@@ -185,7 +185,7 @@ export function DaysTable({ logs, onEdit }: Props) {
                         </div>
                       </TableCell>
                       <TableCell className="py-2.5">
-                        <div className="flex gap-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-0.5 justify-end sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => copyLog(l)}>
                             <Copy className="h-3.5 w-3.5" />
                           </Button>
@@ -219,7 +219,7 @@ export function DaysTable({ logs, onEdit }: Props) {
                         <span className="font-bold text-sm">{total}</span>
                       </TableCell>
                       <TableCell className="py-2.5">
-                        <div className="flex gap-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-0.5 justify-end sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => copyLog(l)}>
                             <Copy className="h-3.5 w-3.5" />
                           </Button>

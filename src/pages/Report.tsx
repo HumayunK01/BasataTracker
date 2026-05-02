@@ -43,7 +43,7 @@ const T = {
     borderRadius: "6px",
   },
   text: { fontSize: "12px", color: "hsl(var(--popover-foreground))" },
-  axis: { stroke: "hsl(var(--muted-foreground))", fontSize: 11 } as const,
+  axis: { stroke: "hsl(var(--muted-foreground))", fontSize: 12 } as const,
   grid: "hsl(var(--border))",
 };
 
@@ -248,22 +248,22 @@ const ReportPage = () => {
                 {/* Summary stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                   <div className="bg-card border border-border rounded-xl p-3 sm:p-4">
-                    <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">Total Docs</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Docs</p>
                     <p className="text-2xl sm:text-3xl font-bold tabular-nums text-primary mt-1">{totalDocs}</p>
                     <p className="text-xs text-muted-foreground mt-1">{filtered.length} days logged</p>
                   </div>
                   <div className="bg-card border border-border rounded-xl p-3 sm:p-4">
-                    <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">Working Days</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Working Days</p>
                     <p className="text-2xl sm:text-3xl font-bold tabular-nums mt-1">{workingLogs.length}</p>
                     <p className="text-xs text-muted-foreground mt-1">{offDays} off days</p>
                   </div>
                   <div className="bg-card border border-border rounded-xl p-3 sm:p-4">
-                    <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">Avg / Day</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Avg / Day</p>
                     <p className="text-2xl sm:text-3xl font-bold tabular-nums text-info mt-1">{avgPerDay}</p>
                     <p className="text-xs text-muted-foreground mt-1">docs per working day</p>
                   </div>
                   <div className="bg-card border border-border rounded-xl p-3 sm:p-4">
-                    <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">Best Day</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Best Day</p>
                     <p className="text-2xl sm:text-3xl font-bold tabular-nums text-warning mt-1">
                       {bestDay ? totalForLog(bestDay) : "—"}
                     </p>
@@ -342,7 +342,7 @@ const ReportPage = () => {
                 <div className="bg-card border border-border rounded-xl overflow-hidden">
                   <div className="px-4 py-3 border-b border-border flex items-center justify-between">
                     <h2 className="text-sm font-medium">Day-by-Day Breakdown</h2>
-                    <span className="text-[10px] text-muted-foreground sm:hidden">← scroll →</span>
+                    <span className="text-xs text-muted-foreground sm:hidden">← scroll →</span>
                   </div>
                   <div className="overflow-x-auto">
                     <Table>

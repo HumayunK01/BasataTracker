@@ -60,7 +60,7 @@ const DailyLogPage = () => {
             <Button size="sm" className="h-8" onClick={openNew}>
               <Plus className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">Log day</span>
-              <kbd className="ml-2 hidden sm:inline-flex text-[10px] border border-primary-foreground/30 rounded px-1">N</kbd>
+              <kbd className="ml-2 hidden sm:inline-flex text-xs border border-primary-foreground/30 rounded px-1">N</kbd>
             </Button>
           </>
         }
