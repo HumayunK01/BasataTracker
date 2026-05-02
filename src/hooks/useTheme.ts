@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 type Theme = "dark" | "light";
 
 const STORAGE_KEY = "basata-theme";
+const THEME_CHANGE_EVENT = "basata-theme-change";
 
 function getInitialTheme(): Theme {
   try {
@@ -29,7 +30,33 @@ export function useTheme() {
     try { localStorage.setItem(STORAGE_KEY, theme); } catch {}
   }, [theme]);
 
-  const toggle = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) {
+        setTheme(getInitialTheme());
+      }
+    };
+    const handleCustomChange = () => {
+      setTheme(getInitialTheme());
+    };
+    
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener(THEME_CHANGE_EVENT, handleCustomChange);
+    
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener(THEME_CHANGE_EVENT, handleCustomChange);
+    };
+  }, []);
+
+  const toggle = useCallback(() => {
+    setTheme((currentTheme) => {
+      const nextTheme = currentTheme === "dark" ? "light" : "dark";
+      try { localStorage.setItem(STORAGE_KEY, nextTheme); } catch {}
+      window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
+      return nextTheme;
+    });
+  }, []);
 
   return { theme, toggle };
 }
