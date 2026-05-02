@@ -2,8 +2,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AppSidebar } from "@/components/ar/AppSidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { CATEGORIES, isoDate, formatTableDate, formatHeaderDate, totalForLog, type DailyLog } from "@/types/log";
 import { downloadCSV } from "@/lib/log-utils";
@@ -166,18 +165,17 @@ const ReportPage = () => {
     : "Select a date range";
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background text-foreground">
-        <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
+    <>
 
           <header className="border-b border-border shrink-0">
             <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <SidebarTrigger className="shrink-0" />
-                <div className="min-w-0">
-                  <h1 className="text-base sm:text-xl font-semibold tracking-tight leading-tight">Date Range Report</h1>
-                  <p className="text-[11px] sm:text-xs text-muted-foreground truncate leading-tight">{formatHeaderDate(now)}</p>
+                <div className="flex items-center gap-3 min-w-0">
+                  <img src="/logo.png" alt="Basata Tracker" className="h-7 sm:h-9 object-contain shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[11px] sm:text-xs text-muted-foreground truncate">{formatHeaderDate(now)}</p>
+                  </div>
                 </div>
               </div>
               <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden shrink-0" onClick={handleExport} disabled={filtered.length === 0}>
@@ -427,9 +425,7 @@ const ReportPage = () => {
               </>
             )}
           </main>
-        </div>
-      </div>
-    </SidebarProvider>
+    </>
   );
 };
 
