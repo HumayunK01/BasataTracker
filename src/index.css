@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Basata-inspired dark theme */
+    --background: 220 38% 9%;
+    --foreground: 210 30% 92%;
+
+    --card: 220 36% 12%;
+    --card-foreground: 210 30% 92%;
+
+    --popover: 220 36% 12%;
+    --popover-foreground: 210 30% 92%;
+
+    --primary: 155 55% 62%;
+    --primary-foreground: 220 40% 10%;
+
+    --secondary: 220 30% 16%;
+    --secondary-foreground: 210 30% 92%;
+
+    --muted: 220 30% 14%;
+    --muted-foreground: 215 18% 62%;
+
+    --accent: 220 30% 18%;
+    --accent-foreground: 210 30% 92%;
+
+    --destructive: 0 70% 58%;
+    --destructive-foreground: 210 40% 98%;
+
+    --warning: 38 88% 60%;
+    --warning-foreground: 220 40% 10%;
+
+    --success: 155 55% 62%;
+    --success-foreground: 220 40% 10%;
+
+    --info: 214 70% 68%;
+    --info-foreground: 220 40% 10%;
+
+    --border: 220 30% 18%;
+    --input: 220 30% 16%;
+    --ring: 155 55% 62%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 220 38% 9%;
+    --sidebar-foreground: 210 30% 92%;
+    --sidebar-primary: 155 55% 62%;
+    --sidebar-primary-foreground: 220 40% 10%;
+    --sidebar-accent: 220 30% 18%;
+    --sidebar-accent-foreground: 210 30% 92%;
+    --sidebar-border: 220 30% 18%;
+    --sidebar-ring: 155 55% 62%;
+  }
+
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 160 84% 35%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 94%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 222 47% 11%;
+    --success: 160 84% 35%;
+    --success-foreground: 0 0% 100%;
+    --info: 217 91% 55%;
+    --info-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 160 84% 35%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 160 84% 35%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 40% 94%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 160 84% 35%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Subtle scrollbars */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: hsl(var(--background)); }
+  ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 5px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.4); }
+
+  /* Hide scrollbar utility */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+
+  /* Fix tooltip text color in dark mode */
+  .recharts-tooltip-item {
+    color: hsl(var(--popover-foreground)) !important;
+  }
+  
+  .recharts-tooltip-label {
+    color: hsl(var(--popover-foreground)) !important;
+  }
+}
+
+@layer components {
+  .status-pill {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+  }
+  .status-indexed { @apply bg-success/15 text-success; }
+  .status-pending { @apply bg-warning/15 text-warning; }
+  .status-escalated { @apply bg-destructive/15 text-destructive; }
+}
