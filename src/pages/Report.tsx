@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
-import { CATEGORIES, isoDate, formatTableDate, formatHeaderDate, totalForLog, type DailyLog } from "@/types/log";
+import { CATEGORIES, isoDate, formatTableDate, totalForLog, type DailyLog } from "@/types/log";
+import { PageHeader } from "@/components/ar/PageHeader";
 import { downloadCSV } from "@/lib/log-utils";
 import { Download, BedDouble, TrendingUp, CalendarRange } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -166,28 +166,20 @@ const ReportPage = () => {
 
   return (
     <>
-
-          <header className="border-b border-border shrink-0">
-            <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <SidebarTrigger className="shrink-0" />
-                <div className="flex items-center gap-3 min-w-0">
-                  <img src="/logo.png" alt="Basata Tracker" className="h-7 sm:h-9 object-contain shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[11px] sm:text-xs text-muted-foreground truncate">{formatHeaderDate(now)}</p>
-                  </div>
-                </div>
-              </div>
-              <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden shrink-0" onClick={handleExport} disabled={filtered.length === 0}>
-                <Download className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" className="hidden sm:flex shrink-0" onClick={handleExport} disabled={filtered.length === 0}>
-                <Download className="h-4 w-4 mr-1" /> Export CSV
-              </Button>
-            </div>
-          </header>
-
-          <main className="px-4 sm:px-6 py-6 space-y-6">
+      <PageHeader
+        now={now}
+        actions={
+          <>
+            <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden shrink-0" onClick={handleExport} disabled={filtered.length === 0}>
+              <Download className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm" className="hidden sm:flex shrink-0" onClick={handleExport} disabled={filtered.length === 0}>
+              <Download className="h-4 w-4 mr-1" /> Export CSV
+            </Button>
+          </>
+        }
+      />
+      <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6">
 
             {/* Date range controls */}
             <div className="bg-card border border-border rounded-xl p-4 space-y-4">

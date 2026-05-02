@@ -88,7 +88,6 @@ export function DaysTable({ logs, onEdit }: Props) {
       : [
           ["Date", formatTableDate(l.log_date)],
           ...categories.filter((c) => getVal(l, c.key) > 0).map((c) => [c.label, String(getVal(l, c.key))]),
-          ["Total", String(logTotal(l))],
         ];
 
     const tdStyle = "border:1px solid #444;padding:4px 12px;text-align:left;";

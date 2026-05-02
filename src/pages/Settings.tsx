@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useNavigate } from "react-router-dom";
+import { PageHeader } from "@/components/ar/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, GripVertical, Tag, Loader2, KeyRound } from "lucide-react";
+import { Plus, Pencil, Trash2, GripVertical, Tag, Loader2, KeyRound, User, Info, ShieldCheck, Download, UserX, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -33,6 +34,7 @@ import {
   useSeedDefaultCategories,
   type Category,
 } from "@/hooks/useCategories";
+import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -47,9 +49,20 @@ interface CategoryFormState {
 
 const emptyForm: CategoryFormState = { label: "", short: "" };
 
+const CAT_COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--info))",
+  "hsl(var(--warning))",
+  "hsl(160 70% 60%)",
+  "hsl(280 70% 65%)",
+  "hsl(20 85% 60%)",
+];
+
 export default function SettingsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: categories = [], isLoading } = useCategories();
+  const { data: logs = [] } = useDailyLogs();
   const addCategory = useAddCategory();
   const updateCategory = useUpdateCategory();
   const deleteCategory = useDeleteCategory();
@@ -63,6 +76,13 @@ export default function SettingsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null);
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pw, setPw] = useState({ next: "", confirm: "" });
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwError, setPwError] = useState("");
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
 
   function openAdd() {
     setEditingKey(null);
@@ -111,16 +131,9 @@ export default function SettingsPage() {
   }
 
   function handleDragStart(key: string) { setDragging(key); }
-
-  function handleDragOver(e: React.DragEvent, key: string) {
-    e.preventDefault();
-    setDragOver(key);
-  }
-
+  function handleDragOver(e: React.DragEvent, key: string) { e.preventDefault(); setDragOver(key); }
   function handleDrop(targetKey: string) {
-    if (!dragging || dragging === targetKey) {
-      setDragging(null); setDragOver(null); return;
-    }
+    if (!dragging || dragging === targetKey) { setDragging(null); setDragOver(null); return; }
     const from = categories.findIndex((c) => c.key === dragging);
     const to = categories.findIndex((c) => c.key === targetKey);
     const next = [...categories];
@@ -129,13 +142,6 @@ export default function SettingsPage() {
     reorderCategories.mutate(next);
     setDragging(null); setDragOver(null);
   }
-
-  const isBusy = addCategory.isPending || updateCategory.isPending;
-
-  const [pwOpen, setPwOpen] = useState(false);
-  const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
-  const [pwLoading, setPwLoading] = useState(false);
-  const [pwError, setPwError] = useState("");
 
   const handleChangePassword = async () => {
     if (!pw.next) { setPwError("New password is required."); return; }
@@ -148,196 +154,283 @@ export default function SettingsPage() {
     if (error) { setPwError(error.message); return; }
     toast.success("Password updated.");
     setPwOpen(false);
-    setPw({ current: "", next: "", confirm: "" });
+    setPw({ next: "", confirm: "" });
   };
+
+  const handleExportData = () => {
+    const payload = {
+      exported_at: new Date().toISOString(),
+      user_email: user?.email,
+      logs,
+      categories,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `basata-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Data exported.");
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "DELETE") return;
+    setDeleteAccountLoading(true);
+    try {
+      const userId = user?.id;
+      if (!userId) throw new Error("Not authenticated");
+      await supabase.from("daily_logs").delete().eq("user_id", userId);
+      await supabase.from("categories").delete().eq("user_id", userId);
+      await supabase.auth.signOut();
+      navigate("/login");
+      toast.success("Account and all data deleted.");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete account.");
+    } finally {
+      setDeleteAccountLoading(false);
+    }
+  };
+
+  const isBusy = addCategory.isPending || updateCategory.isPending;
 
   return (
     <>
+      <PageHeader />
 
-          <header className="border-b border-border shrink-0">
-            <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-2 sm:gap-3">
-              <SidebarTrigger className="shrink-0" />
-              <div className="flex items-center gap-3 min-w-0">
-                <img src="/logo.png" alt="Basata Tracker" className="h-7 sm:h-9 object-contain shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-[11px] sm:text-xs text-muted-foreground truncate">Manage categories and preferences</p>
+      <main className="flex-1 overflow-y-auto">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+
+          {/* Page title */}
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage your categories, account, and preferences.</p>
+          </div>
+
+          {/* Bento grid — top row */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+            {/* Account card */}
+            <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <User className="h-4 w-4 text-primary" />
+                </div>
+                <h2 className="text-sm font-semibold">Account</h2>
+              </div>
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Email</p>
+                  <p className="text-sm font-medium truncate">{user?.email}</p>
+                </div>
+                <Separator />
+                <div className="space-y-1">
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Member since</p>
+                  <p className="text-sm font-medium">
+                    {user?.created_at
+                      ? new Date(user.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+                      : "—"}
+                  </p>
+                </div>
+                <Separator />
+                <div className="space-y-1">
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Last sign in</p>
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <p className="text-sm font-medium">
+                      {user?.last_sign_in_at
+                        ? new Date(user.last_sign_in_at).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })
+                        : "—"}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </header>
 
-          <main className="flex-1 overflow-y-auto">
-            <div className="max-w-2xl mx-auto px-6 py-8 space-y-10">
-
-              {/* Categories */}
-              <section>
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Tag className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <h2 className="text-sm font-semibold">Categories</h2>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Drag rows to reorder · {categories.length} total
-                      </p>
-                    </div>
+            {/* Password card */}
+            <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
+                  <KeyRound className="h-4 w-4 text-warning" />
+                </div>
+                <h2 className="text-sm font-semibold">Password</h2>
+              </div>
+              {!pwOpen ? (
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground leading-relaxed">Change your login password. You'll stay signed in after updating.</p>
+                  <Button size="sm" variant="outline" className="w-full" onClick={() => { setPwOpen(true); setPwError(""); }}>
+                    Change password
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">New password</Label>
+                    <Input type="password" placeholder="••••••••" minLength={6} value={pw.next}
+                      onChange={(e) => setPw((p) => ({ ...p, next: e.target.value }))} autoFocus />
                   </div>
-                  <div className="flex items-center gap-2">
-                    {categories.length === 0 && !isLoading && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => seedDefaults.mutate()}
-                        disabled={seedDefaults.isPending}
-                      >
-                        {seedDefaults.isPending && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
-                        Load defaults
-                      </Button>
-                    )}
-                    <Button size="sm" onClick={openAdd} className="shrink-0">
-                      <Plus className="h-3.5 w-3.5 mr-1.5" /> Add category
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Confirm password</Label>
+                    <Input type="password" placeholder="••••••••" value={pw.confirm}
+                      onChange={(e) => setPw((p) => ({ ...p, confirm: e.target.value }))}
+                      onKeyDown={(e) => e.key === "Enter" && handleChangePassword()} />
+                  </div>
+                  {pwError && <p className="text-xs text-destructive">{pwError}</p>}
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="flex-1" onClick={() => { setPwOpen(false); setPwError(""); }}>Cancel</Button>
+                    <Button size="sm" className="flex-1" onClick={handleChangePassword} disabled={pwLoading}>
+                      {pwLoading && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+                      Update
                     </Button>
                   </div>
                 </div>
+              )}
+            </div>
 
-                <div className="rounded-xl border border-border bg-card overflow-hidden">
-                  {isLoading ? (
-                    <div className="p-3 space-y-px">
-                      {Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="flex items-center gap-3 px-1 py-2.5">
-                          <Skeleton className="h-4 w-4 rounded" />
-                          <Skeleton className="h-4 flex-1" />
-                          <Skeleton className="h-5 w-12 rounded" />
-                        </div>
-                      ))}
-                    </div>
-                  ) : categories.length === 0 ? (
-                    <div className="py-12 text-center text-sm text-muted-foreground">
-                      No categories yet. Add one or load defaults.
-                    </div>
-                  ) : (
-                    categories.map((cat, i) => (
-                      <div key={cat.key}>
-                        {i > 0 && <Separator />}
-                        <div
-                          draggable
-                          onDragStart={() => handleDragStart(cat.key)}
-                          onDragOver={(e) => handleDragOver(e, cat.key)}
-                          onDrop={() => handleDrop(cat.key)}
-                          onDragEnd={() => { setDragging(null); setDragOver(null); }}
-                          className={[
-                            "group flex items-center gap-3 px-4 py-3.5 transition-colors select-none",
-                            dragOver === cat.key && dragging !== cat.key
-                              ? "bg-primary/5"
-                              : "hover:bg-muted/30",
-                            dragging === cat.key ? "opacity-30" : "",
-                          ].join(" ")}
-                        >
-                          <GripVertical className="h-4 w-4 text-muted-foreground/40 group-hover:text-muted-foreground cursor-grab transition-colors shrink-0" />
-                          <div className="flex-1 min-w-0 flex items-center gap-3">
-                            <span className="text-sm font-medium truncate">{cat.label}</span>
-                            <span className="text-[11px] font-mono text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded shrink-0">
-                              {cat.short}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                            <Button
-                              variant="ghost" size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                              onClick={() => openEdit(cat)}
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost" size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                              onClick={() => setDeleteTarget(cat)}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
+            {/* About card */}
+            <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-info/10 flex items-center justify-center shrink-0">
+                  <Info className="h-4 w-4 text-info" />
                 </div>
-              </section>
-
-              {/* Account */}
-              <section>
-                <h2 className="text-[11px] font-semibold mb-4 text-muted-foreground uppercase tracking-wider">Account</h2>
-                <div className="rounded-xl border border-border bg-card divide-y divide-border">
-                  <div className="flex items-center justify-between px-4 py-3">
-                    <span className="text-sm text-muted-foreground">Email</span>
-                    <span className="text-sm font-medium">{user?.email}</span>
+                <h2 className="text-sm font-semibold">About</h2>
+              </div>
+              <div className="space-y-3">
+                <AppLogo className="h-8 object-contain" />
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Version</span>
+                    <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded">1.0.0</span>
                   </div>
-                  <div>
-                    <div className="flex items-center justify-between px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <KeyRound className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">Password</span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs"
-                        onClick={() => { setPwOpen((v) => !v); setPwError(""); setPw({ current: "", next: "", confirm: "" }); }}
-                      >
-                        {pwOpen ? "Cancel" : "Change"}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Categories</span>
+                    <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded">{categories.length} active</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Days logged</span>
+                    <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded">{logs.length} days</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">
+                  <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-success" />
+                  <span>Data encrypted & isolated per user</span>
+                </div>
+                <Button size="sm" variant="outline" className="w-full" onClick={handleExportData} disabled={logs.length === 0 && categories.length === 0}>
+                  <Download className="h-3.5 w-3.5 mr-1.5" /> Export all data
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Danger zone — full width */}
+          <div className="bg-card border border-destructive/30 rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-destructive/20">
+              <div className="h-8 w-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
+                <UserX className="h-4 w-4 text-destructive" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-destructive">Danger Zone</h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Irreversible actions — proceed with caution</p>
+              </div>
+            </div>
+            <div className="px-5 py-4 flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-sm font-medium">Delete account</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Permanently deletes your account and all data — logs, categories, everything. This cannot be undone.</p>
+              </div>
+              <Button size="sm" variant="destructive" className="shrink-0" onClick={() => { setDeleteAccountOpen(true); setDeleteConfirmText(""); }}>
+                Delete account
+              </Button>
+            </div>
+          </div>
+
+          {/* Categories — full width */}
+          <div className="bg-card border border-border rounded-2xl overflow-hidden">
+            {/* Categories header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <Tag className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold">Categories</h2>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Drag to reorder · {categories.length} total</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {categories.length === 0 && !isLoading && (
+                  <Button size="sm" variant="outline" onClick={() => seedDefaults.mutate()} disabled={seedDefaults.isPending}>
+                    {seedDefaults.isPending && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+                    Load defaults
+                  </Button>
+                )}
+                <Button size="sm" onClick={openAdd}>
+                  <Plus className="h-3.5 w-3.5 mr-1.5" /> Add category
+                </Button>
+              </div>
+            </div>
+
+            {/* Categories list */}
+            {isLoading ? (
+              <div className="p-4 space-y-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 px-2 py-2">
+                    <Skeleton className="h-4 w-4 rounded" />
+                    <Skeleton className="h-4 flex-1" />
+                    <Skeleton className="h-5 w-14 rounded" />
+                  </div>
+                ))}
+              </div>
+            ) : categories.length === 0 ? (
+              <div className="py-16 flex flex-col items-center gap-3 text-muted-foreground">
+                <Tag className="h-10 w-10 opacity-20" />
+                <p className="text-sm">No categories yet. Add one or load defaults.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {categories.map((cat, i) => (
+                  <div
+                    key={cat.key}
+                    draggable
+                    onDragStart={() => handleDragStart(cat.key)}
+                    onDragOver={(e) => handleDragOver(e, cat.key)}
+                    onDrop={() => handleDrop(cat.key)}
+                    onDragEnd={() => { setDragging(null); setDragOver(null); }}
+                    className={[
+                      "group flex items-center gap-3 px-5 py-3.5 transition-colors select-none",
+                      dragOver === cat.key && dragging !== cat.key ? "bg-primary/5" : "hover:bg-muted/30",
+                      dragging === cat.key ? "opacity-30" : "",
+                    ].join(" ")}
+                  >
+                    <GripVertical className="h-4 w-4 text-muted-foreground/30 group-hover:text-muted-foreground cursor-grab transition-colors shrink-0" />
+
+                    {/* Color dot */}
+                    <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: CAT_COLORS[i % CAT_COLORS.length] }} />
+
+                    <div className="flex-1 min-w-0 flex items-center gap-3">
+                      <span className="text-sm font-medium truncate">{cat.label}</span>
+                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-md shrink-0"
+                        style={{ backgroundColor: `${CAT_COLORS[i % CAT_COLORS.length]}18`, color: CAT_COLORS[i % CAT_COLORS.length] }}>
+                        {cat.short}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => openEdit(cat)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(cat)}>
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
-                    {pwOpen && (
-                      <div className="px-4 pb-4 space-y-3">
-                        <div className="space-y-1.5">
-                          <Label className="text-xs text-muted-foreground">New password</Label>
-                          <Input
-                            type="password"
-                            placeholder="••••••••"
-                            minLength={6}
-                            value={pw.next}
-                            onChange={(e) => setPw((p) => ({ ...p, next: e.target.value }))}
-                            autoFocus
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs text-muted-foreground">Confirm new password</Label>
-                          <Input
-                            type="password"
-                            placeholder="••••••••"
-                            value={pw.confirm}
-                            onChange={(e) => setPw((p) => ({ ...p, confirm: e.target.value }))}
-                            onKeyDown={(e) => e.key === "Enter" && handleChangePassword()}
-                          />
-                        </div>
-                        {pwError && <p className="text-xs text-destructive">{pwError}</p>}
-                        <Button size="sm" onClick={handleChangePassword} disabled={pwLoading} className="w-full">
-                          {pwLoading && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
-                          Update password
-                        </Button>
-                      </div>
-                    )}
                   </div>
-                </div>
-              </section>
+                ))}
+              </div>
+            )}
+          </div>
 
-              {/* About */}
-              <section>
-                <h2 className="text-[11px] font-semibold mb-4 text-muted-foreground uppercase tracking-wider">About</h2>
-                <div className="rounded-xl border border-border bg-card divide-y divide-border">
-                  <div className="flex items-center justify-between px-4 py-3">
-                    <span className="text-sm text-muted-foreground">Application</span>
-                    <img src="/logo.png" alt="Basata Tracker" className="h-6 object-contain" />
-                  </div>
-                  <div className="flex items-center justify-between px-4 py-3">
-                    <span className="text-sm text-muted-foreground">Version</span>
-                    <span className="text-sm font-medium font-mono">1.0.0</span>
-                  </div>
-                </div>
-              </section>
-
-            </div>
-          </main>
+        </div>
+      </main>
 
       {/* Add / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -348,25 +441,15 @@ export default function SettingsPage() {
           <div className="space-y-4 py-1">
             <div className="space-y-1.5">
               <Label htmlFor="cat-label">Label</Label>
-              <Input
-                id="cat-label"
-                placeholder="e.g. Worked on NG"
-                value={form.label}
+              <Input id="cat-label" placeholder="e.g. Worked on NG" value={form.label}
                 onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
-                onKeyDown={(e) => e.key === "Enter" && handleSave()}
-                autoFocus
-              />
+                onKeyDown={(e) => e.key === "Enter" && handleSave()} autoFocus />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="cat-short">Short name</Label>
-              <Input
-                id="cat-short"
-                placeholder="e.g. NG"
-                maxLength={10}
-                value={form.short}
+              <Input id="cat-short" placeholder="e.g. NG" maxLength={10} value={form.short}
                 onChange={(e) => setForm((f) => ({ ...f, short: e.target.value }))}
-                onKeyDown={(e) => e.key === "Enter" && handleSave()}
-              />
+                onKeyDown={(e) => e.key === "Enter" && handleSave()} />
               <p className="text-xs text-muted-foreground">Shown in compact views · max 10 chars</p>
             </div>
             {formError && <p className="text-xs text-destructive">{formError}</p>}
@@ -381,7 +464,7 @@ export default function SettingsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete confirm */}
+      {/* Delete category confirm */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -392,11 +475,39 @@ export default function SettingsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete account confirm */}
+      <AlertDialog open={deleteAccountOpen} onOpenChange={(o) => { if (!o) { setDeleteAccountOpen(false); setDeleteConfirmText(""); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">Delete your account?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <span className="block">This will permanently delete your account and <strong>all your data</strong> — every log entry, every category. This action <strong>cannot be undone</strong>.</span>
+              <span className="block pt-1">Type <strong>DELETE</strong> to confirm:</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            className="mt-1"
+            placeholder="DELETE"
+            value={deleteConfirmText}
+            onChange={(e) => setDeleteConfirmText(e.target.value)}
+            autoFocus
+          />
+          <AlertDialogFooter className="mt-2">
+            <AlertDialogCancel onClick={() => setDeleteConfirmText("")}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={deleteConfirmText !== "DELETE" || deleteAccountLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
+            >
+              {deleteAccountLoading && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+              Delete forever
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

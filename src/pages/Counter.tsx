@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useCategories, type Category } from "@/hooks/useCategories";
 import { useUpsertLog, useDailyLogs } from "@/hooks/useDailyLogs";
-import { isoDate, formatHeaderDate } from "@/types/log";
+import { isoDate } from "@/types/log";
+import { PageHeader } from "@/components/ar/PageHeader";
 import { Minus, Plus, RotateCcw, Save, CheckCircle2, X, Hash } from "lucide-react";
 
 const COUNTS_KEY = "counter_counts";
@@ -121,44 +121,34 @@ export default function CounterPage() {
 
   return (
     <>
-
-          <header className="border-b border-border shrink-0">
-            <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <SidebarTrigger className="shrink-0" />
-                <div className="flex items-center gap-3 min-w-0">
-                  <img src="/logo.png" alt="Basata Tracker" className="h-7 sm:h-9 object-contain shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[11px] sm:text-xs text-muted-foreground truncate">{formatHeaderDate(now)}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden" onClick={handleReset} disabled={total === 0}>
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="sm" className="hidden sm:flex" onClick={handleReset} disabled={total === 0}>
-                  <RotateCcw className="h-4 w-4 mr-1" /> Reset
-                </Button>
-                <Button
-                  size="sm"
-                  className={`h-8 ${saved ? "bg-success hover:bg-success/90 text-success-foreground" : ""}`}
-                  onClick={handleSave}
-                  disabled={upsert.isPending || total === 0}
-                >
-                  {saved ? (
-                    <><CheckCircle2 className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Saved</span></>
-                  ) : upsert.isPending ? (
-                    <span className="hidden sm:inline">Saving…</span>
-                  ) : (
-                    <><Save className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Save to today</span></>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </header>
-
-          <main className="flex-1 px-4 sm:px-6 py-6 flex flex-col gap-6">
+      <PageHeader
+        now={now}
+        actions={
+          <>
+            <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden" onClick={handleReset} disabled={total === 0}>
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm" className="hidden sm:flex" onClick={handleReset} disabled={total === 0}>
+              <RotateCcw className="h-4 w-4 mr-1" /> Reset
+            </Button>
+            <Button
+              size="sm"
+              className={`h-8 ${saved ? "bg-success hover:bg-success/90 text-success-foreground" : ""}`}
+              onClick={handleSave}
+              disabled={upsert.isPending || total === 0}
+            >
+              {saved ? (
+                <><CheckCircle2 className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Saved</span></>
+              ) : upsert.isPending ? (
+                <span className="hidden sm:inline">Saving…</span>
+              ) : (
+                <><Save className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Save to today</span></>
+              )}
+            </Button>
+          </>
+        }
+      />
+      <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
 
             {/* Total */}
             <div className="flex items-center justify-center">
