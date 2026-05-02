@@ -6,7 +6,9 @@ import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { CATEGORIES, isoDate, formatTableDate, totalForLog, type DailyLog } from "@/types/log";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { downloadCSV } from "@/lib/log-utils";
-import { Download, BedDouble, TrendingUp, CalendarRange } from "lucide-react";
+import { Download, BedDouble, TrendingUp, CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
+
+const TABLE_PAGE_SIZE = 20;
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -108,16 +110,18 @@ const ReportPage = () => {
   const [startDate, setStartDate] = useState(defaultRange.start);
   const [endDate, setEndDate] = useState(defaultRange.end);
   const [activePreset, setActivePreset] = useState<string>("this_month");
+  const [tablePage, setTablePage] = useState(1);
 
   const applyPreset = (id: string) => {
     const range = getPresetRange(id);
     setStartDate(range.start);
     setEndDate(range.end);
     setActivePreset(id);
+    setTablePage(1);
   };
 
-  const onStartChange = (v: string) => { setStartDate(v); setActivePreset(""); };
-  const onEndChange = (v: string) => { setEndDate(v); setActivePreset(""); };
+  const onStartChange = (v: string) => { setStartDate(v); setActivePreset(""); setTablePage(1); };
+  const onEndChange = (v: string) => { setEndDate(v); setActivePreset(""); setTablePage(1); };
 
   const filtered = useMemo(() => {
     if (!startDate || !endDate) return [];
@@ -154,6 +158,18 @@ const ReportPage = () => {
       })),
     [workingLogs],
   );
+
+  const totalTablePages = Math.ceil(filtered.length / TABLE_PAGE_SIZE);
+  const paginatedRows = filtered.slice((tablePage - 1) * TABLE_PAGE_SIZE, tablePage * TABLE_PAGE_SIZE);
+  const tablePageNumbers = useMemo(() => {
+    if (totalTablePages <= 7) return Array.from({ length: totalTablePages }, (_, i) => i + 1);
+    const pages: (number | "…")[] = [1];
+    if (tablePage > 3) pages.push("…");
+    for (let i = Math.max(2, tablePage - 1); i <= Math.min(totalTablePages - 1, tablePage + 1); i++) pages.push(i);
+    if (tablePage < totalTablePages - 2) pages.push("…");
+    pages.push(totalTablePages);
+    return pages;
+  }, [totalTablePages, tablePage]);
 
   const handleExport = () => {
     const sorted = [...filtered].sort((a, b) => b.log_date.localeCompare(a.log_date));
@@ -358,7 +374,7 @@ const ReportPage = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filtered.map((l) => {
+                        {paginatedRows.map((l) => {
                           const total = totalForLog(l);
                           return l.is_off_day ? (
                             <TableRow key={l.id} className="border-b border-border/50 last:border-0 bg-muted/20">
@@ -398,6 +414,32 @@ const ReportPage = () => {
                       </TableBody>
                     </Table>
                   </div>
+
+                  {/* Pagination */}
+                  {totalTablePages > 1 && (
+                    <div className="border-t border-border px-4 py-2.5 flex items-center justify-between gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {(tablePage - 1) * TABLE_PAGE_SIZE + 1}–{Math.min(tablePage * TABLE_PAGE_SIZE, filtered.length)} of {filtered.length}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setTablePage((p) => Math.max(1, p - 1))} disabled={tablePage === 1}>
+                          <ChevronLeft className="h-3.5 w-3.5" />
+                        </Button>
+                        {tablePageNumbers.map((p, i) =>
+                          p === "…" ? (
+                            <span key={`e-${i}`} className="w-7 text-center text-xs text-muted-foreground">…</span>
+                          ) : (
+                            <Button key={p} variant={tablePage === p ? "default" : "ghost"} size="icon" className="h-7 w-7 text-xs" onClick={() => setTablePage(p as number)}>
+                              {p}
+                            </Button>
+                          )
+                        )}
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setTablePage((p) => Math.min(totalTablePages, p + 1))} disabled={tablePage === totalTablePages}>
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Table footer totals */}
                   {workingLogs.length > 0 && (
