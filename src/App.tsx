@@ -1,9 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AuthGuard } from "@/components/ar/AuthGuard";
+import { AppLayout } from "@/components/ar/AppLayout";
 import Index from "./pages/Index.tsx";
 import DailyLogPage from "./pages/DailyLog.tsx";
 import SettingsPage from "./pages/Settings.tsx";
@@ -19,17 +21,20 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthGuard>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/log" element={<DailyLogPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/report" element={<ReportPage />} />
-          <Route path="/counter" element={<CounterPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthGuard>
+        <SidebarProvider>
+          <AuthGuard>
+            <Routes>
+              <Route element={<AppLayout><Outlet /></AppLayout>}>
+                <Route path="/" element={<Index />} />
+                <Route path="/log" element={<DailyLogPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/report" element={<ReportPage />} />
+                <Route path="/counter" element={<CounterPage />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthGuard>
+        </SidebarProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

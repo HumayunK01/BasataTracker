@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DayEntrySheet } from "@/components/ar/DayEntrySheet";
 import { Charts } from "@/components/ar/Charts";
-import { AppSidebar } from "@/components/ar/AppSidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
 import { downloadCSV } from "@/lib/log-utils";
@@ -75,24 +74,21 @@ const Index = () => {
   const isEmpty = !isLoading && logs.length === 0;
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background text-foreground">
-        <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
+    <>
           <header className="border-b border-border">
             <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <SidebarTrigger className="shrink-0" />
-                <div className="min-w-0">
-                  <h1 className="text-base sm:text-xl font-semibold tracking-tight leading-tight">Basata Tracker</h1>
-                  <p className="text-[11px] sm:text-xs text-muted-foreground truncate leading-tight">
-                    {formatHeaderDate(now)}
+                <div className="flex items-center gap-3 min-w-0">
+                  <img src="/logo.png" alt="Basata Tracker" className="h-7 sm:h-9 object-contain shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[11px] sm:text-xs text-muted-foreground truncate">{formatHeaderDate(now)}</p>
                     {isWeekendToday ? (
-                      <>{" · "}<span className="text-muted-foreground">Enjoy your weekend!</span></>
+                      <p className="text-[11px] sm:text-xs font-medium text-primary truncate">Enjoy your weekend!</p>
                     ) : stats.todayLog ? (
-                      <>{" · "}<span className="text-success">{stats.todayTotal} docs today</span></>
+                      <p className="text-[11px] sm:text-xs font-medium text-success truncate">{stats.todayTotal} docs logged today</p>
                     ) : null}
-                  </p>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
@@ -172,11 +168,9 @@ const Index = () => {
             </section>
 
           </main>
-        </div>
 
         <DayEntrySheet open={open} onOpenChange={setOpen} editing={editing} existingDates={existingDates} />
-      </div>
-    </SidebarProvider>
+    </>
   );
 };
 

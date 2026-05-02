@@ -7,7 +7,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -24,8 +23,7 @@ const navItems = [
 ];
 
 export function AppSidebar() {
-  const { state, isMobile, setOpenMobile } = useSidebar();
-  const collapsed = state === "collapsed";
+  const { isMobile, setOpenMobile } = useSidebar();
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
@@ -37,19 +35,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex items-center px-3 py-4">
-          {collapsed ? (
-            <span className="text-primary font-black text-lg tracking-tight">B</span>
-          ) : (
-            <span className="text-xl font-semibold tracking-tight text-sidebar-foreground">
-              Basata <span className="text-primary">Tracker</span>
-            </span>
-          )}
-        </div>
-      </SidebarHeader>
-
-      <SidebarContent>
+<SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>

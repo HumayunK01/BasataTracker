@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DayEntrySheet } from "@/components/ar/DayEntrySheet";
 import { DaysTable } from "@/components/ar/DaysTable";
-import { AppSidebar } from "@/components/ar/AppSidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { downloadCSV } from "@/lib/log-utils";
 import { isoDate, totalForLog, formatHeaderDate, type DailyLog } from "@/types/log";
@@ -46,23 +45,20 @@ const DailyLogPage = () => {
   const openEdit = (log: DailyLog) => { setEditing(log); setOpen(true); };
 
   return (
-    <SidebarProvider>
-      <div className="h-screen flex w-full bg-background text-foreground overflow-hidden">
-        <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
+    <>
 
           <header className="border-b border-border shrink-0">
             <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <SidebarTrigger className="shrink-0" />
-                <div className="min-w-0">
-                  <h1 className="text-base sm:text-xl font-semibold tracking-tight leading-tight">Daily Log</h1>
-                  <p className="text-[11px] sm:text-xs text-muted-foreground truncate leading-tight">
-                    {formatHeaderDate(now)}
+                <div className="flex items-center gap-3 min-w-0">
+                  <img src="/logo.png" alt="Basata Tracker" className="h-7 sm:h-9 object-contain shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[11px] sm:text-xs text-muted-foreground truncate">{formatHeaderDate(now)}</p>
                     {todayLog && (
-                      <>{" · "}<span className="text-success">{totalForLog(todayLog)} docs today</span></>
+                      <p className="text-[11px] sm:text-xs font-medium text-success truncate">{totalForLog(todayLog)} docs logged today</p>
                     )}
-                  </p>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
@@ -116,16 +112,13 @@ const DailyLogPage = () => {
             )}
           </main>
 
-        </div>
-
         <DayEntrySheet
           open={open}
           onOpenChange={setOpen}
           editing={editing}
           existingDates={existingDates}
         />
-      </div>
-    </SidebarProvider>
+    </>
   );
 };
 

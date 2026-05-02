@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES } from "@/types/log";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface Category {
   id?: string;
@@ -10,8 +11,6 @@ export interface Category {
   short: string;
   position: number;
 }
-
-const KEY = ["categories"] as const;
 
 const DEFAULT_CATEGORIES: Category[] = CATEGORIES.map((c, i) => ({
   key: c.key,
@@ -27,12 +26,16 @@ async function getUserId(): Promise<string> {
 }
 
 export function useCategories() {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: KEY,
+    queryKey: ["categories", user?.id],
+    enabled: !!user,
     queryFn: async (): Promise<Category[]> => {
+      const user_id = await getUserId();
       const { data, error } = await supabase
         .from("categories")
         .select("*")
+        .eq("user_id", user_id)
         .order("position", { ascending: true });
       if (error) throw error;
       if (!data || data.length === 0) return DEFAULT_CATEGORIES;
@@ -49,7 +52,7 @@ export function useAddCategory() {
       const { error } = await supabase.from("categories").insert({ ...cat, user_id });
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["categories"] }),
     onError: (e: Error) => toast.error(e.message),
   });
 }
@@ -66,7 +69,7 @@ export function useUpdateCategory() {
         .eq("user_id", user_id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["categories"] }),
     onError: (e: Error) => toast.error(e.message),
   });
 }
@@ -83,7 +86,7 @@ export function useDeleteCategory() {
         .eq("user_id", user_id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["categories"] }),
     onError: (e: Error) => toast.error(e.message),
   });
 }
@@ -105,7 +108,7 @@ export function useReorderCategories() {
         .upsert(updates, { onConflict: "user_id,key" });
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["categories"] }),
     onError: (e: Error) => toast.error(e.message),
   });
 }
@@ -121,6 +124,6 @@ export function useSeedDefaultCategories() {
         .upsert(rows, { onConflict: "user_id,key" });
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["categories"] }),
   });
 }

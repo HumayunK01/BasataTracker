@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { AppSidebar } from "@/components/ar/AppSidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -153,17 +152,16 @@ export default function SettingsPage() {
   };
 
   return (
-    <SidebarProvider>
-      <div className="h-screen flex w-full bg-background text-foreground overflow-hidden">
-        <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
+    <>
 
           <header className="border-b border-border shrink-0">
             <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-2 sm:gap-3">
               <SidebarTrigger className="shrink-0" />
-              <div>
-                <h1 className="text-base sm:text-xl font-semibold tracking-tight leading-tight">Settings</h1>
-                <p className="text-[11px] sm:text-xs text-muted-foreground leading-tight">Manage categories and preferences</p>
+              <div className="flex items-center gap-3 min-w-0">
+                <img src="/logo.png" alt="Basata Tracker" className="h-7 sm:h-9 object-contain shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[11px] sm:text-xs text-muted-foreground truncate">Manage categories and preferences</p>
+                </div>
               </div>
             </div>
           </header>
@@ -329,7 +327,7 @@ export default function SettingsPage() {
                 <div className="rounded-xl border border-border bg-card divide-y divide-border">
                   <div className="flex items-center justify-between px-4 py-3">
                     <span className="text-sm text-muted-foreground">Application</span>
-                    <span className="text-sm font-medium">Basata Tracker</span>
+                    <img src="/logo.png" alt="Basata Tracker" className="h-6 object-contain" />
                   </div>
                   <div className="flex items-center justify-between px-4 py-3">
                     <span className="text-sm text-muted-foreground">Version</span>
@@ -340,8 +338,6 @@ export default function SettingsPage() {
 
             </div>
           </main>
-        </div>
-      </div>
 
       {/* Add / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -405,6 +401,6 @@ export default function SettingsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </SidebarProvider>
+    </>
   );
 }
