@@ -42,7 +42,7 @@ const T = {
     borderRadius: "6px",
   },
   text: { fontSize: "12px", color: "hsl(var(--popover-foreground))" },
-  axis: { stroke: "hsl(var(--muted-foreground))", fontSize: 11 } as const,
+  axis: { stroke: "hsl(var(--muted-foreground))", fontSize: 12 } as const,
   grid: "hsl(var(--border))",
 };
 
@@ -253,7 +253,7 @@ export function Charts({ logs }: Props) {
         <ChartCard title="Category balance — avg / day" height="h-44 sm:h-56">
           <RadarChart data={radarData} outerRadius="65%">
             <PolarGrid stroke={T.grid} />
-            <PolarAngleAxis dataKey="category" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+            <PolarAngleAxis dataKey="category" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
             <Radar name="Avg docs" dataKey="avg" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.25} strokeWidth={2} />
             <Tooltip contentStyle={T.container} labelStyle={T.text} itemStyle={T.text} />
           </RadarChart>

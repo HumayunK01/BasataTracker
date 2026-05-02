@@ -221,17 +221,17 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
                 </p>
                 {/* Autosave indicator */}
                 {autosaveStatus === "pending" && (
-                  <span className="flex items-center gap-1 text-[10px] text-muted-foreground animate-pulse">
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground animate-pulse">
                     <Cloud className="h-3 w-3" /> saving…
                   </span>
                 )}
                 {autosaveStatus === "saved" && (
-                  <span className="flex items-center gap-1 text-[10px] text-success">
+                  <span className="flex items-center gap-1 text-xs text-success">
                     <Cloud className="h-3 w-3" /> autosaved
                   </span>
                 )}
                 {autosaveStatus === "error" && (
-                  <span className="flex items-center gap-1 text-[10px] text-destructive">
+                  <span className="flex items-center gap-1 text-xs text-destructive">
                     <CloudOff className="h-3 w-3" /> save failed
                   </span>
                 )}
@@ -240,7 +240,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
             {!draft.is_off_day && total > 0 && (
               <div className="text-right shrink-0 ml-4">
                 <div className="text-2xl font-bold tabular-nums text-primary leading-none">{total}</div>
-                <div className="text-[10px] text-muted-foreground mt-0.5">total docs</div>
+                <div className="text-xs text-muted-foreground mt-0.5">total docs</div>
               </div>
             )}
           </div>

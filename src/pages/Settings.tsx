@@ -221,12 +221,12 @@ export default function SettingsPage() {
               </div>
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Email</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Email</p>
                   <p className="text-sm font-medium truncate">{user?.email}</p>
                 </div>
                 <Separator />
                 <div className="space-y-1">
-                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Member since</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Member since</p>
                   <p className="text-sm font-medium">
                     {user?.created_at
                       ? new Date(user.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
@@ -235,7 +235,7 @@ export default function SettingsPage() {
                 </div>
                 <Separator />
                 <div className="space-y-1">
-                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Last sign in</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Last sign in</p>
                   <div className="flex items-center gap-1.5">
                     <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
                     <p className="text-sm font-medium">
@@ -312,7 +312,7 @@ export default function SettingsPage() {
                     <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded">{logs.length} days</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">
                   <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-success" />
                   <span>Data encrypted & isolated per user</span>
                 </div>
@@ -331,7 +331,7 @@ export default function SettingsPage() {
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-destructive">Danger Zone</h2>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Irreversible actions — proceed with caution</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Irreversible actions — proceed with caution</p>
               </div>
             </div>
             <div className="px-5 py-4 flex items-center justify-between gap-4">
@@ -355,7 +355,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <h2 className="text-sm font-semibold">Categories</h2>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Drag to reorder · {categories.length} total</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Drag to reorder · {categories.length} total</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -410,13 +410,13 @@ export default function SettingsPage() {
 
                     <div className="flex-1 min-w-0 flex items-center gap-3">
                       <span className="text-sm font-medium truncate">{cat.label}</span>
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-md shrink-0"
+                      <span className="text-xs font-mono px-2 py-0.5 rounded-md shrink-0"
                         style={{ backgroundColor: `${CAT_COLORS[i % CAT_COLORS.length]}18`, color: CAT_COLORS[i % CAT_COLORS.length] }}>
                         {cat.short}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => openEdit(cat)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
