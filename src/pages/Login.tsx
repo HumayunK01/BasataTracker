@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, MailCheck, ArrowLeft, Eye, EyeOff, LayoutDashboard, TrendingUp, Zap } from "lucide-react";
+import { Loader2, MailCheck, ArrowLeft, Eye, EyeOff, LayoutDashboard, TrendingUp, Zap, Sun, Moon } from "lucide-react";
 import { AppLogo } from "@/components/ar/AppLogo";
+import { useTheme } from "@/hooks/useTheme";
 
 type Mode = "login" | "signup" | "forgot" | "check-email";
 
 export default function LoginPage() {
+  const { theme, toggle } = useTheme();
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,7 +43,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background">
+    <div className="flex h-screen w-screen overflow-hidden bg-background relative">
+
+      {/* ── Theme toggle ── */}
+      <Button variant="ghost" size="icon" className="absolute top-4 right-4 h-9 w-9 z-10" onClick={toggle}>
+        {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      </Button>
 
       {/* ── Left branding panel — desktop only ── */}
       <div className="hidden lg:flex w-[420px] xl:w-[480px] shrink-0 flex-col justify-between bg-card border-r border-border p-12">
