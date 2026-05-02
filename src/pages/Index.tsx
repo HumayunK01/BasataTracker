@@ -2,13 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DayEntrySheet } from "@/components/ar/DayEntrySheet";
 import { Charts } from "@/components/ar/Charts";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
-import { downloadCSV } from "@/lib/log-utils";
-import { isoDate, totalForLog, formatHeaderDate, type DailyLog } from "@/types/log";
-import { Download, Plus, BarChart2 } from "lucide-react";
+import { isoDate, totalForLog, type DailyLog } from "@/types/log";
+import { Plus, BarChart2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/ar/PageHeader";
 
 const CAT_COLORS = [
   "hsl(var(--primary))",
@@ -75,39 +74,24 @@ const Index = () => {
 
   return (
     <>
-          <header className="border-b border-border">
-            <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <SidebarTrigger className="shrink-0" />
-                <div className="flex items-center gap-3 min-w-0">
-                  <img src="/logo.png" alt="Basata Tracker" className="h-7 sm:h-9 object-contain shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[11px] sm:text-xs text-muted-foreground truncate">{formatHeaderDate(now)}</p>
-                    {isWeekendToday ? (
-                      <p className="text-[11px] sm:text-xs font-medium text-primary truncate">Enjoy your weekend!</p>
-                    ) : stats.todayLog ? (
-                      <p className="text-[11px] sm:text-xs font-medium text-success truncate">{stats.todayTotal} docs logged today</p>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden" onClick={() => downloadCSV(logs)} disabled={logs.length === 0}>
-                  <Download className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="sm" className="hidden sm:flex" onClick={() => downloadCSV(logs)} disabled={logs.length === 0}>
-                  <Download className="h-4 w-4 mr-1" /> Export
-                </Button>
-                <Button size="sm" className="h-8" onClick={openNew}>
-                  <Plus className="h-4 w-4 sm:mr-1" />
-                  <span className="hidden sm:inline">Log day</span>
-                  <kbd className="ml-2 hidden sm:inline-flex text-[10px] border border-primary-foreground/30 rounded px-1">N</kbd>
-                </Button>
-              </div>
-            </div>
-          </header>
-
-          <main className="px-4 sm:px-6 py-6 space-y-8">
+      <PageHeader
+        now={now}
+        subtitle={
+          isWeekendToday ? (
+            <span className="text-primary">Enjoy your weekend!</span>
+          ) : stats.todayLog ? (
+            <span className="text-success">{stats.todayTotal} docs logged today</span>
+          ) : undefined
+        }
+        actions={
+          <Button size="sm" className="h-8" onClick={openNew}>
+            <Plus className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Log day</span>
+            <kbd className="ml-2 hidden sm:inline-flex text-[10px] border border-primary-foreground/30 rounded px-1">N</kbd>
+          </Button>
+        }
+      />
+      <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-8">
 
             {/* ── Per-category breakdown ── */}
             <section className="space-y-3">
