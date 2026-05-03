@@ -51,7 +51,8 @@ export function useDeleteLog() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("daily_logs").delete().eq("id", id);
+      const user_id = await getUserId();
+      const { error } = await supabase.from("daily_logs").delete().eq("id", id).eq("user_id", user_id);
       if (error) throw error;
     },
     onSuccess: () => {

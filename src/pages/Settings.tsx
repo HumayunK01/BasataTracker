@@ -83,6 +83,7 @@ export default function SettingsPage() {
   const [pwError, setPwError] = useState("");
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
   const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
 
   function openAdd() {
@@ -177,14 +178,19 @@ export default function SettingsPage() {
 
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== "DELETE") return;
+    if (!deletePassword) { toast.error("Password is required to delete your account."); return; }
     setDeleteAccountLoading(true);
     try {
       const userId = user?.id;
-      if (!userId) throw new Error("Not authenticated");
+      const email = user?.email;
+      if (!userId || !email) throw new Error("Not authenticated");
+      // Re-authenticate before destructive action
+      const { error: authError } = await supabase.auth.signInWithPassword({ email, password: deletePassword });
+      if (authError) throw new Error("Incorrect password.");
       await supabase.from("daily_logs").delete().eq("user_id", userId);
       await supabase.from("categories").delete().eq("user_id", userId);
       await supabase.auth.signOut();
-      navigate("/login");
+      navigate("/");
       toast.success("Account and all data deleted.");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to delete account.");
@@ -484,7 +490,7 @@ export default function SettingsPage() {
       </AlertDialog>
 
       {/* Delete account confirm */}
-      <AlertDialog open={deleteAccountOpen} onOpenChange={(o) => { if (!o) { setDeleteAccountOpen(false); setDeleteConfirmText(""); } }}>
+      <AlertDialog open={deleteAccountOpen} onOpenChange={(o) => { if (o) return; setDeleteAccountOpen(false); setDeleteConfirmText(""); setDeletePassword(""); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="text-destructive">Delete your account?</AlertDialogTitle>
@@ -493,18 +499,25 @@ export default function SettingsPage() {
               <span className="block pt-1">Type <strong>DELETE</strong> to confirm:</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <Input
-            className="mt-1"
-            placeholder="DELETE"
-            value={deleteConfirmText}
-            onChange={(e) => setDeleteConfirmText(e.target.value)}
-            autoFocus
-          />
+          <div className="space-y-2 mt-1">
+            <Input
+              placeholder="DELETE"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              autoFocus
+            />
+            <Input
+              type="password"
+              placeholder="Enter your password to confirm"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+            />
+          </div>
           <AlertDialogFooter className="mt-2">
-            <AlertDialogCancel onClick={() => setDeleteConfirmText("")}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => { setDeleteConfirmText(""); setDeletePassword(""); }}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAccount}
-              disabled={deleteConfirmText !== "DELETE" || deleteAccountLoading}
+              disabled={deleteConfirmText !== "DELETE" || !deletePassword || deleteAccountLoading}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
             >
               {deleteAccountLoading && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,10 @@ import { useTheme } from "@/hooks/useTheme";
 
 type Mode = "login" | "signup" | "forgot" | "check-email";
 
+// 5 attempts per 60 seconds, tracked in memory (per page load)
+const MAX_ATTEMPTS = 5;
+const WINDOW_MS = 60_000;
+
 export default function LoginPage() {
   const { theme, toggle } = useTheme();
   const [mode, setMode] = useState<Mode>("login");
@@ -17,9 +21,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const attemptTimestamps = useRef<number[]>([]);
+
+  const checkRateLimit = (): boolean => {
+    const now = Date.now();
+    attemptTimestamps.current = attemptTimestamps.current.filter(t => now - t < WINDOW_MS);
+    if (attemptTimestamps.current.length >= MAX_ATTEMPTS) return false;
+    attemptTimestamps.current.push(now);
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!checkRateLimit()) {
+      toast.error("Too many attempts. Please wait a minute and try again.");
+      return;
+    }
     setLoading(true);
     try {
       if (mode === "login") {
