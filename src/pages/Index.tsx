@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DayEntrySheet } from "@/components/ar/DayEntrySheet";
 import { Charts } from "@/components/ar/Charts";
+import { ContributionHeatmap } from "@/components/ar/ContributionHeatmap";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
 import { isoDate, totalForLog, type DailyLog } from "@/types/log";
@@ -102,6 +103,25 @@ const Index = () => {
                     ))
                 }
               </div>
+            </section>
+
+            {/* ── Contribution heatmap ── */}
+            <section>
+              {isLoading ? (
+                <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="space-y-1.5">
+                      <Skeleton className="h-4 w-36" />
+                      <Skeleton className="h-3 w-52" />
+                    </div>
+                    <Skeleton className="h-3 w-48" />
+                  </div>
+                  <Skeleton className="h-3 w-full max-w-xs" />
+                  <Skeleton className="h-28 sm:h-36 w-full rounded-xl" />
+                </div>
+              ) : !isEmpty && (
+                <ContributionHeatmap logs={logs} />
+              )}
             </section>
 
             {/* ── Charts ── */}

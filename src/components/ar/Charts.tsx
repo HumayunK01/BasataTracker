@@ -320,8 +320,33 @@ export function Charts({ logs, categories }: Props) {
               <Tooltip contentStyle={T.container} cursor={{ fill: "hsl(var(--accent))" }} labelStyle={{ ...T.text, fontWeight: 600 }} itemStyle={T.text} />
               <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }} />
               {categories.map((c, i) => (
-                <Bar key={c.key} dataKey={c.label} stackId="a" fill={colorForKey(c.key)}
-                  radius={i === categories.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]} />
+                <Bar
+                  key={c.key}
+                  dataKey={c.label}
+                  stackId="a"
+                  fill={colorForKey(c.key)}
+                  // Bottom segment gets bottom rounding, all others flat
+                  radius={i === 0 ? [0, 0, 3, 3] : [0, 0, 0, 0]}
+                  shape={(props: Record<string, unknown>) => {
+                    const { x, y, width, height, fill } = props as {
+                      x: number; y: number; width: number; height: number; fill: string;
+                      index: number;
+                    };
+                    if (!height || height <= 0) return <g />;
+                    // Check if this is the topmost non-zero segment for this bar
+                    const rowData = stacked[props.index as number] ?? {};
+                    const catLabels = categories.map((cat) => cat.label);
+                    const myIdx = catLabels.indexOf(c.label);
+                    const isTop = catLabels.slice(myIdx + 1).every((label) => !rowData[label]);
+                    const r = isTop ? 4 : 0;
+                    return (
+                      <path
+                        d={`M${x},${y + height} L${x},${y + r} Q${x},${y} ${x + r},${y} L${x + width - r},${y} Q${x + width},${y} ${x + width},${y + r} L${x + width},${y + height} Z`}
+                        fill={fill}
+                      />
+                    );
+                  }}
+                />
               ))}
             </BarChart>
           </ResponsiveContainer>

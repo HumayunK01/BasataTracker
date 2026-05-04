@@ -202,13 +202,17 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
             </div>
           )}
 
-          {/* Off day toggle */}
+          {/* Off day / Weekend toggle */}
           <div className={`flex items-center justify-between rounded-xl px-4 py-3 border transition-colors ${draft.is_off_day ? "bg-muted/50 border-border" : "bg-card border-border"}`}>
             <div className="flex items-center gap-2.5">
               <Coffee className="h-4 w-4 text-muted-foreground shrink-0" />
               <div>
-                <p className="text-sm font-medium leading-none">Off day</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Weekend, leave, or holiday</p>
+                <p className="text-sm font-medium leading-none">
+                  {isWeekend(draft.log_date) ? "Weekend" : "Off day"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {isWeekend(draft.log_date) ? "Saturday or Sunday" : "Leave or holiday"}
+                </p>
               </div>
             </div>
             <Switch
@@ -264,7 +268,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
             {upsert.isPending
               ? "Saving…"
               : draft.is_off_day
-              ? "Save off day"
+              ? isWeekend(draft.log_date) ? "Save weekend" : "Save off day"
               : total > 0
               ? `Save · ${total} docs`
               : "Save day"}
