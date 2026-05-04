@@ -20,10 +20,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { CATEGORIES, totalForLog, formatShortDate, type DailyLog } from "@/types/log";
+import { totalForLog, formatShortDate, type DailyLog } from "@/types/log";
+import type { Category } from "@/hooks/useCategories";
 
 interface Props {
   logs: DailyLog[];
+  categories: Category[];
 }
 
 export const CAT_COLORS = [
@@ -66,7 +68,7 @@ function ChartCard({ title, height = "h-48 sm:h-56", children, className = "" }:
   );
 }
 
-export function Charts({ logs }: Props) {
+export function Charts({ logs, categories }: Props) {
   const workingLogs = useMemo(() => logs.filter((l) => !l.is_off_day), [logs]);
   const sorted = useMemo(
     () => [...workingLogs].sort((a, b) => a.log_date.localeCompare(b.log_date)),
@@ -79,26 +81,26 @@ export function Charts({ logs }: Props) {
   );
 
   const categoryTotals = useMemo(() =>
-    CATEGORIES.map((c) => ({
+    categories.map((c) => ({
       name: c.label,
-      value: workingLogs.reduce((s, l) => s + l[c.key], 0),
+      value: workingLogs.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0),
     })).filter((d) => d.value > 0),
-    [workingLogs],
+    [categories, workingLogs],
   );
 
   const stacked = useMemo(() =>
     sorted.slice(-14).map((l) => {
       const row: Record<string, number | string> = { date: formatShortDate(l.log_date) };
-      CATEGORIES.forEach((c) => (row[c.label] = l[c.key]));
+      categories.forEach((c) => { row[c.label] = (l.counts ?? {})[c.key] ?? 0; });
       return row;
     }),
-    [sorted],
+    [sorted, categories],
   );
 
   const weeklyTotals = useMemo(() => {
     const map = new Map<string, number>();
     workingLogs.forEach((l) => {
-      const d = new Date(l.log_date + "T12:00:00");
+      const d = new Date(`${l.log_date}T12:00:00`);
       const day = d.getDay();
       const monday = new Date(d);
       monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
@@ -109,7 +111,7 @@ export function Charts({ logs }: Props) {
       .sort(([a], [b]) => a.localeCompare(b))
       .slice(-10)
       .map(([iso, total]) => {
-        const d = new Date(iso + "T12:00:00");
+        const d = new Date(`${iso}T12:00:00`);
         return {
           week: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
           total,
@@ -120,7 +122,7 @@ export function Charts({ logs }: Props) {
   const dowAvg = useMemo(() => {
     const buckets: Record<number, number[]> = { 1: [], 2: [], 3: [], 4: [], 5: [] };
     workingLogs.forEach((l) => {
-      const d = new Date(l.log_date + "T12:00:00").getDay();
+      const d = new Date(`${l.log_date}T12:00:00`).getDay();
       if (buckets[d]) buckets[d].push(totalForLog(l));
     });
     return [1, 2, 3, 4, 5].map((d) => ({
@@ -132,19 +134,19 @@ export function Charts({ logs }: Props) {
   const categoryTrend = useMemo(() =>
     sorted.slice(-30).map((l) => {
       const row: Record<string, number | string> = { date: formatShortDate(l.log_date) };
-      CATEGORIES.forEach((c) => (row[c.short] = l[c.key]));
+      categories.forEach((c) => { row[c.short] = (l.counts ?? {})[c.key] ?? 0; });
       return row;
     }),
-    [sorted],
+    [sorted, categories],
   );
 
   const radarData = useMemo(() =>
-    CATEGORIES.map((c) => {
-      const vals = workingLogs.map((l) => l[c.key]);
+    categories.map((c) => {
+      const vals = workingLogs.map((l) => (l.counts ?? {})[c.key] ?? 0);
       const avg = vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
       return { category: c.short, avg: Math.round(avg * 10) / 10 };
     }),
-    [workingLogs],
+    [categories, workingLogs],
   );
 
   if (workingLogs.length === 0) return null;
@@ -223,7 +225,7 @@ export function Charts({ logs }: Props) {
         <ChartCard title="Category trends — last 30 working days" height="h-44 sm:h-56" className="lg:col-span-2">
           <AreaChart data={categoryTrend}>
             <defs>
-              {CATEGORIES.map((c, i) => (
+              {categories.map((c, i) => (
                 <linearGradient key={c.key} id={`grad-${c.key}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={CAT_COLORS[i % CAT_COLORS.length]} stopOpacity={0.3} />
                   <stop offset="95%" stopColor={CAT_COLORS[i % CAT_COLORS.length]} stopOpacity={0} />
@@ -235,7 +237,7 @@ export function Charts({ logs }: Props) {
             <YAxis {...T.axis} allowDecimals={false} width={35} />
             <Tooltip contentStyle={T.container} labelStyle={T.text} itemStyle={T.text} />
             <Legend wrapperStyle={{ fontSize: "11px" }} />
-            {CATEGORIES.map((c, i) => (
+            {categories.map((c, i) => (
               <Area
                 key={c.key}
                 type="monotone"
@@ -271,7 +273,7 @@ export function Charts({ logs }: Props) {
               <YAxis {...T.axis} allowDecimals={false} width={35} />
               <Tooltip contentStyle={T.container} cursor={{ fill: "hsl(var(--accent))" }} labelStyle={T.text} itemStyle={T.text} />
               <Legend wrapperStyle={{ fontSize: "11px" }} />
-              {CATEGORIES.map((c, i) => (
+              {categories.map((c, i) => (
                 <Bar key={c.key} dataKey={c.label} stackId="a" fill={CAT_COLORS[i % CAT_COLORS.length]} />
               ))}
             </BarChart>

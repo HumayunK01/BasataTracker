@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useCategories, type Category } from "@/hooks/useCategories";
 import { useUpsertLog, useDailyLogs } from "@/hooks/useDailyLogs";
-import { isoDate } from "@/types/log";
+import { isoDate, totalForLog } from "@/types/log";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { Minus, Plus, RotateCcw, Save, CheckCircle2, X, Hash } from "lucide-react";
 
@@ -79,32 +79,17 @@ export default function CounterPage() {
   const handleSave = async () => {
     const today = isoDate();
     const existingLog = logs.find((l) => l.log_date === today);
-    const fixedKeys = ["worked_on_ng", "moved_to_indexing", "ekg", "cath_lab", "roi", "fax_back"];
-
-    const logData: Record<string, unknown> = {
-      log_date: today,
-      is_off_day: false,
-      notes: existingLog?.notes ?? null,
-    };
-
-    const extra: Record<string, number> = { ...(existingLog?.extra ?? {}) };
-
+    const mergedCounts: Record<string, number> = { ...(existingLog?.counts ?? {}) };
     for (const cat of activeCategories) {
-      const val = getCount(cat.key);
-      if (fixedKeys.includes(cat.key)) {
-        logData[cat.key] = val;
-      } else {
-        extra[cat.key] = val;
-      }
+      mergedCounts[cat.key] = getCount(cat.key);
     }
-    logData.extra = extra;
-
-    for (const key of fixedKeys) {
-      if (!(key in logData)) logData[key] = 0;
-    }
-
     try {
-      await upsert.mutateAsync(logData as never);
+      await upsert.mutateAsync({
+        log_date: today,
+        is_off_day: false,
+        notes: existingLog?.notes ?? null,
+        counts: mergedCounts,
+      });
       setSaved(true);
     } catch {
       // error handled by hook
@@ -113,11 +98,7 @@ export default function CounterPage() {
 
   const todayIso = isoDate();
   const todayLog = logs.find((l) => l.log_date === todayIso);
-  const todayTotal = todayLog
-    ? todayLog.worked_on_ng + todayLog.moved_to_indexing + todayLog.ekg +
-      todayLog.cath_lab + todayLog.roi + todayLog.fax_back +
-      Object.values(todayLog.extra ?? {}).reduce((s, v) => s + v, 0)
-    : 0;
+  const todayTotal = todayLog ? totalForLog(todayLog) : 0;
 
   return (
     <>

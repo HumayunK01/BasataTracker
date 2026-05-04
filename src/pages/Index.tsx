@@ -4,7 +4,7 @@ import { DayEntrySheet } from "@/components/ar/DayEntrySheet";
 import { Charts } from "@/components/ar/Charts";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
-import { isoDate, totalForLog, type DailyLog } from "@/types/log";
+import { isoDate, totalForLog } from "@/types/log";
 import { Plus, BarChart2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/ar/PageHeader";
@@ -34,20 +34,14 @@ const Index = () => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       if (t && ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName)) return;
-      if (e.key === "n" || e.key === "N") {
-        e.preventDefault();
-        setEditing(null);
-        setOpen(true);
-      }
+      if (e.key !== "n" && e.key !== "N") return;
+      e.preventDefault();
+      setEditing(null);
+      setOpen(true);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-
-  const getVal = (log: DailyLog, key: string): number => {
-    if (key in log) return (log as Record<string, number>)[key] || 0;
-    return ((log.extra as Record<string, number>) ?? {})[key] || 0;
-  };
 
   const stats = useMemo(() => {
     const today = isoDate();
@@ -57,10 +51,10 @@ const Index = () => {
     const categoryTotals = categories.map((c) => ({
       key: c.key,
       label: c.label,
-      value: working.reduce((s, l) => s + getVal(l, c.key), 0),
+      value: working.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0),
     }));
     return { todayLog, todayTotal, categoryTotals, workingCount: working.length };
-  }, [logs, categories]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [logs, categories]);
 
   const existingDates = useMemo(() => logs.map((l) => l.log_date), [logs]);
   const openNew = () => { setEditing(null); setOpen(true); };
@@ -147,7 +141,7 @@ const Index = () => {
                   </Button>
                 </div>
               ) : (
-                <Charts logs={logs} />
+                <Charts logs={logs} categories={categories} />
               )}
             </section>
 

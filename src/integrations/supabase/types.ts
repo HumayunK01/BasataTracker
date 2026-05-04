@@ -14,48 +14,93 @@ export type Database = {
   }
   public: {
     Tables: {
-      daily_logs: {
+      audit_logs: {
         Row: {
-          cath_lab: number
-          created_at: string
-          ekg: number
-          fax_back: number
           id: string
-          is_off_day: boolean
-          log_date: string
-          moved_to_indexing: number
-          notes: string | null
-          roi: number
-          updated_at: string
-          worked_on_ng: number
+          user_id: string
+          event: string
+          details: Json
+          created_at: string
         }
         Insert: {
-          cath_lab?: number
-          created_at?: string
-          ekg?: number
-          fax_back?: number
           id?: string
-          is_off_day?: boolean
-          log_date: string
-          moved_to_indexing?: number
-          notes?: string | null
-          roi?: number
-          updated_at?: string
-          worked_on_ng?: number
+          user_id: string
+          event: string
+          details?: Json
+          created_at?: string
         }
         Update: {
-          cath_lab?: number
-          created_at?: string
-          ekg?: number
-          fax_back?: number
           id?: string
-          is_off_day?: boolean
-          log_date?: string
-          moved_to_indexing?: number
-          notes?: string | null
-          roi?: number
+          user_id?: string
+          event?: string
+          details?: Json
+          created_at?: string
+        }
+        Relationships: []
+      }
+      categories: {
+        Row: {
+          id: string
+          user_id: string
+          key: string
+          label: string
+          short: string
+          position: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          key: string
+          label: string
+          short: string
+          position: number
+          created_at?: string
           updated_at?: string
-          worked_on_ng?: number
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          key?: string
+          label?: string
+          short?: string
+          position?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      daily_logs: {
+        Row: {
+          id: string
+          user_id: string
+          log_date: string
+          counts: Json
+          is_off_day: boolean
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          log_date: string
+          counts?: Json
+          is_off_day?: boolean
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          log_date?: string
+          counts?: Json
+          is_off_day?: boolean
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
