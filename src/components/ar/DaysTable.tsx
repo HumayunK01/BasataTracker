@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { colorForKey } from "@/lib/cat-colors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -31,15 +32,6 @@ interface Props {
 }
 
 const ITEMS_PER_PAGE = 15;
-
-const CAT_COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--info))",
-  "hsl(var(--warning))",
-  "hsl(160 70% 60%)",
-  "hsl(280 70% 65%)",
-  "hsl(20 85% 60%)",
-];
 
 export function DaysTable({ logs, onEdit }: Props) {
   const [page, setPage] = useState(1);
@@ -151,9 +143,9 @@ export function DaysTable({ logs, onEdit }: Props) {
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b border-border">
                   <TableHead className="w-[120px] font-medium text-xs">Date</TableHead>
-                  {categories.map((c, i) => (
+                  {categories.map((c) => (
                     <TableHead key={c.key} className="font-medium text-xs text-center w-[72px]">
-                      <span style={{ color: CAT_COLORS[i] }}>{c.short}</span>
+                      <span style={{ color: colorForKey(c.key) }}>{c.short}</span>
                     </TableHead>
                   ))}
                   <TableHead className="font-medium text-xs text-center w-[72px]">Total</TableHead>
@@ -182,14 +174,14 @@ export function DaysTable({ logs, onEdit }: Props) {
                         </div>
                       </TableCell>
                       <TableCell className="py-2.5">
-                        <div className="flex gap-0.5 justify-end sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => copyLog(l)}>
+                        <div className="flex gap-0.5 justify-end opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => copyLog(l)}>
                             <Copy className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => onEdit(l)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => onEdit(l)}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(l)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(l)}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
@@ -200,12 +192,12 @@ export function DaysTable({ logs, onEdit }: Props) {
                       <TableCell className="tabular-nums text-sm font-medium py-2.5">
                         {formatTableDate(l.log_date)}
                       </TableCell>
-                      {categories.map((c, i) => {
+                      {categories.map((c) => {
                         const v = getVal(l, c.key);
                         return (
                           <TableCell key={c.key} className="text-center tabular-nums text-sm py-2.5">
                             {v > 0 ? (
-                              <span className="font-medium" style={{ color: CAT_COLORS[i] }}>{v}</span>
+                              <span className="font-medium" style={{ color: colorForKey(c.key) }}>{v}</span>
                             ) : (
                               <span className="text-muted-foreground/30">—</span>
                             )}
@@ -216,14 +208,14 @@ export function DaysTable({ logs, onEdit }: Props) {
                         <span className="font-bold text-sm">{total}</span>
                       </TableCell>
                       <TableCell className="py-2.5">
-                        <div className="flex gap-0.5 justify-end sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => copyLog(l)}>
+                        <div className="flex gap-0.5 justify-end opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => copyLog(l)}>
                             <Copy className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => onEdit(l)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => onEdit(l)}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(l)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(l)}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
@@ -242,26 +234,26 @@ export function DaysTable({ logs, onEdit }: Props) {
                 {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filtered.length)} of {filtered.length}
               </span>
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => goTo(page - 1)} disabled={page === 1}>
-                  <ChevronLeft className="h-3.5 w-3.5" />
+                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => goTo(page - 1)} disabled={page === 1}>
+                  <ChevronLeft className="h-4 w-4" />
                 </Button>
                 {pageNumbers.map((p, i) =>
                   p === "…" ? (
-                    <span key={`ellipsis-${i}`} className="w-7 text-center text-xs text-muted-foreground">…</span>
+                    <span key={`ellipsis-${i}`} className="w-9 text-center text-xs text-muted-foreground">…</span>
                   ) : (
                     <Button
                       key={p}
                       variant={page === p ? "default" : "ghost"}
                       size="icon"
-                      className="h-7 w-7 text-xs"
+                      className="h-9 w-9 text-xs"
                       onClick={() => goTo(p as number)}
                     >
                       {p}
                     </Button>
                   )
                 )}
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => goTo(page + 1)} disabled={page === totalPages}>
-                  <ChevronRight className="h-3.5 w-3.5" />
+                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => goTo(page + 1)} disabled={page === totalPages}>
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>

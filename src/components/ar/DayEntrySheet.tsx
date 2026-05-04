@@ -16,6 +16,7 @@ import { useUpsertLog } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
 import { Minus, Plus, CalendarCheck, Coffee, CalendarIcon } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { colorForKey } from "@/lib/cat-colors";
 
 interface Props {
   open: boolean;
@@ -23,15 +24,6 @@ interface Props {
   editing?: DailyLog | null;
   existingDates: string[];
 }
-
-const CAT_COLORS = [
-  "#10b981",
-  "#6366f1",
-  "#f59e0b",
-  "#34d399",
-  "#a78bfa",
-  "#f97316",
-];
 
 const emptyDraft = (date = isoDate()): DailyLogInsert => ({
   log_date: date,
@@ -66,9 +58,9 @@ function Stepper({
           type="button"
           onClick={dec}
           disabled={value === 0}
-          className="h-8 w-8 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="h-10 w-10 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          <Minus className="h-3.5 w-3.5" />
+          <Minus className="h-4 w-4" />
         </button>
         <input
           ref={inputRef}
@@ -88,9 +80,9 @@ function Stepper({
         <button
           type="button"
           onClick={inc}
-          className="h-8 w-8 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0"
+          className="h-10 w-10 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <Plus className="h-4 w-4" />
         </button>
       </div>
     </div>
@@ -233,12 +225,12 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-2.5">
-              {categories.map((c, i) => (
+              {categories.map((c) => (
                 <Stepper
                   key={c.key}
                   label={c.label}
                   value={getCatValue(c.key)}
-                  color={CAT_COLORS[i % CAT_COLORS.length]}
+                  color={colorForKey(c.key)}
                   onChange={(v) => setCatValue(c.key, v)}
                 />
               ))}

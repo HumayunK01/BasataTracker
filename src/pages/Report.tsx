@@ -30,14 +30,7 @@ import {
   Cell,
 } from "recharts";
 
-const CAT_COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--info))",
-  "hsl(var(--warning))",
-  "hsl(160 70% 60%)",
-  "hsl(280 70% 65%)",
-  "hsl(20 85% 60%)",
-];
+import { colorForKey } from "@/lib/cat-colors";
 
 const T = {
   container: {
@@ -141,11 +134,12 @@ const ReportPage = () => {
   }, [workingLogs]);
 
   const categoryBreakdown = useMemo(() =>
-    categories.map((c, i) => ({
+    categories.map((c) => ({
+      key: c.key,
       label: c.label,
       short: c.short,
       value: workingLogs.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0),
-      color: CAT_COLORS[i % CAT_COLORS.length],
+      color: colorForKey(c.key),
     })).filter((c) => c.value > 0),
     [categories, workingLogs],
   );
@@ -344,9 +338,9 @@ const ReportPage = () => {
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b border-border">
                       <TableHead className="font-medium text-xs w-[120px]">Date</TableHead>
-                      {categories.map((c, i) => (
+                      {categories.map((c) => (
                         <TableHead key={c.key} className="font-medium text-xs text-center w-[72px]">
-                          <span style={{ color: CAT_COLORS[i % CAT_COLORS.length] }}>{c.short}</span>
+                          <span style={{ color: colorForKey(c.key) }}>{c.short}</span>
                         </TableHead>
                       ))}
                       <TableHead className="font-medium text-xs text-center w-[72px]">Total</TableHead>
@@ -372,12 +366,12 @@ const ReportPage = () => {
                           <TableCell className="tabular-nums text-sm font-medium py-2.5">
                             {formatTableDate(l.log_date)}
                           </TableCell>
-                          {categories.map((c, i) => {
+                          {categories.map((c) => {
                             const v = (l.counts ?? {})[c.key] ?? 0;
                             return (
                               <TableCell key={c.key} className="text-center tabular-nums text-sm py-2.5">
                                 {v > 0 ? (
-                                  <span className="font-medium" style={{ color: CAT_COLORS[i % CAT_COLORS.length] }}>{v}</span>
+                                  <span className="font-medium" style={{ color: colorForKey(c.key) }}>{v}</span>
                                 ) : (
                                   <span className="text-muted-foreground/30">—</span>
                                 )}
@@ -400,20 +394,20 @@ const ReportPage = () => {
                     {(tablePage - 1) * TABLE_PAGE_SIZE + 1}–{Math.min(tablePage * TABLE_PAGE_SIZE, filtered.length)} of {filtered.length}
                   </span>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setTablePage((p) => Math.max(1, p - 1))} disabled={tablePage === 1}>
-                      <ChevronLeft className="h-3.5 w-3.5" />
+                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setTablePage((p) => Math.max(1, p - 1))} disabled={tablePage === 1}>
+                      <ChevronLeft className="h-4 w-4" />
                     </Button>
                     {tablePageNumbers.map((p, i) =>
                       p === "…" ? (
-                        <span key={`e-${i}`} className="w-7 text-center text-xs text-muted-foreground">…</span>
+                        <span key={`e-${i}`} className="w-9 text-center text-xs text-muted-foreground">…</span>
                       ) : (
-                        <Button key={p} variant={tablePage === p ? "default" : "ghost"} size="icon" className="h-7 w-7 text-xs" onClick={() => setTablePage(p as number)}>
+                        <Button key={p} variant={tablePage === p ? "default" : "ghost"} size="icon" className="h-9 w-9 text-xs" onClick={() => setTablePage(p as number)}>
                           {p}
                         </Button>
                       )
                     )}
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setTablePage((p) => Math.min(totalTablePages, p + 1))} disabled={tablePage === totalTablePages}>
-                      <ChevronRight className="h-3.5 w-3.5" />
+                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setTablePage((p) => Math.min(totalTablePages, p + 1))} disabled={tablePage === totalTablePages}>
+                      <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>

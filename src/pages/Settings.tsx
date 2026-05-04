@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { colorForKey } from "@/lib/cat-colors";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { AppLogo } from "@/components/ar/AppLogo";
@@ -50,15 +51,6 @@ interface CategoryFormState {
 }
 
 const emptyForm: CategoryFormState = { label: "", short: "" };
-
-const CAT_COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--info))",
-  "hsl(var(--warning))",
-  "hsl(160 70% 60%)",
-  "hsl(280 70% 65%)",
-  "hsl(20 85% 60%)",
-];
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -221,7 +213,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Bento grid — top row */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
             {/* Account card */}
             <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
@@ -346,12 +338,12 @@ export default function SettingsPage() {
                 <p className="text-xs text-muted-foreground mt-0.5">Irreversible actions — proceed with caution</p>
               </div>
             </div>
-            <div className="px-5 py-4 flex items-center justify-between gap-4">
-              <div className="min-w-0">
+            <div className="px-5 py-4 flex flex-wrap items-start gap-4">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium">Delete account</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Permanently deletes your account and all data — logs, categories, everything. This cannot be undone.</p>
               </div>
-              <Button size="sm" variant="destructive" className="shrink-0" onClick={() => { setDeleteAccountOpen(true); setDeleteConfirmText(""); }}>
+              <Button size="sm" variant="destructive" className="shrink-0 w-full sm:w-auto" onClick={() => { setDeleteAccountOpen(true); setDeleteConfirmText(""); }}>
                 Delete account
               </Button>
             </div>
@@ -401,7 +393,7 @@ export default function SettingsPage() {
               </div>
             ) : (
               <div className="divide-y divide-border">
-                {categories.map((cat, i) => (
+                {categories.map((cat) => (
                   <div
                     key={cat.key}
                     draggable
@@ -418,21 +410,21 @@ export default function SettingsPage() {
                     <GripVertical className="h-4 w-4 text-muted-foreground/30 group-hover:text-muted-foreground cursor-grab transition-colors shrink-0" />
 
                     {/* Color dot */}
-                    <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: CAT_COLORS[i % CAT_COLORS.length] }} />
+                    <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: colorForKey(cat.key) }} />
 
                     <div className="flex-1 min-w-0 flex items-center gap-3">
                       <span className="text-sm font-medium truncate">{cat.label}</span>
                       <span className="text-xs font-mono px-2 py-0.5 rounded-md shrink-0"
-                        style={{ backgroundColor: `${CAT_COLORS[i % CAT_COLORS.length]}18`, color: CAT_COLORS[i % CAT_COLORS.length] }}>
+                        style={{ backgroundColor: `${colorForKey(cat.key)}18`, color: colorForKey(cat.key) }}>
                         {cat.short}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => openEdit(cat)}>
+                    <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground" onClick={() => openEdit(cat)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(cat)}>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(cat)}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
