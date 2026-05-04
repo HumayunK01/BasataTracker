@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Sheet,
   SheetContent,
@@ -13,7 +14,8 @@ import {
 import { isoDate, isWeekend, type DailyLog, type DailyLogInsert } from "@/types/log";
 import { useUpsertLog } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
-import { Minus, Plus, CalendarCheck, Coffee, Cloud, CloudOff } from "lucide-react";
+import { Minus, Plus, CalendarCheck, Coffee, CalendarIcon } from "lucide-react";
+import { format, parseISO } from "date-fns";
 
 interface Props {
   open: boolean;
@@ -33,12 +35,7 @@ const CAT_COLORS = [
 
 const emptyDraft = (date = isoDate()): DailyLogInsert => ({
   log_date: date,
-  worked_on_ng: 0,
-  moved_to_indexing: 0,
-  ekg: 0,
-  cath_lab: 0,
-  roi: 0,
-  fax_back: 0,
+  counts: {},
   is_off_day: isWeekend(date),
   notes: null,
 });
@@ -100,107 +97,44 @@ function Stepper({
   );
 }
 
-type AutosaveStatus = "idle" | "pending" | "saved" | "error";
-
 export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Props) {
   const [draft, setDraft] = useState<DailyLogInsert>(emptyDraft());
-  const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>("idle");
+  const [calOpen, setCalOpen] = useState(false);
   const upsert = useUpsertLog();
   const { data: categories = [] } = useCategories();
 
-  // Track whether draft has been changed since last save
-  const dirtyRef = useRef(false);
-  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const draftRef = useRef(draft);
-  draftRef.current = draft;
-
   useEffect(() => {
-    if (!open) {
-      // Clear timer and reset status when sheet closes
-      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
-      dirtyRef.current = false;
-      setAutosaveStatus("idle");
-      return;
-    }
+    if (!open) return;
     if (editing) {
       setDraft({
         log_date: editing.log_date,
-        worked_on_ng: editing.worked_on_ng,
-        moved_to_indexing: editing.moved_to_indexing,
-        ekg: editing.ekg,
-        cath_lab: editing.cath_lab,
-        roi: editing.roi,
-        fax_back: editing.fax_back,
+        counts: { ...editing.counts },
         is_off_day: editing.is_off_day,
         notes: editing.notes,
       });
     } else {
       setDraft(emptyDraft());
     }
-    dirtyRef.current = false;
-    setAutosaveStatus("idle");
   }, [open, editing]);
 
-  // Autosave: debounce 3s after any draft change
-  useEffect(() => {
-    if (!open) return;
-    if (!dirtyRef.current) return;
-
-    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
-    setAutosaveStatus("pending");
-
-    autosaveTimerRef.current = setTimeout(async () => {
-      try {
-        await upsert.mutateAsync({
-          ...draftRef.current,
-          notes: draftRef.current.notes?.trim() ? draftRef.current.notes.trim() : null,
-        });
-        setAutosaveStatus("saved");
-      } catch {
-        setAutosaveStatus("error");
-      }
-    }, 3000);
-
-    return () => {
-      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
-    };
-  }, [draft]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const update = <K extends keyof DailyLogInsert>(k: K, v: DailyLogInsert[K]) => {
-    dirtyRef.current = true;
+  const update = <K extends keyof DailyLogInsert>(k: K, v: DailyLogInsert[K]) =>
     setDraft((d) => ({ ...d, [k]: v }));
-  };
 
-  const onDateChange = (date: string) => {
-    dirtyRef.current = true;
-    const weekend = isWeekend(date);
-    setDraft((d) => ({ ...d, log_date: date, is_off_day: editing ? d.is_off_day : weekend }));
-  };
+  const onDateChange = (date: string) =>
+    setDraft((d) => ({ ...d, log_date: date, is_off_day: editing ? d.is_off_day : isWeekend(date) }));
 
-  const getCatValue = (key: string): number => {
-    if (key in draft) return (draft as Record<string, number>)[key] || 0;
-    return (draft.extra as Record<string, number>)?.[key] || 0;
-  };
+  const getCatValue = (key: string): number =>
+    (draft.counts as Record<string, number>)[key] ?? 0;
 
-  const setCatValue = (key: string, v: number) => {
-    if (key in draft && key !== "extra") {
-      update(key as keyof DailyLogInsert, v as never);
-    } else {
-      dirtyRef.current = true;
-      setDraft((d) => ({ ...d, extra: { ...(d.extra as Record<string, number>), [key]: v } }));
-    }
-  };
+  const setCatValue = (key: string, v: number) =>
+    setDraft((d) => ({ ...d, counts: { ...d.counts, [key]: v } }));
 
   const total = categories.reduce((s, c) => s + getCatValue(c.key), 0);
   const conflict = !editing && existingDates.includes(draft.log_date);
   const isToday = draft.log_date === isoDate();
 
   const save = async () => {
-    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
-    await upsert.mutateAsync({
-      ...draft,
-      notes: draft.notes?.trim() ? draft.notes.trim() : null,
-    });
+    await upsert.mutateAsync({ ...draft, notes: draft.notes?.trim() || null });
     onOpenChange(false);
   };
 
@@ -215,27 +149,9 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
               <SheetTitle className="text-base">
                 {editing ? "Edit log" : "Log a day"}
               </SheetTitle>
-              <div className="flex items-center gap-2 mt-0.5">
-                <p className="text-xs text-muted-foreground">
-                  {editing ? "Update your document counts" : "Record your document counts for the day"}
-                </p>
-                {/* Autosave indicator */}
-                {autosaveStatus === "pending" && (
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground animate-pulse">
-                    <Cloud className="h-3 w-3" /> saving…
-                  </span>
-                )}
-                {autosaveStatus === "saved" && (
-                  <span className="flex items-center gap-1 text-xs text-success">
-                    <Cloud className="h-3 w-3" /> autosaved
-                  </span>
-                )}
-                {autosaveStatus === "error" && (
-                  <span className="flex items-center gap-1 text-xs text-destructive">
-                    <CloudOff className="h-3 w-3" /> save failed
-                  </span>
-                )}
-              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {editing ? "Update your document counts" : "Record your document counts for the day"}
+              </p>
             </div>
             {!draft.is_off_day && total > 0 && (
               <div className="text-right shrink-0 ml-4">
@@ -253,13 +169,27 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
           <div className="flex gap-2 items-end">
             <div className="flex-1 space-y-1.5">
               <Label className="text-xs text-muted-foreground">Date</Label>
-              <Input
-                type="date"
-                value={draft.log_date}
-                onChange={(e) => onDateChange(e.target.value)}
-                disabled={!!editing}
-                className="tabular-nums"
-              />
+              <Popover open={calOpen} onOpenChange={setCalOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!!editing}
+                    className="w-full h-10 justify-start text-left font-normal tabular-nums"
+                  >
+                    <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
+                    {format(parseISO(draft.log_date), "PPP")}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={parseISO(draft.log_date)}
+                    onSelect={(day) => { if (day) { onDateChange(format(day, "yyyy-MM-dd")); setCalOpen(false); } }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             {!editing && (
               <Button
@@ -335,7 +265,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
         {/* Footer */}
         <div className="shrink-0 px-5 py-4 border-t border-border flex gap-2 bg-background">
           <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
-            {autosaveStatus === "saved" ? "Close" : "Cancel"}
+            Cancel
           </Button>
           <Button onClick={save} disabled={upsert.isPending} className="flex-1 gap-1.5">
             <CalendarCheck className="h-4 w-4" />

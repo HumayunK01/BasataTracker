@@ -4,9 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, MailCheck, ArrowLeft, Eye, EyeOff, LayoutDashboard, TrendingUp, Zap, Sun, Moon } from "lucide-react";
+import { Loader2, MailCheck, ArrowLeft, Eye, EyeOff, LayoutDashboard, TrendingUp, Zap, Sun, Moon, Check, X } from "lucide-react";
 import { AppLogo } from "@/components/ar/AppLogo";
 import { useTheme } from "@/hooks/useTheme";
+
+const PASSWORD_RULES = [
+  { label: "Lowercase letter", test: (p: string) => /[a-z]/.test(p) },
+  { label: "Uppercase letter", test: (p: string) => /[A-Z]/.test(p) },
+  { label: "Number", test: (p: string) => /[0-9]/.test(p) },
+  { label: "Special character", test: (p: string) => /[!@#$%^&*()_+\-=\[\]{};':"\\|<>?,./`~]/.test(p) },
+];
 
 type Mode = "login" | "signup" | "forgot" | "check-email";
 
@@ -237,7 +244,23 @@ export default function LoginPage() {
                     </button>
                   </div>
                   {mode === "signup" && (
-                    <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-1">
+                      {PASSWORD_RULES.map(({ label, test }) => {
+                        const passed = password.length > 0 && test(password);
+                        const untouched = password.length === 0;
+                        return (
+                          <div key={label} className={[
+                            "flex items-center gap-1.5 text-xs transition-colors",
+                            untouched ? "text-muted-foreground" : passed ? "text-green-500" : "text-destructive",
+                          ].join(" ")}>
+                            {untouched || passed
+                              ? <Check className="h-3 w-3 shrink-0" />
+                              : <X className="h-3 w-3 shrink-0" />}
+                            {label}
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
 

@@ -48,10 +48,7 @@ export function DaysTable({ logs, onEdit }: Props) {
   const deleteLog = useDeleteLog();
   const { data: categories = [] } = useCategories();
 
-  const getVal = (l: DailyLog, key: string): number => {
-    if (key in l) return (l as Record<string, number>)[key] || 0;
-    return ((l.extra as Record<string, number>) ?? {})[key] || 0;
-  };
+  const getVal = (l: DailyLog, key: string): number => (l.counts ?? {})[key] ?? 0;
 
   const logTotal = (l: DailyLog) =>
     categories.reduce((s, c) => s + getVal(l, c.key), 0);

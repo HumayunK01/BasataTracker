@@ -1,24 +1,7 @@
-export const CATEGORIES = [
-  { key: "worked_on_ng", label: "Worked on NG", short: "NG" },
-  { key: "moved_to_indexing", label: "Moved to Indexing", short: "Indexing" },
-  { key: "ekg", label: "EKG", short: "EKG" },
-  { key: "cath_lab", label: "Cath Lab", short: "Cath" },
-  { key: "roi", label: "ROI", short: "ROI" },
-  { key: "fax_back", label: "Fax Back", short: "Fax" },
-] as const;
-
-export type CategoryKey = (typeof CATEGORIES)[number]["key"];
-
 export interface DailyLog {
   id: string;
   log_date: string;
-  worked_on_ng: number;
-  moved_to_indexing: number;
-  ekg: number;
-  cath_lab: number;
-  roi: number;
-  fax_back: number;
-  extra: Record<string, number>;
+  counts: Record<string, number>;
   is_off_day: boolean;
   notes: string | null;
   created_at: string;
@@ -27,8 +10,8 @@ export interface DailyLog {
 
 export type DailyLogInsert = Omit<DailyLog, "id" | "created_at" | "updated_at">;
 
-export function totalForLog(log: Pick<DailyLog, CategoryKey>): number {
-  return CATEGORIES.reduce((sum, c) => sum + (log[c.key] || 0), 0);
+export function totalForLog(log: Pick<DailyLog, "counts">): number {
+  return Object.values(log.counts ?? {}).reduce((sum, v) => sum + (v || 0), 0);
 }
 
 const US_TZ = "America/New_York";
@@ -44,17 +27,17 @@ export function isoDate(d: Date = new Date()) {
 
 export function isWeekend(iso: string): boolean {
   const day = new Intl.DateTimeFormat(US_LOCALE, { timeZone: US_TZ, weekday: "short" })
-    .format(new Date(iso + "T12:00:00"));
+    .format(new Date(`${iso}T12:00:00`));
   return day === "Sun" || day === "Sat";
 }
 
 export function formatShortDate(iso: string) {
-  const d = new Date(iso + "T12:00:00");
+  const d = new Date(`${iso}T12:00:00`);
   return d.toLocaleDateString(US_LOCALE, { timeZone: US_TZ, month: "short", day: "numeric" });
 }
 
 export function formatDayName(iso: string) {
-  const d = new Date(iso + "T12:00:00");
+  const d = new Date(`${iso}T12:00:00`);
   return d.toLocaleDateString(US_LOCALE, { timeZone: US_TZ, weekday: "short" });
 }
 
@@ -76,6 +59,6 @@ export function formatHeaderDate(d: Date = new Date()) {
 }
 
 export function formatTableDate(iso: string) {
-  const d = new Date(iso + "T12:00:00");
+  const d = new Date(`${iso}T12:00:00`);
   return d.toLocaleDateString(US_LOCALE, { timeZone: US_TZ, month: "2-digit", day: "2-digit", year: "numeric" });
 }

@@ -26,6 +26,7 @@ import {
 import { Plus, Pencil, Trash2, GripVertical, Tag, Loader2, KeyRound, User, Info, ShieldCheck, Download, UserX, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { logAuditEvent } from "@/hooks/useAuditLog";
 import {
   useCategories,
   useAddCategory,
@@ -154,16 +155,21 @@ export default function SettingsPage() {
     const { error } = await supabase.auth.updateUser({ password: pw.next });
     setPwLoading(false);
     if (error) { setPwError(error.message); return; }
+    await logAuditEvent("password_changed");
     toast.success("Password updated.");
     setPwOpen(false);
     setPw({ next: "", confirm: "" });
   };
 
   const handleExportData = () => {
+    // Prefix any string starting with formula characters to prevent spreadsheet injection
+    const safeStr = (s: string | null | undefined) =>
+      s && /^[=+@\-|%]/.test(s) ? `'${s}` : s;
+
     const payload = {
       exported_at: new Date().toISOString(),
-      user_email: user?.email,
-      logs,
+      user_email: safeStr(user?.email),
+      logs: logs.map((l) => ({ ...l, notes: safeStr(l.notes) })),
       categories,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -181,14 +187,14 @@ export default function SettingsPage() {
     if (!deletePassword) { toast.error("Password is required to delete your account."); return; }
     setDeleteAccountLoading(true);
     try {
-      const userId = user?.id;
       const email = user?.email;
-      if (!userId || !email) throw new Error("Not authenticated");
+      if (!email) throw new Error("Not authenticated");
       // Re-authenticate before destructive action
       const { error: authError } = await supabase.auth.signInWithPassword({ email, password: deletePassword });
       if (authError) throw new Error("Incorrect password.");
-      await supabase.from("daily_logs").delete().eq("user_id", userId);
-      await supabase.from("categories").delete().eq("user_id", userId);
+      // Delete the auth user — cascades to all user data via ON DELETE CASCADE
+      const { error: deleteError } = await supabase.rpc("delete_own_account");
+      if (deleteError) throw deleteError;
       await supabase.auth.signOut();
       navigate("/");
       toast.success("Account and all data deleted.");
