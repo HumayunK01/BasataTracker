@@ -201,48 +201,48 @@ export default function SettingsPage() {
 
   return (
     <>
-      <PageHeader />
+      <PageHeader subtitle="Settings" />
 
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-4 sm:space-y-6">
 
           {/* Page title */}
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage your categories, account, and preferences.</p>
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Settings</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Manage your categories, account, and preferences.</p>
           </div>
 
-          {/* Bento grid — top row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Bento grid — 2 cols on mobile, 3 on desktop */}
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
 
             {/* Account card */}
-            <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+            <div className="col-span-2 sm:col-span-1 bg-card border border-border rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4">
               <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <User className="h-4 w-4 text-primary" />
+                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                 </div>
                 <h2 className="text-sm font-semibold">Account</h2>
               </div>
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Email</p>
+              <div className="space-y-2.5 sm:space-y-3">
+                <div className="space-y-0.5">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">Email</p>
                   <p className="text-sm font-medium truncate">{user?.email}</p>
                 </div>
                 <Separator />
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Member since</p>
+                <div className="space-y-0.5">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">Member since</p>
                   <p className="text-sm font-medium">
                     {user?.created_at
-                      ? new Date(user.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+                      ? new Date(user.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
                       : "—"}
                   </p>
                 </div>
                 <Separator />
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Last sign in</p>
+                <div className="space-y-0.5">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">Last sign in</p>
                   <div className="flex items-center gap-1.5">
                     <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
-                    <p className="text-sm font-medium">
+                    <p className="text-xs sm:text-sm font-medium">
                       {user?.last_sign_in_at
                         ? new Date(user.last_sign_in_at).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })
                         : "—"}
@@ -253,10 +253,10 @@ export default function SettingsPage() {
             </div>
 
             {/* Password card */}
-            <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+            <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4">
               <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
-                  <KeyRound className="h-4 w-4 text-warning" />
+                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
+                  <KeyRound className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-warning" />
                 </div>
                 <h2 className="text-sm font-semibold">Password</h2>
               </div>
@@ -293,15 +293,15 @@ export default function SettingsPage() {
             </div>
 
             {/* About card */}
-            <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+            <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4">
               <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-lg bg-info/10 flex items-center justify-center shrink-0">
-                  <Info className="h-4 w-4 text-info" />
+                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-info/10 flex items-center justify-center shrink-0">
+                  <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-info" />
                 </div>
                 <h2 className="text-sm font-semibold">About</h2>
               </div>
-              <div className="space-y-3">
-                <AppLogo className="h-8 object-contain" />
+              <div className="space-y-2.5 sm:space-y-3">
+                <AppLogo className="h-7 sm:h-8 object-contain" />
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Version</span>
@@ -316,66 +316,43 @@ export default function SettingsPage() {
                     <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded">{logs.length} days</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/40 rounded-lg px-2.5 py-2">
                   <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-success" />
-                  <span>Data encrypted & isolated per user</span>
+                  <span>Encrypted &amp; isolated per user</span>
                 </div>
                 <Button size="sm" variant="outline" className="w-full" onClick={handleExportData} disabled={logs.length === 0 && categories.length === 0}>
-                  <Download className="h-3.5 w-3.5 mr-1.5" /> Export all data
+                  <Download className="h-3.5 w-3.5 mr-1.5" /> Export data
                 </Button>
               </div>
             </div>
           </div>
 
-          {/* Danger zone — full width */}
-          <div className="bg-card border border-destructive/30 rounded-2xl overflow-hidden">
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-destructive/20">
-              <div className="h-8 w-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
-                <UserX className="h-4 w-4 text-destructive" />
-              </div>
-              <div>
-                <h2 className="text-sm font-semibold text-destructive">Danger Zone</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Irreversible actions — proceed with caution</p>
-              </div>
-            </div>
-            <div className="px-5 py-4 flex flex-wrap items-start gap-4">
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">Delete account</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Permanently deletes your account and all data — logs, categories, everything. This cannot be undone.</p>
-              </div>
-              <Button size="sm" variant="destructive" className="shrink-0 w-full sm:w-auto" onClick={() => { setDeleteAccountOpen(true); setDeleteConfirmText(""); }}>
-                Delete account
-              </Button>
-            </div>
-          </div>
-
           {/* Categories — full width */}
           <div className="bg-card border border-border rounded-2xl overflow-hidden">
-            {/* Categories header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Tag className="h-4 w-4 text-primary" />
+            <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-border">
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <Tag className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                 </div>
                 <div>
                   <h2 className="text-sm font-semibold">Categories</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">Drag to reorder · {categories.length} total</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 hidden xs:block">Drag to reorder · {categories.length} total</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 {categories.length === 0 && !isLoading && (
                   <Button size="sm" variant="outline" onClick={() => seedDefaults.mutate()} disabled={seedDefaults.isPending}>
                     {seedDefaults.isPending && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
-                    Load defaults
+                    <span className="hidden xs:inline">Load </span>defaults
                   </Button>
                 )}
                 <Button size="sm" onClick={openAdd}>
-                  <Plus className="h-3.5 w-3.5 mr-1.5" /> Add category
+                  <Plus className="h-3.5 w-3.5 sm:mr-1.5" />
+                  <span className="hidden sm:inline">Add category</span>
                 </Button>
               </div>
             </div>
 
-            {/* Categories list */}
             {isLoading ? (
               <div className="p-4 space-y-2">
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -387,7 +364,7 @@ export default function SettingsPage() {
                 ))}
               </div>
             ) : categories.length === 0 ? (
-              <div className="py-16 flex flex-col items-center gap-3 text-muted-foreground">
+              <div className="py-14 flex flex-col items-center gap-3 text-muted-foreground">
                 <Tag className="h-10 w-10 opacity-20" />
                 <p className="text-sm">No categories yet. Add one or load defaults.</p>
               </div>
@@ -402,25 +379,21 @@ export default function SettingsPage() {
                     onDrop={() => handleDrop(cat.key)}
                     onDragEnd={() => { setDragging(null); setDragOver(null); }}
                     className={[
-                      "group flex items-center gap-3 px-5 py-3.5 transition-colors select-none",
+                      "group flex items-center gap-3 px-4 sm:px-5 py-3.5 transition-colors select-none touch-manipulation",
                       dragOver === cat.key && dragging !== cat.key ? "bg-primary/5" : "hover:bg-muted/30",
                       dragging === cat.key ? "opacity-30" : "",
                     ].join(" ")}
                   >
                     <GripVertical className="h-4 w-4 text-muted-foreground/30 group-hover:text-muted-foreground cursor-grab transition-colors shrink-0" />
-
-                    {/* Color dot */}
                     <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: colorForKey(cat.key) }} />
-
-                    <div className="flex-1 min-w-0 flex items-center gap-3">
+                    <div className="flex-1 min-w-0 flex items-center gap-2 sm:gap-3">
                       <span className="text-sm font-medium truncate">{cat.label}</span>
                       <span className="text-xs font-mono px-2 py-0.5 rounded-md shrink-0"
                         style={{ backgroundColor: `${colorForKey(cat.key)}18`, color: colorForKey(cat.key) }}>
                         {cat.short}
                       </span>
                     </div>
-
-                    <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
+                    <div className="flex items-center gap-0.5 shrink-0">
                       <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground" onClick={() => openEdit(cat)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
@@ -432,6 +405,28 @@ export default function SettingsPage() {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Danger zone — full width */}
+          <div className="bg-card border border-destructive/30 rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-destructive/20">
+              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
+                <UserX className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-destructive" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-destructive">Danger Zone</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Irreversible actions — proceed with caution</p>
+              </div>
+            </div>
+            <div className="px-4 sm:px-5 py-4 space-y-3 sm:space-y-0 sm:flex sm:items-start sm:gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium">Delete account</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Permanently deletes your account and all data — logs, categories, everything. This cannot be undone.</p>
+              </div>
+              <Button size="sm" variant="destructive" className="w-full sm:w-auto shrink-0" onClick={() => { setDeleteAccountOpen(true); setDeleteConfirmText(""); }}>
+                Delete account
+              </Button>
+            </div>
           </div>
 
         </div>

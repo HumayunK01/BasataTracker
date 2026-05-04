@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X } from "lucide-react";
+import { CalendarDays, LayoutDashboard, FileBarChart, Hash, HelpCircle, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Sidebar,
@@ -24,6 +24,7 @@ const navItems = [
   { title: "Daily Log", icon: CalendarDays, path: "/log" },
   { title: "Counter", icon: Hash, path: "/counter" },
   { title: "Report", icon: FileBarChart, path: "/report" },
+  { title: "Help & Guide", icon: HelpCircle, path: "/help" },
 ];
 
 export function AppSidebar() {

@@ -109,12 +109,17 @@ export function ContributionHeatmap({ logs }: Props) {
     return [weeks, monthTicks, maxTotal, totalLogged, activeDays, offDays] as const;
   }, [logs, currentYear]);
 
-  // Mobile: just the weeks that have data so far this year (up to today's week)
+  // Mobile: last 16 weeks ending today
   const [weeksMobile, monthTicksMobile] = useMemo(() => {
     const { weeks, monthTicks } = buildGrid(logs, currentYear);
-    const lastDataCol = weeks.reduce((last, week, col) => week.some(Boolean) ? col : last, 0);
-    const start = Math.max(0, lastDataCol - 19);
-    return [weeks.slice(start, lastDataCol + 1), monthTicks.filter(t => t.col >= start).map(t => ({ ...t, col: t.col - start }))] as const;
+    const todayIso = isoDate();
+    const todayCol = weeks.findIndex((week) => week.some((c) => c && c.iso === todayIso));
+    const end = todayCol >= 0 ? todayCol : weeks.length - 1;
+    const start = Math.max(0, end - 15); // 16 weeks
+    return [
+      weeks.slice(start, end + 1),
+      monthTicks.filter((t) => t.col >= start && t.col <= end).map((t) => ({ ...t, col: t.col - start })),
+    ] as const;
   }, [logs, currentYear]);
 
   function renderGrid(weeks: (Cell | null)[][], monthTicks: { label: string; col: number }[]) {
@@ -190,17 +195,15 @@ export function ContributionHeatmap({ logs }: Props) {
     );
   }
 
+  const avgDocs = activeDays > 0 ? Math.round(totalLogged / activeDays) : 0;
+
   return (
     <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold">Activity — Last Year</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {activeDays} active day{activeDays !== 1 ? "s" : ""}
-            {offDays > 0 && <> · <span className="text-red-400/80">{offDays} off day{offDays !== 1 ? "s" : ""}</span></>}
-            {" "}· {totalLogged.toLocaleString()} total docs
-          </p>
+          <h2 className="text-sm font-semibold">Activity — {new Date().getFullYear()}</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Days worked, off days, and doc volume at a glance</p>
         </div>
         {/* Legend */}
         <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-muted-foreground select-none flex-wrap">
@@ -222,9 +225,85 @@ export function ContributionHeatmap({ logs }: Props) {
         </div>
       </div>
 
-      {/* Mobile grid: last 20 weeks */}
-      <div className="block sm:hidden">
-        {renderGrid(weeksMobile, monthTicksMobile)}
+      {/* Stat strip */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="bg-primary/5 border border-primary/15 rounded-xl px-3 py-2.5 text-center">
+          <p className="text-xl sm:text-2xl font-black tabular-nums text-primary leading-none">{activeDays}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Days worked</p>
+        </div>
+        <div className="bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-center">
+          <p className="text-xl sm:text-2xl font-black tabular-nums leading-none">{totalLogged.toLocaleString()}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Total docs</p>
+        </div>
+        <div className="bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-center">
+          <p className="text-xl sm:text-2xl font-black tabular-nums leading-none">{avgDocs}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Avg / day</p>
+          {offDays > 0 && (
+            <p className="text-[9px] text-red-400/70 mt-0.5">{offDays} off day{offDays !== 1 ? "s" : ""}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile grid: last 16 weeks, fixed small cells, horizontal scroll */}
+      <div className="block sm:hidden overflow-x-auto no-scrollbar -mx-1">
+        <div style={{ width: `${weeksMobile.length * 18}px` }} className="px-1">
+          {/* Month labels */}
+          <div className="flex mb-1" style={{ gap: 2 }}>
+            {weeksMobile.map((_, col) => {
+              const tick = monthTicksMobile.find((t) => t.col === col);
+              return (
+                <div key={col} style={{ width: 16, flexShrink: 0 }}>
+                  {tick && (
+                    <span className="text-[9px] text-muted-foreground whitespace-nowrap select-none">
+                      {tick.label}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {/* Rows = days of week (0=Sun … 6=Sat) */}
+          {[0, 1, 2, 3, 4, 5, 6].map((dow) => (
+            <div key={dow} className="flex" style={{ gap: 2, marginBottom: 2 }}>
+              {weeksMobile.map((week, col) => {
+                const cell = week[dow];
+                if (!cell) {
+                  return <div key={col} style={{ width: 16, height: 16, flexShrink: 0 }} className="rounded-[3px] bg-muted/10" />;
+                }
+                const intensity = getIntensity(cell.total, maxTotal);
+                const bgClass = cell.isFuture
+                  ? "bg-muted/10"
+                  : cell.isWeekend
+                  ? "bg-slate-500/30"
+                  : cell.isOffDay
+                  ? "bg-red-500/40"
+                  : INTENSITY_BG[intensity];
+                return (
+                  <div
+                    key={cell.iso}
+                    style={{ width: 16, height: 16, flexShrink: 0 }}
+                    className={[
+                      "rounded-[3px] transition-all duration-100",
+                      bgClass,
+                      cell.isToday ? "ring-1 ring-white/40 ring-offset-1 ring-offset-card" : "",
+                    ].join(" ")}
+                    onMouseEnter={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setTooltip({
+                        iso: cell.iso, total: cell.total,
+                        isOffDay: cell.isOffDay, isWeekend: cell.isWeekend,
+                        isFuture: cell.isFuture, isToday: cell.isToday,
+                        x: Math.min(rect.left, window.innerWidth - 180),
+                        y: rect.top,
+                      });
+                    }}
+                    onMouseLeave={() => setTooltip(null)}
+                  />
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Desktop grid: full year */}
