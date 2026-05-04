@@ -177,6 +177,7 @@ const ReportPage = () => {
     <>
       <PageHeader
         now={now}
+        subtitle="Report"
         actions={
           <>
             <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden shrink-0" onClick={handleExport} disabled={filtered.length === 0}>
@@ -192,17 +193,20 @@ const ReportPage = () => {
 
         {/* Date range controls */}
         <div className="bg-card border border-border rounded-xl p-4 space-y-4">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-0.5 no-scrollbar snap-x snap-mandatory">
             {PRESETS.map((p) => (
-              <Button
+              <button
                 key={p.id}
-                size="sm"
-                variant={activePreset === p.id ? "default" : "outline"}
                 onClick={() => applyPreset(p.id)}
-                className="h-8 text-xs"
+                className={[
+                  "snap-start shrink-0 rounded-full px-4 py-1.5 text-xs font-medium transition-colors whitespace-nowrap",
+                  activePreset === p.id
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground",
+                ].join(" ")}
               >
                 {p.label}
-              </Button>
+              </button>
             ))}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3 items-end">

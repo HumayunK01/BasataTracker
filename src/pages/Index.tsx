@@ -79,24 +79,23 @@ const Index = () => {
           </Button>
         }
       />
-      <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-8">
+      <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6 space-y-5 sm:space-y-8">
 
             {/* ── Per-category breakdown ── */}
-            <section className="space-y-3">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">By Category — All Time</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <section className="space-y-2 sm:space-y-3">
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">By Category — All Time</h2>
+              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
                 {isLoading
                   ? Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="bg-card border border-border rounded-lg p-4 space-y-2">
-                        <Skeleton className="h-3 w-20" />
-                        <Skeleton className="h-7 w-10" />
-                        <Skeleton className="h-3 w-8" />
+                      <div key={i} className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-2">
+                        <Skeleton className="h-3 w-14" />
+                        <Skeleton className="h-6 w-10" />
                       </div>
                     ))
                   : stats.categoryTotals.map((c) => (
-                      <div key={c.key} className="bg-card border border-border rounded-lg p-4">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide truncate">{c.label}</p>
-                        <p className="text-2xl font-semibold mt-1 tabular-nums" style={{ color: colorForKey(c.key) }}>
+                      <div key={c.key} className="bg-card border border-border rounded-xl p-3 sm:p-4">
+                        <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate">{c.label}</p>
+                        <p className="text-xl sm:text-2xl font-bold mt-1 tabular-nums" style={{ color: colorForKey(c.key) }}>
                           {c.value}
                         </p>
                       </div>
@@ -125,8 +124,8 @@ const Index = () => {
             </section>
 
             {/* ── Charts ── */}
-            <section id="trends" className="space-y-3">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Trends & Breakdown</h2>
+            <section id="trends" className="space-y-2 sm:space-y-3">
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Trends & Breakdown</h2>
               {isLoading ? (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   {Array.from({ length: 4 }).map((_, i) => (
