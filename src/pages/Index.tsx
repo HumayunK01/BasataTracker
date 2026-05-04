@@ -105,9 +105,6 @@ const Index = () => {
                         <p className="text-2xl font-semibold mt-1 tabular-nums" style={{ color: CAT_COLORS[i % CAT_COLORS.length] }}>
                           {c.value}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {stats.workingCount > 0 ? `~${Math.round(c.value / stats.workingCount)}/day` : "—"}
-                        </p>
                       </div>
                     ))
                 }

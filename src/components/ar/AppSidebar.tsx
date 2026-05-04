@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { CalendarDays, LayoutDashboard, Settings, FileBarChart, LogOut, Hash, X } from "lucide-react";
+import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Sidebar,
@@ -14,6 +14,7 @@ import {
   SidebarRail,
   SidebarSeparator,
   useSidebar,
+
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { AppLogo } from "@/components/ar/AppLogo";
@@ -29,7 +30,7 @@ export function AppSidebar() {
   const { isMobile, setOpenMobile } = useSidebar();
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut, user } = useAuth();
+  const { user } = useAuth();
 
   const go = (path: string) => {
     navigate(path);
@@ -39,20 +40,20 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
 
-      {/* Mobile header — logo + close */}
-      {isMobile && (
-        <SidebarHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-border">
-          <AppLogo className="h-8 object-contain" />
+      {/* Sidebar header — logo always visible, close button on mobile */}
+      <SidebarHeader className="flex flex-row items-center justify-between px-4 py-3">
+        <AppLogo className="h-10 object-contain group-data-[collapsible=icon]:hidden" />
+        {isMobile && (
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground"
+            className="h-8 w-8 text-muted-foreground shrink-0"
             onClick={() => setOpenMobile(false)}
           >
             <X className="h-4 w-4" />
           </Button>
-        </SidebarHeader>
-      )}
+        )}
+      </SidebarHeader>
 
       <SidebarContent>
         {/* Mobile user info */}
@@ -86,29 +87,9 @@ export function AppSidebar() {
 
       <SidebarFooter>
         <SidebarSeparator />
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              isActive={location.pathname === "/settings"}
-              onClick={() => go("/settings")}
-              tooltip="Settings"
-              className={isMobile ? "h-12 text-base" : ""}
-            >
-              <Settings className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
-              <span>Settings</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={signOut}
-              tooltip="Sign out"
-              className={`text-muted-foreground hover:text-destructive ${isMobile ? "h-12 text-base" : ""}`}
-            >
-              <LogOut className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
-              <span>Sign out</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <div className="text-center group-data-[collapsible=icon]:hidden">
+          <p className="text-xs text-muted-foreground/50">Version 1.0.0</p>
+        </div>
       </SidebarFooter>
 
       <SidebarRail />
