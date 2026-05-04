@@ -4,19 +4,12 @@ import { DayEntrySheet } from "@/components/ar/DayEntrySheet";
 import { Charts } from "@/components/ar/Charts";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
-import { isoDate, totalForLog } from "@/types/log";
+import { isoDate, totalForLog, type DailyLog } from "@/types/log";
 import { Plus, BarChart2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/ar/PageHeader";
 
-const CAT_COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--info))",
-  "hsl(var(--warning))",
-  "hsl(160 70% 60%)",
-  "hsl(280 70% 65%)",
-  "hsl(20 85% 60%)",
-];
+import { colorForKey } from "@/lib/cat-colors";
 
 const Index = () => {
   const { data: logs = [], isLoading } = useDailyLogs();
@@ -90,7 +83,7 @@ const Index = () => {
             {/* ── Per-category breakdown ── */}
             <section className="space-y-3">
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">By Category — All Time</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                 {isLoading
                   ? Array.from({ length: 6 }).map((_, i) => (
                       <div key={i} className="bg-card border border-border rounded-lg p-4 space-y-2">
@@ -99,10 +92,10 @@ const Index = () => {
                         <Skeleton className="h-3 w-8" />
                       </div>
                     ))
-                  : stats.categoryTotals.map((c, i) => (
+                  : stats.categoryTotals.map((c) => (
                       <div key={c.key} className="bg-card border border-border rounded-lg p-4">
                         <p className="text-xs text-muted-foreground uppercase tracking-wide truncate">{c.label}</p>
-                        <p className="text-2xl font-semibold mt-1 tabular-nums" style={{ color: CAT_COLORS[i % CAT_COLORS.length] }}>
+                        <p className="text-2xl font-semibold mt-1 tabular-nums" style={{ color: colorForKey(c.key) }}>
                           {c.value}
                         </p>
                       </div>

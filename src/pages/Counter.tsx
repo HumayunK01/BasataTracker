@@ -5,6 +5,7 @@ import { useUpsertLog, useDailyLogs } from "@/hooks/useDailyLogs";
 import { isoDate, totalForLog } from "@/types/log";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { Minus, Plus, RotateCcw, Save, CheckCircle2, X, Hash } from "lucide-react";
+import { colorForKey } from "@/lib/cat-colors";
 
 const COUNTS_KEY = "counter_counts";
 const SELECTED_KEY = "counter_selected_keys";
@@ -16,15 +17,6 @@ function load<T>(key: string, fallback: T): T {
   } catch {}
   return fallback;
 }
-
-const CAT_COLORS = [
-  { bg: "bg-primary/10", text: "text-primary", border: "border-primary/30", btn: "bg-primary/20 hover:bg-primary/30" },
-  { bg: "bg-info/10", text: "text-info", border: "border-info/30", btn: "bg-info/20 hover:bg-info/30" },
-  { bg: "bg-warning/10", text: "text-warning", border: "border-warning/30", btn: "bg-warning/20 hover:bg-warning/30" },
-  { bg: "bg-[hsl(160_70%_60%/0.1)]", text: "text-[hsl(160_70%_60%)]", border: "border-[hsl(160_70%_60%/0.3)]", btn: "bg-[hsl(160_70%_60%/0.2)] hover:bg-[hsl(160_70%_60%/0.3)]" },
-  { bg: "bg-[hsl(280_70%_65%/0.1)]", text: "text-[hsl(280_70%_65%)]", border: "border-[hsl(280_70%_65%/0.3)]", btn: "bg-[hsl(280_70%_65%/0.2)] hover:bg-[hsl(280_70%_65%/0.3)]" },
-  { bg: "bg-[hsl(20_85%_60%/0.1)]", text: "text-[hsl(20_85%_60%)]", border: "border-[hsl(20_85%_60%/0.3)]", btn: "bg-[hsl(20_85%_60%/0.2)] hover:bg-[hsl(20_85%_60%/0.3)]" },
-];
 
 export default function CounterPage() {
   const { data: categories = [], isLoading: catsLoading } = useCategories();
@@ -150,13 +142,13 @@ export default function CounterPage() {
             {activeCategories.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto w-full">
                 {activeCategories.map((cat) => {
-                  const globalIdx = categories.findIndex((c) => c.key === cat.key);
-                  const color = CAT_COLORS[globalIdx % CAT_COLORS.length];
+                  const clr = colorForKey(cat.key);
                   const count = getCount(cat.key);
                   return (
                     <div
                       key={cat.key}
-                      className={`rounded-2xl border ${color.border} ${color.bg} p-5 flex flex-col gap-4 relative`}
+                      className="rounded-2xl border p-5 flex flex-col gap-4 relative"
+                      style={{ borderColor: `${clr}4d`, backgroundColor: `${clr}1a` }}
                     >
                       {/* Remove button */}
                       <button
@@ -169,8 +161,8 @@ export default function CounterPage() {
                       </button>
 
                       <div className="flex items-center gap-2 pr-6">
-                        <p className={`text-sm font-semibold ${color.text}`}>{cat.label}</p>
-                        <span className={`text-xs font-mono px-2 py-0.5 rounded ${color.btn} ${color.text} ml-auto`}>
+                        <p className="text-sm font-semibold" style={{ color: clr }}>{cat.label}</p>
+                        <span className="text-xs font-mono px-2 py-0.5 rounded ml-auto" style={{ color: clr, backgroundColor: `${clr}33` }}>
                           {cat.short}
                         </span>
                       </div>
@@ -182,7 +174,7 @@ export default function CounterPage() {
                         className="flex-1 flex items-center justify-center py-4 rounded-xl active:scale-95 transition-transform cursor-pointer select-none"
                         title="Tap to count"
                       >
-                        <span className={`text-6xl font-black tabular-nums leading-none ${count > 0 ? color.text : "text-muted-foreground/30"}`}>
+                        <span className="text-6xl font-black tabular-nums leading-none" style={{ color: count > 0 ? clr : "hsl(var(--muted-foreground) / 0.3)" }}>
                           {count}
                         </span>
                       </button>
@@ -192,16 +184,18 @@ export default function CounterPage() {
                           type="button"
                           onClick={() => decrement(cat.key)}
                           disabled={count === 0}
-                          className={`flex-1 flex items-center justify-center h-10 rounded-xl border ${color.border} ${color.btn} transition-colors disabled:opacity-30 disabled:cursor-not-allowed`}
+                          className="flex-1 flex items-center justify-center h-10 rounded-xl border transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                          style={{ borderColor: `${clr}4d`, backgroundColor: `${clr}33` }}
                         >
-                          <Minus className="h-4 w-4" />
+                          <Minus className="h-4 w-4" style={{ color: clr }} />
                         </button>
                         <button
                           type="button"
                           onClick={() => increment(cat.key)}
-                          className={`flex-1 flex items-center justify-center h-10 rounded-xl border ${color.border} ${color.btn} transition-colors`}
+                          className="flex-1 flex items-center justify-center h-10 rounded-xl border transition-colors"
+                          style={{ borderColor: `${clr}4d`, backgroundColor: `${clr}33` }}
                         >
-                          <Plus className="h-4 w-4" />
+                          <Plus className="h-4 w-4" style={{ color: clr }} />
                         </button>
                       </div>
                     </div>
@@ -229,7 +223,7 @@ export default function CounterPage() {
                     : "Add category"}
                 </button>
               ) : (
-                <div className="rounded-2xl border border-border bg-card p-4 space-y-2">
+                <div className="rounded-2xl border border-border bg-card p-4 space-y-2 max-h-72 overflow-y-auto">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-sm font-medium">Select a category</p>
                     <button
@@ -240,9 +234,8 @@ export default function CounterPage() {
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                  {availableToAdd.map((cat, i) => {
-                    const globalIdx = categories.findIndex((c) => c.key === cat.key);
-                    const color = CAT_COLORS[globalIdx % CAT_COLORS.length];
+                  {availableToAdd.map((cat) => {
+                    const clr = colorForKey(cat.key);
                     return (
                       <button
                         key={cat.key}
@@ -250,7 +243,7 @@ export default function CounterPage() {
                         onClick={() => addCategory(cat)}
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/50 transition-colors text-left"
                       >
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${color.text}`} style={{ backgroundColor: `hsl(var(--${["primary","info","warning"][i % 3] ?? "primary"}))` }} />
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: clr }} />
                         <span className="text-sm flex-1">{cat.label}</span>
                         <span className="text-xs font-mono text-muted-foreground">{cat.short}</span>
                       </button>

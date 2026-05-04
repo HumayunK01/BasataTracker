@@ -22,43 +22,43 @@ import {
 } from "recharts";
 import { totalForLog, formatShortDate, type DailyLog } from "@/types/log";
 import type { Category } from "@/hooks/useCategories";
+import { CAT_COLORS, colorForKey } from "@/lib/cat-colors";
+
+export { CAT_COLORS };
 
 interface Props {
   logs: DailyLog[];
   categories: Category[];
 }
 
-export const CAT_COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--info))",
-  "hsl(var(--warning))",
-  "hsl(160 70% 60%)",
-  "hsl(280 70% 65%)",
-  "hsl(20 85% 60%)",
-];
-
 const T = {
   container: {
     backgroundColor: "hsl(var(--popover))",
     border: "1px solid hsl(var(--border))",
-    borderRadius: "6px",
+    borderRadius: "10px",
+    padding: "10px 14px",
+    boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
   },
-  text: { fontSize: "12px", color: "hsl(var(--popover-foreground))" },
+  text: { fontSize: "13px", color: "hsl(var(--popover-foreground))" },
   axis: { stroke: "hsl(var(--muted-foreground))", fontSize: 12 } as const,
   grid: "hsl(var(--border))",
 };
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-function ChartCard({ title, height = "h-48 sm:h-56", children, className = "" }: {
+function ChartCard({ title, subtitle, height = "h-48 sm:h-56", children, className = "" }: {
   title: string;
+  subtitle?: string;
   height?: string;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <div className={`bg-card border border-border rounded-lg p-4 ${className}`}>
-      <h3 className="text-sm font-medium mb-3">{title}</h3>
+    <div className={`bg-card border border-border rounded-2xl p-4 sm:p-5 ${className}`}>
+      <div className="mb-3 sm:mb-4">
+        <h3 className="text-sm font-semibold">{title}</h3>
+        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+      </div>
       <div className={height}>
         <ResponsiveContainer width="100%" height="100%">
           {children as React.ReactElement}
@@ -80,8 +80,18 @@ export function Charts({ logs, categories }: Props) {
     [sorted],
   );
 
+  const trendYDomain = useMemo((): [number, number] => {
+    if (trend.length === 0) return [0, 10];
+    const vals = trend.map((d) => d.docs);
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    const padding = Math.ceil((max - min) * 0.1) || 5;
+    return [Math.max(0, min - padding), max + padding];
+  }, [trend]);
+
   const categoryTotals = useMemo(() =>
     categories.map((c) => ({
+      key: c.key,
       name: c.label,
       value: workingLogs.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0),
     })).filter((d) => d.value > 0),
@@ -156,32 +166,64 @@ export function Charts({ logs, categories }: Props) {
 
       {/* Row 1: Daily trend + Work mix */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <ChartCard title="Daily documents — last 21 working days" height="h-44 sm:h-56" className="lg:col-span-2">
-          <LineChart data={trend}>
-            <CartesianGrid strokeDasharray="3 3" stroke={T.grid} />
-            <XAxis dataKey="date" {...T.axis} />
-            <YAxis {...T.axis} allowDecimals={false} width={35} />
-            <Tooltip contentStyle={T.container} labelStyle={T.text} itemStyle={T.text} />
-            <Line type="monotone" dataKey="docs" name="Documents" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: "hsl(var(--primary))", r: 3 }} />
-          </LineChart>
+        <ChartCard
+          title="Daily Documents"
+          subtitle="Last 21 working days"
+          height="h-48 sm:h-56 md:h-60"
+          className="lg:col-span-2"
+        >
+          <AreaChart data={trend} margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
+            <defs>
+              <linearGradient id="grad-daily" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke={T.grid} vertical={false} />
+            <XAxis dataKey="date" {...T.axis} tickLine={false} axisLine={false} dy={8} />
+            <YAxis
+              {...T.axis}
+              allowDecimals={false}
+              width={32}
+              tickLine={false}
+              axisLine={false}
+              domain={trendYDomain}
+            />
+            <Tooltip
+              contentStyle={T.container}
+              labelStyle={{ ...T.text, fontWeight: 600, marginBottom: 4 }}
+              itemStyle={T.text}
+              cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "4 4" }}
+            />
+            <Area
+              type="monotone"
+              dataKey="docs"
+              name="Documents"
+              stroke="hsl(var(--primary))"
+              strokeWidth={2.5}
+              fill="url(#grad-daily)"
+              dot={{ fill: "hsl(var(--background))", stroke: "hsl(var(--primary))", strokeWidth: 2, r: 3 }}
+              activeDot={{ fill: "hsl(var(--primary))", stroke: "hsl(var(--background))", strokeWidth: 2, r: 5 }}
+            />
+          </AreaChart>
         </ChartCard>
 
-        <div className="bg-card border border-border rounded-lg p-4">
-          <h3 className="text-sm font-medium mb-3">Work mix — all time</h3>
-          <div className="h-36 sm:h-44">
+        <div className="bg-card border border-border rounded-2xl p-4 sm:p-5">
+          <h3 className="text-sm font-semibold mb-3">Work mix — all time</h3>
+          <div className="h-40 sm:h-44">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={categoryTotals} dataKey="value" nameKey="name" innerRadius="40%" outerRadius="65%" paddingAngle={2}>
-                  {categoryTotals.map((_, i) => <Cell key={i} fill={CAT_COLORS[i % CAT_COLORS.length]} />)}
+                  {categoryTotals.map((d) => <Cell key={d.key} fill={colorForKey(d.key)} />)}
                 </Pie>
                 <Tooltip contentStyle={T.container} labelStyle={T.text} itemStyle={T.text} />
               </PieChart>
             </ResponsiveContainer>
           </div>
           <div className="flex justify-center gap-x-3 gap-y-1 text-xs flex-wrap mt-1">
-            {categoryTotals.map((s, i) => (
+            {categoryTotals.map((s) => (
               <div key={s.name} className="flex items-center gap-1 min-w-0">
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: CAT_COLORS[i % CAT_COLORS.length] }} />
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: colorForKey(s.key) }} />
                 <span className="text-muted-foreground truncate">{s.name} ({s.value})</span>
               </div>
             ))}
@@ -191,29 +233,29 @@ export function Charts({ logs, categories }: Props) {
 
       {/* Row 2: Weekly totals + Day-of-week avg */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ChartCard title="Weekly totals — last 10 weeks" height="h-44 sm:h-52">
-          <BarChart data={weeklyTotals}>
+        <ChartCard title="Weekly Totals" subtitle="Last 10 weeks" height="h-44 sm:h-48 md:h-52">
+          <BarChart data={weeklyTotals} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={T.grid} vertical={false} />
-            <XAxis dataKey="week" {...T.axis} />
-            <YAxis {...T.axis} allowDecimals={false} width={35} />
-            <Tooltip contentStyle={T.container} labelStyle={T.text} itemStyle={T.text} cursor={{ fill: "hsl(var(--accent))" }} />
-            <Bar dataKey="total" name="Documents" radius={[4, 4, 0, 0]} maxBarSize={32}>
+            <XAxis dataKey="week" {...T.axis} tickLine={false} axisLine={false} dy={8} />
+            <YAxis {...T.axis} allowDecimals={false} width={32} tickLine={false} axisLine={false} />
+            <Tooltip contentStyle={T.container} labelStyle={{ ...T.text, fontWeight: 600 }} itemStyle={T.text} cursor={{ fill: "hsl(var(--accent))", radius: 4 }} />
+            <Bar dataKey="total" name="Documents" radius={[6, 6, 0, 0]} maxBarSize={36}>
               {weeklyTotals.map((_, i) => (
-                <Cell key={i} fill={i === weeklyTotals.length - 1 ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.45)"} />
+                <Cell key={i} fill={i === weeklyTotals.length - 1 ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.4)"} />
               ))}
             </Bar>
           </BarChart>
         </ChartCard>
 
-        <ChartCard title="Avg documents by day of week" height="h-44 sm:h-52">
-          <BarChart data={dowAvg}>
+        <ChartCard title="Avg by Day of Week" subtitle="Based on all working days" height="h-44 sm:h-48 md:h-52">
+          <BarChart data={dowAvg} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={T.grid} vertical={false} />
-            <XAxis dataKey="day" {...T.axis} />
-            <YAxis {...T.axis} allowDecimals={false} width={35} />
-            <Tooltip contentStyle={T.container} labelStyle={T.text} itemStyle={T.text} cursor={{ fill: "hsl(var(--accent))" }} />
-            <Bar dataKey="avg" name="Avg docs" radius={[4, 4, 0, 0]} maxBarSize={40}>
+            <XAxis dataKey="day" {...T.axis} tickLine={false} axisLine={false} dy={8} />
+            <YAxis {...T.axis} allowDecimals={false} width={32} tickLine={false} axisLine={false} />
+            <Tooltip contentStyle={T.container} labelStyle={{ ...T.text, fontWeight: 600 }} itemStyle={T.text} cursor={{ fill: "hsl(var(--accent))" }} />
+            <Bar dataKey="avg" name="Avg docs" radius={[6, 6, 0, 0]} maxBarSize={44}>
               {dowAvg.map((entry, i) => (
-                <Cell key={i} fill={entry.avg === Math.max(...dowAvg.map((d) => d.avg)) ? "hsl(var(--warning))" : "hsl(var(--info) / 0.6)"} />
+                <Cell key={i} fill={entry.avg === Math.max(...dowAvg.map((d) => d.avg)) ? "hsl(var(--warning))" : "hsl(var(--info) / 0.55)"} />
               ))}
             </Bar>
           </BarChart>
@@ -222,59 +264,64 @@ export function Charts({ logs, categories }: Props) {
 
       {/* Row 3: Category area trend + Radar */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <ChartCard title="Category trends — last 30 working days" height="h-44 sm:h-56" className="lg:col-span-2">
-          <AreaChart data={categoryTrend}>
+        <ChartCard title="Category Trends" subtitle="Last 30 working days" height="h-48 sm:h-56 md:h-60" className="lg:col-span-2">
+          <AreaChart data={categoryTrend} margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
             <defs>
-              {categories.map((c, i) => (
+              {categories.map((c) => (
                 <linearGradient key={c.key} id={`grad-${c.key}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={CAT_COLORS[i % CAT_COLORS.length]} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={CAT_COLORS[i % CAT_COLORS.length]} stopOpacity={0} />
+                  <stop offset="5%" stopColor={colorForKey(c.key)} stopOpacity={0.25} />
+                  <stop offset="95%" stopColor={colorForKey(c.key)} stopOpacity={0} />
                 </linearGradient>
               ))}
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke={T.grid} />
-            <XAxis dataKey="date" {...T.axis} />
-            <YAxis {...T.axis} allowDecimals={false} width={35} />
-            <Tooltip contentStyle={T.container} labelStyle={T.text} itemStyle={T.text} />
-            <Legend wrapperStyle={{ fontSize: "11px" }} />
-            {categories.map((c, i) => (
+            <CartesianGrid strokeDasharray="3 3" stroke={T.grid} vertical={false} />
+            <XAxis dataKey="date" {...T.axis} tickLine={false} axisLine={false} dy={8} />
+            <YAxis {...T.axis} allowDecimals={false} width={32} tickLine={false} axisLine={false} />
+            <Tooltip contentStyle={T.container} labelStyle={{ ...T.text, fontWeight: 600 }} itemStyle={T.text} />
+            <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }} />
+            {categories.map((c) => (
               <Area
                 key={c.key}
                 type="monotone"
                 dataKey={c.short}
                 name={c.label}
-                stroke={CAT_COLORS[i % CAT_COLORS.length]}
+                stroke={colorForKey(c.key)}
                 fill={`url(#grad-${c.key})`}
-                strokeWidth={1.5}
+                strokeWidth={2}
                 dot={false}
+                activeDot={{ r: 4, strokeWidth: 0 }}
               />
             ))}
           </AreaChart>
         </ChartCard>
 
-        <ChartCard title="Category balance — avg / day" height="h-44 sm:h-56">
+        <ChartCard title="Category Balance" subtitle="Avg documents per day" height="h-48 sm:h-56 md:h-60">
           <RadarChart data={radarData} outerRadius="65%">
             <PolarGrid stroke={T.grid} />
             <PolarAngleAxis dataKey="category" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
-            <Radar name="Avg docs" dataKey="avg" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.25} strokeWidth={2} />
+            <Radar name="Avg docs" dataKey="avg" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} strokeWidth={2} />
             <Tooltip contentStyle={T.container} labelStyle={T.text} itemStyle={T.text} />
           </RadarChart>
         </ChartCard>
       </div>
 
       {/* Row 4: Full-width stacked bar breakdown */}
-      <div id="breakdown" className="bg-card border border-border rounded-lg p-4">
-        <h3 className="text-sm font-medium mb-3">Last 14 working days — document breakdown</h3>
-        <div className="h-48 sm:h-64">
+      <div id="breakdown" className="bg-card border border-border rounded-2xl p-4 sm:p-5">
+        <div className="mb-3 sm:mb-4">
+          <h3 className="text-sm font-semibold">Document Breakdown</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Last 14 working days by category</p>
+        </div>
+        <div className="h-48 sm:h-56 md:h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={stacked}>
-              <CartesianGrid strokeDasharray="3 3" stroke={T.grid} />
-              <XAxis dataKey="date" {...T.axis} />
-              <YAxis {...T.axis} allowDecimals={false} width={35} />
-              <Tooltip contentStyle={T.container} cursor={{ fill: "hsl(var(--accent))" }} labelStyle={T.text} itemStyle={T.text} />
-              <Legend wrapperStyle={{ fontSize: "11px" }} />
+            <BarChart data={stacked} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={T.grid} vertical={false} />
+              <XAxis dataKey="date" {...T.axis} tickLine={false} axisLine={false} dy={8} />
+              <YAxis {...T.axis} allowDecimals={false} width={32} tickLine={false} axisLine={false} />
+              <Tooltip contentStyle={T.container} cursor={{ fill: "hsl(var(--accent))" }} labelStyle={{ ...T.text, fontWeight: 600 }} itemStyle={T.text} />
+              <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }} />
               {categories.map((c, i) => (
-                <Bar key={c.key} dataKey={c.label} stackId="a" fill={CAT_COLORS[i % CAT_COLORS.length]} />
+                <Bar key={c.key} dataKey={c.label} stackId="a" fill={colorForKey(c.key)}
+                  radius={i === categories.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]} />
               ))}
             </BarChart>
           </ResponsiveContainer>

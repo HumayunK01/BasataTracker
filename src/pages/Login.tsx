@@ -70,7 +70,7 @@ export default function LoginPage() {
     <div className="flex h-screen w-screen overflow-hidden bg-background relative">
 
       {/* ── Theme toggle ── */}
-      <Button variant="ghost" size="icon" className="absolute top-4 right-4 h-9 w-9 z-10" onClick={toggle}>
+      <Button variant="ghost" size="icon" className="absolute top-3 right-3 h-10 w-10 z-10" onClick={toggle}>
         {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </Button>
 
@@ -114,7 +114,7 @@ export default function LoginPage() {
       </div>
 
       {/* ── Right form panel ── */}
-      <div className="flex-1 flex flex-col items-center justify-center overflow-y-auto px-6 py-10">
+      <div className="flex-1 flex flex-col items-center justify-center overflow-y-auto px-4 sm:px-6 py-10">
 
         {/* Mobile logo — only on small screens */}
         <div className="lg:hidden mb-8">
@@ -199,7 +199,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => setMode(m)}
                     className={[
-                      "flex-1 py-2 text-sm font-medium rounded-md transition-all",
+                      "flex-1 py-2.5 min-h-[44px] text-sm font-medium rounded-md transition-all",
                       mode === m
                         ? "bg-background text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground",
@@ -244,7 +244,7 @@ export default function LoginPage() {
                     </button>
                   </div>
                   {mode === "signup" && (
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-1">
+                    <div className="grid grid-cols-1 xs:grid-cols-2 gap-x-4 gap-y-1.5 pt-1">
                       {PASSWORD_RULES.map(({ label, test }) => {
                         const passed = password.length > 0 && test(password);
                         const untouched = password.length === 0;
