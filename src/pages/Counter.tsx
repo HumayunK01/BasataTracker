@@ -147,7 +147,7 @@ export default function CounterPage() {
                   return (
                     <div
                       key={cat.key}
-                      className="rounded-2xl border p-5 flex flex-col gap-4 relative"
+                      className="rounded-2xl border p-5 flex flex-col gap-4 relative transition-shadow duration-200 hover:shadow-lg"
                       style={{ borderColor: `${clr}4d`, backgroundColor: `${clr}1a` }}
                     >
                       {/* Remove button */}
@@ -171,10 +171,13 @@ export default function CounterPage() {
                       <button
                         type="button"
                         onClick={() => increment(cat.key)}
-                        className="flex-1 flex items-center justify-center py-4 rounded-xl active:scale-95 transition-transform cursor-pointer select-none"
+                        className="flex-1 flex items-center justify-center py-4 rounded-xl active:scale-95 transition-all duration-150 cursor-pointer select-none hover:opacity-80"
+                        style={{ backgroundColor: `${clr}0d` }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = `${clr}22`; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = `${clr}0d`; }}
                         title="Tap to count"
                       >
-                        <span className="text-6xl font-black tabular-nums leading-none" style={{ color: count > 0 ? clr : "hsl(var(--muted-foreground) / 0.3)" }}>
+                        <span className="text-6xl font-black tabular-nums leading-none transition-transform duration-150" style={{ color: count > 0 ? clr : "hsl(var(--muted-foreground) / 0.3)" }}>
                           {count}
                         </span>
                       </button>
@@ -184,18 +187,28 @@ export default function CounterPage() {
                           type="button"
                           onClick={() => decrement(cat.key)}
                           disabled={count === 0}
-                          className="flex-1 flex items-center justify-center h-10 rounded-xl border transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                          style={{ borderColor: `${clr}4d`, backgroundColor: `${clr}33` }}
+                          className="group flex-1 flex items-center justify-center h-11 rounded-xl border transition-all duration-150 disabled:opacity-25 disabled:cursor-not-allowed hover:scale-[1.03] active:scale-95"
+                          style={{
+                            borderColor: `${clr}4d`,
+                            backgroundColor: `${clr}33`,
+                          }}
+                          onMouseEnter={e => { if (count > 0) (e.currentTarget as HTMLButtonElement).style.backgroundColor = `${clr}55`; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = `${clr}33`; }}
                         >
-                          <Minus className="h-4 w-4" style={{ color: clr }} />
+                          <Minus className="h-4 w-4 transition-transform duration-150 group-hover:scale-110" style={{ color: clr }} />
                         </button>
                         <button
                           type="button"
                           onClick={() => increment(cat.key)}
-                          className="flex-1 flex items-center justify-center h-10 rounded-xl border transition-colors"
-                          style={{ borderColor: `${clr}4d`, backgroundColor: `${clr}33` }}
+                          className="group flex-1 flex items-center justify-center h-11 rounded-xl border transition-all duration-150 hover:scale-[1.03] active:scale-95"
+                          style={{
+                            borderColor: `${clr}4d`,
+                            backgroundColor: `${clr}33`,
+                          }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = `${clr}66`; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = `${clr}33`; }}
                         >
-                          <Plus className="h-4 w-4" style={{ color: clr }} />
+                          <Plus className="h-4 w-4 transition-transform duration-150 group-hover:scale-110" style={{ color: clr }} />
                         </button>
                       </div>
                     </div>

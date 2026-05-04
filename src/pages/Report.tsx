@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
-import { isoDate, formatTableDate, totalForLog } from "@/types/log";
+import { isoDate, formatTableDate, isWeekend, totalForLog } from "@/types/log";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { downloadCSV } from "@/lib/log-utils";
 import { Download, BedDouble, TrendingUp, CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
@@ -125,7 +125,8 @@ const ReportPage = () => {
   }, [logs, startDate, endDate]);
 
   const workingLogs = useMemo(() => filtered.filter((l) => !l.is_off_day), [filtered]);
-  const offDays = filtered.length - workingLogs.length;
+  const weekendDays = useMemo(() => filtered.filter((l) => l.is_off_day && isWeekend(l.log_date)).length, [filtered]);
+  const offDays = filtered.filter((l) => l.is_off_day && !isWeekend(l.log_date)).length;
   const totalDocs = useMemo(() => workingLogs.reduce((s, l) => s + totalForLog(l), 0), [workingLogs]);
   const avgPerDay = workingLogs.length ? Math.round(totalDocs / workingLogs.length) : 0;
   const bestDay = useMemo(() => {
@@ -253,7 +254,7 @@ const ReportPage = () => {
               <div className="bg-card border border-border rounded-xl p-3 sm:p-4">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Working Days</p>
                 <p className="text-2xl sm:text-3xl font-bold tabular-nums mt-1">{workingLogs.length}</p>
-                <p className="text-xs text-muted-foreground mt-1">{offDays} off days</p>
+                <p className="text-xs text-muted-foreground mt-1">{weekendDays} weekends · {offDays} off days</p>
               </div>
               <div className="bg-card border border-border rounded-xl p-3 sm:p-4">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Avg / Day</p>
@@ -357,7 +358,9 @@ const ReportPage = () => {
                           <TableCell colSpan={categories.length + 1} className="py-2.5">
                             <div className="flex items-center gap-1.5">
                               <BedDouble className="h-3.5 w-3.5 text-muted-foreground" />
-                              <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Off Day</span>
+                              <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">
+                                {isWeekend(l.log_date) ? "Weekend" : "Off Day"}
+                              </span>
                             </div>
                           </TableCell>
                         </TableRow>

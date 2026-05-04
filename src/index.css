@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    font-family: system-ui, sans-serif;
+  }
+
   :root {
     /* Basata-inspired dark theme */
     --background: 220 38% 9%;

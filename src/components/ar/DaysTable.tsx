@@ -20,7 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { formatTableDate, totalForLog, type DailyLog } from "@/types/log";
+import { formatTableDate, isWeekend, totalForLog, type DailyLog } from "@/types/log";
 import { useDeleteLog } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
 import { Trash2, Pencil, Search, ChevronLeft, ChevronRight, BedDouble, Copy } from "lucide-react";
@@ -73,7 +73,7 @@ export function DaysTable({ logs, onEdit }: Props) {
 
   const copyLog = (l: DailyLog) => {
     const rows = l.is_off_day
-      ? [["Date", formatTableDate(l.log_date)], ["Status", "Off Day"]]
+      ? [["Date", formatTableDate(l.log_date)], ["Status", isWeekend(l.log_date) ? "Weekend" : "Off Day"]]
       : [
           ["Date", formatTableDate(l.log_date)],
           ...categories.filter((c) => getVal(l, c.key) > 0).map((c) => [c.label, String(getVal(l, c.key))]),
@@ -128,7 +128,8 @@ export function DaysTable({ logs, onEdit }: Props) {
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
             <span><span className="font-semibold text-foreground">{workingLogs.length}</span> working days</span>
-            <span><span className="font-semibold text-foreground">{filtered.length - workingLogs.length}</span> off days</span>
+            <span><span className="font-semibold text-foreground">{filtered.filter(l => l.is_off_day && isWeekend(l.log_date)).length}</span> weekends</span>
+            <span><span className="font-semibold text-foreground">{filtered.filter(l => l.is_off_day && !isWeekend(l.log_date)).length}</span> off days</span>
             <span>Avg <span className="font-semibold text-foreground">{avgTotal}</span> docs/day</span>
           </div>
         </div>
@@ -170,7 +171,9 @@ export function DaysTable({ logs, onEdit }: Props) {
                       <TableCell colSpan={categories.length + 1} className="py-2.5">
                         <div className="flex items-center gap-1.5">
                           <BedDouble className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Off Day</span>
+                          <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">
+                            {isWeekend(l.log_date) ? "Weekend" : "Off Day"}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell className="py-2.5">
