@@ -99,14 +99,11 @@ export function ContributionHeatmap({ logs }: Props) {
 
   const currentYear = new Date().getFullYear();
 
-  const [weeks365, monthTicks365, maxTotal, totalLogged, activeDays, offDays] = useMemo(() => {
+  const [weeks365, monthTicks365, maxTotal] = useMemo(() => {
     const { weeks, monthTicks } = buildGrid(logs, currentYear);
     const allCells = weeks.flat().filter(Boolean) as Cell[];
     const maxTotal = Math.max(...allCells.filter((c) => !c.isFuture).map((c) => c.total), 1);
-    const totalLogged = allCells.filter((c) => !c.isFuture).reduce((s, c) => s + c.total, 0);
-    const activeDays = allCells.filter((c) => !c.isFuture && c.total > 0).length;
-    const offDays = allCells.filter((c) => c.isOffDay).length;
-    return [weeks, monthTicks, maxTotal, totalLogged, activeDays, offDays] as const;
+    return [weeks, monthTicks, maxTotal] as const;
   }, [logs, currentYear]);
 
   // Mobile: last 16 weeks ending today
@@ -195,7 +192,6 @@ export function ContributionHeatmap({ logs }: Props) {
     );
   }
 
-  const avgDocs = activeDays > 0 ? Math.round(totalLogged / activeDays) : 0;
 
   return (
     <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4">
@@ -222,25 +218,6 @@ export function ContributionHeatmap({ logs }: Props) {
             ))}
             <span>More</span>
           </div>
-        </div>
-      </div>
-
-      {/* Stat strip */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        <div className="bg-primary/5 border border-primary/15 rounded-xl px-3 py-2.5 text-center">
-          <p className="text-xl sm:text-2xl font-black tabular-nums text-primary leading-none">{activeDays}</p>
-          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Days worked</p>
-        </div>
-        <div className="bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-center">
-          <p className="text-xl sm:text-2xl font-black tabular-nums leading-none">{totalLogged.toLocaleString()}</p>
-          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Total docs</p>
-        </div>
-        <div className="bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-center">
-          <p className="text-xl sm:text-2xl font-black tabular-nums leading-none">{avgDocs}</p>
-          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Avg / day</p>
-          {offDays > 0 && (
-            <p className="text-[9px] text-red-400/70 mt-0.5">{offDays} off day{offDays !== 1 ? "s" : ""}</p>
-          )}
         </div>
       </div>
 
