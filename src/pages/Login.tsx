@@ -75,7 +75,7 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="flex justify-center">
-          <img src="/favicon.png" alt="Basata Tracker" className="h-14 w-14 object-contain" />
+          <img src="/favicon.png" alt="Basata.ai Tracker" className="h-14 w-14 object-contain" />
         </div>
 
         {/* Title */}
