@@ -65,7 +65,7 @@ const DailyLogPage = () => {
           </>
         }
       />
-      <main className="flex-1 overflow-hidden flex flex-col px-4 sm:px-6 py-4">
+      <main className="flex-1 overflow-hidden flex flex-col px-4 sm:px-6 py-4 font-[system-ui]">
             {isLoading ? (
               <div className="flex-1 flex flex-col gap-3 pt-2">
                 <div className="flex gap-3">

@@ -142,7 +142,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0 gap-0 bg-sidebar">
+      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0 gap-0 bg-sidebar font-[system-ui]">
 
         {/* ── Header ── */}
         <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b border-border">

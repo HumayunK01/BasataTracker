@@ -73,7 +73,7 @@ export function AppSidebar() {
             {/* Group label */}
             <div className="flex items-center gap-1.5 px-3 py-1.5 group-data-[collapsible=icon]:hidden">
               <ChevronDown className="h-3.5 w-3.5 text-foreground shrink-0" />
-              <span className="text-xs font-bold text-foreground uppercase tracking-wide">{group.label}</span>
+              <span className="text-xs font-bold text-foreground uppercase tracking-wide font-[system-ui]">{group.label}</span>
             </div>
 
             {/* Nav items */}
@@ -94,7 +94,7 @@ export function AppSidebar() {
                       style={active ? { color: "hsl(var(--sidebar-primary))" } : undefined}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
-                      <span className="group-data-[collapsible=icon]:hidden truncate">{item.title}</span>
+                      <span className="group-data-[collapsible=icon]:hidden truncate font-[system-ui]">{item.title}</span>
                     </button>
                   </li>
                 );

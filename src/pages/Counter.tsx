@@ -133,11 +133,11 @@ export default function CounterPage() {
           {/* Total strip */}
           <div className="bg-card border border-border rounded-md px-5 py-4 flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-widest">Total today</p>
-              <p className="text-5xl sm:text-6xl font-black tabular-nums text-primary leading-none mt-1">{total}</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-widest font-[system-ui]">Total today</p>
+              <p className="text-5xl sm:text-6xl font-black tabular-nums text-primary leading-none mt-1 font-[system-ui]">{total}</p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground font-[system-ui]">
                 {saved
                   ? "Saved to today's log"
                   : todayLog
@@ -178,7 +178,7 @@ export default function CounterPage() {
                   >
                     {/* Header row */}
                     <div className="flex items-center gap-1.5 px-3 pt-3 pb-1 pr-8">
-                      <p className="text-xs font-semibold truncate" style={{ color: clr }}>{cat.label}</p>
+                      <p className="text-xs font-semibold truncate font-[system-ui]" style={{ color: clr }}>{cat.label}</p>
                       <span
                         className="text-xs font-mono px-1.5 py-0.5 rounded shrink-0 ml-auto"
                         style={{ color: clr, backgroundColor: `${clr}33` }}
@@ -206,7 +206,7 @@ export default function CounterPage() {
                       title="Tap to count"
                     >
                       <span
-                        className="text-5xl sm:text-6xl font-black tabular-nums leading-none"
+                        className="text-5xl sm:text-6xl font-black tabular-nums leading-none font-[system-ui]"
                         style={{ color: count > 0 ? clr : "hsl(var(--muted-foreground) / 0.25)" }}
                       >
                         {count}
@@ -246,7 +246,7 @@ export default function CounterPage() {
                 type="button"
                 onClick={() => setPickerOpen(true)}
                 disabled={catsLoading || availableToAdd.length === 0}
-                className="w-full flex items-center justify-center gap-2 rounded-md border border-dashed border-border py-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
+                className="w-full flex items-center justify-center gap-2 rounded-md border border-dashed border-border py-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation font-[system-ui]"
               >
                 <Plus className="h-4 w-4" />
                 {catsLoading
@@ -260,7 +260,7 @@ export default function CounterPage() {
             ) : (
               <div className="rounded-md border border-border bg-card p-4 space-y-1 max-h-64 overflow-y-auto">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium">Select a category</p>
+                  <p className="text-sm font-medium font-[system-ui]">Select a category</p>
                   <button
                     type="button"
                     onClick={() => setPickerOpen(false)}
@@ -279,7 +279,7 @@ export default function CounterPage() {
                       className="w-full flex items-center gap-3 px-3 py-3 rounded-md hover:bg-muted/50 active:bg-muted transition-colors text-left touch-manipulation"
                     >
                       <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: clr }} />
-                      <span className="text-sm flex-1">{cat.label}</span>
+                      <span className="text-sm flex-1 font-[system-ui]">{cat.label}</span>
                       <span className="text-xs font-mono text-muted-foreground">{cat.short}</span>
                     </button>
                   );
@@ -292,7 +292,7 @@ export default function CounterPage() {
           {activeCategories.length === 0 && !pickerOpen && !catsLoading && categories.length > 0 && (
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-muted-foreground">
               <Hash className="h-10 w-10 opacity-20" />
-              <p className="text-sm">Add a category above to start counting.</p>
+              <p className="text-sm font-[system-ui]">Add a category above to start counting.</p>
             </div>
           )}
 
