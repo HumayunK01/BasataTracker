@@ -72,7 +72,7 @@ const DailyLogPage = () => {
                   <Skeleton className="h-8 w-48" />
                   <Skeleton className="h-8 w-56 ml-auto" />
                 </div>
-                <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <div className="bg-card border border-border rounded-md overflow-hidden">
                   {Array.from({ length: 8 }).map((_, i) => (
                     <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-border/50 last:border-0">
                       <Skeleton className="h-4 w-24" />

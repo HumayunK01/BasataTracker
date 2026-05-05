@@ -192,7 +192,7 @@ const ReportPage = () => {
       <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6">
 
         {/* Date range controls */}
-        <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+        <div className="bg-card border border-border rounded-md p-4 space-y-4">
           <div className="flex gap-2 overflow-x-auto pb-0.5 no-scrollbar snap-x snap-mandatory">
             {PRESETS.map((p) => (
               <button
@@ -229,14 +229,14 @@ const ReportPage = () => {
           <div className="space-y-4">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-card border border-border rounded-xl p-4 space-y-2">
+                <div key={i} className="bg-card border border-border rounded-md p-4 space-y-2">
                   <Skeleton className="h-3 w-20" />
                   <Skeleton className="h-8 w-16" />
                   <Skeleton className="h-3 w-24" />
                 </div>
               ))}
             </div>
-            <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+            <div className="bg-card border border-border rounded-md p-4 space-y-3">
               <Skeleton className="h-4 w-36" />
               <Skeleton className="h-44 w-full" />
             </div>
@@ -250,22 +250,22 @@ const ReportPage = () => {
           <>
             {/* Summary stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="bg-card border border-border rounded-xl p-3 sm:p-4">
+              <div className="bg-card border border-border rounded-md p-3 sm:p-4">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Docs</p>
                 <p className="text-2xl sm:text-3xl font-bold tabular-nums text-primary mt-1">{totalDocs}</p>
                 <p className="text-xs text-muted-foreground mt-1">{filtered.length} days logged</p>
               </div>
-              <div className="bg-card border border-border rounded-xl p-3 sm:p-4">
+              <div className="bg-card border border-border rounded-md p-3 sm:p-4">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Working Days</p>
                 <p className="text-2xl sm:text-3xl font-bold tabular-nums mt-1">{workingLogs.length}</p>
                 <p className="text-xs text-muted-foreground mt-1">{weekendDays} weekends · {offDays} off days</p>
               </div>
-              <div className="bg-card border border-border rounded-xl p-3 sm:p-4">
+              <div className="bg-card border border-border rounded-md p-3 sm:p-4">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Avg / Day</p>
                 <p className="text-2xl sm:text-3xl font-bold tabular-nums text-info mt-1">{avgPerDay}</p>
                 <p className="text-xs text-muted-foreground mt-1">docs per working day</p>
               </div>
-              <div className="bg-card border border-border rounded-xl p-3 sm:p-4">
+              <div className="bg-card border border-border rounded-md p-3 sm:p-4">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Best Day</p>
                 <p className="text-2xl sm:text-3xl font-bold tabular-nums text-warning mt-1">
                   {bestDay ? totalForLog(bestDay) : "—"}
@@ -278,7 +278,7 @@ const ReportPage = () => {
 
             {/* Category breakdown + bar chart */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+              <div className="bg-card border border-border rounded-md p-4 space-y-3">
                 <h2 className="text-sm font-medium">By Category</h2>
                 <div className="space-y-2">
                   {categoryBreakdown.map((c) => {
@@ -304,7 +304,7 @@ const ReportPage = () => {
                 </div>
               </div>
 
-              <div className="bg-card border border-border rounded-xl p-4">
+              <div className="bg-card border border-border rounded-md p-4">
                 <h2 className="text-sm font-medium mb-3">
                   Daily docs
                   <TrendingUp className="inline h-3.5 w-3.5 ml-1.5 text-muted-foreground" />
@@ -333,7 +333,7 @@ const ReportPage = () => {
             </div>
 
             {/* Day-by-day table */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="bg-card border border-border rounded-md overflow-hidden">
               <div className="px-4 py-3 border-b border-border flex items-center justify-between">
                 <h2 className="text-sm font-medium">Day-by-Day Breakdown</h2>
                 <span className="text-xs text-muted-foreground sm:hidden">← scroll →</span>

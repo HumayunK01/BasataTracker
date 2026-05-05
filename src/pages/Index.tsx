@@ -54,7 +54,7 @@ const Index = () => {
   const openNew = () => { setEditing(null); setOpen(true); };
 
   const isWeekendToday = (() => {
-    const day = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short" }).format(now);
+    const day = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", weekday: "short" }).format(now);
     return day === "Sat" || day === "Sun";
   })();
 
@@ -83,17 +83,17 @@ const Index = () => {
 
             {/* ── Per-category breakdown ── */}
             <section className="space-y-2 sm:space-y-3">
-              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">By Category — All Time</h2>
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">By Category — All Time</h2>
               <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
                 {isLoading
                   ? Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-2">
+                      <div key={i} className="bg-card border border-border rounded-md p-3 sm:p-4 space-y-2">
                         <Skeleton className="h-3 w-14" />
                         <Skeleton className="h-6 w-10" />
                       </div>
                     ))
                   : stats.categoryTotals.map((c) => (
-                      <div key={c.key} className="bg-card border border-border rounded-xl p-3 sm:p-4">
+                      <div key={c.key} className="bg-card border border-border rounded-md p-3 sm:p-4">
                         <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate">{c.label}</p>
                         <p className="text-xl sm:text-2xl font-bold mt-1 tabular-nums" style={{ color: colorForKey(c.key) }}>
                           {c.value}
@@ -107,7 +107,7 @@ const Index = () => {
             {/* ── Contribution heatmap ── */}
             <section>
               {isLoading ? (
-                <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 space-y-3">
+                <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div className="space-y-1.5">
                       <Skeleton className="h-4 w-36" />
@@ -116,7 +116,7 @@ const Index = () => {
                     <Skeleton className="h-3 w-48" />
                   </div>
                   <Skeleton className="h-3 w-full max-w-xs" />
-                  <Skeleton className="h-28 sm:h-36 w-full rounded-xl" />
+                  <Skeleton className="h-28 sm:h-36 w-full rounded-md" />
                 </div>
               ) : !isEmpty && (
                 <ContributionHeatmap logs={logs} />
@@ -125,7 +125,7 @@ const Index = () => {
 
             {/* ── Charts ── */}
             <section id="trends" className="space-y-2 sm:space-y-3">
-              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Trends & Breakdown</h2>
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Trends & Breakdown</h2>
               {isLoading ? (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   {Array.from({ length: 4 }).map((_, i) => (

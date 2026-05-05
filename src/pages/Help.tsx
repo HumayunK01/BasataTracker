@@ -22,7 +22,7 @@ function CopyButton({ text }: { text: string }) {
 
 function SectionCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 space-y-4">
+    <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-4">
       <div className="flex items-center gap-2.5">
         <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
           {icon}
@@ -43,7 +43,7 @@ interface PatientRowProps {
 
 function PatientRow({ name, docType, dob, children }: PatientRowProps) {
   return (
-    <div className="rounded-xl border border-border bg-muted/30 p-3 sm:p-4 space-y-2">
+    <div className="rounded-md border border-border bg-muted/30 p-3 sm:p-4 space-y-2">
       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
         <span className="text-sm font-semibold leading-snug">{name}</span>
         <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium whitespace-nowrap">{docType}</span>
@@ -137,7 +137,7 @@ export default function HelpPage() {
       <PageHeader subtitle="Categorization Guide" />
 
       <main className="flex-1 overflow-y-auto">
-        <div className="w-full max-w-5xl mx-auto px-3 sm:px-6 py-6 sm:py-8 space-y-4 sm:space-y-6">
+        <div className="w-full px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
           {/* Title */}
           <div>
@@ -201,7 +201,7 @@ export default function HelpPage() {
           <SectionCard icon={<FileText className="h-4 w-4 text-primary" />} title="Inbox Labeling — ROI Category">
             <div className="space-y-2">
               {roiRows.map((row) => (
-                <div key={row.label} className="flex flex-col xs:flex-row xs:items-center gap-2 rounded-xl border border-border bg-muted/20 px-3 sm:px-4 py-3">
+                <div key={row.label} className="flex flex-col xs:flex-row xs:items-center gap-2 rounded-md border border-border bg-muted/20 px-3 sm:px-4 py-3">
                   <span className={`text-xs font-semibold px-2 py-1 rounded-full w-fit shrink-0 ${row.color}`}>{row.label}</span>
                   <span className="text-sm text-muted-foreground">{row.desc}</span>
                 </div>
@@ -213,7 +213,7 @@ export default function HelpPage() {
           <SectionCard icon={<BookOpen className="h-4 w-4 text-primary" />} title="Indexing Labeling">
             <div className="space-y-3">
               {indexingRows.map((row) => (
-                <div key={row.label} className="rounded-xl border border-border bg-muted/20 px-3 sm:px-4 py-3 space-y-1">
+                <div key={row.label} className="rounded-md border border-border bg-muted/20 px-3 sm:px-4 py-3 space-y-1">
                   <span className="text-sm font-semibold">{row.label}</span>
                   <p className="text-xs text-muted-foreground">{row.desc}</p>
                   <code className="block text-xs bg-muted rounded px-2 py-1.5 font-mono text-foreground/80 mt-1 break-all sm:break-normal">
@@ -225,7 +225,7 @@ export default function HelpPage() {
           </SectionCard>
 
           {/* Info footer */}
-          <div className="flex items-start gap-2 rounded-xl border border-border bg-muted/20 px-3 sm:px-4 py-3">
+          <div className="flex items-start gap-2 rounded-md border border-border bg-muted/20 px-3 sm:px-4 py-3">
             <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground">
               For admin workflow details, refer to the{" "}

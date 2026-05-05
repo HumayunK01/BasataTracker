@@ -10,7 +10,7 @@ export function toCSV(logs: DailyLog[], categories: Category[]): string {
   };
   const rows = logs.map((l) => {
     const dayName = new Date(`${l.log_date}T12:00:00`).toLocaleDateString("en-US", {
-      timeZone: "America/New_York",
+      timeZone: "America/Chicago",
       weekday: "long",
     });
     return [

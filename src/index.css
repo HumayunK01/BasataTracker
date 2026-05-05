@@ -4,95 +4,106 @@
 
 @layer base {
   html, body {
-    font-family: system-ui, sans-serif;
+    font-family: "Hubot Sans", system-ui, sans-serif;
   }
 
   :root {
-    /* Basata-inspired dark theme */
-    --background: 220 38% 9%;
-    --foreground: 210 30% 92%;
+    /* Basata exact palette — gray-900 base, blue-500 accent */
+    --background: 221 39% 11%;       /* #111827 gray-900 */
+    --foreground: 220 9% 95%;        /* near-white on dark */
 
-    --card: 220 36% 12%;
-    --card-foreground: 210 30% 92%;
+    --card: 215 28% 17%;             /* #1F2937 gray-800 */
+    --card-foreground: 220 9% 95%;
 
-    --popover: 220 36% 12%;
-    --popover-foreground: 210 30% 92%;
+    --popover: 215 28% 17%;          /* #1F2937 */
+    --popover-foreground: 220 9% 95%;
 
-    --primary: 155 55% 62%;
-    --primary-foreground: 220 40% 10%;
+    --primary: 221 82% 54%;           /* #2663EB */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 30% 16%;
-    --secondary-foreground: 210 30% 92%;
+    --secondary: 215 25% 27%;        /* #374151 gray-700 */
+    --secondary-foreground: 220 9% 95%;
 
-    --muted: 220 30% 14%;
-    --muted-foreground: 215 18% 62%;
+    --muted: 215 25% 27%;            /* #374151 gray-700 */
+    --muted-foreground: 220 9% 63%;  /* #9CA3AF gray-400 */
 
-    --accent: 220 30% 18%;
-    --accent-foreground: 210 30% 92%;
+    --accent: 215 25% 27%;           /* #374151 gray-700 */
+    --accent-foreground: 220 9% 95%;
 
-    --destructive: 0 70% 58%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 96% 65%;        /* #FF4D4F */
+    --destructive-foreground: 0 0% 100%;
 
     --warning: 38 88% 60%;
-    --warning-foreground: 220 40% 10%;
+    --warning-foreground: 221 39% 11%;
 
-    --success: 155 55% 62%;
-    --success-foreground: 220 40% 10%;
+    --success: 130 60% 67%;           /* #7FDC91 */
+    --success-foreground: 221 39% 11%;
 
-    --info: 214 70% 68%;
-    --info-foreground: 220 40% 10%;
+    --info: 213 93% 68%;             /* #60A5FA blue-400 */
+    --info-foreground: 221 39% 11%;
 
-    --border: 220 30% 18%;
-    --input: 220 30% 16%;
-    --ring: 155 55% 62%;
+    --border: 215 20% 33%;           /* #4B5563 gray-600 — visible but subtle */
+    --input: 215 25% 27%;            /* #374151 gray-700 */
+    --ring: 221 82% 54%;             /* #2663EB */
 
     --radius: 0.5rem;
 
-    --sidebar-background: 220 38% 9%;
-    --sidebar-foreground: 210 30% 92%;
-    --sidebar-primary: 155 55% 62%;
-    --sidebar-primary-foreground: 220 40% 10%;
-    --sidebar-accent: 220 30% 18%;
-    --sidebar-accent-foreground: 210 30% 92%;
-    --sidebar-border: 220 30% 18%;
-    --sidebar-ring: 155 55% 62%;
+    --sidebar-background: 215 28% 17%; /* #1F2937 gray-800 */
+    --sidebar-foreground: 220 9% 95%;
+    --sidebar-primary: 204 60% 73%;    /* #95C4E1 */
+    --sidebar-primary-foreground: 221 39% 11%;
+    --sidebar-accent: 215 25% 27%;     /* #374151 */
+    --sidebar-accent-foreground: 220 9% 95%;
+    --sidebar-border: 215 20% 33%;     /* #4B5563 */
+    --sidebar-ring: 130 60% 67%;
   }
 
   .light {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 160 84% 35%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 210 40% 94%;
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 72% 50%;
-    --destructive-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 222 47% 11%;
-    --success: 160 84% 35%;
-    --success-foreground: 0 0% 100%;
-    --info: 217 91% 55%;
-    --info-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 160 84% 35%;
+    --background: 220 14% 96%;        /* #F3F4F6 gray-100 */
+    --foreground: 221 39% 11%;        /* #111827 gray-900 */
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 160 84% 35%;
+    --card: 0 0% 100%;                /* #FFFFFF */
+    --card-foreground: 221 39% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 221 39% 11%;
+
+    --primary: 221 82% 54%;           /* #2663EB */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 91%;         /* #E5E7EB gray-200 */
+    --secondary-foreground: 221 39% 11%;
+
+    --muted: 220 14% 91%;             /* #E5E7EB gray-200 */
+    --muted-foreground: 220 9% 46%;   /* #6B7280 gray-500 */
+
+    --accent: 220 14% 91%;            /* #E5E7EB */
+    --accent-foreground: 221 39% 11%;
+
+    --destructive: 0 84% 60%;         /* #EF4444 */
+    --destructive-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 221 39% 11%;
+
+    --success: 130 60% 67%;           /* #7FDC91 */
+    --success-foreground: 221 39% 11%;
+
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 220 13% 86%;            /* #D1D5DB gray-300 */
+    --input: 220 13% 86%;
+    --ring: 221 82% 54%;              /* #2663EB */
+
+    --sidebar-background: 0 0% 100%;  /* #FFFFFF */
+    --sidebar-foreground: 221 39% 11%;
+    --sidebar-primary: 221 82% 54%;   /* #2663EB */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 94%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 160 84% 35%;
+    --sidebar-accent: 220 14% 91%;
+    --sidebar-accent-foreground: 221 39% 11%;
+    --sidebar-border: 220 13% 86%;
+    --sidebar-ring: 221 82% 54%;
   }
 }
 
@@ -115,6 +126,10 @@
     touch-action: manipulation;
   }
 
+  table, table * {
+    font-family: system-ui, sans-serif;
+  }
+
   /* Smooth theme transition — only active during toggle, not on every interaction */
   html.theme-transitioning,
   html.theme-transitioning *,
@@ -125,7 +140,7 @@
 
   /* Subtle scrollbars — desktop only */
   @media (min-width: 640px) {
-    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: hsl(var(--background)); }
     ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 5px; }
     ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.4); }

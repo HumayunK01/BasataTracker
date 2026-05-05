@@ -14,7 +14,7 @@ export function totalForLog(log: Pick<DailyLog, "counts">): number {
   return Object.values(log.counts ?? {}).reduce((sum, v) => sum + (v || 0), 0);
 }
 
-const US_TZ = "America/New_York";
+const US_TZ = "America/Chicago";
 const US_LOCALE = "en-US";
 
 export function isoDate(d: Date = new Date()) {

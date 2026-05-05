@@ -204,7 +204,7 @@ export default function SettingsPage() {
       <PageHeader subtitle="Settings" />
 
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-4 sm:space-y-6">
+        <div className="w-full px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
           {/* Page title */}
           <div>
@@ -216,7 +216,7 @@ export default function SettingsPage() {
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
 
             {/* Account card */}
-            <div className="col-span-2 sm:col-span-1 bg-card border border-border rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4">
+            <div className="col-span-2 sm:col-span-1 bg-card border border-border rounded-md p-4 sm:p-5 space-y-3 sm:space-y-4">
               <div className="flex items-center gap-2.5">
                 <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
@@ -253,7 +253,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Password card */}
-            <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4">
+            <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-3 sm:space-y-4">
               <div className="flex items-center gap-2.5">
                 <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
                   <KeyRound className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-warning" />
@@ -293,7 +293,7 @@ export default function SettingsPage() {
             </div>
 
             {/* About card */}
-            <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4">
+            <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-3 sm:space-y-4">
               <div className="flex items-center gap-2.5">
                 <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-info/10 flex items-center justify-center shrink-0">
                   <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-info" />
@@ -328,7 +328,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Categories — full width */}
-          <div className="bg-card border border-border rounded-2xl overflow-hidden">
+          <div className="bg-card border border-border rounded-md overflow-hidden">
             <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-border">
               <div className="flex items-center gap-2.5 sm:gap-3">
                 <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -408,7 +408,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Danger zone — full width */}
-          <div className="bg-card border border-destructive/30 rounded-2xl overflow-hidden">
+          <div className="bg-card border border-destructive/30 rounded-md overflow-hidden">
             <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-destructive/20">
               <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
                 <UserX className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-destructive" />
