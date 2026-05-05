@@ -163,7 +163,7 @@ export function DaysTable({ logs, onEdit }: Props) {
 
   return (
     <>
-      <div className="flex flex-col h-full min-h-0 gap-3">
+      <div className="flex flex-col h-full min-h-0 gap-3 font-[system-ui]">
 
         {/* Search + summary */}
         <div className="flex items-center gap-3 shrink-0 px-0">

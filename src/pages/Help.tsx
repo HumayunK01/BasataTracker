@@ -136,7 +136,7 @@ export default function HelpPage() {
     <>
       <PageHeader subtitle="Categorization Guide" />
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto font-[system-ui]">
         <div className="w-full px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
           {/* Title */}
