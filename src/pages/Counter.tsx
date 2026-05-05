@@ -128,10 +128,10 @@ export default function CounterPage() {
       />
 
       <main className="flex-1 overflow-y-auto">
-        <div className="w-full max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col gap-4 sm:gap-6">
+        <div className="w-full px-4 sm:px-6 py-4 sm:py-6 flex flex-col gap-4 sm:gap-6">
 
           {/* Total strip */}
-          <div className="bg-card border border-border rounded-2xl px-5 py-4 flex items-center justify-between gap-4">
+          <div className="bg-card border border-border rounded-md px-5 py-4 flex items-center justify-between gap-4">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-widest">Total today</p>
               <p className="text-5xl sm:text-6xl font-black tabular-nums text-primary leading-none mt-1">{total}</p>
@@ -173,7 +173,7 @@ export default function CounterPage() {
                 return (
                   <div
                     key={cat.key}
-                    className="rounded-2xl border flex flex-col relative"
+                    className="rounded-md border flex flex-col relative"
                     style={{ borderColor: `${clr}4d`, backgroundColor: `${clr}1a` }}
                   >
                     {/* Header row */}
@@ -201,7 +201,7 @@ export default function CounterPage() {
                     <button
                       type="button"
                       onClick={() => increment(cat.key)}
-                      className="flex items-center justify-center py-5 sm:py-6 mx-2 rounded-xl active:scale-95 transition-transform duration-100 touch-manipulation select-none"
+                      className="flex items-center justify-center py-5 sm:py-6 mx-2 rounded-md active:scale-95 transition-transform duration-100 touch-manipulation select-none"
                       style={{ backgroundColor: `${clr}0d` }}
                       title="Tap to count"
                     >
@@ -219,7 +219,7 @@ export default function CounterPage() {
                         type="button"
                         onClick={() => decrement(cat.key)}
                         disabled={count === 0}
-                        className="flex-1 flex items-center justify-center h-11 rounded-xl border transition-all active:scale-95 disabled:opacity-25 disabled:cursor-not-allowed touch-manipulation"
+                        className="flex-1 flex items-center justify-center h-11 rounded-md border transition-all active:scale-95 disabled:opacity-25 disabled:cursor-not-allowed touch-manipulation"
                         style={{ borderColor: `${clr}4d`, backgroundColor: `${clr}33` }}
                       >
                         <Minus className="h-4 w-4" style={{ color: clr }} />
@@ -227,7 +227,7 @@ export default function CounterPage() {
                       <button
                         type="button"
                         onClick={() => increment(cat.key)}
-                        className="flex-1 flex items-center justify-center h-11 rounded-xl border transition-all active:scale-95 touch-manipulation"
+                        className="flex-1 flex items-center justify-center h-11 rounded-md border transition-all active:scale-95 touch-manipulation"
                         style={{ borderColor: `${clr}4d`, backgroundColor: `${clr}33` }}
                       >
                         <Plus className="h-4 w-4" style={{ color: clr }} />
@@ -246,7 +246,7 @@ export default function CounterPage() {
                 type="button"
                 onClick={() => setPickerOpen(true)}
                 disabled={catsLoading || availableToAdd.length === 0}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl border border-dashed border-border py-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
+                className="w-full flex items-center justify-center gap-2 rounded-md border border-dashed border-border py-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
               >
                 <Plus className="h-4 w-4" />
                 {catsLoading
@@ -258,7 +258,7 @@ export default function CounterPage() {
                   : "Add category"}
               </button>
             ) : (
-              <div className="rounded-2xl border border-border bg-card p-4 space-y-1 max-h-64 overflow-y-auto">
+              <div className="rounded-md border border-border bg-card p-4 space-y-1 max-h-64 overflow-y-auto">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-medium">Select a category</p>
                   <button
@@ -276,7 +276,7 @@ export default function CounterPage() {
                       key={cat.key}
                       type="button"
                       onClick={() => addCategory(cat)}
-                      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted/50 active:bg-muted transition-colors text-left touch-manipulation"
+                      className="w-full flex items-center gap-3 px-3 py-3 rounded-md hover:bg-muted/50 active:bg-muted transition-colors text-left touch-manipulation"
                     >
                       <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: clr }} />
                       <span className="text-sm flex-1">{cat.label}</span>

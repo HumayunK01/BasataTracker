@@ -1,30 +1,35 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { CalendarDays, LayoutDashboard, FileBarChart, Hash, HelpCircle, X } from "lucide-react";
+import { CalendarDays, LayoutDashboard, FileBarChart, Hash, HelpCircle, X, ChevronDown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarRail,
   SidebarSeparator,
   useSidebar,
-
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { AppLogo } from "@/components/ar/AppLogo";
+import { cn } from "@/lib/utils";
 
-const navItems = [
-  { title: "Dashboard", icon: LayoutDashboard, path: "/" },
-  { title: "Daily Log", icon: CalendarDays, path: "/log" },
-  { title: "Counter", icon: Hash, path: "/counter" },
-  { title: "Report", icon: FileBarChart, path: "/report" },
-  { title: "Help & Guide", icon: HelpCircle, path: "/help" },
+const groups = [
+  {
+    label: "Dashboards",
+    items: [
+      { title: "Dashboard", icon: LayoutDashboard, path: "/" },
+      { title: "Report", icon: FileBarChart, path: "/report" },
+    ],
+  },
+  {
+    label: "Documents",
+    items: [
+      { title: "Counter", icon: Hash, path: "/counter" },
+      { title: "Daily Log", icon: CalendarDays, path: "/log" },
+      { title: "Help & Guide", icon: HelpCircle, path: "/help" },
+    ],
+  },
 ];
 
 export function AppSidebar() {
@@ -41,14 +46,13 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
 
-      {/* Sidebar header — logo always visible, close button on mobile */}
       <SidebarHeader className="flex flex-row items-center justify-between px-4 py-3">
-        <AppLogo className="h-10 object-contain group-data-[collapsible=icon]:hidden" />
+        <AppLogo className="h-12 object-contain group-data-[collapsible=icon]:hidden" />
         {isMobile && (
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground shrink-0"
+            className="h-7 w-7 text-muted-foreground shrink-0"
             onClick={() => setOpenMobile(false)}
           >
             <X className="h-4 w-4" />
@@ -56,39 +60,53 @@ export function AppSidebar() {
         )}
       </SidebarHeader>
 
-      <SidebarContent>
-        {/* Mobile user info */}
+      <SidebarContent className="py-2">
         {isMobile && user?.email && (
-          <div className="px-4 py-3 border-b border-border">
+          <div className="px-4 py-2 border-b border-border mb-1">
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Signed in as</p>
             <p className="text-sm font-medium truncate">{user.email}</p>
           </div>
         )}
 
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton
-                    isActive={location.pathname === item.path}
-                    onClick={() => go(item.path)}
-                    tooltip={item.title}
-                    className={isMobile ? "h-12 text-base" : ""}
-                  >
-                    <item.icon className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {groups.map((group) => (
+          <div key={group.label} className="mb-1">
+            {/* Group label */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 group-data-[collapsible=icon]:hidden">
+              <ChevronDown className="h-3.5 w-3.5 text-foreground shrink-0" />
+              <span className="text-xs font-bold text-foreground uppercase tracking-wide">{group.label}</span>
+            </div>
+
+            {/* Nav items */}
+            <ul className="space-y-0.5 px-2">
+              {group.items.map((item) => {
+                const active = location.pathname === item.path;
+                return (
+                  <li key={item.path}>
+                    <button
+                      onClick={() => go(item.path)}
+                      title={item.title}
+                      className={cn(
+                        "w-full flex items-center gap-3 px-3 py-2 rounded-md text-base transition-colors",
+                        active
+                          ? "bg-sidebar-accent font-medium"
+                          : "text-foreground hover:bg-sidebar-accent/60",
+                      )}
+                      style={active ? { color: "hsl(var(--sidebar-primary))" } : undefined}
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      <span className="group-data-[collapsible=icon]:hidden truncate">{item.title}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
       </SidebarContent>
 
       <SidebarFooter>
         <SidebarSeparator />
-        <div className="text-center group-data-[collapsible=icon]:hidden">
+        <div className="text-center group-data-[collapsible=icon]:hidden pb-1">
           <p className="text-xs text-muted-foreground/50">Version 1.0.0</p>
         </div>
       </SidebarFooter>

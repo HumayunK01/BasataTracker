@@ -54,7 +54,7 @@ function ChartCard({ title, subtitle, height = "h-48 sm:h-56", children, classNa
   className?: string;
 }) {
   return (
-    <div className={`bg-card border border-border rounded-2xl p-4 sm:p-5 ${className}`}>
+    <div className={`bg-card border border-border rounded-md p-4 sm:p-5 ${className}`}>
       <div className="mb-3 sm:mb-4">
         <h3 className="text-sm font-semibold">{title}</h3>
         {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
@@ -208,7 +208,7 @@ export function Charts({ logs, categories }: Props) {
           </AreaChart>
         </ChartCard>
 
-        <div className="bg-card border border-border rounded-2xl p-4 sm:p-5">
+        <div className="bg-card border border-border rounded-md p-4 sm:p-5">
           <h3 className="text-sm font-semibold mb-3">Work mix — all time</h3>
           <div className="h-40 sm:h-44">
             <ResponsiveContainer width="100%" height="100%">
@@ -306,7 +306,7 @@ export function Charts({ logs, categories }: Props) {
       </div>
 
       {/* Row 4: Full-width stacked bar breakdown */}
-      <div id="breakdown" className="bg-card border border-border rounded-2xl p-4 sm:p-5">
+      <div id="breakdown" className="bg-card border border-border rounded-md p-4 sm:p-5">
         <div className="mb-3 sm:mb-4">
           <h3 className="text-sm font-semibold">Document Breakdown</h3>
           <p className="text-xs text-muted-foreground mt-0.5">Last 14 working days by category</p>

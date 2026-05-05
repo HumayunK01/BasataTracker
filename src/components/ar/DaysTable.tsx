@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { colorForKey } from "@/lib/cat-colors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +24,7 @@ import {
 import { formatTableDate, isWeekend, totalForLog, type DailyLog } from "@/types/log";
 import { useDeleteLog } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
-import { Trash2, Pencil, Search, ChevronLeft, ChevronRight, BedDouble, Copy } from "lucide-react";
+import { Trash2, Pencil, Search, ChevronLeft, ChevronRight, BedDouble, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
@@ -31,12 +32,12 @@ interface Props {
   onEdit: (log: DailyLog) => void;
 }
 
-const ITEMS_PER_PAGE = 15;
-
 export function DaysTable({ logs, onEdit }: Props) {
   const [page, setPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<DailyLog | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const deleteLog = useDeleteLog();
   const { data: categories = [] } = useCategories();
 
@@ -65,8 +66,8 @@ export function DaysTable({ logs, onEdit }: Props) {
     );
   }, [workingLogs, categories]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginated = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   const goTo = (p: number) => setPage(Math.max(1, Math.min(totalPages, p)));
 
@@ -83,6 +84,11 @@ export function DaysTable({ logs, onEdit }: Props) {
     const html = `<table style="border-collapse:collapse;font-family:sans-serif;font-size:13px;">${rows.map(([k, v]) => `<tr><td style="${thStyle}">${k}</td><td style="${tdStyle}">${v}</td></tr>`).join("")}</table>`;
     const plain = rows.map(([k, v]) => `${k}\t${v}`).join("\n");
 
+    const onCopied = () => {
+      setCopiedId(l.id);
+      setTimeout(() => setCopiedId(null), 1500);
+    };
+
     if (navigator.clipboard && window.ClipboardItem) {
       navigator.clipboard
         .write([
@@ -91,9 +97,9 @@ export function DaysTable({ logs, onEdit }: Props) {
             "text/plain": new Blob([plain], { type: "text/plain" }),
           }),
         ])
-        .then(() => toast.success("Copied as table"));
+        .then(onCopied);
     } else {
-      navigator.clipboard.writeText(plain).then(() => toast.success("Copied"));
+      navigator.clipboard.writeText(plain).then(onCopied);
     }
   };
 
@@ -114,32 +120,43 @@ export function DaysTable({ logs, onEdit }: Props) {
 
   const Pagination = () =>
     totalPages > 1 ? (
-      <div className="shrink-0 border-t border-border px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2">
-        <span className="text-xs text-muted-foreground">
-          {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filtered.length)} of {filtered.length}
-        </span>
-        <div className="flex items-center gap-0.5">
-          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => goTo(page - 1)} disabled={page === 1}>
+      <div className="shrink-0 py-2.5 flex items-center relative">
+        <div className="flex items-center gap-1 mx-auto">
+          <Button size="sm" className="h-8 px-3 text-sm rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(1)} disabled={page === 1}>First</Button>
+          <Button size="icon" className="h-8 w-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page - 1)} disabled={page === 1}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
           {pageNumbers.map((p, i) =>
             p === "…" ? (
-              <span key={`e-${i}`} className="w-8 text-center text-xs text-muted-foreground">…</span>
+              <span key={`e-${i}`} className="w-8 text-center text-sm text-muted-foreground">…</span>
             ) : (
               <Button
                 key={p}
-                variant={page === p ? "default" : "ghost"}
                 size="icon"
-                className="h-9 w-9 text-xs"
+                className={`h-8 w-8 text-sm rounded-md border border-border ${page === p ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-sidebar text-foreground hover:bg-muted"}`}
                 onClick={() => goTo(p as number)}
               >
                 {p}
               </Button>
             ),
           )}
-          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => goTo(page + 1)} disabled={page === totalPages}>
+          <Button size="icon" className="h-8 w-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page + 1)} disabled={page === totalPages}>
             <ChevronRight className="h-4 w-4" />
           </Button>
+          <Button size="sm" className="h-8 px-3 text-sm rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(totalPages)} disabled={page === totalPages}>Last</Button>
+        </div>
+        <div className="absolute right-0 flex items-center gap-2 text-sm text-muted-foreground">
+          <span>Items per page</span>
+          <Select value={String(itemsPerPage)} onValueChange={(v) => { setItemsPerPage(Number(v)); setPage(1); }}>
+            <SelectTrigger className="h-8 w-16 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[10, 20, 50, 100].map((n) => (
+                <SelectItem key={n} value={String(n)} className="text-xs">{n}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
     ) : null;
@@ -149,17 +166,17 @@ export function DaysTable({ logs, onEdit }: Props) {
       <div className="flex flex-col h-full min-h-0 gap-3">
 
         {/* Search + summary */}
-        <div className="flex flex-col xs:flex-row xs:items-center gap-2 shrink-0">
-          <div className="relative w-full xs:flex-1 xs:max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+        <div className="flex items-center gap-3 shrink-0 px-0">
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
-              className="pl-8 h-9 text-sm w-full"
-              placeholder="Search by date or day…"
+              className="pl-9 h-10 text-sm w-full bg-card border-border"
+              placeholder="Search by date…"
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-2 xs:gap-3 text-xs text-muted-foreground flex-wrap">
+          <div className="ml-auto flex items-center gap-4 text-sm text-muted-foreground">
             <span><span className="font-semibold text-foreground">{workingLogs.length}</span> working days</span>
             <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && isWeekend(l.log_date)).length}</span> weekends</span>
             <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && !isWeekend(l.log_date)).length}</span> off days</span>
@@ -168,8 +185,8 @@ export function DaysTable({ logs, onEdit }: Props) {
         </div>
 
         {/* ── MOBILE card list (hidden sm+) ── */}
-        <div className="flex flex-col flex-1 min-h-0 sm:hidden bg-card border border-border rounded-xl overflow-hidden">
-          <div className="flex-1 overflow-y-auto no-scrollbar divide-y divide-border/50">
+        <div className="flex flex-col flex-1 min-h-0 sm:hidden bg-card border border-border rounded-md overflow-hidden">
+          <div className="flex-1 overflow-y-auto no-scrollbar divide-y divide-border/50 min-h-0">
             {paginated.length === 0 && (
               <p className="text-center text-muted-foreground py-16 text-sm">
                 {search ? "No entries match your search." : "No days logged yet."}
@@ -205,7 +222,6 @@ export function DaysTable({ logs, onEdit }: Props) {
 
               return (
                 <div key={l.id} className="px-4 py-3 space-y-2">
-                  {/* Top row: date + total + actions */}
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold tabular-nums flex-1">{formatTableDate(l.log_date)}</span>
                     <span className="text-2xl font-black tabular-nums text-primary leading-none">{total}</span>
@@ -221,7 +237,6 @@ export function DaysTable({ logs, onEdit }: Props) {
                       </Button>
                     </div>
                   </div>
-                  {/* Pills row */}
                   {activeCats.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                       {activeCats.map((c) => {
@@ -242,23 +257,22 @@ export function DaysTable({ logs, onEdit }: Props) {
               );
             })}
           </div>
-          <Pagination />
         </div>
 
         {/* ── DESKTOP table (hidden below sm) ── */}
-        <div className="hidden sm:flex flex-col flex-1 min-h-0 bg-card border border-border rounded-xl overflow-hidden">
-          <div className="flex-1 overflow-auto no-scrollbar">
-            <Table>
+        <div className="hidden sm:flex flex-col bg-card border border-border rounded-md overflow-hidden">
+          <div className="overflow-auto no-scrollbar">
+            <Table className="[&_th]:border-r [&_th]:border-border [&_th:last-child]:border-r-0 [&_td]:border-r [&_td]:border-border/40 [&_td:last-child]:border-r-0">
               <TableHeader>
-                <TableRow className="hover:bg-transparent border-b border-border">
-                  <TableHead className="w-[120px] font-medium text-xs">Date</TableHead>
+                <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
+                  <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center py-3">Date</TableHead>
                   {categories.map((c) => (
-                    <TableHead key={c.key} className="font-medium text-xs text-center w-[72px]">
-                      <span style={{ color: colorForKey(c.key) }}>{c.short}</span>
+                    <TableHead key={c.key} className="font-bold text-xs uppercase tracking-wider text-center text-foreground">
+                      {c.short}
                     </TableHead>
                   ))}
-                  <TableHead className="font-medium text-xs text-center w-[72px]">Total</TableHead>
-                  <TableHead className="w-[72px]" />
+                  <TableHead className="font-bold text-xs uppercase tracking-wider text-center text-foreground">Total</TableHead>
+                  <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -272,11 +286,11 @@ export function DaysTable({ logs, onEdit }: Props) {
                 {paginated.map((l) => {
                   const total = logTotal(l);
                   return l.is_off_day ? (
-                    <TableRow key={l.id} className="group border-b border-border/50 last:border-0 bg-muted/20">
-                      <TableCell className="tabular-nums text-sm font-medium py-2.5 text-muted-foreground">
+                    <TableRow key={l.id} className="border-b border-border/40 last:border-0 bg-muted/10">
+                      <TableCell className="tabular-nums text-sm font-medium py-3 text-muted-foreground text-center">
                         {formatTableDate(l.log_date)}
                       </TableCell>
-                      <TableCell colSpan={categories.length + 1} className="py-2.5">
+                      <TableCell colSpan={categories.length + 1} className="py-3">
                         <div className="flex items-center gap-1.5">
                           <BedDouble className="h-3.5 w-3.5 text-muted-foreground" />
                           <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">
@@ -284,49 +298,49 @@ export function DaysTable({ logs, onEdit }: Props) {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="py-2.5">
-                        <div className="flex gap-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => copyLog(l)}>
-                            <Copy className="h-3.5 w-3.5" />
+                      <TableCell className="py-3">
+                        <div className="flex gap-1 justify-center">
+                          <Button size="icon" className="h-7 w-7 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => copyLog(l)} title="Copy">
+                            {copiedId === l.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => onEdit(l)}>
+                          <Button variant="secondary" size="icon" className="h-7 w-7" onClick={() => onEdit(l)} title="Edit">
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(l)}>
+                          <Button variant="secondary" size="icon" className="h-7 w-7 hover:bg-destructive/20 hover:text-destructive" onClick={() => setDeleteTarget(l)} title="Delete">
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
                       </TableCell>
                     </TableRow>
                   ) : (
-                    <TableRow key={l.id} className="group border-b border-border/50 last:border-0">
-                      <TableCell className="tabular-nums text-sm font-medium py-2.5">
+                    <TableRow key={l.id} className="border-b border-border/40 last:border-0 hover:bg-muted/20 transition-colors">
+                      <TableCell className="tabular-nums text-sm font-medium py-3 text-foreground text-center">
                         {formatTableDate(l.log_date)}
                       </TableCell>
                       {categories.map((c) => {
                         const v = getVal(l, c.key);
                         return (
-                          <TableCell key={c.key} className="text-center tabular-nums text-sm py-2.5">
+                          <TableCell key={c.key} className="text-center tabular-nums text-sm py-3">
                             {v > 0 ? (
-                              <span className="font-medium" style={{ color: colorForKey(c.key) }}>{v}</span>
+                              <span className="font-medium text-foreground">{v}</span>
                             ) : (
                               <span className="text-muted-foreground/30">—</span>
                             )}
                           </TableCell>
                         );
                       })}
-                      <TableCell className="text-center tabular-nums py-2.5">
-                        <span className="font-bold text-sm">{total}</span>
+                      <TableCell className="text-center tabular-nums py-3">
+                        <span className="font-bold text-sm text-foreground">{total}</span>
                       </TableCell>
-                      <TableCell className="py-2.5">
-                        <div className="flex gap-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => copyLog(l)}>
-                            <Copy className="h-3.5 w-3.5" />
+                      <TableCell className="py-3">
+                        <div className="flex gap-1 justify-center">
+                          <Button size="icon" className="h-7 w-7 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => copyLog(l)} title="Copy">
+                            {copiedId === l.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => onEdit(l)}>
+                          <Button variant="secondary" size="icon" className="h-7 w-7" onClick={() => onEdit(l)} title="Edit">
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(l)}>
+                          <Button variant="secondary" size="icon" className="h-7 w-7 hover:bg-destructive/20 hover:text-destructive" onClick={() => setDeleteTarget(l)} title="Delete">
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
@@ -337,8 +351,9 @@ export function DaysTable({ logs, onEdit }: Props) {
               </TableBody>
             </Table>
           </div>
-          <Pagination />
         </div>
+
+        <Pagination />
 
       </div>
 
