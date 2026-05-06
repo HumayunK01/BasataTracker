@@ -305,7 +305,7 @@ export default function SettingsPage() {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Version</span>
-                    <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded">1.0.0</span>
+                    <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded">1.1.0</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Categories</span>

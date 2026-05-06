@@ -2,12 +2,20 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
 import { isoDate, formatTableDate, isWeekend, totalForLog } from "@/types/log";
 import { PageHeader } from "@/components/ar/PageHeader";
-import { downloadCSV } from "@/lib/log-utils";
-import { Download, BedDouble, TrendingUp, CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
+import { downloadCSV, downloadJSON } from "@/lib/log-utils";
+import { Download, FileJson, FileText, ChevronDown, BedDouble, TrendingUp, CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
 
 const TABLE_PAGE_SIZE = 20;
 import { Skeleton } from "@/components/ui/skeleton";
@@ -164,10 +172,13 @@ const ReportPage = () => {
     return pages;
   }, [totalTablePages, tablePage]);
 
-  const handleExport = () => {
-    const sorted = [...filtered].sort((a, b) => b.log_date.localeCompare(a.log_date));
-    downloadCSV(sorted, categories, `report-${startDate}-to-${endDate}.csv`);
-  };
+  const exportedLogs = useMemo(
+    () => [...filtered].sort((a, b) => b.log_date.localeCompare(a.log_date)),
+    [filtered],
+  );
+  const exportFilename = `report-${startDate}-to-${endDate}`;
+  const handleExportCSV = () => downloadCSV(exportedLogs, categories, `${exportFilename}.csv`);
+  const handleExportJSON = () => downloadJSON(exportedLogs, categories, `${exportFilename}.json`);
 
   const rangeLabel = startDate && endDate
     ? `${formatTableDate(startDate)} – ${formatTableDate(endDate)}`
@@ -179,14 +190,28 @@ const ReportPage = () => {
         now={now}
         subtitle="Report"
         actions={
-          <>
-            <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden shrink-0" onClick={handleExport} disabled={filtered.length === 0}>
-              <Download className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm" className="hidden sm:flex shrink-0" onClick={handleExport} disabled={filtered.length === 0}>
-              <Download className="h-4 w-4 mr-1" /> Export CSV
-            </Button>
-          </>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden shrink-0" disabled={filtered.length === 0}>
+                <Download className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="hidden sm:flex h-8 shrink-0" disabled={filtered.length === 0}>
+                <Download className="h-4 w-4 mr-1" /> Export <ChevronDown className="h-3 w-3 ml-1 opacity-60" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Export filtered range</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleExportCSV}>
+                <FileText className="h-4 w-4 mr-2" /> CSV (.csv)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportJSON}>
+                <FileJson className="h-4 w-4 mr-2" /> JSON (.json)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         }
       />
       <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6">
