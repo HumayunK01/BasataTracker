@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import {
   Area,
   AreaChart,
@@ -68,7 +68,7 @@ function ChartCard({ title, subtitle, height = "h-48 sm:h-56", children, classNa
   );
 }
 
-export function Charts({ logs, categories }: Props) {
+export const Charts = memo(function Charts({ logs, categories }: Props) {
   const workingLogs = useMemo(() => logs.filter((l) => !l.is_off_day), [logs]);
   const sorted = useMemo(
     () => [...workingLogs].sort((a, b) => a.log_date.localeCompare(b.log_date)),
@@ -355,4 +355,4 @@ export function Charts({ logs, categories }: Props) {
 
     </div>
   );
-}
+});
