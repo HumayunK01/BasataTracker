@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { isoDate, isWeekend, totalForLog, type DailyLog } from "@/types/log";
 
 interface Props {
@@ -91,7 +91,7 @@ const INTENSITY_BG: Record<0 | 1 | 2 | 3 | 4, string> = {
   4: "bg-primary",
 };
 
-export function ContributionHeatmap({ logs }: Props) {
+export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: Props) {
   const [tooltip, setTooltip] = useState<{
     iso: string; total: number; isOffDay: boolean; isWeekend: boolean;
     isFuture: boolean; isToday: boolean; x: number; y: number;
@@ -311,4 +311,4 @@ export function ContributionHeatmap({ logs }: Props) {
       )}
     </div>
   );
-}
+});

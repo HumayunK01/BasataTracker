@@ -46,8 +46,13 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
 
-      <SidebarHeader className="flex flex-row items-center justify-between px-4 py-3">
+      <SidebarHeader className="flex flex-row items-center justify-between px-4 py-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-3">
         <AppLogo className="h-12 object-contain group-data-[collapsible=icon]:hidden" />
+        <img
+          src="/favicon.png"
+          alt="Basata.ai"
+          className="h-7 w-7 object-contain hidden group-data-[collapsible=icon]:block mx-auto"
+        />
         {isMobile && (
           <Button
             variant="ghost"
@@ -69,15 +74,15 @@ export function AppSidebar() {
         )}
 
         {groups.map((group) => (
-          <div key={group.label} className="mb-1">
+          <div key={group.label} className="mb-1 group-data-[collapsible=icon]:mb-0">
             {/* Group label */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 group-data-[collapsible=icon]:hidden">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:h-0 group-data-[collapsible=icon]:py-0 group-data-[collapsible=icon]:overflow-hidden">
               <ChevronDown className="h-3.5 w-3.5 text-foreground shrink-0" />
               <span className="text-xs font-bold text-foreground uppercase tracking-wide font-[system-ui]">{group.label}</span>
             </div>
 
             {/* Nav items */}
-            <ul className="space-y-0.5 px-2">
+            <ul className="space-y-0.5 px-2 group-data-[collapsible=icon]:px-1">
               {group.items.map((item) => {
                 const active = location.pathname === item.path;
                 return (
@@ -87,6 +92,7 @@ export function AppSidebar() {
                       title={item.title}
                       className={cn(
                         "w-full flex items-center gap-3 px-3 py-2 rounded-md text-base transition-colors",
+                        "group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-2 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:mx-auto",
                         active
                           ? "bg-sidebar-accent font-medium"
                           : "text-foreground hover:bg-sidebar-accent/60",
