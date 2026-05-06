@@ -1,16 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { DayEntrySheet } from "@/components/ar/DayEntrySheet";
 import { DaysTable } from "@/components/ar/DaysTable";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
-import { downloadCSV } from "@/lib/log-utils";
+import { useCategories } from "@/hooks/useCategories";
+import { downloadCSV, downloadJSON } from "@/lib/log-utils";
 import { isoDate, totalForLog, type DailyLog } from "@/types/log";
-import { Download, Plus } from "lucide-react";
+import { Download, FileJson, FileText, Plus, ChevronDown } from "lucide-react";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const DailyLogPage = () => {
   const { data: logs = [], isLoading } = useDailyLogs();
+  const { data: categories = [] } = useCategories();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<DailyLog | null>(null);
   const [now, setNow] = useState(() => new Date());
@@ -51,12 +61,28 @@ const DailyLogPage = () => {
         subtitle={todayLog ? <span className="text-success">{totalForLog(todayLog)} docs logged today</span> : undefined}
         actions={
           <>
-            <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden" onClick={() => downloadCSV(logs)} disabled={logs.length === 0}>
-              <Download className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm" className="hidden sm:flex" onClick={() => downloadCSV(logs)} disabled={logs.length === 0}>
-              <Download className="h-4 w-4 mr-1" /> Export
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden" disabled={logs.length === 0}>
+                  <Download className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="hidden sm:flex h-8" disabled={logs.length === 0}>
+                  <Download className="h-4 w-4 mr-1" /> Export <ChevronDown className="h-3 w-3 ml-1 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Export all logs</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => downloadCSV(logs, categories, "daily-log.csv")}>
+                  <FileText className="h-4 w-4 mr-2" /> CSV (.csv)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => downloadJSON(logs, categories, "daily-log.json")}>
+                  <FileJson className="h-4 w-4 mr-2" /> JSON (.json)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button size="sm" className="h-8" onClick={openNew}>
               <Plus className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">Log day</span>
