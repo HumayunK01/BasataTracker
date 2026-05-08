@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { CalendarDays, LayoutDashboard, FileBarChart, Hash, HelpCircle, X, ChevronDown } from "lucide-react";
+import { CalendarDays, LayoutDashboard, FileBarChart, Hash, HelpCircle, X, ChevronDown, Settings, Sun, Moon, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import {
   Sidebar,
   SidebarContent,
@@ -36,7 +37,8 @@ export function AppSidebar() {
   const { isMobile, setOpenMobile } = useSidebar();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const { theme, toggle } = useTheme();
 
   const go = (path: string) => {
     navigate(path);
@@ -112,6 +114,39 @@ export function AppSidebar() {
 
       <SidebarFooter>
         <SidebarSeparator />
+        {isMobile && (
+          <ul className="space-y-0.5 px-2 py-1">
+            <li>
+              <button
+                onClick={() => { navigate("/settings"); setOpenMobile(false); }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-base transition-colors text-foreground hover:bg-sidebar-accent/60"
+              >
+                <Settings className="h-4 w-4 shrink-0" />
+                <span className="font-[system-ui]">Settings</span>
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={toggle}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-base transition-colors text-foreground hover:bg-sidebar-accent/60"
+              >
+                {theme === "dark"
+                  ? <Sun className="h-4 w-4 shrink-0" />
+                  : <Moon className="h-4 w-4 shrink-0" />}
+                <span className="font-[system-ui]">{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={signOut}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-base transition-colors text-destructive hover:bg-destructive/10"
+              >
+                <LogOut className="h-4 w-4 shrink-0" />
+                <span className="font-[system-ui]">Sign out</span>
+              </button>
+            </li>
+          </ul>
+        )}
         <div className="text-center group-data-[collapsible=icon]:hidden pb-1">
           <p className="text-xs text-muted-foreground/50">Version 1.1.0</p>
         </div>
