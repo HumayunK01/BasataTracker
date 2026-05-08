@@ -37,13 +37,13 @@ export function PageHeader({ subtitle, actions, now }: PageHeaderProps) {
           </div>
         </div>
 
-        {/* Right: actions + settings + sign out + theme toggle */}
+        {/* Right: actions + settings + sign out + theme toggle (hidden on mobile, shown on desktop) */}
         <div className="flex items-center gap-1 shrink-0">
           {actions}
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-foreground hover:text-foreground/80"
+            className="hidden md:flex h-9 w-9 text-foreground hover:text-foreground/80"
             onClick={() => navigate("/settings")}
             title="Settings"
           >
@@ -52,7 +52,7 @@ export function PageHeader({ subtitle, actions, now }: PageHeaderProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-foreground hover:text-foreground/80"
+            className="hidden md:flex h-9 w-9 text-foreground hover:text-foreground/80"
             onClick={toggle}
             title={theme === "dark" ? "Light mode" : "Dark mode"}
           >
@@ -63,7 +63,7 @@ export function PageHeader({ subtitle, actions, now }: PageHeaderProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-foreground hover:text-destructive"
+            className="hidden md:flex h-9 w-9 text-foreground hover:text-destructive"
             onClick={signOut}
             title="Sign out"
           >
