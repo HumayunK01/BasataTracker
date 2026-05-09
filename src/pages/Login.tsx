@@ -23,6 +23,8 @@ export default function LoginPage() {
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const attemptTimestamps = useRef<number[]>([]);
@@ -35,11 +37,21 @@ export default function LoginPage() {
     return true;
   };
 
+  const switchMode = (next: Mode) => {
+    setMode(next);
+    setFirstName("");
+    setLastName("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkRateLimit()) {
       toast.error("Too many attempts. Please wait a minute and try again.");
       return;
+    }
+    if (mode === "signup") {
+      if (!firstName.trim()) { toast.error("First name is required."); return; }
+      if (!lastName.trim()) { toast.error("Last name is required."); return; }
     }
     setLoading(true);
     try {
@@ -47,10 +59,16 @@ export default function LoginPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       } else {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { first_name: firstName.trim(), last_name: lastName.trim() },
+          },
+        });
         if (error) throw error;
         toast.success("Account created! Check your email to confirm.");
-        setMode("login");
+        switchMode("login");
       }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
@@ -63,7 +81,7 @@ export default function LoginPage() {
     <div className="flex h-screen w-screen items-center justify-center bg-background relative">
 
       {/* Card */}
-      <div className="w-full max-w-[16rem] bg-card rounded-md p-5 space-y-4 relative">
+      <div className={`w-full bg-card rounded-md p-5 space-y-4 relative transition-all duration-200 ${mode === "signup" ? "max-w-xs" : "max-w-[16rem]"}`}>
 
         {/* Theme toggle */}
         <button
@@ -85,9 +103,34 @@ export default function LoginPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3">
+
+          {/* Name fields — signup only */}
+          {mode === "signup" && (
+            <div className="flex flex-col xs:flex-row gap-2">
+              <Input
+                type="text"
+                placeholder="First name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+                autoComplete="given-name"
+                className="h-11 bg-muted border-0 placeholder:text-muted-foreground"
+              />
+              <Input
+                type="text"
+                placeholder="Last name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+                autoComplete="family-name"
+                className="h-11 bg-muted border-0 placeholder:text-muted-foreground"
+              />
+            </div>
+          )}
+
           <Input
             type="email"
-            placeholder="Username"
+            placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -147,13 +190,13 @@ export default function LoginPage() {
         <p className="text-center text-sm text-muted-foreground">
           {mode === "login" ? (
             <>Don't have an account?{" "}
-              <button type="button" onClick={() => setMode("signup")} className="text-primary hover:underline font-medium">
+              <button type="button" onClick={() => switchMode("signup")} className="text-primary hover:underline font-medium">
                 Sign up
               </button>
             </>
           ) : (
             <>Already have an account?{" "}
-              <button type="button" onClick={() => setMode("login")} className="text-primary hover:underline font-medium">
+              <button type="button" onClick={() => switchMode("login")} className="text-primary hover:underline font-medium">
                 Sign in
               </button>
             </>

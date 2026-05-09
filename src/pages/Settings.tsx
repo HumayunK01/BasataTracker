@@ -24,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, GripVertical, Tag, Loader2, KeyRound, User, Info, ShieldCheck, Download, UserX, Clock } from "lucide-react";
+import { Plus, Pencil, Trash2, GripVertical, Tag, Loader2, KeyRound, User, Info, ShieldCheck, Download, UserX, Clock, BadgeCheck } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { logAuditEvent } from "@/hooks/useAuditLog";
@@ -39,6 +39,7 @@ import {
 } from "@/hooks/useCategories";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 
 function toKey(label: string) {
@@ -55,6 +56,8 @@ const emptyForm: CategoryFormState = { label: "", short: "" };
 export default function SettingsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { data: profile } = useProfile();
+  const updateProfile = useUpdateProfile();
   const { data: categories = [], isLoading } = useCategories();
   const { data: logs = [] } = useDailyLogs();
   const addCategory = useAddCategory();
@@ -78,6 +81,10 @@ export default function SettingsPage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
+
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState({ first_name: "", last_name: "" });
+  const [profileLoading, setProfileLoading] = useState(false);
 
   function openAdd() {
     setEditingKey(null);
@@ -197,6 +204,24 @@ export default function SettingsPage() {
     }
   };
 
+  const handleUpdateProfile = async () => {
+    if (!profileForm.first_name.trim()) { toast.error("First name is required."); return; }
+    if (!profileForm.last_name.trim()) { toast.error("Last name is required."); return; }
+    setProfileLoading(true);
+    try {
+      await updateProfile.mutateAsync({
+        first_name: profileForm.first_name.trim(),
+        last_name: profileForm.last_name.trim(),
+      });
+      toast.success("Profile updated.");
+      setProfileOpen(false);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to update profile.");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
   const isBusy = addCategory.isPending || updateCategory.isPending;
 
   return (
@@ -252,44 +277,100 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Password card */}
-            <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-3 sm:space-y-4">
-              <div className="flex items-center gap-2.5">
-                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
-                  <KeyRound className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-warning" />
-                </div>
-                <h2 className="text-sm font-semibold">Password</h2>
-              </div>
-              {!pwOpen ? (
-                <div className="space-y-3">
-                  <p className="text-xs text-muted-foreground leading-relaxed">Change your login password. You'll stay signed in after updating.</p>
-                  <Button size="sm" variant="outline" className="w-full" onClick={() => { setPwOpen(true); setPwError(""); }}>
-                    Change password
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">New password</Label>
-                    <Input type="password" placeholder="••••••••" minLength={6} value={pw.next}
-                      onChange={(e) => setPw((p) => ({ ...p, next: e.target.value }))} autoFocus />
+            {/* Profile & Password card */}
+            <div className="col-span-2 sm:col-span-1 bg-card border border-border rounded-md p-4 sm:p-5 space-y-4">
+
+              {/* Profile section */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <BadgeCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                   </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Confirm password</Label>
-                    <Input type="password" placeholder="••••••••" value={pw.confirm}
-                      onChange={(e) => setPw((p) => ({ ...p, confirm: e.target.value }))}
-                      onKeyDown={(e) => e.key === "Enter" && handleChangePassword()} />
-                  </div>
-                  {pwError && <p className="text-xs text-destructive">{pwError}</p>}
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="flex-1" onClick={() => { setPwOpen(false); setPwError(""); }}>Cancel</Button>
-                    <Button size="sm" className="flex-1" onClick={handleChangePassword} disabled={pwLoading}>
-                      {pwLoading && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
-                      Update
+                  <h2 className="text-sm font-semibold">Profile</h2>
+                </div>
+                {!profileOpen ? (
+                  <div className="space-y-3">
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">Name</p>
+                      <p className="text-sm font-medium">
+                        {profile?.first_name || profile?.last_name
+                          ? `${profile.first_name} ${profile.last_name}`.trim()
+                          : <span className="text-muted-foreground italic">Not set</span>}
+                      </p>
+                    </div>
+                    <Button size="sm" variant="outline" className="w-full" onClick={() => {
+                      setProfileForm({ first_name: profile?.first_name ?? "", last_name: profile?.last_name ?? "" });
+                      setProfileOpen(true);
+                    }}>
+                      Edit name
                     </Button>
                   </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">First name</Label>
+                      <Input placeholder="First name" value={profileForm.first_name}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, first_name: e.target.value }))} autoFocus />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Last name</Label>
+                      <Input placeholder="Last name" value={profileForm.last_name}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, last_name: e.target.value }))}
+                        onKeyDown={(e) => e.key === "Enter" && handleUpdateProfile()} />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" className="flex-1" onClick={() => setProfileOpen(false)}>Cancel</Button>
+                      <Button size="sm" className="flex-1" onClick={handleUpdateProfile} disabled={profileLoading}>
+                        {profileLoading && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+                        Save
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Password section */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
+                    <KeyRound className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-warning" />
+                  </div>
+                  <h2 className="text-sm font-semibold">Password</h2>
                 </div>
-              )}
+                {!pwOpen ? (
+                  <div className="space-y-3">
+                    <p className="text-xs text-muted-foreground leading-relaxed">Change your login password. You'll stay signed in after updating.</p>
+                    <Button size="sm" variant="outline" className="w-full" onClick={() => { setPwOpen(true); setPwError(""); }}>
+                      Change password
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">New password</Label>
+                      <Input type="password" placeholder="••••••••" minLength={6} value={pw.next}
+                        onChange={(e) => setPw((p) => ({ ...p, next: e.target.value }))} autoFocus />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Confirm password</Label>
+                      <Input type="password" placeholder="••••••••" value={pw.confirm}
+                        onChange={(e) => setPw((p) => ({ ...p, confirm: e.target.value }))}
+                        onKeyDown={(e) => e.key === "Enter" && handleChangePassword()} />
+                    </div>
+                    {pwError && <p className="text-xs text-destructive">{pwError}</p>}
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" className="flex-1" onClick={() => { setPwOpen(false); setPwError(""); }}>Cancel</Button>
+                      <Button size="sm" className="flex-1" onClick={handleChangePassword} disabled={pwLoading}>
+                        {pwLoading && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+                        Update
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
             </div>
 
             {/* About card */}
