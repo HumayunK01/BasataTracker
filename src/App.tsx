@@ -13,6 +13,7 @@ import SettingsPage from "./pages/Settings.tsx";
 import ReportPage from "./pages/Report.tsx";
 import CounterPage from "./pages/Counter.tsx";
 import HelpPage from "./pages/Help.tsx";
+import UsersPage from "./pages/Users.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
                 <Route path="/report" element={<ReportPage />} />
                 <Route path="/counter" element={<CounterPage />} />
                 <Route path="/help" element={<HelpPage />} />
+                <Route path="/users" element={<UsersPage />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
