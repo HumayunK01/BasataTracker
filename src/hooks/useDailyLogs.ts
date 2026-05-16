@@ -27,6 +27,10 @@ export function useDailyLogs() {
   return useQuery({
     queryKey: ["daily_logs", user?.id],
     enabled: !!user,
+    // Pull remote changes so the counter/logs stay in sync across the user's
+    // devices (another device's auto-save shows up here on focus/interval).
+    refetchOnWindowFocus: true,
+    refetchInterval: 60_000,
     queryFn: async (): Promise<DailyLog[]> => {
       const user_id = await getUserId();
       const { data, error } = await supabase

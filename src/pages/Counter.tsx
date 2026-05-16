@@ -303,6 +303,13 @@ export default function CounterPage() {
   const [now, setNow] = useState(() => new Date());
   const [saved, setSaved] = useState(false);
 
+  // Cross-device persistence. The counter auto-saves (debounced) into today's
+  // daily_logs row, and on first load it hydrates from the server so a device
+  // that wasn't the last writer continues where the others left off.
+  const hydratedRef = useRef(false);
+  const skipAutoSaveRef = useRef(false);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(id);
@@ -310,7 +317,6 @@ export default function CounterPage() {
 
   useEffect(() => {
     localStorage.setItem(COUNTS_KEY, JSON.stringify(counts));
-    setSaved(false);
   }, [counts]);
 
   useEffect(() => {
@@ -334,34 +340,90 @@ export default function CounterPage() {
   const removeCategory = (key: string) =>
     setSelectedKeys((prev) => prev.filter((k) => k !== key));
 
+  const todayIso = isoDate();
+  const todayLog = logs.find((l) => l.log_date === todayIso);
+  const todayTotal = todayLog ? totalForLog(todayLog) : 0;
+
+  // Shared write path for both debounced auto-save and the manual Save button.
+  // Merges into today's row so categories tracked on other devices are kept.
+  const flush = useCallback(
+    async (current: Record<string, number>, keys: string[]) => {
+      const existingLog = logs.find((l) => l.log_date === todayIso);
+      const mergedCounts: Record<string, number> = { ...(existingLog?.counts ?? {}) };
+      for (const key of keys) mergedCounts[key] = current[key] ?? 0;
+      await upsert.mutateAsync({
+        log_date: todayIso,
+        is_off_day: false,
+        notes: existingLog?.notes ?? null,
+        counts: mergedCounts,
+      });
+    },
+    [logs, todayIso, upsert],
+  );
+
+  // Hydrate from the server once, when today's row first arrives. Only seed if
+  // this device has no local progress, so we never clobber in-progress taps.
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    if (categories.length === 0) return;
+    hydratedRef.current = true;
+
+    const serverCounts = todayLog?.counts ?? {};
+    const localTotal = Object.values(counts).reduce((s, v) => s + (v || 0), 0);
+    const serverTotal = Object.values(serverCounts).reduce((s, v) => s + (v || 0), 0);
+    if (localTotal === 0 && serverTotal > 0) {
+      skipAutoSaveRef.current = true;
+      setCounts({ ...serverCounts });
+      setSelectedKeys((prev) => {
+        const next = new Set(prev);
+        for (const k of Object.keys(serverCounts)) {
+          if ((serverCounts[k] ?? 0) > 0 && categories.some((c) => c.key === k)) next.add(k);
+        }
+        return [...next];
+      });
+      setSaved(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todayLog, categories]);
+
+  // Debounced auto-save: ~1s after taps settle, push to the server.
+  useEffect(() => {
+    if (!hydratedRef.current) return;
+    if (skipAutoSaveRef.current) {
+      skipAutoSaveRef.current = false;
+      return;
+    }
+    setSaved(false);
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      const keys = categories.filter((c) => selectedKeys.includes(c.key)).map((c) => c.key);
+      if (keys.length === 0) return;
+      flush(counts, keys).then(
+        () => setSaved(true),
+        () => {}, // error toast handled by the mutation hook
+      );
+    }, 1000);
+    return () => {
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [counts]);
+
   const handleReset = () => {
     setCounts({});
     setSaved(false);
   };
 
   const handleSave = async () => {
-    const today = isoDate();
-    const existingLog = logs.find((l) => l.log_date === today);
-    const mergedCounts: Record<string, number> = { ...(existingLog?.counts ?? {}) };
-    for (const cat of activeCategories) {
-      mergedCounts[cat.key] = getCount(cat.key);
-    }
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    const keys = activeCategories.map((c) => c.key);
     try {
-      await upsert.mutateAsync({
-        log_date: today,
-        is_off_day: false,
-        notes: existingLog?.notes ?? null,
-        counts: mergedCounts,
-      });
+      await flush(counts, keys);
       setSaved(true);
     } catch {
       // error handled by hook
     }
   };
-
-  const todayIso = isoDate();
-  const todayLog = logs.find((l) => l.log_date === todayIso);
-  const todayTotal = todayLog ? totalForLog(todayLog) : 0;
 
   return (
     <>
