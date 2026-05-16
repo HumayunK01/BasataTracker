@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/ar/PageHeader";
-import { BookOpen, Tag, FileText, Users, Info, AlertCircle, Copy, Check } from "lucide-react";
+import { BookOpen, Tag, FileText, Users, Info, AlertCircle, Copy, Check, Phone, Printer, MapPin, ClipboardList, Contact } from "lucide-react";
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -59,12 +59,14 @@ const inboxLabels = [
   "Advertisement",
   "Appeal (peer to peer)",
   "Approval",
-  "Blank Faxback (No patient data/ Just fax facesheet no other information)",
+  "Blank Faxback (No patient data/ Just fax facesheet no other information, or missing pages)",
   "Cardiac clearance",
+  "CC",
   "Chron Con (Chronic Condition of Verification)",
-  "CTA",
+  "CT/CTA (For CT or /CTA Reports, orders, needing more information)",
   "Denial",
-  "Doubt",
+  "Device Clinic (mentions MRI or Pacemaker)",
+  "Doubt (Need Casey to help with a question on a doc)",
   "EKG (internal)",
   "External records (this also includes external records with PH letterhead)",
   "Imaging (for radiology doc types, diagnostic imaging report, external ekgs)",
@@ -87,18 +89,13 @@ const inboxLabels = [
 
 const roiRows = [
   {
-    label: "Manual review ROI",
-    desc: "Pt not found in either EMR system",
-    color: "bg-destructive/10 text-destructive",
-  },
-  {
     label: "Athena ROI",
     desc: "Chart needs to be created",
     color: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
   },
   {
-    label: "NG ROI",
-    desc: "Verify pt in both EMR systems",
+    label: "Multi pt ROI",
+    desc: "Multiple patients listed on ROI document",
     color: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
   },
 ];
@@ -106,44 +103,105 @@ const roiRows = [
 const indexingRows = [
   {
     label: "NR then verify pt",
-    desc: "If no encounter — write: no encounter + doc type",
-    format: "NR/NextGen/No Encounter",
+    desc: "If no encounter & no new provider assigned — fax document back with note about provider not being at Phoenix Heart and no recent encounter",
+    format: "NR → verify pt → fax back (no encounter / no new provider)",
+  },
+];
+
+const assignedTasks = [
+  {
+    name: "Awes",
+    tasks: "INR, External Record, Autoclassified, STAT, ROI, Index box Sweeping at least 1 time per day, Labs, Imaging",
   },
   {
-    label: "NextGen only",
-    desc: "Last encounter date + doc type",
-    format: "NR/NextGen only/Last encounter + date + doc type",
+    name: "Ayush",
+    tasks: "Cardiac Clearance, Labs, Admin, Autoclassified, STAT",
   },
   {
-    label: "Athena",
-    desc: "Last encounter date + doc type",
-    format: "NR/Athena/Last encounter + date + doc type",
+    name: "Casey",
+    tasks: "INR, Rx, Denials, Appeal, STAT, Imaging/Order, Cardiac Clearance, CC, CT/CTAs, Approvals, Admin, Labs, Imaging, All document types, Helping with questions noted in the notes on documents",
   },
   {
-    label: "Both EMR",
-    desc: "Last encounter date + doc type",
-    format: "NR/Both EMR/Last encounter + date + doc type",
+    name: "Hamza",
+    tasks: "Progress note, Approvals, STAT, Denials, Inbox Sweeping at least 1 time per day, Labs, Imaging, Inbox to Indexing when available",
   },
   {
-    label: "Last encounter before 2024",
-    desc: "Fax back with message: \"Provider no longer with Phoenix Heart and pt's last encounter + date\"",
-    format: "NR + Last encounter <2024 → fax back",
+    name: "Humayun",
+    tasks: "Inbox to indexing, Cath lab, EKGs, Rx renewals and prior auths, Cardiac Clearance, CC",
   },
+  {
+    name: "Danish",
+    tasks: "Inbox to indexing",
+  },
+  {
+    name: "Rais",
+    tasks: "Inbox to indexing",
+  },
+];
+
+const employeeList = [
+  { name: "Yessica Ochoa", role: "MA", email: "yochoa@phoenixheart.com" },
 ];
 
 export default function HelpPage() {
   return (
     <>
-      <PageHeader subtitle="Categorization Guide" />
+      <PageHeader subtitle="Inbox Cheat Sheet" />
 
       <main className="flex-1 overflow-y-auto font-[system-ui]">
         <div className="w-full px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
           {/* Title */}
           <div>
-            <h1 className="text-xl sm:text-2xl font-semibold">Document Categorization Guide</h1>
+            <h1 className="text-xl sm:text-2xl font-semibold">Inbox Cheat Sheet</h1>
             <p className="text-sm text-muted-foreground mt-1">Reference for labeling and indexing incoming documents correctly.</p>
           </div>
+
+          {/* Phoenix Heart Info */}
+          <SectionCard icon={<Contact className="h-4 w-4 text-primary" />} title="Phoenix Heart Info">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="flex items-center gap-2.5 rounded-md border border-border bg-muted/20 px-3 py-2.5">
+                <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">Phone</p>
+                  <p className="text-sm font-medium">(623) 915-6058</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5 rounded-md border border-border bg-muted/20 px-3 py-2.5">
+                <Printer className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">Fax</p>
+                  <p className="text-sm font-medium">(623) 930-6060</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5 rounded-md border border-border bg-muted/20 px-3 py-2.5">
+                <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">Address</p>
+                  <p className="text-sm font-medium text-muted-foreground/60 italic">Not provided</p>
+                </div>
+              </div>
+            </div>
+          </SectionCard>
+
+          {/* Assigned Tasks */}
+          <SectionCard icon={<ClipboardList className="h-4 w-4 text-primary" />} title="Assigned Tasks">
+            <div className="flex items-start gap-2 rounded-lg bg-primary/5 border border-primary/20 px-3 py-2.5">
+              <Users className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <p className="text-sm">
+                <span className="font-semibold">Everybody:</span>{" "}
+                <span className="text-muted-foreground">ROI, Cath Lab, EKGs — Help with other trained document types as needed</span>
+              </p>
+            </div>
+            <div className="space-y-2">
+              {assignedTasks.map((person) => (
+                <div key={person.name} className="rounded-md border border-border bg-muted/20 px-3 sm:px-4 py-3 space-y-1">
+                  <span className="text-sm font-semibold">{person.name}</span>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{person.tasks}</p>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
 
           {/* Test Patients */}
           <SectionCard icon={<Users className="h-4 w-4 text-primary" />} title="Test Patients & Document Types">
@@ -154,7 +212,7 @@ export default function HelpPage() {
                 Once the document is in indexing, follow the admin workflow on the <strong>PH cheat sheet</strong>.
               </PatientRow>
 
-              <PatientRow name="Test Pt 2: Test, Medical Record" docType="Medical Record" dob="02/02/2001">
+              <PatientRow name="Test Pt 2: Test, Medical Record" docType="Medical Record" dob="02/02/2002">
                 <strong>ROI Multi pts</strong> — use this patient for release-of-information documents that span multiple patients.
               </PatientRow>
 
@@ -162,6 +220,7 @@ export default function HelpPage() {
                 <strong>Assign to Kellie Chavez.</strong> Use for:
                 <ul className="list-disc list-inside mt-1 space-y-0.5">
                   <li>Zelis</li>
+                  <li>United Healthcare</li>
                   <li>Optum Financial</li>
                   <li>Other documents with patient payment — will either have a credit card image or use verbiage such as <em>payment transmittal</em></li>
                 </ul>
@@ -219,6 +278,21 @@ export default function HelpPage() {
                   <code className="block text-xs bg-muted rounded px-2 py-1.5 font-mono text-foreground/80 mt-1 break-all sm:break-normal">
                     {row.format}
                   </code>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+
+          {/* Employee List */}
+          <SectionCard icon={<Contact className="h-4 w-4 text-primary" />} title="Employee List">
+            <div className="space-y-2">
+              {employeeList.map((emp) => (
+                <div key={emp.email} className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/20 px-3 sm:px-4 py-3">
+                  <span className="text-sm font-semibold">{emp.name}</span>
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">{emp.role}</span>
+                  <a href={`mailto:${emp.email}`} className="text-sm text-primary underline underline-offset-2 hover:opacity-80 ml-auto break-all">
+                    {emp.email}
+                  </a>
                 </div>
               ))}
             </div>
