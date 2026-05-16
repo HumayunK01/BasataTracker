@@ -1,4 +1,5 @@
 import { memo, useMemo } from "react";
+import { DeferRender } from "@/components/ar/DeferRender";
 import {
   Area,
   AreaChart,
@@ -232,7 +233,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
       </div>
 
       {/* Row 2: Weekly totals + Day-of-week avg */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <DeferRender minHeight={224} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ChartCard title="Weekly Totals" subtitle="Last 10 weeks" height="h-44 sm:h-48 md:h-52">
           <BarChart data={weeklyTotals} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={T.grid} vertical={false} />
@@ -260,10 +261,10 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
             </Bar>
           </BarChart>
         </ChartCard>
-      </div>
+      </DeferRender>
 
       {/* Row 3: Category area trend + Radar */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <DeferRender minHeight={272} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <ChartCard title="Category Trends" subtitle="Last 30 working days" height="h-48 sm:h-56 md:h-60" className="lg:col-span-2">
           <AreaChart data={categoryTrend} margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
             <defs>
@@ -303,10 +304,10 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
             <Tooltip contentStyle={T.container} labelStyle={T.text} itemStyle={T.text} />
           </RadarChart>
         </ChartCard>
-      </div>
+      </DeferRender>
 
       {/* Row 4: Full-width stacked bar breakdown */}
-      <div id="breakdown" className="bg-card border border-border rounded-md p-4 sm:p-5">
+      <DeferRender minHeight={320} id="breakdown" className="bg-card border border-border rounded-md p-4 sm:p-5">
         <div className="mb-3 sm:mb-4">
           <h3 className="text-sm font-semibold">Document Breakdown</h3>
           <p className="text-xs text-muted-foreground mt-0.5">Last 14 working days by category</p>
@@ -351,7 +352,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
             </BarChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </DeferRender>
 
     </div>
   );

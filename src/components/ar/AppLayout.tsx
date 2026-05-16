@@ -1,6 +1,8 @@
 import { AppSidebar } from "@/components/ar/AppSidebar";
+import { useSmoothScroll } from "@/hooks/useSmoothScroll";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
+  useSmoothScroll();
   return (
     <div className="flex h-screen w-full bg-background text-foreground overflow-hidden">
       <AppSidebar />

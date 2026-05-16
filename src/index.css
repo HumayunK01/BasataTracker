@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Lenis smooth scroll (custom wrapper mode) */
+.lenis,
+.lenis .lenis-content {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
 @layer base {
   html, body {
     font-family: "Hubot Sans", system-ui, sans-serif;
