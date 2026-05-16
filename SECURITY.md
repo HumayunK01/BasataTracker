@@ -22,6 +22,8 @@
 
 The following headers are configured in `vite.config.ts`:
 
+**Note:** Development CSP is relaxed to allow tooling (React DevTools, HMR, etc.). Production CSP should be stricter with nonce-based inline scripts.
+
 | Header | Purpose |
 |--------|---------|
 | `Strict-Transport-Security` | Forces HTTPS connections (max-age: 1 year) |
@@ -76,6 +78,31 @@ const data = userInputSchema.parse(userInput);
 - All Supabase functions verify user authentication via Authorization header
 - Use Supabase RLS to enforce row-level access control
 - Rate limiting should be configured at the database or function level
+
+## Content Security Policy (CSP)
+
+**Development Environment:**
+- CSP allows `'unsafe-inline'` and `'unsafe-eval'` for tooling (React DevTools, HMR)
+- Includes external sources (Google Fonts, Supabase)
+- Suitable for local development only
+
+**Production Environment (TODO):**
+Create a production build that:
+- Removes `'unsafe-inline'` and `'unsafe-eval'`
+- Uses nonce-based or hash-based inline scripts
+- Pins to specific Supabase domains
+- Disables frame-src entirely if not needed
+- Enables `upgrade-insecure-requests` for automatic HTTP→HTTPS redirect
+- Adds `require-sri-for` for subresource integrity
+
+Example production CSP:
+```
+script-src 'self' 'nonce-{random}' 'strict-dynamic'
+style-src 'self' 'nonce-{random}' https://fonts.googleapis.com
+font-src 'self' https://fonts.gstatic.com
+upgrade-insecure-requests
+require-sri-for script style
+```
 
 ## Recommended Security Practices
 
