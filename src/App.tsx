@@ -15,6 +15,7 @@ import CounterPage from "./pages/Counter.tsx";
 import HelpPage from "./pages/Help.tsx";
 import PhoenixHeartCheatSheetPage from "./pages/PhoenixHeartCheatSheet.tsx";
 import UsersPage from "./pages/Users.tsx";
+import DailyActivityPage from "./pages/DailyActivity.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
                 <Route path="/help" element={<HelpPage />} />
                 <Route path="/cheat-sheet" element={<PhoenixHeartCheatSheetPage />} />
                 <Route path="/users" element={<UsersPage />} />
+                <Route path="/daily-activity" element={<DailyActivityPage />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
