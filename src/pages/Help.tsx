@@ -190,7 +190,7 @@ export default function HelpPage() {
               <Users className="size-4 text-primary shrink-0 mt-0.5" />
               <p className="text-sm">
                 <span className="font-semibold">Everybody:</span>{" "}
-                <span className="text-muted-foreground">ROI, Cath Lab, EKGs — Help with other trained document types as needed</span>
+                <span className="text-muted-foreground">ROI, Cath Lab, EKGs{"—"}Help with other trained document types as needed</span>
               </p>
             </div>
             <div className="space-y-2">
@@ -207,13 +207,13 @@ export default function HelpPage() {
           <SectionCard icon={<Users className="size-4 text-primary" />} title="Test Patients & Document Types">
             <div className="space-y-3">
               <PatientRow name="Test Pt 1: Test, Back Office" docType="Back Office" dob="01/01/2001">
-                <strong>Message to providers</strong> — documents with no patient information that only address the provider.
+                <strong>Message to providers</strong>{"—"}documents with no patient information that only address the provider.
                 If there is no provider, <strong>Khan</strong> will be the default provider.
                 Once the document is in indexing, follow the admin workflow on the <strong>PH cheat sheet</strong>.
               </PatientRow>
 
               <PatientRow name="Test Pt 2: Test, Medical Record" docType="Medical Record" dob="02/02/2002">
-                <strong>ROI Multi pts</strong> — use this patient for release-of-information documents that span multiple patients.
+                <strong>ROI Multi pts</strong>{"—"}use this patient for release-of-information documents that span multiple patients.
               </PatientRow>
 
               <PatientRow name="Test Pt 3: Test, Credit Card" docType="Credit Card" dob="03/03/2003">
@@ -222,7 +222,7 @@ export default function HelpPage() {
                   <li>Zelis</li>
                   <li>United Healthcare</li>
                   <li>Optum Financial</li>
-                  <li>Other documents with patient payment — will either have a credit card image or use verbiage such as <em>payment transmittal</em></li>
+                  <li>Other documents with patient payment{"—"}will either have a credit card image or use verbiage such as <em>payment transmittal</em></li>
                 </ul>
               </PatientRow>
             </div>

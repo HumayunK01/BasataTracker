@@ -496,13 +496,13 @@ export default function SettingsPage() {
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-destructive">Danger Zone</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Irreversible actions — proceed with caution</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Irreversible actions{"—"}proceed with caution</p>
               </div>
             </div>
             <div className="px-4 sm:px-5 py-4 space-y-3 sm:space-y-0 sm:flex sm:items-start sm:gap-4">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium">Delete account</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Permanently deletes your account and all data — logs, categories, everything. This cannot be undone.</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Permanently deletes your account and all data{"—"}logs, categories, everything. This cannot be undone.</p>
               </div>
               <Button size="sm" variant="destructive" className="w-full sm:w-auto shrink-0" onClick={() => { setDeleteAccountOpen(true); setDeleteConfirmText(""); }}>
                 Delete account
@@ -569,7 +569,7 @@ export default function SettingsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-destructive">Delete your account?</AlertDialogTitle>
             <AlertDialogDescription className="space-y-3">
-              <span className="block">This will permanently delete your account and <strong>all your data</strong> — every log entry, every category. This action <strong>cannot be undone</strong>.</span>
+              <span className="block">This will permanently delete your account and <strong>all your data</strong>{"—"}every log entry, every category. This action <strong>cannot be undone</strong>.</span>
               <span className="block pt-1">Type <strong>DELETE</strong> to confirm:</span>
             </AlertDialogDescription>
           </AlertDialogHeader>

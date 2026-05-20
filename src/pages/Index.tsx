@@ -83,7 +83,7 @@ const Index = () => {
 
             {/* ── Per-category breakdown ── */}
             <section className="space-y-2 sm:space-y-3">
-              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">By Category — All Time</h2>
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">By Category{"—"}All Time</h2>
               <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
                 {isLoading
                   ? Array.from({ length: 6 }).map((_, i) => (

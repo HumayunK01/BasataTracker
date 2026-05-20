@@ -208,7 +208,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
             {conflict && (
               <div className="flex items-start gap-2 text-xs text-warning bg-warning/10 border border-warning/25 rounded-md px-3 py-2.5">
                 <TriangleAlert className="size-3.5 shrink-0 mt-0.5" />
-                <span>A log already exists for this date — saving will overwrite it.</span>
+                <span>A log already exists for this date{"—"}saving will overwrite it.</span>
               </div>
             )}
           </div>

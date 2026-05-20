@@ -210,7 +210,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
         </ChartCard>
 
         <div className="bg-card border border-border rounded-md p-4 sm:p-5">
-          <h3 className="text-sm font-semibold mb-3">Work mix — all time</h3>
+          <h3 className="text-sm font-semibold mb-3">Work mix{"—"}all time</h3>
           <div className="h-40 sm:h-44">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>

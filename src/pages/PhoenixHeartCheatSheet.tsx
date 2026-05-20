@@ -51,7 +51,7 @@ function SectionCard({
 
 /** Renders an arrow-separated workflow chain as pill segments. */
 function Workflow({ chain }: { chain: string }) {
-  const parts = chain.split("→").map((p) => p.trim()).filter(Boolean);
+  const parts = chain.split("→").flatMap((p) => { const t = p.trim(); return t ? [t] : []; });
   return (
     <div className="flex flex-wrap items-center gap-1 mt-1.5">
       {parts.map((part, i) => (
@@ -635,10 +635,10 @@ export default function PhoenixHeartCheatSheetPage() {
             <div className="rounded-md border border-border bg-muted/20 p-3 sm:p-4 space-y-1.5">
               <span className="text-sm font-bold uppercase tracking-wide">ROI Workflow Updates</span>
               <ul className="list-disc list-inside text-xs text-muted-foreground space-y-1 leading-relaxed">
-                <li>Review — provider's name but no patient found, then fax back "patient not found"</li>
+                <li>Review{"—"}provider&#39;s name but no patient found, then fax back &quot;patient not found&quot;</li>
                 <li>
-                  Athena: clinical docs labeled "record of care - referrals" not found in Athena are
-                  treated as a new patient. Ask Ayub or Chandni — patient might not be transferable to
+                  Athena: clinical docs labeled &quot;record of care - referrals&quot; not found in Athena are
+                  treated as a new patient. Ask Ayub or Chandni{"—"}patient might not be transferable to
                   NextGen from Athena since it is in view-only mode
                 </li>
                 <li>

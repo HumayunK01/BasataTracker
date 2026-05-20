@@ -151,7 +151,7 @@ export default function DailyActivityPage() {
             <div>
               <h1 className="text-xl sm:text-2xl font-semibold">Daily Activity</h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Today's logged documents for all users. Today only — no history.
+                Today&#39;s logged documents for all users. Today only{"—"}no history.
               </p>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
