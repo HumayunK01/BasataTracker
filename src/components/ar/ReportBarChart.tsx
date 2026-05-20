@@ -1,3 +1,4 @@
+// react-doctor-disable-next-line react-doctor/prefer-dynamic-import -- this file IS the lazy chunk; top-level import is intentional
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 interface ChartEntry { date: string; docs: number; }
