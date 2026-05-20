@@ -437,7 +437,7 @@ export default function SettingsPage() {
             {isLoading ? (
               <div className="p-4 space-y-2">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-3 px-2 py-2">
+                  <div key={i} className="flex items-center gap-3 p-2">
                     <Skeleton className="size-4 rounded" />
                     <Skeleton className="h-4 flex-1" />
                     <Skeleton className="h-5 w-14 rounded" />

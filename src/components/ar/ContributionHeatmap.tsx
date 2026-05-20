@@ -248,7 +248,7 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
           </div>
           {/* Rows = days of week (0=Sun … 6=Sat) */}
           {[0, 1, 2, 3, 4, 5, 6].map((dow) => (
-            <div key={dow} className="flex" style={{ gap: 2, marginBottom: 2 }}>
+            <div key={`dow-${dow}`} className="flex" style={{ gap: 2, marginBottom: 2 }}>
               {weeksMobile.map((week, col) => {
                 const cell = week[dow];
                 if (!cell) {
