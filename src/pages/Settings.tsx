@@ -499,7 +499,7 @@ export default function SettingsPage() {
                 <p className="text-xs text-muted-foreground mt-0.5">Irreversible actions{"—"}proceed with caution</p>
               </div>
             </div>
-            <div className="px-4 sm:px-5 py-4 space-y-3 sm:space-y-0 sm:flex sm:items-start sm:gap-4">
+            <div className="px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium">Delete account</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Permanently deletes your account and all data{"—"}logs, categories, everything. This cannot be undone.</p>

@@ -220,8 +220,8 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
           </div>
           <div className="flex items-center gap-1 sm:gap-1.5">
             <span>Less</span>
-            {([0, 1, 2, 3, 4] as const).map((i) => (
-              <span key={`intensity-${i}`} className={`size-2.5 sm:w-3 sm:h-3 rounded-sm ${INTENSITY_BG[i]}`} />
+            {([0, 1, 2, 3, 4] as const).map((level) => (
+              <span key={`intensity-${level}`} className={`size-2.5 sm:w-3 sm:h-3 rounded-sm ${INTENSITY_BG[level]}`} />
             ))}
             <span>More</span>
           </div>
