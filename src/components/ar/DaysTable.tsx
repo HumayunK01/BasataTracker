@@ -27,6 +27,60 @@ import { useCategories } from "@/hooks/useCategories";
 import { Trash2, Pencil, Search, ChevronLeft, ChevronRight, BedDouble, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 
+interface PaginationProps {
+  page: number;
+  totalPages: number;
+  pageNumbers: (number | "…")[];
+  itemsPerPage: number;
+  goTo: (p: number) => void;
+  onItemsPerPageChange: (n: number) => void;
+}
+
+function Pagination({ page, totalPages, pageNumbers, itemsPerPage, goTo, onItemsPerPageChange }: PaginationProps) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="shrink-0 py-2.5 flex items-center relative">
+      <div className="flex items-center gap-1 mx-auto">
+        <Button size="sm" className="h-8 px-3 text-sm rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(1)} disabled={page === 1}>First</Button>
+        <Button size="icon" className="h-8 w-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page - 1)} disabled={page === 1}>
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        {pageNumbers.map((p, i) =>
+          p === "…" ? (
+            <span key={`e-${i}`} className="w-8 text-center text-sm text-muted-foreground">…</span>
+          ) : (
+            <Button
+              key={p}
+              size="icon"
+              className={`h-8 w-8 text-sm rounded-md border border-border ${page === p ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-sidebar text-foreground hover:bg-muted"}`}
+              onClick={() => goTo(p as number)}
+            >
+              {p}
+            </Button>
+          ),
+        )}
+        <Button size="icon" className="h-8 w-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page + 1)} disabled={page === totalPages}>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+        <Button size="sm" className="h-8 px-3 text-sm rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(totalPages)} disabled={page === totalPages}>Last</Button>
+      </div>
+      <div className="absolute right-0 flex items-center gap-2 text-sm text-muted-foreground">
+        <span>Items per page</span>
+        <Select value={String(itemsPerPage)} onValueChange={(v) => onItemsPerPageChange(Number(v))}>
+          <SelectTrigger className="h-8 w-16 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[10, 20, 50, 100].map((n) => (
+              <SelectItem key={n} value={String(n)} className="text-xs">{n}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+}
+
 interface Props {
   logs: DailyLog[];
   onEdit: (log: DailyLog) => void;
@@ -45,7 +99,7 @@ export function DaysTable({ logs, onEdit }: Props) {
   const logTotal = (l: DailyLog) => categories.reduce((s, c) => s + getVal(l, c.key), 0);
 
   const allSorted = useMemo(
-    () => [...logs].sort((a, b) => b.log_date.localeCompare(a.log_date)),
+    () => logs.toSorted((a, b) => b.log_date.localeCompare(a.log_date)),
     [logs],
   );
 
@@ -117,49 +171,6 @@ export function DaysTable({ logs, onEdit }: Props) {
     pages.push(totalPages);
     return pages;
   }, [totalPages, page]);
-
-  const Pagination = () =>
-    totalPages > 1 ? (
-      <div className="shrink-0 py-2.5 flex items-center relative">
-        <div className="flex items-center gap-1 mx-auto">
-          <Button size="sm" className="h-8 px-3 text-sm rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(1)} disabled={page === 1}>First</Button>
-          <Button size="icon" className="h-8 w-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page - 1)} disabled={page === 1}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          {pageNumbers.map((p, i) =>
-            p === "…" ? (
-              <span key={`e-${i}`} className="w-8 text-center text-sm text-muted-foreground">…</span>
-            ) : (
-              <Button
-                key={p}
-                size="icon"
-                className={`h-8 w-8 text-sm rounded-md border border-border ${page === p ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-sidebar text-foreground hover:bg-muted"}`}
-                onClick={() => goTo(p as number)}
-              >
-                {p}
-              </Button>
-            ),
-          )}
-          <Button size="icon" className="h-8 w-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page + 1)} disabled={page === totalPages}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button size="sm" className="h-8 px-3 text-sm rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(totalPages)} disabled={page === totalPages}>Last</Button>
-        </div>
-        <div className="absolute right-0 flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Items per page</span>
-          <Select value={String(itemsPerPage)} onValueChange={(v) => { setItemsPerPage(Number(v)); setPage(1); }}>
-            <SelectTrigger className="h-8 w-16 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[10, 20, 50, 100].map((n) => (
-                <SelectItem key={n} value={String(n)} className="text-xs">{n}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-    ) : null;
 
   return (
     <>
@@ -353,7 +364,14 @@ export function DaysTable({ logs, onEdit }: Props) {
           </div>
         </div>
 
-        <Pagination />
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          pageNumbers={pageNumbers}
+          itemsPerPage={itemsPerPage}
+          goTo={goTo}
+          onItemsPerPageChange={(n) => { setItemsPerPage(n); setPage(1); }}
+        />
 
       </div>
 

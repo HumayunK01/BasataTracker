@@ -17,48 +17,37 @@ export function totalForLog(log: Pick<DailyLog, "counts">): number {
 const US_TZ = "America/Chicago";
 const US_LOCALE = "en-US";
 
+const isoFmt = new Intl.DateTimeFormat(US_LOCALE, { timeZone: US_TZ, year: "numeric", month: "2-digit", day: "2-digit" });
+const weekdayFmt = new Intl.DateTimeFormat(US_LOCALE, { timeZone: US_TZ, weekday: "short" });
+const shortDateFmt = new Intl.DateTimeFormat(US_LOCALE, { timeZone: US_TZ, month: "short", day: "numeric" });
+const dayNameFmt = new Intl.DateTimeFormat(US_LOCALE, { timeZone: US_TZ, weekday: "short" });
+const headerDateFmt = new Intl.DateTimeFormat(US_LOCALE, { timeZone: US_TZ, weekday: "long", month: "long", day: "numeric", year: "numeric" });
+const headerTimeFmt = new Intl.DateTimeFormat(US_LOCALE, { timeZone: US_TZ, hour: "numeric", minute: "2-digit", hour12: true });
+const tableDateFmt = new Intl.DateTimeFormat(US_LOCALE, { timeZone: US_TZ, month: "2-digit", day: "2-digit", year: "numeric" });
+
 export function isoDate(d: Date = new Date()) {
-  const parts = new Intl.DateTimeFormat(US_LOCALE, {
-    timeZone: US_TZ, year: "numeric", month: "2-digit", day: "2-digit",
-  }).formatToParts(d);
+  const parts = isoFmt.formatToParts(d);
   const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
 export function isWeekend(iso: string): boolean {
-  const day = new Intl.DateTimeFormat(US_LOCALE, { timeZone: US_TZ, weekday: "short" })
-    .format(new Date(`${iso}T12:00:00`));
+  const day = weekdayFmt.format(new Date(`${iso}T12:00:00`));
   return day === "Sun" || day === "Sat";
 }
 
 export function formatShortDate(iso: string) {
-  const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString(US_LOCALE, { timeZone: US_TZ, month: "short", day: "numeric" });
+  return shortDateFmt.format(new Date(`${iso}T12:00:00`));
 }
 
 export function formatDayName(iso: string) {
-  const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString(US_LOCALE, { timeZone: US_TZ, weekday: "short" });
+  return dayNameFmt.format(new Date(`${iso}T12:00:00`));
 }
 
 export function formatHeaderDate(d: Date = new Date()) {
-  const date = d.toLocaleDateString(US_LOCALE, {
-    timeZone: US_TZ,
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-  const time = d.toLocaleTimeString(US_LOCALE, {
-    timeZone: US_TZ,
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-  return `${date} · ${time}`;
+  return `${headerDateFmt.format(d)} · ${headerTimeFmt.format(d)}`;
 }
 
 export function formatTableDate(iso: string) {
-  const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString(US_LOCALE, { timeZone: US_TZ, month: "2-digit", day: "2-digit", year: "numeric" });
+  return tableDateFmt.format(new Date(`${iso}T12:00:00`));
 }

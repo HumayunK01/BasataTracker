@@ -97,12 +97,12 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
     isFuture: boolean; isToday: boolean; x: number; y: number;
   } | null>(null);
 
-  const currentYear = new Date().getFullYear();
+  const [currentYear] = useState(() => new Date().getFullYear());
 
   const [weeks365, monthTicks365, maxTotal] = useMemo(() => {
     const { weeks, monthTicks } = buildGrid(logs, currentYear);
     const allCells = weeks.flat().filter(Boolean) as Cell[];
-    const maxTotal = Math.max(...allCells.filter((c) => !c.isFuture).map((c) => c.total), 1);
+    const maxTotal = allCells.reduce((m, c) => c.isFuture ? m : Math.max(m, c.total), 1);
     return [weeks, monthTicks, maxTotal] as const;
   }, [logs, currentYear]);
 
@@ -127,7 +127,7 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
           {weeks.map((_, col) => {
             const tick = monthTicks.find((t) => t.col === col);
             return (
-              <div key={col} className="flex-1 min-w-0 overflow-hidden">
+              <div key={`month-${col}`} className="flex-1 min-w-0 overflow-hidden">
                 {tick && (
                   <span className="text-[9px] sm:text-[10px] text-muted-foreground whitespace-nowrap select-none">
                     {tick.label}
@@ -141,12 +141,12 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
         {/* Cell columns */}
         <div className="flex w-full">
           {weeks.map((week, col) => (
-            <div key={col} className="flex-1 flex flex-col gap-[2px] sm:gap-1 min-w-0 px-[1px] sm:px-[1.5px]">
+            <div key={`col-${col}`} className="flex-1 flex flex-col gap-[2px] sm:gap-1 min-w-0 px-[1px] sm:px-[1.5px]">
               {week.map((cell, row) => {
                 if (!cell) {
                   return (
                     <div
-                      key={row}
+                      key={`empty-${col}-${row}`}
                       className="w-full aspect-square rounded-[2px] sm:rounded-sm bg-muted/10 border border-white/[0.05]"
                     />
                   );
@@ -198,7 +198,7 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold">Activity — {new Date().getFullYear()}</h2>
+          <h2 className="text-sm font-semibold">Activity — {currentYear}</h2>
           <p className="text-xs text-muted-foreground mt-0.5">Days worked, off days, and doc volume at a glance</p>
         </div>
         {/* Legend */}
@@ -229,7 +229,7 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
             {weeksMobile.map((_, col) => {
               const tick = monthTicksMobile.find((t) => t.col === col);
               return (
-                <div key={col} style={{ width: 16, flexShrink: 0 }}>
+                <div key={`month-m-${col}`} style={{ width: 16, flexShrink: 0 }}>
                   {tick && (
                     <span className="text-[9px] text-muted-foreground whitespace-nowrap select-none">
                       {tick.label}
@@ -245,7 +245,7 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
               {weeksMobile.map((week, col) => {
                 const cell = week[dow];
                 if (!cell) {
-                  return <div key={col} style={{ width: 16, height: 16, flexShrink: 0 }} className="rounded-[3px] bg-muted/10" />;
+                  return <div key={`empty-m-${col}-${dow}`} style={{ width: 16, height: 16, flexShrink: 0 }} className="rounded-[3px] bg-muted/10" />;
                 }
                 const intensity = getIntensity(cell.total, maxTotal);
                 const bgClass = cell.isFuture
