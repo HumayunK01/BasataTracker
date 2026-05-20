@@ -17,6 +17,9 @@ interface AuthUser {
   email_confirmed_at: string | null;
 }
 
+function formatJoined(iso: string) { return format(new Date(iso), "MMM d, yyyy"); }
+function formatLastSeen(iso: string) { return formatDistanceToNow(new Date(iso), { addSuffix: true }); }
+
 async function fetchUsers(): Promise<AuthUser[]> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error("Not authenticated");
@@ -125,11 +128,11 @@ export default function UsersPage() {
                         </span>
                       </td>
                       <td suppressHydrationWarning className="px-4 py-3 hidden md:table-cell text-muted-foreground">
-                        {format(new Date(user.created_at), "MMM d, yyyy")}
+                        {formatJoined(user.created_at)}
                       </td>
                       <td suppressHydrationWarning className="px-4 py-3 hidden lg:table-cell text-muted-foreground">
                         {user.last_sign_in_at
-                          ? formatDistanceToNow(new Date(user.last_sign_in_at), { addSuffix: true })
+                          ? formatLastSeen(user.last_sign_in_at)
                           : <span className="italic">Never</span>}
                       </td>
                     </tr>
