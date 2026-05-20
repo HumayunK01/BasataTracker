@@ -7,7 +7,7 @@ import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
 import { isoDate, totalForLog, type DailyLog } from "@/types/log";
 import { Plus, BarChart2 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import Skeleton from "react-loading-skeleton";
 import { PageHeader } from "@/components/ar/PageHeader";
 
 import { colorForKey } from "@/lib/cat-colors";
@@ -90,8 +90,8 @@ const Index = () => {
                 {isLoading
                   ? Array.from({ length: 6 }).map((_, i) => (
                       <div key={i} className="bg-card border border-border rounded-md p-3 sm:p-4 space-y-2">
-                        <Skeleton className="h-3 w-14" />
-                        <Skeleton className="h-6 w-10" />
+                        <Skeleton width={56} height={12} borderRadius={4} />
+                        <Skeleton width={40} height={24} borderRadius={4} />
                       </div>
                     ))
                   : stats.categoryTotals.map((c) => (
@@ -112,13 +112,13 @@ const Index = () => {
                 <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div className="space-y-1.5">
-                      <Skeleton className="h-4 w-36" />
-                      <Skeleton className="h-3 w-52" />
+                      <Skeleton width={144} height={16} borderRadius={4} />
+                      <Skeleton width={208} height={12} borderRadius={4} />
                     </div>
-                    <Skeleton className="h-3 w-48" />
+                    <Skeleton width={192} height={12} borderRadius={4} />
                   </div>
-                  <Skeleton className="h-3 w-full max-w-xs" />
-                  <Skeleton className="h-28 sm:h-36 w-full rounded-md" />
+                  <Skeleton width={240} height={12} borderRadius={4} />
+                  <Skeleton height={144} borderRadius={6} />
                 </div>
               ) : !isEmpty && (
                 <ContributionHeatmap logs={logs} />
@@ -135,8 +135,8 @@ const Index = () => {
                       key={i}
                       className={`bg-card border border-border rounded-lg p-4 space-y-3 ${i === 0 || i === 3 ? "lg:col-span-2" : ""}`}
                     >
-                      <Skeleton className="size-40" />
-                      <Skeleton className="h-52 w-full" />
+                      <Skeleton width={160} height={160} borderRadius={4} />
+                      <Skeleton height={208} borderRadius={4} />
                     </div>
                   ))}
                 </div>

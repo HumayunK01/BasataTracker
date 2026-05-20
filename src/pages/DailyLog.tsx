@@ -16,7 +16,7 @@ import { downloadCSV, downloadJSON } from "@/lib/log-utils";
 import { isoDate, totalForLog, type DailyLog } from "@/types/log";
 import { Download, FileJson, FileText, Plus, ChevronDown } from "lucide-react";
 import { PageHeader } from "@/components/ar/PageHeader";
-import { Skeleton } from "@/components/ui/skeleton";
+import Skeleton from "react-loading-skeleton";
 
 const DailyLogPage = () => {
   const { data: logs = [], isLoading } = useDailyLogs();
@@ -95,17 +95,17 @@ const DailyLogPage = () => {
             {isLoading ? (
               <div className="flex-1 flex flex-col gap-3 pt-2">
                 <div className="flex gap-3">
-                  <Skeleton className="h-8 w-48" />
-                  <Skeleton className="h-8 w-56 ml-auto" />
+                  <Skeleton width={192} height={32} borderRadius={6} />
+                  <Skeleton width={224} height={32} borderRadius={6} />
                 </div>
                 <div className="bg-card border border-border rounded-md overflow-hidden">
                   {Array.from({ length: 8 }).map((_, i) => (
                     <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-border/50 last:border-0">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-4 w-8 mx-auto" />
-                      <Skeleton className="h-4 w-8 mx-auto" />
-                      <Skeleton className="h-4 w-8 mx-auto" />
-                      <Skeleton className="h-4 w-8 ml-auto" />
+                      <Skeleton width={96} height={16} borderRadius={4} />
+                      <Skeleton width={32} height={16} borderRadius={4} />
+                      <Skeleton width={32} height={16} borderRadius={4} />
+                      <Skeleton width={32} height={16} borderRadius={4} />
+                      <Skeleton width={32} height={16} borderRadius={4} />
                     </div>
                   ))}
                 </div>

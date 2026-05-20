@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import Skeleton from "react-loading-skeleton";
 import { Button } from "@/components/ui/button";
 import { useDailyActivity, type DailyActivityRow } from "@/hooks/useDailyActivity";
 import { useCategories } from "@/hooks/useCategories";
@@ -193,7 +193,7 @@ export default function DailyActivityPage() {
                   {s.label}
                 </p>
                 <p className="text-xl sm:text-2xl font-bold mt-1 tabular-nums">
-                  {isLoading ? <Skeleton className="h-6 w-12" /> : s.value}
+                  {isLoading ? <Skeleton width={48} height={24} borderRadius={4} /> : s.value}
                 </p>
               </div>
             ))}
@@ -223,8 +223,8 @@ export default function DailyActivityPage() {
               <div className="space-y-2 sm:hidden">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="bg-card border border-border rounded-md p-3 space-y-2">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-40" />
+                    <Skeleton width={128} height={16} borderRadius={4} />
+                    <Skeleton width={160} height={12} borderRadius={4} />
                   </div>
                 ))}
               </div>
@@ -234,10 +234,10 @@ export default function DailyActivityPage() {
                   <tbody>
                     {Array.from({ length: 6 }).map((_, i) => (
                       <tr key={i} className="border-t border-border first:border-t-0">
-                        <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
-                        <td className="px-4 py-3"><Skeleton className="h-4 w-10 ml-auto" /></td>
-                        <td className="px-4 py-3"><Skeleton className="size-40" /></td>
-                        <td className="px-4 py-3"><Skeleton className="h-4 w-16" /></td>
+                        <td className="px-4 py-3"><Skeleton width={128} height={16} borderRadius={4} /></td>
+                        <td className="px-4 py-3"><Skeleton width={40} height={16} borderRadius={4} /></td>
+                        <td className="px-4 py-3"><Skeleton width={160} height={16} borderRadius={4} /></td>
+                        <td className="px-4 py-3"><Skeleton width={64} height={16} borderRadius={4} /></td>
                       </tr>
                     ))}
                   </tbody>
