@@ -54,7 +54,7 @@ function Workflow({ chain }: { chain: string }) {
   const parts = chain.split("→").flatMap((p) => { const t = p.trim(); return t ? [t] : []; });
   return (
     <div className="flex flex-wrap items-center gap-1 mt-1.5">
-      {parts.map((part) => (
+      {parts.map((part, i) => (
         <span key={part} className="flex items-center gap-1">
           <span className="text-xs font-medium bg-muted text-foreground/80 rounded px-2 py-1">
             {part}
