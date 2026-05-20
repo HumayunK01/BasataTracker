@@ -123,7 +123,7 @@ function CategoryPickerList({ categories, onPick }: Pick<CategoryPickerProps, "c
                 key={cat.key}
                 type="button"
                 onClick={() => onPick(cat)}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted/60 active:bg-muted transition-colors text-left touch-manipulation"
+                className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted/60 active:bg-muted transition-colors text-left touch-manipulation"
               >
                 <span
                   className="size-7 rounded-md flex items-center justify-center text-[10px] font-mono font-bold shrink-0"

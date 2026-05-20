@@ -54,8 +54,8 @@ function Workflow({ chain }: { chain: string }) {
   const parts = chain.split("→").flatMap((p) => { const t = p.trim(); return t ? [t] : []; });
   return (
     <div className="flex flex-wrap items-center gap-1 mt-1.5">
-      {parts.map((part, i) => (
-        <span key={i} className="flex items-center gap-1">
+      {parts.map((part) => (
+        <span key={part} className="flex items-center gap-1">
           <span className="text-xs font-medium bg-muted text-foreground/80 rounded px-2 py-1">
             {part}
           </span>
@@ -91,8 +91,8 @@ function DocTypeCard({ doc }: { doc: DocType }) {
           <span className="font-semibold text-foreground/70">Description:</span> {doc.description}
         </p>
       )}
-      {doc.workflows.map((wf, i) => (
-        <Workflow key={i} chain={wf} />
+      {doc.workflows.map((wf) => (
+        <Workflow key={wf} chain={wf} />
       ))}
       {doc.notes && (
         <div className="text-xs text-muted-foreground leading-relaxed mt-1">{doc.notes}</div>
@@ -558,8 +558,8 @@ export default function PhoenixHeartCheatSheetPage() {
             title="Notes for Cheat Sheet"
           >
             <ul className="space-y-1.5">
-              {cheatSheetNotes.map((note, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+              {cheatSheetNotes.map((note) => (
+                <li key={note} className="flex items-start gap-2 text-sm text-muted-foreground">
                   <span className="size-1.5 rounded-full bg-muted-foreground/40 shrink-0 mt-2" />
                   <span className="leading-relaxed">{note}</span>
                 </li>
