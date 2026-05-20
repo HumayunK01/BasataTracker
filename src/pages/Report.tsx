@@ -345,8 +345,8 @@ const ReportPage = () => {
                       <YAxis {...T.axis} allowDecimals={false} />
                       <Tooltip contentStyle={T.container} labelStyle={T.text} itemStyle={T.text} cursor={{ fill: "hsl(var(--accent))" }} />
                       <Bar dataKey="docs" name="Documents" radius={[3, 3, 0, 0]}>
-                        {chartData.map((_, i) => (
-                          <Cell key={`bar-${i}`} fill={i === chartData.length - 1 ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.5)"} />
+                        {chartData.map((entry, i) => (
+                          <Cell key={`bar-${entry.date}`} fill={i === chartData.length - 1 ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.5)"} />
                         ))}
                       </Bar>
                     </BarChart>
@@ -429,7 +429,7 @@ const ReportPage = () => {
                     </Button>
                     {tablePageNumbers.map((p, i) =>
                       p === "…" ? (
-                        <span key={`ellipsis-${i}`} className="w-9 text-center text-xs text-muted-foreground">…</span>
+                        <span key={`ellipsis-${tablePageNumbers[i + 1] ?? i}`} className="w-9 text-center text-xs text-muted-foreground">…</span>
                       ) : (
                         <Button key={p} variant={tablePage === p ? "default" : "ghost"} size="icon" className="size-9 text-xs" onClick={() => setTablePage(p as number)}>
                           {p}

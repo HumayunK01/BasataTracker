@@ -56,7 +56,7 @@ function Breakdown({
 }) {
   const entries = Object.entries(r.counts).filter(([, v]) => (v || 0) > 0);
   if (entries.length === 0) {
-    return <span className="text-xs text-muted-foreground/40">—</span>;
+    return <span className="text-xs text-muted-foreground/40" aria-hidden="true">{"—"}</span>;
   }
   return (
     <div className="flex flex-wrap gap-1">

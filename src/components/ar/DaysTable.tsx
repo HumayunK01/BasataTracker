@@ -47,7 +47,7 @@ function Pagination({ page, totalPages, pageNumbers, itemsPerPage, goTo, onItems
         </Button>
         {pageNumbers.map((p, i) =>
           p === "…" ? (
-            <span key={`e-${i}`} className="w-8 text-center text-sm text-muted-foreground">…</span>
+            <span key={`e-${pageNumbers[i + 1] ?? i}`} className="w-8 text-center text-sm text-muted-foreground">…</span>
           ) : (
             <Button
               key={p}
