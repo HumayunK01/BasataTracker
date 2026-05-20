@@ -91,6 +91,85 @@ const INTENSITY_BG: Record<0 | 1 | 2 | 3 | 4, string> = {
   4: "bg-primary",
 };
 
+interface GridProps {
+  weeks: (Cell | null)[][];
+  monthTicks: { label: string; col: number }[];
+  maxTotal: number;
+  setTooltip: (t: { iso: string; total: number; isOffDay: boolean; isWeekend: boolean; isFuture: boolean; isToday: boolean; x: number; y: number } | null) => void;
+}
+
+function HeatmapGrid({ weeks, monthTicks, maxTotal, setTooltip }: GridProps) {
+  return (
+    <div className="w-full">
+      {/* Month labels */}
+      <div className="flex w-full mb-1">
+        {weeks.map((_, col) => {
+          const tick = monthTicks.find((t) => t.col === col);
+          return (
+            <div key={`month-${col}`} className="flex-1 min-w-0 overflow-hidden">
+              {tick && (
+                <span className="text-[9px] sm:text-[10px] text-muted-foreground whitespace-nowrap select-none">
+                  {tick.label}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Cell columns */}
+      <div className="flex w-full">
+        {weeks.map((week, col) => (
+          <div key={`col-${col}`} className="flex-1 flex flex-col gap-[2px] sm:gap-1 min-w-0 px-[1px] sm:px-[1.5px]">
+            {week.map((cell, row) => {
+              if (!cell) {
+                return (
+                  <div
+                    key={`empty-${col}-${row}`}
+                    className="w-full aspect-square rounded-[2px] sm:rounded-sm bg-muted/10 border border-white/[0.05]"
+                  />
+                );
+              }
+
+              const intensity = getIntensity(cell.total, maxTotal);
+              const bgClass = cell.isFuture
+                ? "bg-muted/10 border border-white/[0.05]"
+                : cell.isWeekend
+                ? "bg-slate-500/30 border border-slate-400/20"
+                : cell.isOffDay
+                ? "bg-red-500/40 border border-red-400/20"
+                : `${INTENSITY_BG[intensity]} border border-white/[0.07]`;
+
+              return (
+                <div
+                  key={cell.iso}
+                  className={[
+                    "w-full aspect-square rounded-[2px] sm:rounded-sm transition-all duration-100 cursor-default",
+                    bgClass,
+                    cell.isToday ? "ring-1 ring-white/30 ring-offset-1 ring-offset-card" : "",
+                    !cell.isFuture ? "hover:brightness-125" : "",
+                  ].join(" ")}
+                  onMouseEnter={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const tipX = Math.min(rect.left, window.innerWidth - 180);
+                    setTooltip({
+                      iso: cell.iso, total: cell.total,
+                      isOffDay: cell.isOffDay, isWeekend: cell.isWeekend,
+                      isFuture: cell.isFuture, isToday: cell.isToday,
+                      x: tipX, y: rect.top,
+                    });
+                  }}
+                  onMouseLeave={() => setTooltip(null)}
+                />
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: Props) {
   const [tooltip, setTooltip] = useState<{
     iso: string; total: number; isOffDay: boolean; isWeekend: boolean;
@@ -119,78 +198,6 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
     ] as const;
   }, [logs, currentYear]);
 
-  function renderGrid(weeks: (Cell | null)[][], monthTicks: { label: string; col: number }[]) {
-    return (
-      <div className="w-full">
-        {/* Month labels */}
-        <div className="flex w-full mb-1">
-          {weeks.map((_, col) => {
-            const tick = monthTicks.find((t) => t.col === col);
-            return (
-              <div key={`month-${col}`} className="flex-1 min-w-0 overflow-hidden">
-                {tick && (
-                  <span className="text-[9px] sm:text-[10px] text-muted-foreground whitespace-nowrap select-none">
-                    {tick.label}
-                  </span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Cell columns */}
-        <div className="flex w-full">
-          {weeks.map((week, col) => (
-            <div key={`col-${col}`} className="flex-1 flex flex-col gap-[2px] sm:gap-1 min-w-0 px-[1px] sm:px-[1.5px]">
-              {week.map((cell, row) => {
-                if (!cell) {
-                  return (
-                    <div
-                      key={`empty-${col}-${row}`}
-                      className="w-full aspect-square rounded-[2px] sm:rounded-sm bg-muted/10 border border-white/[0.05]"
-                    />
-                  );
-                }
-
-                const intensity = getIntensity(cell.total, maxTotal);
-                const bgClass = cell.isFuture
-                  ? "bg-muted/10 border border-white/[0.05]"
-                  : cell.isWeekend
-                  ? "bg-slate-500/30 border border-slate-400/20"
-                  : cell.isOffDay
-                  ? "bg-red-500/40 border border-red-400/20"
-                  : `${INTENSITY_BG[intensity]} border border-white/[0.07]`;
-
-                return (
-                  <div
-                    key={cell.iso}
-                    className={[
-                      "w-full aspect-square rounded-[2px] sm:rounded-sm transition-all duration-100 cursor-default",
-                      bgClass,
-                      cell.isToday ? "ring-1 ring-white/30 ring-offset-1 ring-offset-card" : "",
-                      !cell.isFuture ? "hover:brightness-125" : "",
-                    ].join(" ")}
-                    onMouseEnter={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      // Keep tooltip on screen horizontally
-                      const tipX = Math.min(rect.left, window.innerWidth - 180);
-                      setTooltip({
-                        iso: cell.iso, total: cell.total,
-                        isOffDay: cell.isOffDay, isWeekend: cell.isWeekend,
-                        isFuture: cell.isFuture, isToday: cell.isToday,
-                        x: tipX, y: rect.top,
-                      });
-                    }}
-                    onMouseLeave={() => setTooltip(null)}
-                  />
-                );
-              })}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
 
   return (
@@ -285,7 +292,7 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
 
       {/* Desktop grid: full year */}
       <div className="hidden sm:block">
-        {renderGrid(weeks365, monthTicks365)}
+        <HeatmapGrid weeks={weeks365} monthTicks={monthTicks365} maxTotal={maxTotal} setTooltip={setTooltip} />
       </div>
 
       {/* Tooltip */}

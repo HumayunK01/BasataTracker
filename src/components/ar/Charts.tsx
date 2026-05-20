@@ -241,8 +241,8 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
             <YAxis {...T.axis} allowDecimals={false} width={32} tickLine={false} axisLine={false} />
             <Tooltip contentStyle={T.container} labelStyle={{ ...T.text, fontWeight: 600 }} itemStyle={T.text} cursor={{ fill: "hsl(var(--accent))", radius: 4 }} />
             <Bar dataKey="total" name="Documents" radius={[6, 6, 0, 0]} maxBarSize={36}>
-              {weeklyTotals.map((_, i) => (
-                <Cell key={`week-${i}`} fill={i === weeklyTotals.length - 1 ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.4)"} />
+              {weeklyTotals.map((entry, i) => (
+                <Cell key={`week-${entry.week}`} fill={i === weeklyTotals.length - 1 ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.4)"} />
               ))}
             </Bar>
           </BarChart>
@@ -255,8 +255,8 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
             <YAxis {...T.axis} allowDecimals={false} width={32} tickLine={false} axisLine={false} />
             <Tooltip contentStyle={T.container} labelStyle={{ ...T.text, fontWeight: 600 }} itemStyle={T.text} cursor={{ fill: "hsl(var(--accent))" }} />
             <Bar dataKey="avg" name="Avg docs" radius={[6, 6, 0, 0]} maxBarSize={44}>
-              {dowAvg.map((entry, i) => (
-                <Cell key={`dow-${i}`} fill={entry.avg === Math.max(...dowAvg.map((d) => d.avg)) ? "hsl(var(--warning))" : "hsl(var(--info) / 0.55)"} />
+              {dowAvg.map((entry) => (
+                <Cell key={`dow-${entry.day}`} fill={entry.avg === Math.max(...dowAvg.map((d) => d.avg)) ? "hsl(var(--warning))" : "hsl(var(--info) / 0.55)"} />
               ))}
             </Bar>
           </BarChart>

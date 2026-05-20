@@ -403,7 +403,7 @@ const ReportPage = () => {
                                 {v > 0 ? (
                                   <span className="font-medium" style={{ color: colorForKey(c.key) }}>{v}</span>
                                 ) : (
-                                  <span className="text-muted-foreground/30">—</span>
+                                  <span className="text-muted-foreground/30" aria-hidden="true">{"—"}</span>
                                 )}
                               </TableCell>
                             );
