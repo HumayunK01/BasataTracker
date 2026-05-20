@@ -310,7 +310,7 @@ export default function SettingsPage() {
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">First name</Label>
                       <Input placeholder="First name" value={profileForm.first_name}
-                        onChange={(e) => setProfileForm((f) => ({ ...f, first_name: e.target.value }))} autoFocus />
+                        onChange={(e) => setProfileForm((f) => ({ ...f, first_name: e.target.value }))} />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">Last name</Label>
@@ -351,7 +351,7 @@ export default function SettingsPage() {
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">New password</Label>
                       <Input type="password" placeholder="••••••••" minLength={6} value={pw.next}
-                        onChange={(e) => setPw((p) => ({ ...p, next: e.target.value }))} autoFocus />
+                        onChange={(e) => setPw((p) => ({ ...p, next: e.target.value }))} />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">Confirm password</Label>
@@ -524,7 +524,7 @@ export default function SettingsPage() {
               <Label htmlFor="cat-label">Label</Label>
               <Input id="cat-label" placeholder="e.g. Worked on NG" value={form.label}
                 onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
-                onKeyDown={(e) => e.key === "Enter" && handleSave()} autoFocus />
+                onKeyDown={(e) => e.key === "Enter" && handleSave()} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="cat-short">Short name</Label>
@@ -578,7 +578,6 @@ export default function SettingsPage() {
               placeholder="DELETE"
               value={deleteConfirmText}
               onChange={(e) => setDeleteConfirmText(e.target.value)}
-              autoFocus
             />
             <Input
               type="password"
