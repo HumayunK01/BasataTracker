@@ -1,5 +1,6 @@
 import { memo, useMemo } from "react";
 import { DeferRender } from "@/components/ar/DeferRender";
+// react-doctor-disable-next-line react-doctor/prefer-dynamic-import -- Charts is already lazy-loaded by its caller (Index.tsx); top-level recharts import here is intentional
 import {
   Area,
   AreaChart,

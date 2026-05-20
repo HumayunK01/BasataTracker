@@ -1,4 +1,4 @@
-import { useMemo, useReducer, useState } from "react";
+import { useMemo, useReducer } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { colorForKey } from "@/lib/cat-colors";
 import { Button } from "@/components/ui/button";
@@ -21,12 +21,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { formatTableDate, isWeekend, totalForLog, type DailyLog } from "@/types/log";
+import { formatTableDate, isWeekend, type DailyLog } from "@/types/log";
 import { useDeleteLog } from "@/hooks/useDailyLogs";
-import { useCategories } from "@/hooks/useCategories";
+import { useCategories, type Category } from "@/hooks/useCategories";
 import { Trash2, Pencil, Search, ChevronLeft, ChevronRight, BedDouble, Copy, Check } from "lucide-react";
-import { toast } from "sonner";
 
+// ── Helpers ────────────────────────────────────────────────────────────────
+function getVal(l: DailyLog, key: string): number { return (l.counts ?? {})[key] ?? 0; }
+
+// ── Pagination ─────────────────────────────────────────────────────────────
 interface PaginationProps {
   page: number;
   totalPages: number;
@@ -81,11 +84,204 @@ function Pagination({ page, totalPages, pageNumbers, itemsPerPage, goTo, onItems
   );
 }
 
-interface Props {
-  logs: DailyLog[];
-  onEdit: (log: DailyLog) => void;
+// ── Mobile card list ───────────────────────────────────────────────────────
+interface MobileCardListProps {
+  paginated: DailyLog[];
+  categories: Category[];
+  search: string;
+  copiedId: string | null;
+  onEdit: (l: DailyLog) => void;
+  onDelete: (l: DailyLog) => void;
+  onCopy: (l: DailyLog) => void;
 }
 
+function MobileCardList({ paginated, categories, search, copiedId, onEdit, onDelete, onCopy }: MobileCardListProps) {
+  return (
+    <div className="flex flex-col flex-1 min-h-0 sm:hidden bg-card border border-border rounded-md overflow-hidden">
+      <div className="flex-1 overflow-y-auto no-scrollbar divide-y divide-border/50 min-h-0">
+        {paginated.length === 0 && (
+          <p className="text-center text-muted-foreground py-16 text-sm">
+            {search ? "No entries match your search." : "No days logged yet."}
+          </p>
+        )}
+        {paginated.map((l) => {
+          const isOff = l.is_off_day;
+          const weekend = isWeekend(l.log_date);
+          const total = categories.reduce((s, c) => s + getVal(l, c.key), 0);
+          const activeCats = categories.filter((c) => getVal(l, c.key) > 0);
+
+          if (isOff) {
+            return (
+              <div key={l.id} className="flex items-center gap-3 px-4 py-2.5 bg-muted/20">
+                <BedDouble className="size-3.5 text-muted-foreground/50 shrink-0" />
+                <span className="text-sm text-muted-foreground tabular-nums flex-1">
+                  {formatTableDate(l.log_date)}
+                </span>
+                <span className="text-xs text-muted-foreground/60 uppercase tracking-wide font-medium">
+                  {weekend ? "Weekend" : "Off day"}
+                </span>
+                <div className="flex items-center gap-0.5 ml-1">
+                  <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/40 hover:text-foreground" onClick={() => onEdit(l)}>
+                    <Pencil className="size-3" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/40 hover:text-destructive" onClick={() => onDelete(l)}>
+                    <Trash2 className="size-3" />
+                  </Button>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div key={l.id} className="px-4 py-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold tabular-nums flex-1">{formatTableDate(l.log_date)}</span>
+                <span className="text-2xl font-black tabular-nums text-primary leading-none">{total}</span>
+                <div className="flex items-center gap-0.5 ml-1">
+                  <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/50 hover:text-foreground" onClick={() => onCopy(l)}>
+                    {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                  </Button>
+                  <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/50 hover:text-foreground" onClick={() => onEdit(l)}>
+                    <Pencil className="size-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/50 hover:text-destructive" onClick={() => onDelete(l)}>
+                    <Trash2 className="size-3.5" />
+                  </Button>
+                </div>
+              </div>
+              {activeCats.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {activeCats.map((c) => {
+                    const clr = colorForKey(c.key);
+                    return (
+                      <span
+                        key={c.key}
+                        className="text-xs font-medium px-2 py-0.5 rounded-full tabular-nums"
+                        style={{ color: clr, backgroundColor: `${clr}20`, border: `1px solid ${clr}33` }}
+                      >
+                        {c.short} · {getVal(l, c.key)}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Desktop table ──────────────────────────────────────────────────────────
+interface DesktopTableProps {
+  paginated: DailyLog[];
+  categories: Category[];
+  search: string;
+  copiedId: string | null;
+  onEdit: (l: DailyLog) => void;
+  onDelete: (l: DailyLog) => void;
+  onCopy: (l: DailyLog) => void;
+}
+
+function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelete, onCopy }: DesktopTableProps) {
+  return (
+    <div className="hidden sm:flex flex-col bg-card border border-border rounded-md overflow-hidden">
+      <div className="overflow-auto no-scrollbar">
+        <Table className="[&_th]:border-r [&_th]:border-border [&_th:last-child]:border-r-0 [&_td]:border-r [&_td]:border-border/40 [&_td:last-child]:border-r-0">
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
+              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center py-3">Date</TableHead>
+              {categories.map((c) => (
+                <TableHead key={c.key} className="font-bold text-xs uppercase tracking-wider text-center text-foreground">
+                  {c.short}
+                </TableHead>
+              ))}
+              <TableHead className="font-bold text-xs uppercase tracking-wider text-center text-foreground">Total</TableHead>
+              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginated.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={categories.length + 3} className="text-center text-muted-foreground py-16 text-sm">
+                  {search ? "No entries match your search." : "No days logged yet."}
+                </TableCell>
+              </TableRow>
+            )}
+            {paginated.map((l) => {
+              const total = categories.reduce((s, c) => s + getVal(l, c.key), 0);
+              return l.is_off_day ? (
+                <TableRow key={l.id} className="border-b border-border/40 last:border-0 bg-muted/10">
+                  <TableCell className="tabular-nums text-sm font-medium py-3 text-muted-foreground text-center">
+                    {formatTableDate(l.log_date)}
+                  </TableCell>
+                  <TableCell colSpan={categories.length + 1} className="py-3">
+                    <div className="flex items-center gap-1.5">
+                      <BedDouble className="size-3.5 text-muted-foreground" />
+                      <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">
+                        {isWeekend(l.log_date) ? "Weekend" : "Off Day"}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3">
+                    <div className="flex gap-1 justify-center">
+                      <Button size="icon" className="size-7 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => onCopy(l)} title="Copy">
+                        {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                      </Button>
+                      <Button variant="secondary" size="icon" className="size-7" onClick={() => onEdit(l)} title="Edit">
+                        <Pencil className="size-3.5" />
+                      </Button>
+                      <Button variant="secondary" size="icon" className="size-7 hover:bg-destructive/20 hover:text-destructive" onClick={() => onDelete(l)} title="Delete">
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                <TableRow key={l.id} className="border-b border-border/40 last:border-0 hover:bg-muted/20 transition-colors">
+                  <TableCell className="tabular-nums text-sm font-medium py-3 text-foreground text-center">
+                    {formatTableDate(l.log_date)}
+                  </TableCell>
+                  {categories.map((c) => {
+                    const v = getVal(l, c.key);
+                    return (
+                      <TableCell key={c.key} className="text-center tabular-nums text-sm py-3">
+                        {v > 0 ? (
+                          <span className="font-medium text-foreground">{v}</span>
+                        ) : (
+                          <span className="text-muted-foreground/30" aria-hidden="true">{"—"}</span>
+                        )}
+                      </TableCell>
+                    );
+                  })}
+                  <TableCell className="text-center tabular-nums py-3">
+                    <span className="font-bold text-sm text-foreground">{total}</span>
+                  </TableCell>
+                  <TableCell className="py-3">
+                    <div className="flex gap-1 justify-center">
+                      <Button size="icon" className="size-7 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => onCopy(l)} title="Copy">
+                        {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                      </Button>
+                      <Button variant="secondary" size="icon" className="size-7" onClick={() => onEdit(l)} title="Edit">
+                        <Pencil className="size-3.5" />
+                      </Button>
+                      <Button variant="secondary" size="icon" className="size-7 hover:bg-destructive/20 hover:text-destructive" onClick={() => onDelete(l)} title="Delete">
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+// ── Reducer ────────────────────────────────────────────────────────────────
 interface TableState { page: number; itemsPerPage: number; search: string; deleteTarget: DailyLog | null; copiedId: string | null; }
 type TableAction =
   | { type: "set_page"; p: number }
@@ -107,13 +303,16 @@ function tableReducer(s: TableState, a: TableAction): TableState {
   }
 }
 
+// ── Main component ─────────────────────────────────────────────────────────
+interface Props {
+  logs: DailyLog[];
+  onEdit: (log: DailyLog) => void;
+}
+
 export function DaysTable({ logs, onEdit }: Props) {
   const [{ page, itemsPerPage, search, deleteTarget, copiedId }, tDispatch] = useReducer(tableReducer, tableInit);
   const deleteLog = useDeleteLog();
   const { data: categories = [] } = useCategories();
-
-  const getVal = (l: DailyLog, key: string): number => (l.counts ?? {})[key] ?? 0;
-  const logTotal = (l: DailyLog) => categories.reduce((s, c) => s + getVal(l, c.key), 0);
 
   const allSorted = useMemo(
     () => logs.toSorted((a, b) => b.log_date.localeCompare(a.log_date)),
@@ -139,7 +338,6 @@ export function DaysTable({ logs, onEdit }: Props) {
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginated = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
-
   const goTo = (p: number) => tDispatch({ type: "set_page", p: Math.max(1, Math.min(totalPages, p)) });
 
   const copyLog = (l: DailyLog) => {
@@ -174,8 +372,6 @@ export function DaysTable({ logs, onEdit }: Props) {
     }
   };
 
-  const handleSearch = (v: string) => tDispatch({ type: "set_search", q: v });
-
   const pageNumbers = useMemo(() => {
     if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
     const pages: (number | "…")[] = [1];
@@ -185,6 +381,8 @@ export function DaysTable({ logs, onEdit }: Props) {
     pages.push(totalPages);
     return pages;
   }, [totalPages, page]);
+
+  const sharedProps = { paginated, categories, search, copiedId, onEdit, onDelete: (l: DailyLog) => tDispatch({ type: "set_delete", log: l }), onCopy: copyLog };
 
   return (
     <>
@@ -198,7 +396,7 @@ export function DaysTable({ logs, onEdit }: Props) {
               className="pl-9 h-10 text-sm w-full bg-card border-border"
               placeholder="Search by date…"
               value={search}
-              onChange={(e) => handleSearch(e.target.value)}
+              onChange={(e) => tDispatch({ type: "set_search", q: e.target.value })}
             />
           </div>
           <div className="ml-auto flex items-center gap-4 text-sm text-muted-foreground">
@@ -209,174 +407,8 @@ export function DaysTable({ logs, onEdit }: Props) {
           </div>
         </div>
 
-        {/* ── MOBILE card list (hidden sm+) ── */}
-        <div className="flex flex-col flex-1 min-h-0 sm:hidden bg-card border border-border rounded-md overflow-hidden">
-          <div className="flex-1 overflow-y-auto no-scrollbar divide-y divide-border/50 min-h-0">
-            {paginated.length === 0 && (
-              <p className="text-center text-muted-foreground py-16 text-sm">
-                {search ? "No entries match your search." : "No days logged yet."}
-              </p>
-            )}
-            {paginated.map((l) => {
-              const isOff = l.is_off_day;
-              const weekend = isWeekend(l.log_date);
-              const total = logTotal(l);
-              const activeCats = categories.filter((c) => getVal(l, c.key) > 0);
-
-              if (isOff) {
-                return (
-                  <div key={l.id} className="flex items-center gap-3 px-4 py-2.5 bg-muted/20">
-                    <BedDouble className="size-3.5 text-muted-foreground/50 shrink-0" />
-                    <span className="text-sm text-muted-foreground tabular-nums flex-1">
-                      {formatTableDate(l.log_date)}
-                    </span>
-                    <span className="text-xs text-muted-foreground/60 uppercase tracking-wide font-medium">
-                      {weekend ? "Weekend" : "Off day"}
-                    </span>
-                    <div className="flex items-center gap-0.5 ml-1">
-                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/40 hover:text-foreground" onClick={() => onEdit(l)}>
-                        <Pencil className="size-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/40 hover:text-destructive" onClick={() => tDispatch({ type: "set_delete", log: l })}>
-                        <Trash2 className="size-3" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              }
-
-              return (
-                <div key={l.id} className="px-4 py-3 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold tabular-nums flex-1">{formatTableDate(l.log_date)}</span>
-                    <span className="text-2xl font-black tabular-nums text-primary leading-none">{total}</span>
-                    <div className="flex items-center gap-0.5 ml-1">
-                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/50 hover:text-foreground" onClick={() => copyLog(l)}>
-                        <Copy className="size-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/50 hover:text-foreground" onClick={() => onEdit(l)}>
-                        <Pencil className="size-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/50 hover:text-destructive" onClick={() => tDispatch({ type: "set_delete", log: l })}>
-                        <Trash2 className="size-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                  {activeCats.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {activeCats.map((c) => {
-                        const clr = colorForKey(c.key);
-                        return (
-                          <span
-                            key={c.key}
-                            className="text-xs font-medium px-2 py-0.5 rounded-full tabular-nums"
-                            style={{ color: clr, backgroundColor: `${clr}20`, border: `1px solid ${clr}33` }}
-                          >
-                            {c.short} · {getVal(l, c.key)}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── DESKTOP table (hidden below sm) ── */}
-        <div className="hidden sm:flex flex-col bg-card border border-border rounded-md overflow-hidden">
-          <div className="overflow-auto no-scrollbar">
-            <Table className="[&_th]:border-r [&_th]:border-border [&_th:last-child]:border-r-0 [&_td]:border-r [&_td]:border-border/40 [&_td:last-child]:border-r-0">
-              <TableHeader>
-                <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
-                  <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center py-3">Date</TableHead>
-                  {categories.map((c) => (
-                    <TableHead key={c.key} className="font-bold text-xs uppercase tracking-wider text-center text-foreground">
-                      {c.short}
-                    </TableHead>
-                  ))}
-                  <TableHead className="font-bold text-xs uppercase tracking-wider text-center text-foreground">Total</TableHead>
-                  <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginated.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={categories.length + 3} className="text-center text-muted-foreground py-16 text-sm">
-                      {search ? "No entries match your search." : "No days logged yet."}
-                    </TableCell>
-                  </TableRow>
-                )}
-                {paginated.map((l) => {
-                  const total = logTotal(l);
-                  return l.is_off_day ? (
-                    <TableRow key={l.id} className="border-b border-border/40 last:border-0 bg-muted/10">
-                      <TableCell className="tabular-nums text-sm font-medium py-3 text-muted-foreground text-center">
-                        {formatTableDate(l.log_date)}
-                      </TableCell>
-                      <TableCell colSpan={categories.length + 1} className="py-3">
-                        <div className="flex items-center gap-1.5">
-                          <BedDouble className="size-3.5 text-muted-foreground" />
-                          <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">
-                            {isWeekend(l.log_date) ? "Weekend" : "Off Day"}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <div className="flex gap-1 justify-center">
-                          <Button size="icon" className="size-7 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => copyLog(l)} title="Copy">
-                            {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-                          </Button>
-                          <Button variant="secondary" size="icon" className="size-7" onClick={() => onEdit(l)} title="Edit">
-                            <Pencil className="size-3.5" />
-                          </Button>
-                          <Button variant="secondary" size="icon" className="size-7 hover:bg-destructive/20 hover:text-destructive" onClick={() => tDispatch({ type: "set_delete", log: l })} title="Delete">
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    <TableRow key={l.id} className="border-b border-border/40 last:border-0 hover:bg-muted/20 transition-colors">
-                      <TableCell className="tabular-nums text-sm font-medium py-3 text-foreground text-center">
-                        {formatTableDate(l.log_date)}
-                      </TableCell>
-                      {categories.map((c) => {
-                        const v = getVal(l, c.key);
-                        return (
-                          <TableCell key={c.key} className="text-center tabular-nums text-sm py-3">
-                            {v > 0 ? (
-                              <span className="font-medium text-foreground">{v}</span>
-                            ) : (
-                              <span className="text-muted-foreground/30" aria-hidden="true">{"—"}</span>
-                            )}
-                          </TableCell>
-                        );
-                      })}
-                      <TableCell className="text-center tabular-nums py-3">
-                        <span className="font-bold text-sm text-foreground">{total}</span>
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <div className="flex gap-1 justify-center">
-                          <Button size="icon" className="size-7 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => copyLog(l)} title="Copy">
-                            {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-                          </Button>
-                          <Button variant="secondary" size="icon" className="size-7" onClick={() => onEdit(l)} title="Edit">
-                            <Pencil className="size-3.5" />
-                          </Button>
-                          <Button variant="secondary" size="icon" className="size-7 hover:bg-destructive/20 hover:text-destructive" onClick={() => tDispatch({ type: "set_delete", log: l })} title="Delete">
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
+        <MobileCardList {...sharedProps} />
+        <DesktopTable {...sharedProps} />
 
         <Pagination
           page={page}
