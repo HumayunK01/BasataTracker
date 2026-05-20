@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,6 +30,27 @@ function load<T>(key: string, fallback: T): T {
     if (raw) return JSON.parse(raw) as T;
   } catch {}
   return fallback;
+}
+
+interface CounterState { counts: Record<string, number>; selectedKeys: string[]; saved: boolean; }
+type CounterAction =
+  | { type: "set_count"; key: string; val: number }
+  | { type: "add_key"; key: string }
+  | { type: "remove_key"; key: string }
+  | { type: "set_saved"; v: boolean }
+  | { type: "reset" }
+  | { type: "hydrate"; counts: Record<string, number>; keys: string[] };
+
+function counterReducer(s: CounterState, a: CounterAction): CounterState {
+  switch (a.type) {
+    case "set_count": return { ...s, counts: { ...s.counts, [a.key]: Math.max(0, a.val) } };
+    case "add_key": return { ...s, selectedKeys: [...s.selectedKeys, a.key] };
+    case "remove_key": return { ...s, selectedKeys: s.selectedKeys.filter((k) => k !== a.key) };
+    case "set_saved": return { ...s, saved: a.v };
+    case "reset": return { ...s, counts: {}, saved: false };
+    case "hydrate": return { counts: { ...a.counts }, selectedKeys: a.keys, saved: true };
+    default: return s;
+  }
 }
 
 /** Eases a displayed number toward `value` so the hero total animates. */
@@ -296,11 +317,13 @@ export default function CounterPage() {
   const { data: logs = [] } = useDailyLogs();
   const upsert = useUpsertLog();
 
-  const [counts, setCounts] = useState<Record<string, number>>(() => load(COUNTS_KEY, {}));
-  const [selectedKeys, setSelectedKeys] = useState<string[]>(() => load(SELECTED_KEY, []));
+  const [{ counts, selectedKeys, saved }, cDispatch] = useReducer(counterReducer, undefined, () => ({
+    counts: load<Record<string, number>>(COUNTS_KEY, {}),
+    selectedKeys: load<string[]>(SELECTED_KEY, []),
+    saved: false,
+  }));
   const [pickerOpen, setPickerOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
-  const [saved, setSaved] = useState(false);
 
   // Cross-device persistence. The counter auto-saves (debounced) into today's
   // daily_logs row, and on first load it hydrates from the server so a device
@@ -326,8 +349,7 @@ export default function CounterPage() {
   const availableToAdd = categories.filter((c) => !selectedKeys.includes(c.key));
 
   const getCount = (key: string) => counts[key] ?? 0;
-  const setCount = (key: string, val: number) =>
-    setCounts((prev) => ({ ...prev, [key]: Math.max(0, val) }));
+  const setCount = (key: string, val: number) => cDispatch({ type: "set_count", key, val });
   const increment = (key: string) => setCount(key, getCount(key) + 1);
   const decrement = (key: string) => setCount(key, getCount(key) - 1);
 
@@ -335,9 +357,8 @@ export default function CounterPage() {
   const maxCount = activeCategories.reduce((m, c) => Math.max(m, getCount(c.key)), 0);
   const animatedTotal = useAnimatedNumber(total);
 
-  const addCategory = (cat: Category) => setSelectedKeys((prev) => [...prev, cat.key]);
-  const removeCategory = (key: string) =>
-    setSelectedKeys((prev) => prev.filter((k) => k !== key));
+  const addCategory = (cat: Category) => cDispatch({ type: "add_key", key: cat.key });
+  const removeCategory = (key: string) => cDispatch({ type: "remove_key", key });
 
   const todayIso = isoDate();
   const todayLog = logs.find((l) => l.log_date === todayIso);
@@ -372,15 +393,11 @@ export default function CounterPage() {
     const serverTotal = Object.values(serverCounts).reduce((s, v) => s + (v || 0), 0);
     if (localTotal === 0 && serverTotal > 0) {
       skipAutoSaveRef.current = true;
-      setCounts({ ...serverCounts });
-      setSelectedKeys((prev) => {
-        const next = new Set(prev);
-        for (const k of Object.keys(serverCounts)) {
-          if ((serverCounts[k] ?? 0) > 0 && categories.some((c) => c.key === k)) next.add(k);
-        }
-        return [...next];
-      });
-      setSaved(true);
+      const next = new Set(selectedKeys);
+      for (const k of Object.keys(serverCounts)) {
+        if ((serverCounts[k] ?? 0) > 0 && categories.some((c) => c.key === k)) next.add(k);
+      }
+      cDispatch({ type: "hydrate", counts: { ...serverCounts }, keys: [...next] });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todayLog, categories]);
@@ -392,13 +409,13 @@ export default function CounterPage() {
       skipAutoSaveRef.current = false;
       return;
     }
-    setSaved(false);
+    cDispatch({ type: "set_saved", v: false });
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(() => {
       const keys = categories.reduce<string[]>((acc, c) => { if (selectedKeys.includes(c.key)) acc.push(c.key); return acc; }, []);
       if (keys.length === 0) return;
       flush(counts, keys).then(
-        () => setSaved(true),
+        () => cDispatch({ type: "set_saved", v: true }),
         () => {}, // error toast handled by the mutation hook
       );
     }, 1000);
@@ -408,17 +425,14 @@ export default function CounterPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [counts]);
 
-  const handleReset = () => {
-    setCounts({});
-    setSaved(false);
-  };
+  const handleReset = () => cDispatch({ type: "reset" });
 
   const handleSave = async () => {
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     const keys = activeCategories.map((c) => c.key);
     try {
       await flush(counts, keys);
-      setSaved(true);
+      cDispatch({ type: "set_saved", v: true });
     } catch {
       // error handled by hook
     }

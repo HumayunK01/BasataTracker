@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useReducer, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,18 +15,43 @@ const PASSWORD_RULES = [
 
 type Mode = "login" | "signup";
 
+interface LoginState {
+  mode: Mode; email: string; password: string;
+  firstName: string; lastName: string; showPassword: boolean; loading: boolean;
+}
+type LoginAction =
+  | { type: "set_mode"; mode: Mode }
+  | { type: "set_email"; v: string }
+  | { type: "set_password"; v: string }
+  | { type: "set_first"; v: string }
+  | { type: "set_last"; v: string }
+  | { type: "toggle_pw" }
+  | { type: "submitting" }
+  | { type: "done" };
+
+const loginInit: LoginState = { mode: "login", email: "", password: "", firstName: "", lastName: "", showPassword: false, loading: false };
+
+function loginReducer(s: LoginState, a: LoginAction): LoginState {
+  switch (a.type) {
+    case "set_mode": return { ...s, mode: a.mode, firstName: "", lastName: "" };
+    case "set_email": return { ...s, email: a.v };
+    case "set_password": return { ...s, password: a.v };
+    case "set_first": return { ...s, firstName: a.v };
+    case "set_last": return { ...s, lastName: a.v };
+    case "toggle_pw": return { ...s, showPassword: !s.showPassword };
+    case "submitting": return { ...s, loading: true };
+    case "done": return { ...s, loading: false };
+    default: return s;
+  }
+}
+
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 60_000;
 
 export default function LoginPage() {
   const { theme, toggle } = useTheme();
-  const [mode, setMode] = useState<Mode>("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [s, dispatch] = useReducer(loginReducer, loginInit);
+  const { mode, email, password, firstName, lastName, showPassword, loading } = s;
   const attemptTimestamps = useRef<number[]>([]);
 
   const checkRateLimit = (): boolean => {
@@ -35,12 +60,6 @@ export default function LoginPage() {
     if (attemptTimestamps.current.length >= MAX_ATTEMPTS) return false;
     attemptTimestamps.current.push(now);
     return true;
-  };
-
-  const switchMode = (next: Mode) => {
-    setMode(next);
-    setFirstName("");
-    setLastName("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,7 +72,7 @@ export default function LoginPage() {
       if (!firstName.trim()) { toast.error("First name is required."); return; }
       if (!lastName.trim()) { toast.error("Last name is required."); return; }
     }
-    setLoading(true);
+    dispatch({ type: "submitting" });
     try {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -62,18 +81,16 @@ export default function LoginPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            data: { first_name: firstName.trim(), last_name: lastName.trim() },
-          },
+          options: { data: { first_name: firstName.trim(), last_name: lastName.trim() } },
         });
         if (error) throw error;
         toast.success("Account created! Check your email to confirm.");
-        switchMode("login");
+        dispatch({ type: "set_mode", mode: "login" });
       }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
-      setLoading(false);
+      dispatch({ type: "done" });
     }
   };
 
@@ -111,7 +128,7 @@ export default function LoginPage() {
                 type="text"
                 placeholder="First name"
                 value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                onChange={(e) => dispatch({ type: "set_first", v: e.target.value })}
                 required
                 autoComplete="given-name"
                 className="h-11 bg-muted border-0 placeholder:text-muted-foreground"
@@ -120,7 +137,7 @@ export default function LoginPage() {
                 type="text"
                 placeholder="Last name"
                 value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
+                onChange={(e) => dispatch({ type: "set_last", v: e.target.value })}
                 required
                 autoComplete="family-name"
                 className="h-11 bg-muted border-0 placeholder:text-muted-foreground"
@@ -132,7 +149,7 @@ export default function LoginPage() {
             type="email"
             placeholder="Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => dispatch({ type: "set_email", v: e.target.value })}
             required
             autoComplete="email"
             className="h-11 bg-muted border-0 placeholder:text-muted-foreground"
@@ -143,7 +160,7 @@ export default function LoginPage() {
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => dispatch({ type: "set_password", v: e.target.value })}
               required
               minLength={6}
               autoComplete={mode === "login" ? "current-password" : "new-password"}
@@ -151,7 +168,7 @@ export default function LoginPage() {
             />
             <button
               type="button"
-              onClick={() => setShowPassword((v) => !v)}
+              onClick={() => dispatch({ type: "toggle_pw" })}
               tabIndex={-1}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
@@ -190,13 +207,13 @@ export default function LoginPage() {
         <p className="text-center text-sm text-muted-foreground">
           {mode === "login" ? (
             <>Don't have an account?{" "}
-              <button type="button" onClick={() => switchMode("signup")} className="text-primary hover:underline font-medium">
+              <button type="button" onClick={() => dispatch({ type: "set_mode", mode: "signup" })} className="text-primary hover:underline font-medium">
                 Sign up
               </button>
             </>
           ) : (
             <>Already have an account?{" "}
-              <button type="button" onClick={() => switchMode("login")} className="text-primary hover:underline font-medium">
+              <button type="button" onClick={() => dispatch({ type: "set_mode", mode: "login" })} className="text-primary hover:underline font-medium">
                 Sign in
               </button>
             </>
