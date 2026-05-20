@@ -12,6 +12,8 @@ import { PageHeader } from "@/components/ar/PageHeader";
 
 import { colorForKey } from "@/lib/cat-colors";
 
+const chicagoWeekdayFmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", weekday: "short" });
+
 const Index = () => {
   const { data: logs = [], isLoading } = useDailyLogs();
   const { data: categories = [] } = useCategories();
@@ -54,7 +56,7 @@ const Index = () => {
   const openNew = () => { setEditing(null); setOpen(true); };
 
   const isWeekendToday = useMemo(() => {
-    const day = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", weekday: "short" }).format(now);
+    const day = chicagoWeekdayFmt.format(now);
     return day === "Sat" || day === "Sun";
   }, [now]);
 

@@ -335,7 +335,7 @@ export function DaysTable({ logs, onEdit }: Props) {
                             {v > 0 ? (
                               <span className="font-medium text-foreground">{v}</span>
                             ) : (
-                              <span className="text-muted-foreground/30">—</span>
+                              <span className="text-muted-foreground/30" aria-hidden="true">{"—"}</span>
                             )}
                           </TableCell>
                         );
