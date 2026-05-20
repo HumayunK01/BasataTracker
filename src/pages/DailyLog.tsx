@@ -63,28 +63,28 @@ const DailyLogPage = () => {
           <>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden" disabled={logs.length === 0}>
-                  <Download className="h-4 w-4" />
+                <Button variant="outline" size="icon" className="size-8 sm:hidden" disabled={logs.length === 0}>
+                  <Download className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="hidden sm:flex h-8" disabled={logs.length === 0}>
-                  <Download className="h-4 w-4 mr-1" /> Export <ChevronDown className="h-3 w-3 ml-1 opacity-60" />
+                  <Download className="size-4 mr-1" /> Export <ChevronDown className="size-3 ml-1 opacity-60" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
                 <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Export all logs</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => downloadCSV(logs, categories, "daily-log.csv")}>
-                  <FileText className="h-4 w-4 mr-2" /> CSV (.csv)
+                  <FileText className="size-4 mr-2" /> CSV (.csv)
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => downloadJSON(logs, categories, "daily-log.json")}>
-                  <FileJson className="h-4 w-4 mr-2" /> JSON (.json)
+                  <FileJson className="size-4 mr-2" /> JSON (.json)
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <Button size="sm" className="h-8" onClick={openNew}>
-              <Plus className="h-4 w-4 sm:mr-1" />
+              <Plus className="size-4 sm:mr-1" />
               <span className="hidden sm:inline">Log day</span>
               <kbd className="ml-2 hidden sm:inline-flex text-xs border border-primary-foreground/30 rounded px-1">N</kbd>
             </Button>
@@ -117,7 +117,7 @@ const DailyLogPage = () => {
                   <h2 className="font-semibold mb-1">No logs yet</h2>
                   <p className="text-sm text-muted-foreground mb-4">Start by logging your first day of work.</p>
                   <Button onClick={openNew}>
-                    <Plus className="h-4 w-4 mr-1" /> Log your first day
+                    <Plus className="size-4 mr-1" /> Log your first day
                   </Button>
                 </div>
               </div>

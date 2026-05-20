@@ -25,7 +25,7 @@ export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
 
         {/* Left: hamburger + date/title */}
         <div className="flex items-center gap-2 min-w-0 -ml-2">
-          <SidebarTrigger className="shrink-0 h-8 w-8 [&>svg]:h-6 [&>svg]:w-6" />
+          <SidebarTrigger className="shrink-0 size-8 [&>svg]:h-6 [&>svg]:w-6" />
           <div className="min-w-0">
             <p className="text-xs text-muted-foreground truncate leading-tight">
               {formatHeaderDate(date)}
@@ -44,31 +44,31 @@ export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="hidden md:flex h-9 w-9 text-foreground hover:text-foreground/80"
+            className="hidden md:flex size-9 text-foreground hover:text-foreground/80"
             onClick={() => navigate("/settings")}
             title="Settings"
           >
-            <Settings className="h-8 w-8" />
+            <Settings className="size-8" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="hidden md:flex h-9 w-9 text-foreground hover:text-foreground/80"
+            className="hidden md:flex size-9 text-foreground hover:text-foreground/80"
             onClick={toggle}
             title={theme === "dark" ? "Light mode" : "Dark mode"}
           >
             {theme === "dark"
-              ? <Sun className="h-8 w-8" />
-              : <Moon className="h-8 w-8" />}
+              ? <Sun className="size-8" />
+              : <Moon className="size-8" />}
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="hidden md:flex h-9 w-9 text-foreground hover:text-destructive"
+            className="hidden md:flex size-9 text-foreground hover:text-destructive"
             onClick={signOut}
             title="Sign out"
           >
-            <LogOut className="h-8 w-8" />
+            <LogOut className="size-8" />
           </Button>
         </div>
       </div>

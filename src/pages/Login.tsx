@@ -88,12 +88,12 @@ export default function LoginPage() {
           onClick={toggle}
           className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
         >
-          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
         </button>
 
         {/* Logo */}
         <div className="flex justify-center">
-          <img src="/favicon.png" alt="Basata.ai Tracker" className="h-14 w-14 object-contain" />
+          <img src="/favicon.png" alt="Basata.ai Tracker" className="size-14 object-contain" />
         </div>
 
         {/* Title */}
@@ -155,7 +155,7 @@ export default function LoginPage() {
               tabIndex={-1}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             </button>
           </div>
 
@@ -171,8 +171,8 @@ export default function LoginPage() {
                     untouched ? "text-muted-foreground" : passed ? "text-green-500" : "text-destructive",
                   ].join(" ")}>
                     {untouched || passed
-                      ? <Check className="h-3 w-3 shrink-0" />
-                      : <X className="h-3 w-3 shrink-0" />}
+                      ? <Check className="size-3 shrink-0" />
+                      : <X className="size-3 shrink-0" />}
                     {label}
                   </div>
                 );
@@ -181,7 +181,7 @@ export default function LoginPage() {
           )}
 
           <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={loading}>
-            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            {loading && <Loader2 className="size-4 mr-2 animate-spin" />}
             {mode === "login" ? "Login" : "Create Account"}
           </Button>
         </form>

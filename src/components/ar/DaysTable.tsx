@@ -42,8 +42,8 @@ function Pagination({ page, totalPages, pageNumbers, itemsPerPage, goTo, onItems
     <div className="shrink-0 py-2.5 flex items-center relative">
       <div className="flex items-center gap-1 mx-auto">
         <Button size="sm" className="h-8 px-3 text-sm rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(1)} disabled={page === 1}>First</Button>
-        <Button size="icon" className="h-8 w-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page - 1)} disabled={page === 1}>
-          <ChevronLeft className="h-4 w-4" />
+        <Button size="icon" className="size-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page - 1)} disabled={page === 1}>
+          <ChevronLeft className="size-4" />
         </Button>
         {pageNumbers.map((p, i) =>
           p === "…" ? (
@@ -52,15 +52,15 @@ function Pagination({ page, totalPages, pageNumbers, itemsPerPage, goTo, onItems
             <Button
               key={p}
               size="icon"
-              className={`h-8 w-8 text-sm rounded-md border border-border ${page === p ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-sidebar text-foreground hover:bg-muted"}`}
+              className={`size-8 text-sm rounded-md border border-border ${page === p ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-sidebar text-foreground hover:bg-muted"}`}
               onClick={() => goTo(p as number)}
             >
               {p}
             </Button>
           ),
         )}
-        <Button size="icon" className="h-8 w-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page + 1)} disabled={page === totalPages}>
-          <ChevronRight className="h-4 w-4" />
+        <Button size="icon" className="size-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page + 1)} disabled={page === totalPages}>
+          <ChevronRight className="size-4" />
         </Button>
         <Button size="sm" className="h-8 px-3 text-sm rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(totalPages)} disabled={page === totalPages}>Last</Button>
       </div>
@@ -130,7 +130,7 @@ export function DaysTable({ logs, onEdit }: Props) {
       ? [["Date", formatTableDate(l.log_date)], ["Status", isWeekend(l.log_date) ? "Weekend" : "Off Day"]]
       : [
           ["Date", formatTableDate(l.log_date)],
-          ...categories.filter((c) => getVal(l, c.key) > 0).map((c) => [c.label, String(getVal(l, c.key))]),
+          ...categories.reduce<string[][]>((acc, c) => { if (getVal(l, c.key) > 0) acc.push([c.label, String(getVal(l, c.key))]); return acc; }, []),
         ];
 
     const tdStyle = "border:1px solid #444;padding:4px 12px;text-align:left;";
@@ -179,7 +179,7 @@ export function DaysTable({ logs, onEdit }: Props) {
         {/* Search + summary */}
         <div className="flex items-center gap-3 shrink-0 px-0">
           <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
             <Input
               className="pl-9 h-10 text-sm w-full bg-card border-border"
               placeholder="Search by date…"
@@ -212,7 +212,7 @@ export function DaysTable({ logs, onEdit }: Props) {
               if (isOff) {
                 return (
                   <div key={l.id} className="flex items-center gap-3 px-4 py-2.5 bg-muted/20">
-                    <BedDouble className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                    <BedDouble className="size-3.5 text-muted-foreground/50 shrink-0" />
                     <span className="text-sm text-muted-foreground tabular-nums flex-1">
                       {formatTableDate(l.log_date)}
                     </span>
@@ -220,11 +220,11 @@ export function DaysTable({ logs, onEdit }: Props) {
                       {weekend ? "Weekend" : "Off day"}
                     </span>
                     <div className="flex items-center gap-0.5 ml-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/40 hover:text-foreground" onClick={() => onEdit(l)}>
-                        <Pencil className="h-3 w-3" />
+                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/40 hover:text-foreground" onClick={() => onEdit(l)}>
+                        <Pencil className="size-3" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/40 hover:text-destructive" onClick={() => setDeleteTarget(l)}>
-                        <Trash2 className="h-3 w-3" />
+                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/40 hover:text-destructive" onClick={() => setDeleteTarget(l)}>
+                        <Trash2 className="size-3" />
                       </Button>
                     </div>
                   </div>
@@ -237,14 +237,14 @@ export function DaysTable({ logs, onEdit }: Props) {
                     <span className="text-sm font-bold tabular-nums flex-1">{formatTableDate(l.log_date)}</span>
                     <span className="text-2xl font-black tabular-nums text-primary leading-none">{total}</span>
                     <div className="flex items-center gap-0.5 ml-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/50 hover:text-foreground" onClick={() => copyLog(l)}>
-                        <Copy className="h-3.5 w-3.5" />
+                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/50 hover:text-foreground" onClick={() => copyLog(l)}>
+                        <Copy className="size-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/50 hover:text-foreground" onClick={() => onEdit(l)}>
-                        <Pencil className="h-3.5 w-3.5" />
+                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/50 hover:text-foreground" onClick={() => onEdit(l)}>
+                        <Pencil className="size-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/50 hover:text-destructive" onClick={() => setDeleteTarget(l)}>
-                        <Trash2 className="h-3.5 w-3.5" />
+                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/50 hover:text-destructive" onClick={() => setDeleteTarget(l)}>
+                        <Trash2 className="size-3.5" />
                       </Button>
                     </div>
                   </div>
@@ -303,7 +303,7 @@ export function DaysTable({ logs, onEdit }: Props) {
                       </TableCell>
                       <TableCell colSpan={categories.length + 1} className="py-3">
                         <div className="flex items-center gap-1.5">
-                          <BedDouble className="h-3.5 w-3.5 text-muted-foreground" />
+                          <BedDouble className="size-3.5 text-muted-foreground" />
                           <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">
                             {isWeekend(l.log_date) ? "Weekend" : "Off Day"}
                           </span>
@@ -311,14 +311,14 @@ export function DaysTable({ logs, onEdit }: Props) {
                       </TableCell>
                       <TableCell className="py-3">
                         <div className="flex gap-1 justify-center">
-                          <Button size="icon" className="h-7 w-7 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => copyLog(l)} title="Copy">
-                            {copiedId === l.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                          <Button size="icon" className="size-7 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => copyLog(l)} title="Copy">
+                            {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                           </Button>
-                          <Button variant="secondary" size="icon" className="h-7 w-7" onClick={() => onEdit(l)} title="Edit">
-                            <Pencil className="h-3.5 w-3.5" />
+                          <Button variant="secondary" size="icon" className="size-7" onClick={() => onEdit(l)} title="Edit">
+                            <Pencil className="size-3.5" />
                           </Button>
-                          <Button variant="secondary" size="icon" className="h-7 w-7 hover:bg-destructive/20 hover:text-destructive" onClick={() => setDeleteTarget(l)} title="Delete">
-                            <Trash2 className="h-3.5 w-3.5" />
+                          <Button variant="secondary" size="icon" className="size-7 hover:bg-destructive/20 hover:text-destructive" onClick={() => setDeleteTarget(l)} title="Delete">
+                            <Trash2 className="size-3.5" />
                           </Button>
                         </div>
                       </TableCell>
@@ -345,14 +345,14 @@ export function DaysTable({ logs, onEdit }: Props) {
                       </TableCell>
                       <TableCell className="py-3">
                         <div className="flex gap-1 justify-center">
-                          <Button size="icon" className="h-7 w-7 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => copyLog(l)} title="Copy">
-                            {copiedId === l.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                          <Button size="icon" className="size-7 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => copyLog(l)} title="Copy">
+                            {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                           </Button>
-                          <Button variant="secondary" size="icon" className="h-7 w-7" onClick={() => onEdit(l)} title="Edit">
-                            <Pencil className="h-3.5 w-3.5" />
+                          <Button variant="secondary" size="icon" className="size-7" onClick={() => onEdit(l)} title="Edit">
+                            <Pencil className="size-3.5" />
                           </Button>
-                          <Button variant="secondary" size="icon" className="h-7 w-7 hover:bg-destructive/20 hover:text-destructive" onClick={() => setDeleteTarget(l)} title="Delete">
-                            <Trash2 className="h-3.5 w-3.5" />
+                          <Button variant="secondary" size="icon" className="size-7 hover:bg-destructive/20 hover:text-destructive" onClick={() => setDeleteTarget(l)} title="Delete">
+                            <Trash2 className="size-3.5" />
                           </Button>
                         </div>
                       </TableCell>

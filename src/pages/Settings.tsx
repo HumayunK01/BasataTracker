@@ -243,8 +243,8 @@ export default function SettingsPage() {
             {/* Account card */}
             <div className="col-span-2 sm:col-span-1 bg-card border border-border rounded-md p-4 sm:p-5 space-y-3 sm:space-y-4">
               <div className="flex items-center gap-2.5">
-                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+                <div className="size-7 sm:h-8 sm:w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <User className="size-3.5 sm:h-4 sm:w-4 text-primary" />
                 </div>
                 <h2 className="text-sm font-semibold">Account</h2>
               </div>
@@ -256,7 +256,7 @@ export default function SettingsPage() {
                 <Separator />
                 <div className="space-y-0.5">
                   <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">Member since</p>
-                  <p className="text-sm font-medium">
+                  <p className="text-sm font-medium" suppressHydrationWarning>
                     {user?.created_at
                       ? new Date(user.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
                       : "—"}
@@ -266,8 +266,8 @@ export default function SettingsPage() {
                 <div className="space-y-0.5">
                   <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">Last sign in</p>
                   <div className="flex items-center gap-1.5">
-                    <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
-                    <p className="text-xs sm:text-sm font-medium">
+                    <Clock className="size-3 text-muted-foreground shrink-0" />
+                    <p className="text-xs sm:text-sm font-medium" suppressHydrationWarning>
                       {user?.last_sign_in_at
                         ? new Date(user.last_sign_in_at).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })
                         : "—"}
@@ -283,8 +283,8 @@ export default function SettingsPage() {
               {/* Profile section */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <BadgeCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+                  <div className="size-7 sm:h-8 sm:w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <BadgeCheck className="size-3.5 sm:h-4 sm:w-4 text-primary" />
                   </div>
                   <h2 className="text-sm font-semibold">Profile</h2>
                 </div>
@@ -321,7 +321,7 @@ export default function SettingsPage() {
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" className="flex-1" onClick={() => setProfileOpen(false)}>Cancel</Button>
                       <Button size="sm" className="flex-1" onClick={handleUpdateProfile} disabled={profileLoading}>
-                        {profileLoading && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+                        {profileLoading && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
                         Save
                       </Button>
                     </div>
@@ -334,8 +334,8 @@ export default function SettingsPage() {
               {/* Password section */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
-                    <KeyRound className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-warning" />
+                  <div className="size-7 sm:h-8 sm:w-8 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
+                    <KeyRound className="size-3.5 sm:h-4 sm:w-4 text-warning" />
                   </div>
                   <h2 className="text-sm font-semibold">Password</h2>
                 </div>
@@ -363,7 +363,7 @@ export default function SettingsPage() {
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" className="flex-1" onClick={() => { setPwOpen(false); setPwError(""); }}>Cancel</Button>
                       <Button size="sm" className="flex-1" onClick={handleChangePassword} disabled={pwLoading}>
-                        {pwLoading && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+                        {pwLoading && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
                         Update
                       </Button>
                     </div>
@@ -376,8 +376,8 @@ export default function SettingsPage() {
             {/* About card */}
             <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-3 sm:space-y-4">
               <div className="flex items-center gap-2.5">
-                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-info/10 flex items-center justify-center shrink-0">
-                  <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-info" />
+                <div className="size-7 sm:h-8 sm:w-8 rounded-lg bg-info/10 flex items-center justify-center shrink-0">
+                  <Info className="size-3.5 sm:h-4 sm:w-4 text-info" />
                 </div>
                 <h2 className="text-sm font-semibold">About</h2>
               </div>
@@ -398,11 +398,11 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/40 rounded-lg px-2.5 py-2">
-                  <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-success" />
+                  <ShieldCheck className="size-3.5 shrink-0 text-success" />
                   <span>Encrypted &amp; isolated per user</span>
                 </div>
                 <Button size="sm" variant="outline" className="w-full" onClick={handleExportData} disabled={logs.length === 0 && categories.length === 0}>
-                  <Download className="h-3.5 w-3.5 mr-1.5" /> Export data
+                  <Download className="size-3.5 mr-1.5" /> Export data
                 </Button>
               </div>
             </div>
@@ -412,8 +412,8 @@ export default function SettingsPage() {
           <div className="bg-card border border-border rounded-md overflow-hidden">
             <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-border">
               <div className="flex items-center gap-2.5 sm:gap-3">
-                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Tag className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+                <div className="size-7 sm:h-8 sm:w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <Tag className="size-3.5 sm:h-4 sm:w-4 text-primary" />
                 </div>
                 <div>
                   <h2 className="text-sm font-semibold">Categories</h2>
@@ -423,12 +423,12 @@ export default function SettingsPage() {
               <div className="flex items-center gap-2">
                 {categories.length === 0 && !isLoading && (
                   <Button size="sm" variant="outline" onClick={() => seedDefaults.mutate()} disabled={seedDefaults.isPending}>
-                    {seedDefaults.isPending && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+                    {seedDefaults.isPending && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
                     <span className="hidden xs:inline">Load </span>defaults
                   </Button>
                 )}
                 <Button size="sm" onClick={openAdd}>
-                  <Plus className="h-3.5 w-3.5 sm:mr-1.5" />
+                  <Plus className="size-3.5 sm:mr-1.5" />
                   <span className="hidden sm:inline">Add category</span>
                 </Button>
               </div>
@@ -438,7 +438,7 @@ export default function SettingsPage() {
               <div className="p-4 space-y-2">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="flex items-center gap-3 px-2 py-2">
-                    <Skeleton className="h-4 w-4 rounded" />
+                    <Skeleton className="size-4 rounded" />
                     <Skeleton className="h-4 flex-1" />
                     <Skeleton className="h-5 w-14 rounded" />
                   </div>
@@ -446,7 +446,7 @@ export default function SettingsPage() {
               </div>
             ) : categories.length === 0 ? (
               <div className="py-14 flex flex-col items-center gap-3 text-muted-foreground">
-                <Tag className="h-10 w-10 opacity-20" />
+                <Tag className="size-10 opacity-20" />
                 <p className="text-sm">No categories yet. Add one or load defaults.</p>
               </div>
             ) : (
@@ -465,8 +465,8 @@ export default function SettingsPage() {
                       dragging === cat.key ? "opacity-30" : "",
                     ].join(" ")}
                   >
-                    <GripVertical className="h-4 w-4 text-muted-foreground/30 group-hover:text-muted-foreground cursor-grab transition-colors shrink-0" />
-                    <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: colorForKey(cat.key) }} />
+                    <GripVertical className="size-4 text-muted-foreground/30 group-hover:text-muted-foreground cursor-grab transition-colors shrink-0" />
+                    <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: colorForKey(cat.key) }} />
                     <div className="flex-1 min-w-0 flex items-center gap-2 sm:gap-3">
                       <span className="text-sm font-medium truncate">{cat.label}</span>
                       <span className="text-xs font-mono px-2 py-0.5 rounded-md shrink-0"
@@ -475,11 +475,11 @@ export default function SettingsPage() {
                       </span>
                     </div>
                     <div className="flex items-center gap-0.5 shrink-0">
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground" onClick={() => openEdit(cat)}>
-                        <Pencil className="h-3.5 w-3.5" />
+                      <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground" onClick={() => openEdit(cat)}>
+                        <Pencil className="size-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(cat)}>
-                        <Trash2 className="h-3.5 w-3.5" />
+                      <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(cat)}>
+                        <Trash2 className="size-3.5" />
                       </Button>
                     </div>
                   </div>
@@ -491,8 +491,8 @@ export default function SettingsPage() {
           {/* Danger zone — full width */}
           <div className="bg-card border border-destructive/30 rounded-md overflow-hidden">
             <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-destructive/20">
-              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
-                <UserX className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-destructive" />
+              <div className="size-7 sm:h-8 sm:w-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
+                <UserX className="size-3.5 sm:h-4 sm:w-4 text-destructive" />
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-destructive">Danger Zone</h2>
@@ -538,7 +538,7 @@ export default function SettingsPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleSave} disabled={isBusy}>
-              {isBusy && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+              {isBusy && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
               {editingKey ? "Save" : "Add"}
             </Button>
           </DialogFooter>
@@ -593,7 +593,7 @@ export default function SettingsPage() {
               disabled={deleteConfirmText !== "DELETE" || !deletePassword || deleteAccountLoading}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
             >
-              {deleteAccountLoading && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+              {deleteAccountLoading && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
               Delete forever
             </AlertDialogAction>
           </AlertDialogFooter>

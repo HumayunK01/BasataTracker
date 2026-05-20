@@ -53,10 +53,10 @@ const Index = () => {
   const existingDates = useMemo(() => logs.map((l) => l.log_date), [logs]);
   const openNew = () => { setEditing(null); setOpen(true); };
 
-  const isWeekendToday = (() => {
+  const isWeekendToday = useMemo(() => {
     const day = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", weekday: "short" }).format(now);
     return day === "Sat" || day === "Sun";
-  })();
+  }, [now]);
 
   const isEmpty = !isLoading && logs.length === 0;
 
@@ -73,7 +73,7 @@ const Index = () => {
         }
         actions={
           <Button size="sm" className="h-8" onClick={openNew}>
-            <Plus className="h-4 w-4 sm:mr-1" />
+            <Plus className="size-4 sm:mr-1" />
             <span className="hidden sm:inline">Log day</span>
             <kbd className="ml-2 hidden sm:inline-flex text-xs border border-primary-foreground/30 rounded px-1">N</kbd>
           </Button>
@@ -133,20 +133,20 @@ const Index = () => {
                       key={i}
                       className={`bg-card border border-border rounded-lg p-4 space-y-3 ${i === 0 || i === 3 ? "lg:col-span-2" : ""}`}
                     >
-                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="size-40" />
                       <Skeleton className="h-52 w-full" />
                     </div>
                   ))}
                 </div>
               ) : isEmpty ? (
                 <div className="bg-card border border-border rounded-lg flex flex-col items-center justify-center py-20 gap-4 text-muted-foreground">
-                  <BarChart2 className="h-12 w-12 opacity-20" />
+                  <BarChart2 className="size-12 opacity-20" />
                   <div className="text-center space-y-1">
                     <p className="text-sm font-medium text-foreground">No data yet</p>
                     <p className="text-xs">Log your first day to see trends and charts here.</p>
                   </div>
                   <Button size="sm" onClick={openNew}>
-                    <Plus className="h-4 w-4 mr-1" /> Log your first day
+                    <Plus className="size-4 mr-1" /> Log your first day
                   </Button>
                 </div>
               ) : (

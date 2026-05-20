@@ -115,7 +115,7 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
     const start = Math.max(0, end - 15); // 16 weeks
     return [
       weeks.slice(start, end + 1),
-      monthTicks.filter((t) => t.col >= start && t.col <= end).map((t) => ({ ...t, col: t.col - start })),
+      monthTicks.reduce<{ label: string; col: number }[]>((acc, t) => { if (t.col >= start && t.col <= end) acc.push({ ...t, col: t.col - start }); return acc; }, []),
     ] as const;
   }, [logs, currentYear]);
 
@@ -204,17 +204,17 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
         {/* Legend */}
         <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-muted-foreground select-none flex-wrap">
           <div className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-slate-500/30 border border-slate-400/20" />
+            <span className="size-2.5 sm:w-3 sm:h-3 rounded-sm bg-slate-500/30 border border-slate-400/20" />
             <span>Weekend</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-red-500/50" />
+            <span className="size-2.5 sm:w-3 sm:h-3 rounded-sm bg-red-500/50" />
             <span>Off</span>
           </div>
           <div className="flex items-center gap-1 sm:gap-1.5">
             <span>Less</span>
             {([0, 1, 2, 3, 4] as const).map((i) => (
-              <span key={i} className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm ${INTENSITY_BG[i]}`} />
+              <span key={i} className={`size-2.5 sm:w-3 sm:h-3 rounded-sm ${INTENSITY_BG[i]}`} />
             ))}
             <span>More</span>
           </div>

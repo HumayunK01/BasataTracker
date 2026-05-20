@@ -39,7 +39,7 @@ function SectionCard({
   return (
     <div id={id} className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-4 scroll-mt-20">
       <div className="flex items-center gap-2.5">
-        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+        <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
           {icon}
         </div>
         <h2 className="text-sm font-semibold">{title}</h2>
@@ -60,7 +60,7 @@ function Workflow({ chain }: { chain: string }) {
             {part}
           </span>
           {i < parts.length - 1 && (
-            <ChevronRight className="h-3 w-3 text-muted-foreground/50 shrink-0" />
+            <ChevronRight className="size-3 text-muted-foreground/50 shrink-0" />
           )}
         </span>
       ))}
@@ -503,7 +503,7 @@ export default function PhoenixHeartCheatSheetPage() {
           </div>
 
           {/* Table of Contents */}
-          <SectionCard id="toc" icon={<BookOpen className="h-4 w-4 text-primary" />} title="User Guide Contents">
+          <SectionCard id="toc" icon={<BookOpen className="size-4 text-primary" />} title="User Guide Contents">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {tocItems.map((item) => (
                 <a
@@ -511,7 +511,7 @@ export default function PhoenixHeartCheatSheetPage() {
                   href={`#${item.id}`}
                   className="flex items-center gap-2 text-sm rounded-md border border-dashed border-border px-3 py-2 hover:bg-muted/40 transition-colors"
                 >
-                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <ChevronRight className="size-3.5 text-muted-foreground shrink-0" />
                   <span>{item.label}</span>
                 </a>
               ))}
@@ -519,7 +519,7 @@ export default function PhoenixHeartCheatSheetPage() {
           </SectionCard>
 
           {/* Introduction */}
-          <SectionCard id="intro" icon={<Info className="h-4 w-4 text-primary" />} title="Introduction">
+          <SectionCard id="intro" icon={<Info className="size-4 text-primary" />} title="Introduction">
             <p className="text-sm text-muted-foreground leading-relaxed">
               <strong className="text-foreground">Basata</strong> is an AI-powered healthcare operations
               platform that streamlines administrative workflows through automation and intelligent task
@@ -527,7 +527,7 @@ export default function PhoenixHeartCheatSheetPage() {
               accuracy, consistency, and alignment across teams.
             </p>
             <div className="flex items-start gap-2 rounded-lg bg-primary/5 border border-primary/20 px-3 py-2.5">
-              <AlertCircle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <AlertCircle className="size-4 text-primary shrink-0 mt-0.5" />
               <p className="text-xs text-foreground/80">
                 <strong>Attn Phoenix Heart:</strong> The indicators and types are not limited to the
                 examples provided under each document type below. Please feel free to add as needed.
@@ -538,7 +538,7 @@ export default function PhoenixHeartCheatSheetPage() {
           {/* Indexing Terms */}
           <SectionCard
             id="indexing-terms"
-            icon={<ListChecks className="h-4 w-4 text-primary" />}
+            icon={<ListChecks className="size-4 text-primary" />}
             title="Indexing Terms or Breakdown"
           >
             <div className="space-y-2">
@@ -554,13 +554,13 @@ export default function PhoenixHeartCheatSheetPage() {
           {/* Notes for Cheat Sheet */}
           <SectionCard
             id="notes"
-            icon={<StickyNote className="h-4 w-4 text-primary" />}
+            icon={<StickyNote className="size-4 text-primary" />}
             title="Notes for Cheat Sheet"
           >
             <ul className="space-y-1.5">
               {cheatSheetNotes.map((note, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 shrink-0 mt-2" />
+                  <span className="size-1.5 rounded-full bg-muted-foreground/40 shrink-0 mt-2" />
                   <span className="leading-relaxed">{note}</span>
                 </li>
               ))}
@@ -574,11 +574,11 @@ export default function PhoenixHeartCheatSheetPage() {
           {/* Document Types */}
           <SectionCard
             id="doc-types"
-            icon={<FileText className="h-4 w-4 text-primary" />}
+            icon={<FileText className="size-4 text-primary" />}
             title="Document Types (Workflows)"
           >
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
               <input
                 type="text"
                 value={query}
@@ -592,7 +592,7 @@ export default function PhoenixHeartCheatSheetPage() {
                   title="Clear search"
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="size-3.5" />
                 </button>
               )}
             </div>
@@ -609,7 +609,7 @@ export default function PhoenixHeartCheatSheetPage() {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border py-10 text-center">
-                <Search className="h-5 w-5 text-muted-foreground/50" />
+                <Search className="size-5 text-muted-foreground/50" />
                 <p className="text-sm text-muted-foreground">
                   No document types match <span className="font-medium text-foreground">"{debouncedQuery}"</span>
                 </p>
@@ -620,7 +620,7 @@ export default function PhoenixHeartCheatSheetPage() {
           {/* Additional Information */}
           <SectionCard
             id="additional-info"
-            icon={<Building2 className="h-4 w-4 text-primary" />}
+            icon={<Building2 className="size-4 text-primary" />}
             title="Phoenix Heart — Additional Information"
           >
             <div className="rounded-md border border-border bg-muted/20 p-3 sm:p-4 space-y-1.5">
@@ -658,7 +658,7 @@ export default function PhoenixHeartCheatSheetPage() {
             </div>
 
             <div className="flex items-start gap-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 px-3 py-2">
-              <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+              <AlertCircle className="size-4 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
               <p className="text-xs text-yellow-700 dark:text-yellow-300">
                 This portion is still under construction.
               </p>
@@ -668,7 +668,7 @@ export default function PhoenixHeartCheatSheetPage() {
           {/* Provider List */}
           <SectionCard
             id="providers"
-            icon={<Users className="h-4 w-4 text-primary" />}
+            icon={<Users className="size-4 text-primary" />}
             title="Provider List"
           >
             <div>
@@ -720,7 +720,7 @@ export default function PhoenixHeartCheatSheetPage() {
           {/* Tests Performed */}
           <SectionCard
             id="tests"
-            icon={<FlaskConical className="h-4 w-4 text-primary" />}
+            icon={<FlaskConical className="size-4 text-primary" />}
             title="Tests Performed at Phoenix Heart"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -729,7 +729,7 @@ export default function PhoenixHeartCheatSheetPage() {
                   key={test}
                   className="flex items-center gap-2 text-sm rounded-md border border-dashed border-border px-3 py-2"
                 >
-                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
+                  <span className="size-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
                   <span>{test}</span>
                 </div>
               ))}
@@ -739,7 +739,7 @@ export default function PhoenixHeartCheatSheetPage() {
 
           {/* Footer */}
           <div className="flex items-start gap-2 rounded-md border border-border bg-muted/20 px-3 sm:px-4 py-3">
-            <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+            <Info className="size-4 text-muted-foreground shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground">
               Indicators and types are examples, not an exhaustive list. When in doubt, route to Staff
               EHR and flag for review.

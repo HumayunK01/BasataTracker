@@ -52,7 +52,7 @@ function Stepper({
     <div className="flex items-center gap-3 px-4 py-3 border-b border-border/50 last:border-0">
       {/* Color dot + label */}
       <div className="flex items-center gap-2.5 flex-1 min-w-0">
-        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+        <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
         <span className="text-sm font-medium text-foreground truncate">{label}</span>
         <span
           className="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
@@ -68,9 +68,9 @@ function Stepper({
           type="button"
           onClick={dec}
           disabled={value === 0}
-          className="h-8 w-8 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-25 disabled:cursor-not-allowed touch-manipulation"
+          className="size-8 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-25 disabled:cursor-not-allowed touch-manipulation"
         >
-          <Minus className="h-3.5 w-3.5" />
+          <Minus className="size-3.5" />
         </button>
         <input
           type="number"
@@ -89,9 +89,9 @@ function Stepper({
         <button
           type="button"
           onClick={inc}
-          className="h-8 w-8 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors touch-manipulation"
+          className="size-8 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors touch-manipulation"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <Plus className="size-3.5" />
         </button>
       </div>
     </div>
@@ -99,7 +99,7 @@ function Stepper({
 }
 
 export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Props) {
-  const [draft, setDraft] = useState<DailyLogInsert>(emptyDraft());
+  const [draft, setDraft] = useState<DailyLogInsert>(() => emptyDraft());
   const [calOpen, setCalOpen] = useState(false);
   const upsert = useUpsertLog();
   const { data: categories = [] } = useCategories();
@@ -179,7 +179,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
                     disabled={!!editing}
                     className="flex-1 h-10 justify-start text-left font-normal tabular-nums"
                   >
-                    <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
+                    <CalendarIcon className="size-4 mr-2 text-muted-foreground shrink-0" />
                     {format(parseISO(draft.log_date), "PPP")}
                   </Button>
                 </PopoverTrigger>
@@ -207,7 +207,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
             {/* Conflict */}
             {conflict && (
               <div className="flex items-start gap-2 text-xs text-warning bg-warning/10 border border-warning/25 rounded-md px-3 py-2.5">
-                <TriangleAlert className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                <TriangleAlert className="size-3.5 shrink-0 mt-0.5" />
                 <span>A log already exists for this date — saving will overwrite it.</span>
               </div>
             )}
@@ -217,7 +217,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
           <div className="px-5">
             <div className={`flex items-center justify-between rounded-md px-4 py-3 border ${draft.is_off_day ? "bg-muted/30 border-border" : "border-border"}`}>
               <div className="flex items-center gap-3">
-                <BedDouble className="h-4 w-4 text-muted-foreground shrink-0" />
+                <BedDouble className="size-4 text-muted-foreground shrink-0" />
                 <div>
                   <p className="text-sm font-semibold leading-none">{weekend ? "Weekend" : "Off day"}</p>
                   <p className="text-xs text-muted-foreground mt-1">{weekend ? "Saturday or Sunday" : "Leave, holiday, or sick day"}</p>
@@ -253,7 +253,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
           {draft.is_off_day && (
             <div className="px-5">
               <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground rounded-md border border-dashed border-border">
-                <BedDouble className="h-8 w-8 opacity-20" />
+                <BedDouble className="size-8 opacity-20" />
                 <p className="text-sm">No counts needed for an off day</p>
               </div>
             </div>
@@ -282,7 +282,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
             Cancel
           </Button>
           <Button onClick={save} disabled={upsert.isPending} className="flex-1 gap-1.5">
-            <CalendarCheck className="h-4 w-4" />
+            <CalendarCheck className="size-4" />
             {upsert.isPending
               ? "Saving…"
               : draft.is_off_day

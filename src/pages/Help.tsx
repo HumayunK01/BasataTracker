@@ -15,7 +15,7 @@ function CopyButton({ text }: { text: string }) {
       className="ml-auto shrink-0 p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors touch-manipulation"
       title="Copy"
     >
-      {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+      {copied ? <Check className="size-3.5 text-green-500" /> : <Copy className="size-3.5" />}
     </button>
   );
 }
@@ -24,7 +24,7 @@ function SectionCard({ icon, title, children }: { icon: React.ReactNode; title: 
   return (
     <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-4">
       <div className="flex items-center gap-2.5">
-        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+        <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
           {icon}
         </div>
         <h2 className="text-sm font-semibold">{title}</h2>
@@ -158,24 +158,24 @@ export default function HelpPage() {
           </div>
 
           {/* Phoenix Heart Info */}
-          <SectionCard icon={<Contact className="h-4 w-4 text-primary" />} title="Phoenix Heart Info">
+          <SectionCard icon={<Contact className="size-4 text-primary" />} title="Phoenix Heart Info">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div className="flex items-center gap-2.5 rounded-md border border-border bg-muted/20 px-3 py-2.5">
-                <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+                <Phone className="size-4 text-muted-foreground shrink-0" />
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">Phone</p>
                   <p className="text-sm font-medium">(623) 915-6058</p>
                 </div>
               </div>
               <div className="flex items-center gap-2.5 rounded-md border border-border bg-muted/20 px-3 py-2.5">
-                <Printer className="h-4 w-4 text-muted-foreground shrink-0" />
+                <Printer className="size-4 text-muted-foreground shrink-0" />
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">Fax</p>
                   <p className="text-sm font-medium">(623) 930-6060</p>
                 </div>
               </div>
               <div className="flex items-center gap-2.5 rounded-md border border-border bg-muted/20 px-3 py-2.5">
-                <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                <MapPin className="size-4 text-muted-foreground shrink-0" />
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">Address</p>
                   <p className="text-sm font-medium text-muted-foreground/60 italic">Not provided</p>
@@ -185,9 +185,9 @@ export default function HelpPage() {
           </SectionCard>
 
           {/* Assigned Tasks */}
-          <SectionCard icon={<ClipboardList className="h-4 w-4 text-primary" />} title="Assigned Tasks">
+          <SectionCard icon={<ClipboardList className="size-4 text-primary" />} title="Assigned Tasks">
             <div className="flex items-start gap-2 rounded-lg bg-primary/5 border border-primary/20 px-3 py-2.5">
-              <Users className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <Users className="size-4 text-primary shrink-0 mt-0.5" />
               <p className="text-sm">
                 <span className="font-semibold">Everybody:</span>{" "}
                 <span className="text-muted-foreground">ROI, Cath Lab, EKGs — Help with other trained document types as needed</span>
@@ -204,7 +204,7 @@ export default function HelpPage() {
           </SectionCard>
 
           {/* Test Patients */}
-          <SectionCard icon={<Users className="h-4 w-4 text-primary" />} title="Test Patients & Document Types">
+          <SectionCard icon={<Users className="size-4 text-primary" />} title="Test Patients & Document Types">
             <div className="space-y-3">
               <PatientRow name="Test Pt 1: Test, Back Office" docType="Back Office" dob="01/01/2001">
                 <strong>Message to providers</strong> — documents with no patient information that only address the provider.
@@ -229,9 +229,9 @@ export default function HelpPage() {
           </SectionCard>
 
           {/* Inbox Labeling */}
-          <SectionCard icon={<Tag className="h-4 w-4 text-primary" />} title="Inbox Labeling">
+          <SectionCard icon={<Tag className="size-4 text-primary" />} title="Inbox Labeling">
             <div className="flex items-start gap-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 px-3 py-2">
-              <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+              <AlertCircle className="size-4 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
               <p className="text-xs text-yellow-700 dark:text-yellow-300 font-medium">Use the following words exactly. No deviations.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -240,7 +240,7 @@ export default function HelpPage() {
                 const note = label.match(/\(([^)]+)\)/)?.[1] ?? null;
                 return (
                   <div key={label} className="flex items-center gap-2 text-sm rounded-lg border border-dashed border-border bg-transparent px-3 py-2 min-w-0">
-                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
+                    <span className="size-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
                     <span className="flex-1 min-w-0">
                       <span className="font-medium">{main}</span>
                       {note && (
@@ -257,7 +257,7 @@ export default function HelpPage() {
           </SectionCard>
 
           {/* ROI Category */}
-          <SectionCard icon={<FileText className="h-4 w-4 text-primary" />} title="Inbox Labeling — ROI Category">
+          <SectionCard icon={<FileText className="size-4 text-primary" />} title="Inbox Labeling — ROI Category">
             <div className="space-y-2">
               {roiRows.map((row) => (
                 <div key={row.label} className="flex flex-col xs:flex-row xs:items-center gap-2 rounded-md border border-border bg-muted/20 px-3 sm:px-4 py-3">
@@ -269,7 +269,7 @@ export default function HelpPage() {
           </SectionCard>
 
           {/* Indexing Labeling */}
-          <SectionCard icon={<BookOpen className="h-4 w-4 text-primary" />} title="Indexing Labeling">
+          <SectionCard icon={<BookOpen className="size-4 text-primary" />} title="Indexing Labeling">
             <div className="space-y-3">
               {indexingRows.map((row) => (
                 <div key={row.label} className="rounded-md border border-border bg-muted/20 px-3 sm:px-4 py-3 space-y-1">
@@ -284,7 +284,7 @@ export default function HelpPage() {
           </SectionCard>
 
           {/* Employee List */}
-          <SectionCard icon={<Contact className="h-4 w-4 text-primary" />} title="Employee List">
+          <SectionCard icon={<Contact className="size-4 text-primary" />} title="Employee List">
             <div className="space-y-2">
               {employeeList.map((emp) => (
                 <div key={emp.email} className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/20 px-3 sm:px-4 py-3">
@@ -300,7 +300,7 @@ export default function HelpPage() {
 
           {/* Info footer */}
           <div className="flex items-start gap-2 rounded-md border border-border bg-muted/20 px-3 sm:px-4 py-3">
-            <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+            <Info className="size-4 text-muted-foreground shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground">
               For admin workflow details, refer to the{" "}
               <a

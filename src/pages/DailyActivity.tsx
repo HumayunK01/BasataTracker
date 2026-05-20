@@ -138,7 +138,7 @@ export default function DailyActivityPage() {
             onClick={() => refetch()}
             disabled={isFetching}
           >
-            <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+            <RefreshCw className={`size-4 ${isFetching ? "animate-spin" : ""}`} />
             <span className="hidden xs:inline ml-1">Refresh</span>
           </Button>
         }
@@ -156,11 +156,11 @@ export default function DailyActivityPage() {
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
               <span className="flex items-center gap-1.5">
-                <span className="relative flex h-2 w-2">
+                <span className="relative flex size-2">
                   {isFetching && (
                     <span className="absolute inline-flex h-full w-full rounded-full bg-success opacity-75 animate-ping" />
                   )}
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+                  <span className="relative inline-flex size-2 rounded-full bg-success" />
                 </span>
                 <span className="font-medium text-foreground">Live</span>
               </span>
@@ -173,7 +173,7 @@ export default function DailyActivityPage() {
                 title="Refresh now"
                 className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
               >
-                <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} />
+                <RefreshCw className={`size-3.5 ${isFetching ? "animate-spin" : ""}`} />
               </button>
             </div>
           </div>
@@ -201,7 +201,7 @@ export default function DailyActivityPage() {
 
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -212,7 +212,7 @@ export default function DailyActivityPage() {
 
           {error ? (
             <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3">
-              <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+              <AlertCircle className="size-4 text-destructive shrink-0 mt-0.5" />
               <p className="text-sm text-destructive">
                 Couldn't load daily activity: {(error as Error).message}
               </p>
@@ -236,7 +236,7 @@ export default function DailyActivityPage() {
                       <tr key={i} className="border-t border-border first:border-t-0">
                         <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
                         <td className="px-4 py-3"><Skeleton className="h-4 w-10 ml-auto" /></td>
-                        <td className="px-4 py-3"><Skeleton className="h-4 w-40" /></td>
+                        <td className="px-4 py-3"><Skeleton className="size-40" /></td>
                         <td className="px-4 py-3"><Skeleton className="h-4 w-16" /></td>
                       </tr>
                     ))}
@@ -246,7 +246,7 @@ export default function DailyActivityPage() {
             </>
           ) : rows.length === 0 ? (
             <div className="bg-card border border-border rounded-md py-12 text-center text-muted-foreground">
-              <Activity className="h-8 w-8 mx-auto opacity-20 mb-2" />
+              <Activity className="size-8 mx-auto opacity-20 mb-2" />
               <p className="text-sm">
                 {search ? "No users match your search." : "No users found."}
               </p>
