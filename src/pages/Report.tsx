@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useReducer, useState } from "react";
 const ReportBarChart = lazy(() => import("@/components/ar/ReportBarChart"));
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,27 +84,41 @@ const PRESETS = [
   { id: "last_90", label: "Last 90 Days" },
 ];
 
+interface ReportFilter { startDate: string; endDate: string; activePreset: string; tablePage: number; }
+type ReportAction =
+  | { type: "preset"; id: string; start: string; end: string }
+  | { type: "set_start"; v: string }
+  | { type: "set_end"; v: string }
+  | { type: "set_page"; p: number };
+
+function reportReducer(s: ReportFilter, a: ReportAction): ReportFilter {
+  switch (a.type) {
+    case "preset": return { startDate: a.start, endDate: a.end, activePreset: a.id, tablePage: 1 };
+    case "set_start": return { ...s, startDate: a.v, activePreset: "", tablePage: 1 };
+    case "set_end": return { ...s, endDate: a.v, activePreset: "", tablePage: 1 };
+    case "set_page": return { ...s, tablePage: a.p };
+    default: return s;
+  }
+}
+
 const ReportPage = () => {
   const { data: logs = [], isLoading } = useDailyLogs();
   const { data: categories = [] } = useCategories();
   const [now] = useState(() => new Date());
 
-  const defaultRange = getPresetRange("this_month");
-  const [startDate, setStartDate] = useState(defaultRange.start);
-  const [endDate, setEndDate] = useState(defaultRange.end);
-  const [activePreset, setActivePreset] = useState<string>("this_month");
-  const [tablePage, setTablePage] = useState(1);
+  const [filter, filterDispatch] = useReducer(reportReducer, undefined, () => {
+    const r = getPresetRange("this_month");
+    return { startDate: r.start, endDate: r.end, activePreset: "this_month", tablePage: 1 };
+  });
+  const { startDate, endDate, activePreset, tablePage } = filter;
 
   const applyPreset = (id: string) => {
     const range = getPresetRange(id);
-    setStartDate(range.start);
-    setEndDate(range.end);
-    setActivePreset(id);
-    setTablePage(1);
+    filterDispatch({ type: "preset", id, start: range.start, end: range.end });
   };
 
-  const onStartChange = (v: string) => { setStartDate(v); setActivePreset(""); setTablePage(1); };
-  const onEndChange = (v: string) => { setEndDate(v); setActivePreset(""); setTablePage(1); };
+  const onStartChange = (v: string) => filterDispatch({ type: "set_start", v });
+  const onEndChange = (v: string) => filterDispatch({ type: "set_end", v });
 
   const filtered = useMemo(() => {
     if (!startDate || !endDate) return [];
@@ -390,19 +404,19 @@ const ReportPage = () => {
                     {(tablePage - 1) * TABLE_PAGE_SIZE + 1}–{Math.min(tablePage * TABLE_PAGE_SIZE, filtered.length)} of {filtered.length}
                   </span>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="size-9" onClick={() => setTablePage((p) => Math.max(1, p - 1))} disabled={tablePage === 1}>
+                    <Button variant="ghost" size="icon" className="size-9" onClick={() => filterDispatch({ type: "set_page", p: Math.max(1, tablePage - 1) })} disabled={tablePage === 1}>
                       <ChevronLeft className="size-4" />
                     </Button>
                     {tablePageNumbers.map((p, i) =>
                       p === "…" ? (
                         <span key={`ellipsis-${tablePageNumbers[i + 1] ?? i}`} className="w-9 text-center text-xs text-muted-foreground">…</span>
                       ) : (
-                        <Button key={p} variant={tablePage === p ? "default" : "ghost"} size="icon" className="size-9 text-xs" onClick={() => setTablePage(p as number)}>
+                        <Button key={p} variant={tablePage === p ? "default" : "ghost"} size="icon" className="size-9 text-xs" onClick={() => filterDispatch({ type: "set_page", p: p as number })}>
                           {p}
                         </Button>
                       )
                     )}
-                    <Button variant="ghost" size="icon" className="size-9" onClick={() => setTablePage((p) => Math.min(totalTablePages, p + 1))} disabled={tablePage === totalTablePages}>
+                    <Button variant="ghost" size="icon" className="size-9" onClick={() => filterDispatch({ type: "set_page", p: Math.min(totalTablePages, tablePage + 1) })} disabled={tablePage === totalTablePages}>
                       <ChevronRight className="size-4" />
                     </Button>
                   </div>
