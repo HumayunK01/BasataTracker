@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import Skeleton from "react-loading-skeleton";
 import { Search, Users } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 
@@ -93,11 +93,11 @@ export default function UsersPage() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b last:border-0">
-                    <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
-                    <td className="px-4 py-3 hidden sm:table-cell"><Skeleton className="size-48" /></td>
-                    <td className="px-4 py-3 hidden sm:table-cell"><Skeleton className="h-4 w-24" /></td>
-                    <td className="px-4 py-3 hidden md:table-cell"><Skeleton className="h-4 w-28" /></td>
-                    <td className="px-4 py-3 hidden lg:table-cell"><Skeleton className="h-4 w-32" /></td>
+                    <td className="px-4 py-3"><Skeleton width={128} height={16} borderRadius={4} /></td>
+                    <td className="px-4 py-3 hidden sm:table-cell"><Skeleton width={192} height={16} borderRadius={4} /></td>
+                    <td className="px-4 py-3 hidden sm:table-cell"><Skeleton width={96} height={16} borderRadius={4} /></td>
+                    <td className="px-4 py-3 hidden md:table-cell"><Skeleton width={112} height={16} borderRadius={4} /></td>
+                    <td className="px-4 py-3 hidden lg:table-cell"><Skeleton width={128} height={16} borderRadius={4} /></td>
                   </tr>
                 ))
               ) : filtered.length === 0 ? (

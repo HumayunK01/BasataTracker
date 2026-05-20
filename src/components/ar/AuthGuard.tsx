@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
-import { Skeleton } from "@/components/ui/skeleton";
+import Skeleton from "react-loading-skeleton";
 import LoginPage from "@/pages/Login";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -9,8 +9,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
-          <Skeleton className="h-8 w-40" />
-          <Skeleton className="h-4 w-28" />
+          <Skeleton width={160} height={32} borderRadius={6} />
+          <Skeleton width={112} height={16} borderRadius={6} />
         </div>
       </div>
     );

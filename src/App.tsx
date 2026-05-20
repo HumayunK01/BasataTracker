@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
+import { SkeletonTheme } from "react-loading-skeleton";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,6 +23,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <ThemeProvider>
+  <SkeletonTheme baseColor="#2d3748" highlightColor="#3d4f66">
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -48,6 +50,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+  </SkeletonTheme>
   </ThemeProvider>
 );
 

@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, GripVertical, Tag, Loader2, KeyRound, User, Info, ShieldCheck, Download, UserX, Clock, BadgeCheck } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import Skeleton from "react-loading-skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { logAuditEvent } from "@/hooks/useAuditLog";
 import {
@@ -387,9 +387,9 @@ function CategorySection({ categories, isLoading, cat, catDispatch, isBusy, onAd
           <div className="p-4 space-y-2">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3 p-2">
-                <Skeleton className="size-4 rounded" />
-                <Skeleton className="h-4 flex-1" />
-                <Skeleton className="h-5 w-14 rounded" />
+                <Skeleton width={16} height={16} borderRadius={4} />
+                <Skeleton width="100%" height={16} borderRadius={4} />
+                <Skeleton width={56} height={20} borderRadius={4} />
               </div>
             ))}
           </div>

@@ -19,7 +19,7 @@ import { downloadCSV, downloadJSON } from "@/lib/log-utils";
 import { Download, FileJson, FileText, ChevronDown, BedDouble, TrendingUp, CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
 
 const TABLE_PAGE_SIZE = 20;
-import { Skeleton } from "@/components/ui/skeleton";
+import Skeleton from "react-loading-skeleton";
 import {
   Table,
   TableBody,
@@ -453,15 +453,15 @@ const ReportPage = () => {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="bg-card border border-border rounded-md p-4 space-y-2">
-                  <Skeleton className="h-3 w-20" />
-                  <Skeleton className="h-8 w-16" />
-                  <Skeleton className="h-3 w-24" />
+                  <Skeleton width={80} height={12} borderRadius={4} />
+                  <Skeleton width={64} height={32} borderRadius={4} />
+                  <Skeleton width={96} height={12} borderRadius={4} />
                 </div>
               ))}
             </div>
             <div className="bg-card border border-border rounded-md p-4 space-y-3">
-              <Skeleton className="h-4 w-36" />
-              <Skeleton className="h-44 w-full" />
+              <Skeleton width={144} height={16} borderRadius={4} />
+              <Skeleton height={176} borderRadius={6} />
             </div>
           </div>
         ) : filtered.length === 0 ? (
