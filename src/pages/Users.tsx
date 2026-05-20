@@ -124,10 +124,10 @@ export default function UsersPage() {
                           {user.id.slice(0, 8)}…
                         </span>
                       </td>
-                      <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">
+                      <td suppressHydrationWarning className="px-4 py-3 hidden md:table-cell text-muted-foreground">
                         {format(new Date(user.created_at), "MMM d, yyyy")}
                       </td>
-                      <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">
+                      <td suppressHydrationWarning className="px-4 py-3 hidden lg:table-cell text-muted-foreground">
                         {user.last_sign_in_at
                           ? formatDistanceToNow(new Date(user.last_sign_in_at), { addSuffix: true })
                           : <span className="italic">Never</span>}
