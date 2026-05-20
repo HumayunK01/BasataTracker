@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useReducer, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { colorForKey } from "@/lib/cat-colors";
 import { Button } from "@/components/ui/button";
@@ -86,12 +86,29 @@ interface Props {
   onEdit: (log: DailyLog) => void;
 }
 
+interface TableState { page: number; itemsPerPage: number; search: string; deleteTarget: DailyLog | null; copiedId: string | null; }
+type TableAction =
+  | { type: "set_page"; p: number }
+  | { type: "set_per_page"; n: number }
+  | { type: "set_search"; q: string }
+  | { type: "set_delete"; log: DailyLog | null }
+  | { type: "set_copied"; id: string | null };
+
+const tableInit: TableState = { page: 1, itemsPerPage: 10, search: "", deleteTarget: null, copiedId: null };
+
+function tableReducer(s: TableState, a: TableAction): TableState {
+  switch (a.type) {
+    case "set_page": return { ...s, page: a.p };
+    case "set_per_page": return { ...s, itemsPerPage: a.n, page: 1 };
+    case "set_search": return { ...s, search: a.q, page: 1 };
+    case "set_delete": return { ...s, deleteTarget: a.log };
+    case "set_copied": return { ...s, copiedId: a.id };
+    default: return s;
+  }
+}
+
 export function DaysTable({ logs, onEdit }: Props) {
-  const [page, setPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [search, setSearch] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<DailyLog | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [{ page, itemsPerPage, search, deleteTarget, copiedId }, tDispatch] = useReducer(tableReducer, tableInit);
   const deleteLog = useDeleteLog();
   const { data: categories = [] } = useCategories();
 
@@ -123,7 +140,7 @@ export function DaysTable({ logs, onEdit }: Props) {
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginated = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
-  const goTo = (p: number) => setPage(Math.max(1, Math.min(totalPages, p)));
+  const goTo = (p: number) => tDispatch({ type: "set_page", p: Math.max(1, Math.min(totalPages, p)) });
 
   const copyLog = (l: DailyLog) => {
     const rows = l.is_off_day
@@ -139,8 +156,8 @@ export function DaysTable({ logs, onEdit }: Props) {
     const plain = rows.map(([k, v]) => `${k}\t${v}`).join("\n");
 
     const onCopied = () => {
-      setCopiedId(l.id);
-      setTimeout(() => setCopiedId(null), 1500);
+      tDispatch({ type: "set_copied", id: l.id });
+      setTimeout(() => tDispatch({ type: "set_copied", id: null }), 1500);
     };
 
     if (navigator.clipboard && window.ClipboardItem) {
@@ -157,10 +174,7 @@ export function DaysTable({ logs, onEdit }: Props) {
     }
   };
 
-  const handleSearch = (v: string) => {
-    setSearch(v);
-    setPage(1);
-  };
+  const handleSearch = (v: string) => tDispatch({ type: "set_search", q: v });
 
   const pageNumbers = useMemo(() => {
     if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -223,7 +237,7 @@ export function DaysTable({ logs, onEdit }: Props) {
                       <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/40 hover:text-foreground" onClick={() => onEdit(l)}>
                         <Pencil className="size-3" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/40 hover:text-destructive" onClick={() => setDeleteTarget(l)}>
+                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/40 hover:text-destructive" onClick={() => tDispatch({ type: "set_delete", log: l })}>
                         <Trash2 className="size-3" />
                       </Button>
                     </div>
@@ -243,7 +257,7 @@ export function DaysTable({ logs, onEdit }: Props) {
                       <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/50 hover:text-foreground" onClick={() => onEdit(l)}>
                         <Pencil className="size-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/50 hover:text-destructive" onClick={() => setDeleteTarget(l)}>
+                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/50 hover:text-destructive" onClick={() => tDispatch({ type: "set_delete", log: l })}>
                         <Trash2 className="size-3.5" />
                       </Button>
                     </div>
@@ -317,7 +331,7 @@ export function DaysTable({ logs, onEdit }: Props) {
                           <Button variant="secondary" size="icon" className="size-7" onClick={() => onEdit(l)} title="Edit">
                             <Pencil className="size-3.5" />
                           </Button>
-                          <Button variant="secondary" size="icon" className="size-7 hover:bg-destructive/20 hover:text-destructive" onClick={() => setDeleteTarget(l)} title="Delete">
+                          <Button variant="secondary" size="icon" className="size-7 hover:bg-destructive/20 hover:text-destructive" onClick={() => tDispatch({ type: "set_delete", log: l })} title="Delete">
                             <Trash2 className="size-3.5" />
                           </Button>
                         </div>
@@ -351,7 +365,7 @@ export function DaysTable({ logs, onEdit }: Props) {
                           <Button variant="secondary" size="icon" className="size-7" onClick={() => onEdit(l)} title="Edit">
                             <Pencil className="size-3.5" />
                           </Button>
-                          <Button variant="secondary" size="icon" className="size-7 hover:bg-destructive/20 hover:text-destructive" onClick={() => setDeleteTarget(l)} title="Delete">
+                          <Button variant="secondary" size="icon" className="size-7 hover:bg-destructive/20 hover:text-destructive" onClick={() => tDispatch({ type: "set_delete", log: l })} title="Delete">
                             <Trash2 className="size-3.5" />
                           </Button>
                         </div>
@@ -370,13 +384,13 @@ export function DaysTable({ logs, onEdit }: Props) {
           pageNumbers={pageNumbers}
           itemsPerPage={itemsPerPage}
           goTo={goTo}
-          onItemsPerPageChange={(n) => { setItemsPerPage(n); setPage(1); }}
+          onItemsPerPageChange={(n) => tDispatch({ type: "set_per_page", n })}
         />
 
       </div>
 
       {/* Delete confirmation */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && tDispatch({ type: "set_delete", log: null })}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this log?</AlertDialogTitle>
@@ -391,7 +405,7 @@ export function DaysTable({ logs, onEdit }: Props) {
               onClick={() => {
                 if (deleteTarget) {
                   deleteLog.mutate(deleteTarget.id);
-                  setDeleteTarget(null);
+                  tDispatch({ type: "set_delete", log: null });
                 }
               }}
             >
