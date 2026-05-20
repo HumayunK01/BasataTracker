@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DayEntrySheet } from "@/components/ar/DayEntrySheet";
-import { Charts } from "@/components/ar/Charts";
+const Charts = lazy(() => import("@/components/ar/Charts").then((m) => ({ default: m.Charts })));
 import { ContributionHeatmap } from "@/components/ar/ContributionHeatmap";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
@@ -152,7 +152,9 @@ const Index = () => {
                   </Button>
                 </div>
               ) : (
-                <Charts logs={logs} categories={categories} />
+                <Suspense fallback={null}>
+                  <Charts logs={logs} categories={categories} />
+                </Suspense>
               )}
             </section>
 

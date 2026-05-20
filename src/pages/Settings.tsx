@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useReducer } from "react";
 import { colorForKey } from "@/lib/cat-colors";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/ar/PageHeader";
@@ -53,6 +53,112 @@ interface CategoryFormState {
 
 const emptyForm: CategoryFormState = { label: "", short: "" };
 
+// ── Category dialog state ──────────────────────────────────────────────────
+interface CatState {
+  dialogOpen: boolean;
+  editingKey: string | null;
+  form: CategoryFormState;
+  formError: string;
+  deleteTarget: Category | null;
+  dragging: string | null;
+  dragOver: string | null;
+}
+type CatAction =
+  | { type: "open_add" }
+  | { type: "open_edit"; cat: Category }
+  | { type: "set_form"; patch: Partial<CategoryFormState> }
+  | { type: "set_error"; msg: string }
+  | { type: "close_dialog" }
+  | { type: "set_delete_target"; cat: Category | null }
+  | { type: "drag_start"; key: string }
+  | { type: "drag_over"; key: string }
+  | { type: "drag_end" };
+
+const catInit: CatState = { dialogOpen: false, editingKey: null, form: emptyForm, formError: "", deleteTarget: null, dragging: null, dragOver: null };
+
+function catReducer(s: CatState, a: CatAction): CatState {
+  switch (a.type) {
+    case "open_add": return { ...s, dialogOpen: true, editingKey: null, form: emptyForm, formError: "" };
+    case "open_edit": return { ...s, dialogOpen: true, editingKey: a.cat.key, form: { label: a.cat.label, short: a.cat.short }, formError: "" };
+    case "set_form": return { ...s, form: { ...s.form, ...a.patch } };
+    case "set_error": return { ...s, formError: a.msg };
+    case "close_dialog": return { ...s, dialogOpen: false };
+    case "set_delete_target": return { ...s, deleteTarget: a.cat };
+    case "drag_start": return { ...s, dragging: a.key };
+    case "drag_over": return { ...s, dragOver: a.key };
+    case "drag_end": return { ...s, dragging: null, dragOver: null };
+    default: return s;
+  }
+}
+
+// ── Password state ─────────────────────────────────────────────────────────
+interface PwState { open: boolean; next: string; confirm: string; loading: boolean; error: string; }
+type PwAction =
+  | { type: "open" }
+  | { type: "close" }
+  | { type: "set"; patch: Partial<Pick<PwState, "next" | "confirm">> }
+  | { type: "submitting" }
+  | { type: "done"; error?: string };
+
+const pwInit: PwState = { open: false, next: "", confirm: "", loading: false, error: "" };
+
+function pwReducer(s: PwState, a: PwAction): PwState {
+  switch (a.type) {
+    case "open": return { ...s, open: true };
+    case "close": return { ...pwInit };
+    case "set": return { ...s, ...a.patch, error: "" };
+    case "submitting": return { ...s, loading: true, error: "" };
+    case "done": return { ...s, loading: false, error: a.error ?? "", ...(a.error ? {} : { open: false, next: "", confirm: "" }) };
+    default: return s;
+  }
+}
+
+// ── Delete account state ───────────────────────────────────────────────────
+interface DelState { open: boolean; confirmText: string; password: string; loading: boolean; }
+type DelAction =
+  | { type: "open" }
+  | { type: "close" }
+  | { type: "set_text"; text: string }
+  | { type: "set_pw"; pw: string }
+  | { type: "submitting" }
+  | { type: "done" };
+
+const delInit: DelState = { open: false, confirmText: "", password: "", loading: false };
+
+function delReducer(s: DelState, a: DelAction): DelState {
+  switch (a.type) {
+    case "open": return { ...delInit, open: true };
+    case "close": return { ...delInit };
+    case "set_text": return { ...s, confirmText: a.text };
+    case "set_pw": return { ...s, password: a.pw };
+    case "submitting": return { ...s, loading: true };
+    case "done": return { ...delInit };
+    default: return s;
+  }
+}
+
+// ── Profile state ──────────────────────────────────────────────────────────
+interface ProfileState { open: boolean; first_name: string; last_name: string; loading: boolean; }
+type ProfileAction =
+  | { type: "open"; first_name: string; last_name: string }
+  | { type: "close" }
+  | { type: "set"; patch: Partial<Pick<ProfileState, "first_name" | "last_name">> }
+  | { type: "submitting" }
+  | { type: "done" };
+
+const profileInit: ProfileState = { open: false, first_name: "", last_name: "", loading: false };
+
+function profileReducer(s: ProfileState, a: ProfileAction): ProfileState {
+  switch (a.type) {
+    case "open": return { open: true, first_name: a.first_name, last_name: a.last_name, loading: false };
+    case "close": return { ...profileInit };
+    case "set": return { ...s, ...a.patch };
+    case "submitting": return { ...s, loading: true };
+    case "done": return { ...profileInit };
+    default: return s;
+  }
+}
+
 export default function SettingsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -66,98 +172,69 @@ export default function SettingsPage() {
   const reorderCategories = useReorderCategories();
   const seedDefaults = useSeedDefaultCategories();
 
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingKey, setEditingKey] = useState<string | null>(null);
-  const [form, setForm] = useState<CategoryFormState>(emptyForm);
-  const [formError, setFormError] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
-  const [dragging, setDragging] = useState<string | null>(null);
-  const [dragOver, setDragOver] = useState<string | null>(null);
-  const [pwOpen, setPwOpen] = useState(false);
-  const [pw, setPw] = useState({ next: "", confirm: "" });
-  const [pwLoading, setPwLoading] = useState(false);
-  const [pwError, setPwError] = useState("");
-  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [deletePassword, setDeletePassword] = useState("");
-  const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
+  const [cat, catDispatch] = useReducer(catReducer, catInit);
+  const [pwState, pwDispatch] = useReducer(pwReducer, pwInit);
+  const [delState, delDispatch] = useReducer(delReducer, delInit);
+  const [profileState, profileDispatch] = useReducer(profileReducer, profileInit);
 
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [profileForm, setProfileForm] = useState({ first_name: "", last_name: "" });
-  const [profileLoading, setProfileLoading] = useState(false);
-
-  function openAdd() {
-    setEditingKey(null);
-    setForm(emptyForm);
-    setFormError("");
-    setDialogOpen(true);
-  }
-
-  function openEdit(cat: Category) {
-    setEditingKey(cat.key);
-    setForm({ label: cat.label, short: cat.short });
-    setFormError("");
-    setDialogOpen(true);
-  }
+  function openAdd() { catDispatch({ type: "open_add" }); }
+  function openEdit(c: Category) { catDispatch({ type: "open_edit", cat: c }); }
 
   function handleSave() {
-    const label = form.label.trim();
-    const short = form.short.trim();
-    if (!label) { setFormError("Label is required."); return; }
-    if (!short) { setFormError("Short name is required."); return; }
-    if (short.length > 10) { setFormError("Short name must be 10 characters or fewer."); return; }
+    const label = cat.form.label.trim();
+    const short = cat.form.short.trim();
+    if (!label) { catDispatch({ type: "set_error", msg: "Label is required." }); return; }
+    if (!short) { catDispatch({ type: "set_error", msg: "Short name is required." }); return; }
+    if (short.length > 10) { catDispatch({ type: "set_error", msg: "Short name must be 10 characters or fewer." }); return; }
 
-    if (editingKey) {
-      updateCategory.mutate({ key: editingKey, updates: { label, short } }, {
-        onSuccess: () => { toast.success("Category updated."); setDialogOpen(false); },
+    if (cat.editingKey) {
+      updateCategory.mutate({ key: cat.editingKey, updates: { label, short } }, {
+        onSuccess: () => { toast.success("Category updated."); catDispatch({ type: "close_dialog" }); },
       });
     } else {
       const key = toKey(label);
-      if (!key) { setFormError("Could not derive a key from this label."); return; }
+      if (!key) { catDispatch({ type: "set_error", msg: "Could not derive a key from this label." }); return; }
       if (categories.some((c) => c.key === key)) {
-        setFormError("A category with this name already exists.");
+        catDispatch({ type: "set_error", msg: "A category with this name already exists." });
         return;
       }
       addCategory.mutate(
         { key, label, short, position: categories.length },
-        { onSuccess: () => { toast.success("Category added."); setDialogOpen(false); } },
+        { onSuccess: () => { toast.success("Category added."); catDispatch({ type: "close_dialog" }); } },
       );
     }
   }
 
   function handleDelete() {
-    if (!deleteTarget) return;
-    deleteCategory.mutate(deleteTarget.key, {
-      onSuccess: () => { toast.success(`"${deleteTarget.label}" removed.`); setDeleteTarget(null); },
+    if (!cat.deleteTarget) return;
+    deleteCategory.mutate(cat.deleteTarget.key, {
+      onSuccess: () => { toast.success(`"${cat.deleteTarget!.label}" removed.`); catDispatch({ type: "set_delete_target", cat: null }); },
     });
   }
 
-  function handleDragStart(key: string) { setDragging(key); }
-  function handleDragOver(e: React.DragEvent, key: string) { e.preventDefault(); setDragOver(key); }
+  function handleDragStart(key: string) { catDispatch({ type: "drag_start", key }); }
+  function handleDragOver(e: React.DragEvent, key: string) { e.preventDefault(); catDispatch({ type: "drag_over", key }); }
   function handleDrop(targetKey: string) {
-    if (!dragging || dragging === targetKey) { setDragging(null); setDragOver(null); return; }
-    const from = categories.findIndex((c) => c.key === dragging);
+    if (!cat.dragging || cat.dragging === targetKey) { catDispatch({ type: "drag_end" }); return; }
+    const from = categories.findIndex((c) => c.key === cat.dragging);
     const to = categories.findIndex((c) => c.key === targetKey);
     const next = [...categories];
     const [moved] = next.splice(from, 1);
     next.splice(to, 0, moved);
     reorderCategories.mutate(next);
-    setDragging(null); setDragOver(null);
+    catDispatch({ type: "drag_end" });
   }
 
   const handleChangePassword = async () => {
-    if (!pw.next) { setPwError("New password is required."); return; }
-    if (pw.next.length < 6) { setPwError("Password must be at least 6 characters."); return; }
-    if (pw.next !== pw.confirm) { setPwError("Passwords do not match."); return; }
-    setPwLoading(true);
-    setPwError("");
-    const { error } = await supabase.auth.updateUser({ password: pw.next });
-    setPwLoading(false);
-    if (error) { setPwError(error.message); return; }
+    if (!pwState.next) { pwDispatch({ type: "done", error: "New password is required." }); return; }
+    if (pwState.next.length < 6) { pwDispatch({ type: "done", error: "Password must be at least 6 characters." }); return; }
+    if (pwState.next !== pwState.confirm) { pwDispatch({ type: "done", error: "Passwords do not match." }); return; }
+    pwDispatch({ type: "submitting" });
+    const { error } = await supabase.auth.updateUser({ password: pwState.next });
+    if (error) { pwDispatch({ type: "done", error: error.message }); return; }
     await logAuditEvent("password_changed");
     toast.success("Password updated.");
-    setPwOpen(false);
-    setPw({ next: "", confirm: "" });
+    pwDispatch({ type: "done" });
   };
 
   const handleExportData = () => {
@@ -182,16 +259,14 @@ export default function SettingsPage() {
   };
 
   const handleDeleteAccount = async () => {
-    if (deleteConfirmText !== "DELETE") return;
-    if (!deletePassword) { toast.error("Password is required to delete your account."); return; }
-    setDeleteAccountLoading(true);
+    if (delState.confirmText !== "DELETE") return;
+    if (!delState.password) { toast.error("Password is required to delete your account."); return; }
+    delDispatch({ type: "submitting" });
     try {
       const email = user?.email;
       if (!email) throw new Error("Not authenticated");
-      // Re-authenticate before destructive action
-      const { error: authError } = await supabase.auth.signInWithPassword({ email, password: deletePassword });
+      const { error: authError } = await supabase.auth.signInWithPassword({ email, password: delState.password });
       if (authError) throw new Error("Incorrect password.");
-      // Delete the auth user — cascades to all user data via ON DELETE CASCADE
       const { error: deleteError } = await supabase.rpc("delete_own_account");
       if (deleteError) throw deleteError;
       await supabase.auth.signOut();
@@ -199,26 +274,24 @@ export default function SettingsPage() {
       toast.success("Account and all data deleted.");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to delete account.");
-    } finally {
-      setDeleteAccountLoading(false);
+      delDispatch({ type: "done" });
     }
   };
 
   const handleUpdateProfile = async () => {
-    if (!profileForm.first_name.trim()) { toast.error("First name is required."); return; }
-    if (!profileForm.last_name.trim()) { toast.error("Last name is required."); return; }
-    setProfileLoading(true);
+    if (!profileState.first_name.trim()) { toast.error("First name is required."); return; }
+    if (!profileState.last_name.trim()) { toast.error("Last name is required."); return; }
+    profileDispatch({ type: "submitting" });
     try {
       await updateProfile.mutateAsync({
-        first_name: profileForm.first_name.trim(),
-        last_name: profileForm.last_name.trim(),
+        first_name: profileState.first_name.trim(),
+        last_name: profileState.last_name.trim(),
       });
       toast.success("Profile updated.");
-      setProfileOpen(false);
+      profileDispatch({ type: "done" });
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to update profile.");
-    } finally {
-      setProfileLoading(false);
+      profileDispatch({ type: "done" });
     }
   };
 
@@ -288,7 +361,7 @@ export default function SettingsPage() {
                   </div>
                   <h2 className="text-sm font-semibold">Profile</h2>
                 </div>
-                {!profileOpen ? (
+                {!profileState.open ? (
                   <div className="space-y-3">
                     <div className="space-y-0.5">
                       <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">Name</p>
@@ -298,10 +371,9 @@ export default function SettingsPage() {
                           : <span className="text-muted-foreground italic">Not set</span>}
                       </p>
                     </div>
-                    <Button size="sm" variant="outline" className="w-full" onClick={() => {
-                      setProfileForm({ first_name: profile?.first_name ?? "", last_name: profile?.last_name ?? "" });
-                      setProfileOpen(true);
-                    }}>
+                    <Button size="sm" variant="outline" className="w-full" onClick={() =>
+                      profileDispatch({ type: "open", first_name: profile?.first_name ?? "", last_name: profile?.last_name ?? "" })
+                    }>
                       Edit name
                     </Button>
                   </div>
@@ -309,19 +381,19 @@ export default function SettingsPage() {
                   <div className="space-y-3">
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">First name</Label>
-                      <Input placeholder="First name" value={profileForm.first_name}
-                        onChange={(e) => setProfileForm((f) => ({ ...f, first_name: e.target.value }))} />
+                      <Input placeholder="First name" value={profileState.first_name}
+                        onChange={(e) => profileDispatch({ type: "set", patch: { first_name: e.target.value } })} />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">Last name</Label>
-                      <Input placeholder="Last name" value={profileForm.last_name}
-                        onChange={(e) => setProfileForm((f) => ({ ...f, last_name: e.target.value }))}
+                      <Input placeholder="Last name" value={profileState.last_name}
+                        onChange={(e) => profileDispatch({ type: "set", patch: { last_name: e.target.value } })}
                         onKeyDown={(e) => e.key === "Enter" && handleUpdateProfile()} />
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="flex-1" onClick={() => setProfileOpen(false)}>Cancel</Button>
-                      <Button size="sm" className="flex-1" onClick={handleUpdateProfile} disabled={profileLoading}>
-                        {profileLoading && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
+                      <Button size="sm" variant="outline" className="flex-1" onClick={() => profileDispatch({ type: "close" })}>Cancel</Button>
+                      <Button size="sm" className="flex-1" onClick={handleUpdateProfile} disabled={profileState.loading}>
+                        {profileState.loading && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
                         Save
                       </Button>
                     </div>
@@ -339,10 +411,10 @@ export default function SettingsPage() {
                   </div>
                   <h2 className="text-sm font-semibold">Password</h2>
                 </div>
-                {!pwOpen ? (
+                {!pwState.open ? (
                   <div className="space-y-3">
-                    <p className="text-xs text-muted-foreground leading-relaxed">Change your login password. You'll stay signed in after updating.</p>
-                    <Button size="sm" variant="outline" className="w-full" onClick={() => { setPwOpen(true); setPwError(""); }}>
+                    <p className="text-xs text-muted-foreground leading-relaxed">Change your login password. You&#39;ll stay signed in after updating.</p>
+                    <Button size="sm" variant="outline" className="w-full" onClick={() => pwDispatch({ type: "open" })}>
                       Change password
                     </Button>
                   </div>
@@ -350,20 +422,20 @@ export default function SettingsPage() {
                   <div className="space-y-3">
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">New password</Label>
-                      <Input type="password" placeholder="••••••••" minLength={6} value={pw.next}
-                        onChange={(e) => setPw((p) => ({ ...p, next: e.target.value }))} />
+                      <Input type="password" placeholder="••••••••" minLength={6} value={pwState.next}
+                        onChange={(e) => pwDispatch({ type: "set", patch: { next: e.target.value } })} />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">Confirm password</Label>
-                      <Input type="password" placeholder="••••••••" value={pw.confirm}
-                        onChange={(e) => setPw((p) => ({ ...p, confirm: e.target.value }))}
+                      <Input type="password" placeholder="••••••••" value={pwState.confirm}
+                        onChange={(e) => pwDispatch({ type: "set", patch: { confirm: e.target.value } })}
                         onKeyDown={(e) => e.key === "Enter" && handleChangePassword()} />
                     </div>
-                    {pwError && <p className="text-xs text-destructive">{pwError}</p>}
+                    {pwState.error && <p className="text-xs text-destructive">{pwState.error}</p>}
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="flex-1" onClick={() => { setPwOpen(false); setPwError(""); }}>Cancel</Button>
-                      <Button size="sm" className="flex-1" onClick={handleChangePassword} disabled={pwLoading}>
-                        {pwLoading && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
+                      <Button size="sm" variant="outline" className="flex-1" onClick={() => pwDispatch({ type: "close" })}>Cancel</Button>
+                      <Button size="sm" className="flex-1" onClick={handleChangePassword} disabled={pwState.loading}>
+                        {pwState.loading && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
                         Update
                       </Button>
                     </div>
@@ -451,34 +523,34 @@ export default function SettingsPage() {
               </div>
             ) : (
               <div className="divide-y divide-border">
-                {categories.map((cat) => (
+                {categories.map((c) => (
                   <div
-                    key={cat.key}
+                    key={c.key}
                     draggable
-                    onDragStart={() => handleDragStart(cat.key)}
-                    onDragOver={(e) => handleDragOver(e, cat.key)}
-                    onDrop={() => handleDrop(cat.key)}
-                    onDragEnd={() => { setDragging(null); setDragOver(null); }}
+                    onDragStart={() => handleDragStart(c.key)}
+                    onDragOver={(e) => handleDragOver(e, c.key)}
+                    onDrop={() => handleDrop(c.key)}
+                    onDragEnd={() => catDispatch({ type: "drag_end" })}
                     className={[
                       "group flex items-center gap-3 px-4 sm:px-5 py-3.5 transition-colors select-none touch-manipulation",
-                      dragOver === cat.key && dragging !== cat.key ? "bg-primary/5" : "hover:bg-muted/30",
-                      dragging === cat.key ? "opacity-30" : "",
+                      cat.dragOver === c.key && cat.dragging !== c.key ? "bg-primary/5" : "hover:bg-muted/30",
+                      cat.dragging === c.key ? "opacity-30" : "",
                     ].join(" ")}
                   >
                     <GripVertical className="size-4 text-muted-foreground/30 group-hover:text-muted-foreground cursor-grab transition-colors shrink-0" />
-                    <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: colorForKey(cat.key) }} />
+                    <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: colorForKey(c.key) }} />
                     <div className="flex-1 min-w-0 flex items-center gap-2 sm:gap-3">
-                      <span className="text-sm font-medium truncate">{cat.label}</span>
+                      <span className="text-sm font-medium truncate">{c.label}</span>
                       <span className="text-xs font-mono px-2 py-0.5 rounded-md shrink-0"
-                        style={{ backgroundColor: `${colorForKey(cat.key)}18`, color: colorForKey(cat.key) }}>
-                        {cat.short}
+                        style={{ backgroundColor: `${colorForKey(c.key)}18`, color: colorForKey(c.key) }}>
+                        {c.short}
                       </span>
                     </div>
                     <div className="flex items-center gap-0.5 shrink-0">
-                      <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground" onClick={() => openEdit(cat)}>
+                      <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground" onClick={() => openEdit(c)}>
                         <Pencil className="size-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(cat)}>
+                      <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-destructive" onClick={() => catDispatch({ type: "set_delete_target", cat: c })}>
                         <Trash2 className="size-3.5" />
                       </Button>
                     </div>
@@ -504,7 +576,7 @@ export default function SettingsPage() {
                 <p className="text-sm font-medium">Delete account</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Permanently deletes your account and all data{"—"}logs, categories, everything. This cannot be undone.</p>
               </div>
-              <Button size="sm" variant="destructive" className="w-full sm:w-auto shrink-0" onClick={() => { setDeleteAccountOpen(true); setDeleteConfirmText(""); }}>
+              <Button size="sm" variant="destructive" className="w-full sm:w-auto shrink-0" onClick={() => delDispatch({ type: "open" })}>
                 Delete account
               </Button>
             </div>
@@ -514,44 +586,44 @@ export default function SettingsPage() {
       </main>
 
       {/* Add / Edit dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={cat.dialogOpen} onOpenChange={(o) => !o && catDispatch({ type: "close_dialog" })}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>{editingKey ? "Edit category" : "New category"}</DialogTitle>
+            <DialogTitle>{cat.editingKey ? "Edit category" : "New category"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-1">
             <div className="space-y-1.5">
               <Label htmlFor="cat-label">Label</Label>
-              <Input id="cat-label" placeholder="e.g. Worked on NG" value={form.label}
-                onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
+              <Input id="cat-label" placeholder="e.g. Worked on NG" value={cat.form.label}
+                onChange={(e) => catDispatch({ type: "set_form", patch: { label: e.target.value } })}
                 onKeyDown={(e) => e.key === "Enter" && handleSave()} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="cat-short">Short name</Label>
-              <Input id="cat-short" placeholder="e.g. NG" maxLength={10} value={form.short}
-                onChange={(e) => setForm((f) => ({ ...f, short: e.target.value }))}
+              <Input id="cat-short" placeholder="e.g. NG" maxLength={10} value={cat.form.short}
+                onChange={(e) => catDispatch({ type: "set_form", patch: { short: e.target.value } })}
                 onKeyDown={(e) => e.key === "Enter" && handleSave()} />
               <p className="text-xs text-muted-foreground">Shown in compact views · max 10 chars</p>
             </div>
-            {formError && <p className="text-xs text-destructive">{formError}</p>}
+            {cat.formError && <p className="text-xs text-destructive">{cat.formError}</p>}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => catDispatch({ type: "close_dialog" })}>Cancel</Button>
             <Button onClick={handleSave} disabled={isBusy}>
               {isBusy && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
-              {editingKey ? "Save" : "Add"}
+              {cat.editingKey ? "Save" : "Add"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Delete category confirm */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+      <AlertDialog open={!!cat.deleteTarget} onOpenChange={(o) => !o && catDispatch({ type: "set_delete_target", cat: null })}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remove category?</AlertDialogTitle>
             <AlertDialogDescription>
-              <strong>"{deleteTarget?.label}"</strong> will be removed. Existing log data is unaffected.
+              <strong>&#34;{cat.deleteTarget?.label}&#34;</strong> will be removed. Existing log data is unaffected.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -564,7 +636,7 @@ export default function SettingsPage() {
       </AlertDialog>
 
       {/* Delete account confirm */}
-      <AlertDialog open={deleteAccountOpen} onOpenChange={(o) => { if (o) return; setDeleteAccountOpen(false); setDeleteConfirmText(""); setDeletePassword(""); }}>
+      <AlertDialog open={delState.open} onOpenChange={(o) => !o && delDispatch({ type: "close" })}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="text-destructive">Delete your account?</AlertDialogTitle>
@@ -576,24 +648,24 @@ export default function SettingsPage() {
           <div className="space-y-2 mt-1">
             <Input
               placeholder="DELETE"
-              value={deleteConfirmText}
-              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              value={delState.confirmText}
+              onChange={(e) => delDispatch({ type: "set_text", text: e.target.value })}
             />
             <Input
               type="password"
               placeholder="Enter your password to confirm"
-              value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)}
+              value={delState.password}
+              onChange={(e) => delDispatch({ type: "set_pw", pw: e.target.value })}
             />
           </div>
           <AlertDialogFooter className="mt-2">
-            <AlertDialogCancel onClick={() => { setDeleteConfirmText(""); setDeletePassword(""); }}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => delDispatch({ type: "close" })}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAccount}
-              disabled={deleteConfirmText !== "DELETE" || !deletePassword || deleteAccountLoading}
+              disabled={delState.confirmText !== "DELETE" || !delState.password || delState.loading}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
             >
-              {deleteAccountLoading && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
+              {delState.loading && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
               Delete forever
             </AlertDialogAction>
           </AlertDialogFooter>
