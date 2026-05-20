@@ -72,7 +72,7 @@ function ChartCard({ title, subtitle, height = "h-48 sm:h-56", children, classNa
 export const Charts = memo(function Charts({ logs, categories }: Props) {
   const workingLogs = useMemo(() => logs.filter((l) => !l.is_off_day), [logs]);
   const sorted = useMemo(
-    () => [...workingLogs].sort((a, b) => a.log_date.localeCompare(b.log_date)),
+    () => workingLogs.toSorted((a, b) => a.log_date.localeCompare(b.log_date)),
     [workingLogs],
   );
 
@@ -91,11 +91,11 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
   }, [trend]);
 
   const categoryTotals = useMemo(() =>
-    categories.map((c) => ({
-      key: c.key,
-      name: c.label,
-      value: workingLogs.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0),
-    })).filter((d) => d.value > 0),
+    categories.reduce<{ key: string; name: string; value: number }[]>((acc, c) => {
+      const value = workingLogs.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0);
+      if (value > 0) acc.push({ key: c.key, name: c.label, value });
+      return acc;
+    }, []),
     [categories, workingLogs],
   );
 
@@ -119,7 +119,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
       map.set(key, (map.get(key) ?? 0) + totalForLog(l));
     });
     return [...map.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
+      .toSorted(([a], [b]) => a.localeCompare(b))
       .slice(-10)
       .map(([iso, total]) => {
         const d = new Date(`${iso}T12:00:00`);
@@ -224,7 +224,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
           <div className="flex justify-center gap-x-3 gap-y-1 text-xs flex-wrap mt-1">
             {categoryTotals.map((s) => (
               <div key={s.name} className="flex items-center gap-1 min-w-0">
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: colorForKey(s.key) }} />
+                <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: colorForKey(s.key) }} />
                 <span className="text-muted-foreground truncate">{s.name} ({s.value})</span>
               </div>
             ))}
@@ -242,7 +242,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
             <Tooltip contentStyle={T.container} labelStyle={{ ...T.text, fontWeight: 600 }} itemStyle={T.text} cursor={{ fill: "hsl(var(--accent))", radius: 4 }} />
             <Bar dataKey="total" name="Documents" radius={[6, 6, 0, 0]} maxBarSize={36}>
               {weeklyTotals.map((_, i) => (
-                <Cell key={i} fill={i === weeklyTotals.length - 1 ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.4)"} />
+                <Cell key={`week-${i}`} fill={i === weeklyTotals.length - 1 ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.4)"} />
               ))}
             </Bar>
           </BarChart>
@@ -256,7 +256,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
             <Tooltip contentStyle={T.container} labelStyle={{ ...T.text, fontWeight: 600 }} itemStyle={T.text} cursor={{ fill: "hsl(var(--accent))" }} />
             <Bar dataKey="avg" name="Avg docs" radius={[6, 6, 0, 0]} maxBarSize={44}>
               {dowAvg.map((entry, i) => (
-                <Cell key={i} fill={entry.avg === Math.max(...dowAvg.map((d) => d.avg)) ? "hsl(var(--warning))" : "hsl(var(--info) / 0.55)"} />
+                <Cell key={`dow-${i}`} fill={entry.avg === Math.max(...dowAvg.map((d) => d.avg)) ? "hsl(var(--warning))" : "hsl(var(--info) / 0.55)"} />
               ))}
             </Bar>
           </BarChart>

@@ -143,19 +143,17 @@ const ReportPage = () => {
   }, [workingLogs]);
 
   const categoryBreakdown = useMemo(() =>
-    categories.map((c) => ({
-      key: c.key,
-      label: c.label,
-      short: c.short,
-      value: workingLogs.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0),
-      color: colorForKey(c.key),
-    })).filter((c) => c.value > 0),
+    categories.reduce<{ key: string; label: string; short: string; value: number; color: string }[]>((acc, c) => {
+      const value = workingLogs.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0);
+      if (value > 0) acc.push({ key: c.key, label: c.label, short: c.short, value, color: colorForKey(c.key) });
+      return acc;
+    }, []),
     [categories, workingLogs],
   );
 
   const chartData = useMemo(() =>
-    [...workingLogs]
-      .sort((a, b) => a.log_date.localeCompare(b.log_date))
+    workingLogs
+      .toSorted((a, b) => a.log_date.localeCompare(b.log_date))
       .map((l) => ({ date: formatTableDate(l.log_date), docs: totalForLog(l) })),
     [workingLogs],
   );
@@ -173,7 +171,7 @@ const ReportPage = () => {
   }, [totalTablePages, tablePage]);
 
   const exportedLogs = useMemo(
-    () => [...filtered].sort((a, b) => b.log_date.localeCompare(a.log_date)),
+    () => filtered.toSorted((a, b) => b.log_date.localeCompare(a.log_date)),
     [filtered],
   );
   const exportFilename = `report-${startDate}-to-${endDate}`;
@@ -192,23 +190,23 @@ const ReportPage = () => {
         actions={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden shrink-0" disabled={filtered.length === 0}>
-                <Download className="h-4 w-4" />
+              <Button variant="outline" size="icon" className="size-8 sm:hidden shrink-0" disabled={filtered.length === 0}>
+                <Download className="size-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="hidden sm:flex h-8 shrink-0" disabled={filtered.length === 0}>
-                <Download className="h-4 w-4 mr-1" /> Export <ChevronDown className="h-3 w-3 ml-1 opacity-60" />
+                <Download className="size-4 mr-1" /> Export <ChevronDown className="size-3 ml-1 opacity-60" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Export filtered range</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleExportCSV}>
-                <FileText className="h-4 w-4 mr-2" /> CSV (.csv)
+                <FileText className="size-4 mr-2" /> CSV (.csv)
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleExportJSON}>
-                <FileJson className="h-4 w-4 mr-2" /> JSON (.json)
+                <FileJson className="size-4 mr-2" /> JSON (.json)
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -244,7 +242,7 @@ const ReportPage = () => {
               <Input type="date" value={endDate} onChange={(e) => onEndChange(e.target.value)} className="w-full sm:w-44 tabular-nums" />
             </div>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:pb-2">
-              <CalendarRange className="h-3.5 w-3.5 shrink-0" />
+              <CalendarRange className="size-3.5 shrink-0" />
               <span className="truncate">{rangeLabel}</span>
             </div>
           </div>
@@ -268,7 +266,7 @@ const ReportPage = () => {
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
-            <CalendarRange className="h-10 w-10 opacity-20" />
+            <CalendarRange className="size-10 opacity-20" />
             <p className="text-sm">No logs found for this date range.</p>
           </div>
         ) : (
@@ -312,7 +310,7 @@ const ReportPage = () => {
                       <div key={c.label} className="space-y-1">
                         <div className="flex items-center justify-between text-xs">
                           <div className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
+                            <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
                             <span className="text-muted-foreground">{c.label}</span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -332,7 +330,7 @@ const ReportPage = () => {
               <div className="bg-card border border-border rounded-md p-4">
                 <h2 className="text-sm font-medium mb-3">
                   Daily docs
-                  <TrendingUp className="inline h-3.5 w-3.5 ml-1.5 text-muted-foreground" />
+                  <TrendingUp className="inline size-3.5 ml-1.5 text-muted-foreground" />
                 </h2>
                 <div className="h-44 sm:h-52">
                   <ResponsiveContainer width="100%" height="100%">
@@ -348,7 +346,7 @@ const ReportPage = () => {
                       <Tooltip contentStyle={T.container} labelStyle={T.text} itemStyle={T.text} cursor={{ fill: "hsl(var(--accent))" }} />
                       <Bar dataKey="docs" name="Documents" radius={[3, 3, 0, 0]}>
                         {chartData.map((_, i) => (
-                          <Cell key={i} fill={i === chartData.length - 1 ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.5)"} />
+                          <Cell key={`bar-${i}`} fill={i === chartData.length - 1 ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.5)"} />
                         ))}
                       </Bar>
                     </BarChart>
@@ -386,7 +384,7 @@ const ReportPage = () => {
                           </TableCell>
                           <TableCell colSpan={categories.length + 1} className="py-2.5">
                             <div className="flex items-center gap-1.5">
-                              <BedDouble className="h-3.5 w-3.5 text-muted-foreground" />
+                              <BedDouble className="size-3.5 text-muted-foreground" />
                               <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">
                                 {isWeekend(l.log_date) ? "Weekend" : "Off Day"}
                               </span>
@@ -426,20 +424,20 @@ const ReportPage = () => {
                     {(tablePage - 1) * TABLE_PAGE_SIZE + 1}–{Math.min(tablePage * TABLE_PAGE_SIZE, filtered.length)} of {filtered.length}
                   </span>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setTablePage((p) => Math.max(1, p - 1))} disabled={tablePage === 1}>
-                      <ChevronLeft className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="size-9" onClick={() => setTablePage((p) => Math.max(1, p - 1))} disabled={tablePage === 1}>
+                      <ChevronLeft className="size-4" />
                     </Button>
                     {tablePageNumbers.map((p, i) =>
                       p === "…" ? (
-                        <span key={`e-${i}`} className="w-9 text-center text-xs text-muted-foreground">…</span>
+                        <span key={`ellipsis-${i}`} className="w-9 text-center text-xs text-muted-foreground">…</span>
                       ) : (
-                        <Button key={p} variant={tablePage === p ? "default" : "ghost"} size="icon" className="h-9 w-9 text-xs" onClick={() => setTablePage(p as number)}>
+                        <Button key={p} variant={tablePage === p ? "default" : "ghost"} size="icon" className="size-9 text-xs" onClick={() => setTablePage(p as number)}>
                           {p}
                         </Button>
                       )
                     )}
-                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setTablePage((p) => Math.min(totalTablePages, p + 1))} disabled={tablePage === totalTablePages}>
-                      <ChevronRight className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="size-9" onClick={() => setTablePage((p) => Math.min(totalTablePages, p + 1))} disabled={tablePage === totalTablePages}>
+                      <ChevronRight className="size-4" />
                     </Button>
                   </div>
                 </div>

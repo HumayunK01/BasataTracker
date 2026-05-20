@@ -104,7 +104,7 @@ function CategoryPickerList({ categories, onPick }: Pick<CategoryPickerProps, "c
   return (
     <div className="space-y-3">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -126,13 +126,13 @@ function CategoryPickerList({ categories, onPick }: Pick<CategoryPickerProps, "c
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted/60 active:bg-muted transition-colors text-left touch-manipulation"
               >
                 <span
-                  className="h-7 w-7 rounded-md flex items-center justify-center text-[10px] font-mono font-bold shrink-0"
+                  className="size-7 rounded-md flex items-center justify-center text-[10px] font-mono font-bold shrink-0"
                   style={{ color: clr, backgroundColor: `${clr}22` }}
                 >
                   {cat.short.slice(0, 3)}
                 </span>
                 <span className="text-sm flex-1 font-[system-ui] truncate">{cat.label}</span>
-                <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+                <Plus className="size-4 text-muted-foreground shrink-0" />
               </button>
             );
           })
@@ -226,11 +226,11 @@ function CounterCard({ cat, count, maxCount, onIncrement, onDecrement, onRemove 
       <button
         type="button"
         onClick={onRemove}
-        className="absolute top-2 right-2 h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/60 transition-colors touch-manipulation z-10 opacity-60 group-hover:opacity-100"
+        className="absolute top-2 right-2 size-6 rounded-full flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/60 transition-colors touch-manipulation z-10 opacity-60 group-hover:opacity-100"
         title={`Remove ${cat.label}`}
         aria-label={`Remove ${cat.label}`}
       >
-        <X className="h-3 w-3" />
+        <X className="size-3" />
       </button>
 
       {/* Big tap area */}
@@ -272,7 +272,7 @@ function CounterCard({ cat, count, maxCount, onIncrement, onDecrement, onRemove 
           style={{ borderColor: `${clr}40`, backgroundColor: `${clr}26` }}
           aria-label={`Decrease ${cat.label}`}
         >
-          <Minus className="h-4 w-4" style={{ color: clr }} />
+          <Minus className="size-4" style={{ color: clr }} />
         </button>
         <button
           type="button"
@@ -284,7 +284,7 @@ function CounterCard({ cat, count, maxCount, onIncrement, onDecrement, onRemove 
           style={{ borderColor: `${clr}40`, backgroundColor: `${clr}26` }}
           aria-label={`Increase ${cat.label}`}
         >
-          <Plus className="h-4 w-4" style={{ color: clr }} />
+          <Plus className="size-4" style={{ color: clr }} />
         </button>
       </div>
     </div>
@@ -395,7 +395,7 @@ export default function CounterPage() {
     setSaved(false);
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(() => {
-      const keys = categories.filter((c) => selectedKeys.includes(c.key)).map((c) => c.key);
+      const keys = categories.reduce<string[]>((acc, c) => { if (selectedKeys.includes(c.key)) acc.push(c.key); return acc; }, []);
       if (keys.length === 0) return;
       flush(counts, keys).then(
         () => setSaved(true),
@@ -439,7 +439,7 @@ export default function CounterPage() {
               onClick={handleReset}
               disabled={total === 0}
             >
-              <RotateCcw className="h-4 w-4" />
+              <RotateCcw className="size-4" />
               <span className="hidden xs:inline ml-1">Reset</span>
             </Button>
             <Button
@@ -449,11 +449,11 @@ export default function CounterPage() {
               disabled={upsert.isPending || total === 0}
             >
               {saved ? (
-                <><CheckCircle2 className="h-4 w-4" /><span className="hidden xs:inline ml-1">Saved</span></>
+                <><CheckCircle2 className="size-4" /><span className="hidden xs:inline ml-1">Saved</span></>
               ) : upsert.isPending ? (
                 <span>Saving…</span>
               ) : (
-                <><Save className="h-4 w-4" /><span className="hidden xs:inline ml-1">Save</span></>
+                <><Save className="size-4" /><span className="hidden xs:inline ml-1">Save</span></>
               )}
             </Button>
           </>
@@ -554,7 +554,7 @@ export default function CounterPage() {
             disabled={catsLoading || availableToAdd.length === 0}
             className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-border py-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-muted/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation font-[system-ui]"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="size-4" />
             {catsLoading
               ? "Loading categories…"
               : availableToAdd.length === 0 && activeCategories.length === 0
@@ -567,7 +567,7 @@ export default function CounterPage() {
           {/* Empty state */}
           {activeCategories.length === 0 && !catsLoading && categories.length > 0 && (
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-muted-foreground">
-              <Hash className="h-10 w-10 opacity-20" />
+              <Hash className="size-10 opacity-20" />
               <p className="text-sm font-[system-ui]">Add a category above to start counting.</p>
             </div>
           )}

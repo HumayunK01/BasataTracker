@@ -47,18 +47,18 @@ export default function UsersPage() {
 
   return (
     <>
-      <PageHeader now={new Date()} title="Users" />
+      <PageHeader title="Users" />
 
       <div className="p-4 sm:p-6 space-y-4">
         {/* Summary */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Users className="h-4 w-4" />
+          <Users className="size-4" />
           <span>{isLoading ? "Loading…" : `${users.length} total user${users.length !== 1 ? "s" : ""}`}</span>
         </div>
 
         {/* Search */}
         <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             className="pl-9"
             placeholder="Search by name or email…"
@@ -91,7 +91,7 @@ export default function UsersPage() {
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b last:border-0">
                     <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
-                    <td className="px-4 py-3 hidden sm:table-cell"><Skeleton className="h-4 w-48" /></td>
+                    <td className="px-4 py-3 hidden sm:table-cell"><Skeleton className="size-48" /></td>
                     <td className="px-4 py-3 hidden sm:table-cell"><Skeleton className="h-4 w-24" /></td>
                     <td className="px-4 py-3 hidden md:table-cell"><Skeleton className="h-4 w-28" /></td>
                     <td className="px-4 py-3 hidden lg:table-cell"><Skeleton className="h-4 w-32" /></td>

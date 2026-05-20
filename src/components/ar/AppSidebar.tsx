@@ -61,16 +61,16 @@ export function AppSidebar() {
         <img
           src="/favicon.png"
           alt="Basata.ai"
-          className="h-7 w-7 object-contain hidden group-data-[collapsible=icon]:block mx-auto"
+          className="size-7 object-contain hidden group-data-[collapsible=icon]:block mx-auto"
         />
         {isMobile && (
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-muted-foreground shrink-0"
+            className="size-7 text-muted-foreground shrink-0"
             onClick={() => setOpenMobile(false)}
           >
-            <X className="h-4 w-4" />
+            <X className="size-4" />
           </Button>
         )}
       </SidebarHeader>
@@ -87,7 +87,7 @@ export function AppSidebar() {
           <div key={group.label} className="mb-1 group-data-[collapsible=icon]:mb-0">
             {/* Group label */}
             <div className="flex items-center gap-1.5 px-3 py-1.5 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:h-0 group-data-[collapsible=icon]:py-0 group-data-[collapsible=icon]:overflow-hidden">
-              <ChevronDown className="h-3.5 w-3.5 text-foreground shrink-0" />
+              <ChevronDown className="size-3.5 text-foreground shrink-0" />
               <span className="text-xs font-bold text-foreground uppercase tracking-wide font-[system-ui]">{group.label}</span>
             </div>
 
@@ -109,7 +109,7 @@ export function AppSidebar() {
                       )}
                       style={active ? { color: "hsl(var(--sidebar-primary))" } : undefined}
                     >
-                      <item.icon className="h-4 w-4 shrink-0" />
+                      <item.icon className="size-4 shrink-0" />
                       <span className="group-data-[collapsible=icon]:hidden truncate font-[system-ui]">{item.title}</span>
                     </button>
                   </li>
@@ -129,7 +129,7 @@ export function AppSidebar() {
                 onClick={() => { navigate("/settings"); setOpenMobile(false); }}
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-base transition-colors text-foreground hover:bg-sidebar-accent/60"
               >
-                <Settings className="h-4 w-4 shrink-0" />
+                <Settings className="size-4 shrink-0" />
                 <span className="font-[system-ui]">Settings</span>
               </button>
             </li>
@@ -139,8 +139,8 @@ export function AppSidebar() {
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-base transition-colors text-foreground hover:bg-sidebar-accent/60"
               >
                 {theme === "dark"
-                  ? <Sun className="h-4 w-4 shrink-0" />
-                  : <Moon className="h-4 w-4 shrink-0" />}
+                  ? <Sun className="size-4 shrink-0" />
+                  : <Moon className="size-4 shrink-0" />}
                 <span className="font-[system-ui]">{theme === "dark" ? "Light mode" : "Dark mode"}</span>
               </button>
             </li>
@@ -149,7 +149,7 @@ export function AppSidebar() {
                 onClick={signOut}
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-base transition-colors text-destructive hover:bg-destructive/10"
               >
-                <LogOut className="h-4 w-4 shrink-0" />
+                <LogOut className="size-4 shrink-0" />
                 <span className="font-[system-ui]">Sign out</span>
               </button>
             </li>
