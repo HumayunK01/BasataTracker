@@ -315,7 +315,7 @@ export function DaysTable({ logs, onEdit }: Props) {
   const { data: categories = [] } = useCategories();
 
   const allSorted = useMemo(
-    () => logs.toSorted((a, b) => b.log_date.localeCompare(a.log_date)),
+    () => [...logs].sort((a, b) => b.log_date.localeCompare(a.log_date)),
     [logs],
   );
 

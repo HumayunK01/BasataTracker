@@ -1,25 +1,15 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
 import { useCategories, type Category } from "@/hooks/useCategories";
 import { useUpsertLog, useDailyLogs } from "@/hooks/useDailyLogs";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { isoDate, totalForLog } from "@/types/log";
 import { PageHeader } from "@/components/ar/PageHeader";
-import { Minus, Plus, RotateCcw, Save, CheckCircle2, X, Hash, Search } from "lucide-react";
+import { RotateCcw, Save, CheckCircle2, Hash, Plus } from "lucide-react";
 import { colorForKey } from "@/lib/cat-colors";
+
+// Import modular components
+import { CounterCard } from "@/components/ar/counter/CounterCard";
+import { CategoryPicker } from "@/components/ar/counter/CategoryPicker";
 
 const COUNTS_KEY = "counter_counts";
 const SELECTED_KEY = "counter_selected_keys";
@@ -32,7 +22,12 @@ function load<T>(key: string, fallback: T): T {
   return fallback;
 }
 
-interface CounterState { counts: Record<string, number>; selectedKeys: string[]; saved: boolean; }
+interface CounterState {
+  counts: Record<string, number>;
+  selectedKeys: string[];
+  saved: boolean;
+}
+
 type CounterAction =
   | { type: "set_count"; key: string; val: number }
   | { type: "add_key"; key: string }
@@ -43,13 +38,20 @@ type CounterAction =
 
 function counterReducer(s: CounterState, a: CounterAction): CounterState {
   switch (a.type) {
-    case "set_count": return { ...s, counts: { ...s.counts, [a.key]: Math.max(0, a.val) } };
-    case "add_key": return { ...s, selectedKeys: [...s.selectedKeys, a.key] };
-    case "remove_key": return { ...s, selectedKeys: s.selectedKeys.filter((k) => k !== a.key) };
-    case "set_saved": return { ...s, saved: a.v };
-    case "reset": return { ...s, counts: {}, saved: false };
-    case "hydrate": return { counts: { ...a.counts }, selectedKeys: a.keys, saved: true };
-    default: return s;
+    case "set_count":
+      return { ...s, counts: { ...s.counts, [a.key]: Math.max(0, a.val) } };
+    case "add_key":
+      return { ...s, selectedKeys: [...s.selectedKeys, a.key] };
+    case "remove_key":
+      return { ...s, selectedKeys: s.selectedKeys.filter((k) => k !== a.key) };
+    case "set_saved":
+      return { ...s, saved: a.v };
+    case "reset":
+      return { ...s, counts: {}, saved: false };
+    case "hydrate":
+      return { counts: { ...a.counts }, selectedKeys: a.keys, saved: true };
+    default:
+      return s;
   }
 }
 
@@ -80,236 +82,6 @@ function useAnimatedNumber(value: number, duration = 400) {
   }, [value, duration]);
 
   return display;
-}
-
-/** Press-and-hold auto-repeat for the +/- buttons. */
-function useHoldRepeat(action: () => void) {
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const interval = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const stop = useCallback(() => {
-    if (timer.current) clearTimeout(timer.current);
-    if (interval.current) clearInterval(interval.current);
-    timer.current = null;
-    interval.current = null;
-  }, []);
-
-  const start = useCallback(() => {
-    action();
-    timer.current = setTimeout(() => {
-      interval.current = setInterval(action, 80);
-    }, 400);
-  }, [action]);
-
-  useEffect(() => stop, [stop]);
-  return { start, stop };
-}
-
-interface CategoryPickerProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  categories: Category[];
-  onPick: (cat: Category) => void;
-}
-
-function CategoryPickerList({ categories, onPick }: Pick<CategoryPickerProps, "categories" | "onPick">) {
-  const [q, setQ] = useState("");
-  const filtered = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    if (!s) return categories;
-    return categories.filter(
-      (c) => c.label.toLowerCase().includes(s) || c.short.toLowerCase().includes(s),
-    );
-  }, [q, categories]);
-
-  return (
-    <div className="space-y-3">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search categories…"
-          className="pl-9"
-        />
-      </div>
-      <div className="max-h-[50vh] overflow-y-auto -mx-1 px-1 space-y-1">
-        {filtered.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">No categories match.</p>
-        ) : (
-          filtered.map((cat) => {
-            const clr = colorForKey(cat.key);
-            return (
-              <button
-                key={cat.key}
-                type="button"
-                onClick={() => onPick(cat)}
-                className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted/60 active:bg-muted transition-colors text-left touch-manipulation"
-              >
-                <span
-                  className="size-7 rounded-md flex items-center justify-center text-[10px] font-mono font-bold shrink-0"
-                  style={{ color: clr, backgroundColor: `${clr}22` }}
-                >
-                  {cat.short.slice(0, 3)}
-                </span>
-                <span className="text-sm flex-1 font-[system-ui] truncate">{cat.label}</span>
-                <Plus className="size-4 text-muted-foreground shrink-0" />
-              </button>
-            );
-          })
-        )}
-      </div>
-    </div>
-  );
-}
-
-function CategoryPicker({ open, onOpenChange, categories, onPick }: CategoryPickerProps) {
-  const isMobile = useIsMobile();
-  const handlePick = (cat: Category) => {
-    onPick(cat);
-    onOpenChange(false);
-  };
-
-  if (isMobile) {
-    return (
-      <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="font-[system-ui]">
-          <DrawerHeader className="text-left pb-2">
-            <DrawerTitle className="text-base font-semibold">Add category</DrawerTitle>
-          </DrawerHeader>
-          <div className="px-4 pb-6">
-            <CategoryPickerList categories={categories} onPick={handlePick} />
-          </div>
-        </DrawerContent>
-      </Drawer>
-    );
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md font-[system-ui]">
-        <DialogHeader>
-          <DialogTitle>Add category</DialogTitle>
-        </DialogHeader>
-        <CategoryPickerList categories={categories} onPick={handlePick} />
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-interface CounterCardProps {
-  cat: Category;
-  count: number;
-  maxCount: number;
-  onIncrement: () => void;
-  onDecrement: () => void;
-  onRemove: () => void;
-}
-
-function CounterCard({ cat, count, maxCount, onIncrement, onDecrement, onRemove }: CounterCardProps) {
-  const clr = colorForKey(cat.key);
-  const [bump, setBump] = useState(0);
-  const fill = maxCount > 0 ? Math.min(100, (count / maxCount) * 100) : 0;
-
-  const inc = useHoldRepeat(onIncrement);
-  const dec = useHoldRepeat(onDecrement);
-
-  const tap = () => {
-    onIncrement();
-    setBump((n) => n + 1);
-  };
-
-  return (
-    <div
-      className="group rounded-xl border flex flex-col relative overflow-hidden transition-shadow hover:shadow-sm focus-within:ring-2"
-      style={{ borderColor: `${clr}40`, backgroundColor: `${clr}12` }}
-    >
-      {/* Progress fill (share of the busiest category) */}
-      <div
-        className="absolute inset-x-0 bottom-0 transition-[height] duration-500 ease-out pointer-events-none"
-        style={{ height: `${fill}%`, backgroundColor: `${clr}1f` }}
-        aria-hidden
-      />
-
-      {/* Header */}
-      <div className="relative flex items-center gap-1.5 px-3 pt-3 pb-1 pr-9">
-        <p className="text-xs font-semibold truncate font-[system-ui]" style={{ color: clr }}>
-          {cat.label}
-        </p>
-        <span
-          className="text-[10px] font-mono px-1.5 py-0.5 rounded shrink-0 ml-auto"
-          style={{ color: clr, backgroundColor: `${clr}2e` }}
-        >
-          {cat.short}
-        </span>
-      </div>
-
-      <button
-        type="button"
-        onClick={onRemove}
-        className="absolute top-2 right-2 size-6 rounded-full flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/60 transition-colors touch-manipulation z-10 opacity-60 group-hover:opacity-100"
-        title={`Remove ${cat.label}`}
-        aria-label={`Remove ${cat.label}`}
-      >
-        <X className="size-3" />
-      </button>
-
-      {/* Big tap area */}
-      <button
-        type="button"
-        onClick={tap}
-        onKeyDown={(e) => {
-          if (e.key === "ArrowUp" || e.key === "+" || e.key === "=") {
-            e.preventDefault();
-            tap();
-          } else if (e.key === "ArrowDown" || e.key === "-") {
-            e.preventDefault();
-            onDecrement();
-          }
-        }}
-        className="relative flex items-center justify-center py-7 sm:py-8 mx-2 rounded-lg active:scale-[0.97] transition-transform duration-100 touch-manipulation select-none outline-none"
-        title="Tap to count (or press ↑ / +)"
-        aria-label={`${cat.label}: ${count}. Tap to add one.`}
-      >
-        <span
-          key={bump}
-          className="text-5xl sm:text-6xl font-black tabular-nums leading-none font-[system-ui] [animation:counter-pop_180ms_ease-out]"
-          style={{ color: count > 0 ? clr : "hsl(var(--muted-foreground) / 0.25)" }}
-        >
-          {count}
-        </span>
-      </button>
-
-      {/* +/- controls */}
-      <div className="relative flex gap-2 p-2 pt-1">
-        <button
-          type="button"
-          onPointerDown={dec.start}
-          onPointerUp={dec.stop}
-          onPointerLeave={dec.stop}
-          onPointerCancel={dec.stop}
-          disabled={count === 0}
-          className="flex-1 flex items-center justify-center h-11 rounded-lg border transition-all active:scale-95 disabled:opacity-25 disabled:cursor-not-allowed touch-manipulation"
-          style={{ borderColor: `${clr}40`, backgroundColor: `${clr}26` }}
-          aria-label={`Decrease ${cat.label}`}
-        >
-          <Minus className="size-4" style={{ color: clr }} />
-        </button>
-        <button
-          type="button"
-          onPointerDown={inc.start}
-          onPointerUp={inc.stop}
-          onPointerLeave={inc.stop}
-          onPointerCancel={inc.stop}
-          className="flex-1 flex items-center justify-center h-11 rounded-lg border transition-all active:scale-95 touch-manipulation"
-          style={{ borderColor: `${clr}40`, backgroundColor: `${clr}26` }}
-          aria-label={`Increase ${cat.label}`}
-        >
-          <Plus className="size-4" style={{ color: clr }} />
-        </button>
-      </div>
-    </div>
-  );
 }
 
 export default function CounterPage() {
@@ -345,13 +117,23 @@ export default function CounterPage() {
     localStorage.setItem(SELECTED_KEY, JSON.stringify(selectedKeys));
   }, [selectedKeys]);
 
-  const activeCategories = categories.filter((c) => selectedKeys.includes(c.key));
-  const availableToAdd = categories.filter((c) => !selectedKeys.includes(c.key));
+  const activeCategories = useMemo(() => {
+    return categories.filter((c) => selectedKeys.includes(c.key));
+  }, [categories, selectedKeys]);
+
+  const availableToAdd = useMemo(() => {
+    return categories.filter((c) => !selectedKeys.includes(c.key));
+  }, [categories, selectedKeys]);
 
   const getCount = (key: string) => counts[key] ?? 0;
   const setCount = (key: string, val: number) => cDispatch({ type: "set_count", key, val });
-  const increment = (key: string) => setCount(key, getCount(key) + 1);
-  const decrement = (key: string) => setCount(key, getCount(key) - 1);
+  const increment = useCallback((key: string) => {
+    cDispatch({ type: "set_count", key, val: (counts[key] ?? 0) + 1 });
+  }, [counts]);
+  
+  const decrement = useCallback((key: string) => {
+    cDispatch({ type: "set_count", key, val: (counts[key] ?? 0) - 1 });
+  }, [counts]);
 
   const total = activeCategories.reduce((s, c) => s + getCount(c.key), 0);
   const maxCount = activeCategories.reduce((m, c) => Math.max(m, getCount(c.key)), 0);
@@ -378,7 +160,7 @@ export default function CounterPage() {
         counts: mergedCounts,
       });
     },
-    [logs, todayIso, upsert],
+    [logs, todayIso, upsert]
   );
 
   // Hydrate from the server once, when today's row first arrives. Only seed if
@@ -412,11 +194,14 @@ export default function CounterPage() {
     cDispatch({ type: "set_saved", v: false });
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(() => {
-      const keys = categories.reduce<string[]>((acc, c) => { if (selectedKeys.includes(c.key)) acc.push(c.key); return acc; }, []);
+      const keys = categories.reduce<string[]>((acc, c) => {
+        if (selectedKeys.includes(c.key)) acc.push(c.key);
+        return acc;
+      }, []);
       if (keys.length === 0) return;
       flush(counts, keys).then(
         () => cDispatch({ type: "set_saved", v: true }),
-        () => {}, // error toast handled by the mutation hook
+        () => {} // error toast handled by the mutation hook
       );
     }, 1000);
     return () => {
@@ -424,6 +209,25 @@ export default function CounterPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [counts]);
+
+  // Global Keyboard Shortcuts: Keys 1 to 9 instantly increment the 1st through 9th cards
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      if (t && ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName)) return;
+
+      const num = parseInt(e.key);
+      if (!isNaN(num) && num >= 1 && num <= 9) {
+        const idx = num - 1;
+        if (idx >= 0 && idx < activeCategories.length) {
+          e.preventDefault();
+          increment(activeCategories[idx].key);
+        }
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [activeCategories, increment]);
 
   const handleReset = () => cDispatch({ type: "reset" });
 
@@ -440,58 +244,69 @@ export default function CounterPage() {
 
   return (
     <>
-      <style>{`@keyframes counter-pop{0%{transform:scale(1.18)}60%{transform:scale(0.97)}100%{transform:scale(1)}}`}</style>
+      <style>{`
+        @keyframes counter-pop{0%{transform:scale(1.18)}60%{transform:scale(0.97)}100%{transform:scale(1)}}
+      `}</style>
       <PageHeader
         now={now}
         subtitle="Counter"
         actions={
-          <>
+          <div className="font-[system-ui]">
             <Button
               variant="outline"
               size="sm"
-              className="h-8 px-2.5 sm:px-3"
+              className="h-8 px-2.5 sm:px-3 mr-2 border-border/60 hover:bg-muted/80 transition-all duration-200"
               onClick={handleReset}
               disabled={total === 0}
             >
               <RotateCcw className="size-4" />
-              <span className="hidden xs:inline ml-1">Reset</span>
+              <span className="hidden xs:inline ml-1 font-semibold">Reset</span>
             </Button>
             <Button
               size="sm"
-              className={`h-8 px-2.5 sm:px-3 ${saved ? "bg-success hover:bg-success/90 text-success-foreground" : ""}`}
+              className={`h-8 px-2.5 sm:px-3 shadow-sm transition-all duration-200 ${
+                saved
+                  ? "bg-success hover:bg-success/90 text-success-foreground shadow-success/10"
+                  : "bg-primary hover:bg-primary/95 text-primary-foreground shadow-primary/10"
+              }`}
               onClick={handleSave}
               disabled={upsert.isPending || total === 0}
             >
               {saved ? (
-                <><CheckCircle2 className="size-4" /><span className="hidden xs:inline ml-1">Saved</span></>
+                <>
+                  <CheckCircle2 className="size-4" />
+                  <span className="hidden xs:inline ml-1 font-semibold">Saved</span>
+                </>
               ) : upsert.isPending ? (
-                <span>Saving…</span>
+                <span className="font-semibold">Saving…</span>
               ) : (
-                <><Save className="size-4" /><span className="hidden xs:inline ml-1">Save</span></>
+                <>
+                  <Save className="size-4" />
+                  <span className="hidden xs:inline ml-1 font-semibold">Save</span>
+                </>
               )}
             </Button>
-          </>
+          </div>
         }
       />
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto font-[system-ui]">
         <div className="w-full px-4 sm:px-6 py-4 sm:py-6 flex flex-col gap-4 sm:gap-6">
-
-          {/* Hero total */}
-          <div className="relative overflow-hidden rounded-xl border border-border bg-gradient-to-br from-card to-muted/40 px-5 py-5 sm:px-6 sm:py-6">
+          {/* Hero total today */}
+          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card/90 to-muted/40 backdrop-blur-md px-5 py-5 sm:px-6 sm:py-6 hover:border-primary/10 transition-all duration-300">
             <div className="flex items-end justify-between gap-4 flex-wrap">
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="text-xs text-muted-foreground uppercase tracking-widest font-[system-ui]">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
                     Total today
                   </p>
                   <span
-                    className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                    className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
                       saved
-                        ? "bg-success/15 text-success"
+                        ? "bg-success/15 text-success border border-success/10"
                         : total > 0
-                        ? "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400"
-                        : "bg-muted text-muted-foreground"
+                        ? "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border border-yellow-500/10"
+                        : "bg-muted text-muted-foreground border border-border/40"
                     }`}
                   >
                     {saved ? "Saved" : total > 0 ? "Unsaved" : "Empty"}
@@ -500,12 +315,12 @@ export default function CounterPage() {
                 <p className="text-6xl sm:text-7xl font-black tabular-nums text-primary leading-none mt-1.5 font-[system-ui]">
                   {animatedTotal}
                 </p>
-                <p className="text-xs text-muted-foreground mt-2 font-[system-ui]">
+                <p className="text-[10px] text-muted-foreground mt-2 font-medium">
                   {saved
-                    ? "Saved to today's log"
+                    ? "All counts synchronized to database"
                     : todayLog
-                    ? `Last saved: ${todayTotal} docs`
-                    : "Not saved yet"}
+                    ? `Last saved value: ${todayTotal} documents`
+                    : "No documents saved yet today"}
                 </p>
               </div>
 
@@ -520,20 +335,17 @@ export default function CounterPage() {
                       const c = getCount(cat.key);
                       const pct = total > 0 ? (c / total) * 100 : 0;
                       return (
-                        <div key={cat.key} className="flex items-center gap-2">
-                          <span
-                            className="text-[10px] font-mono w-10 shrink-0 text-right"
-                            style={{ color: clr }}
-                          >
+                        <div key={cat.key} className="flex items-center gap-2 animate-fade-in">
+                          <span className="text-[10px] font-mono font-bold w-10 shrink-0 text-right" style={{ color: clr }}>
                             {cat.short}
                           </span>
-                          <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div className="flex-1 h-1.5 rounded-full bg-muted/40 border border-border/20 overflow-hidden">
                             <div
                               className="h-full rounded-full transition-[width] duration-500 ease-out"
                               style={{ width: `${pct}%`, backgroundColor: clr }}
                             />
                           </div>
-                          <span className="text-[10px] font-mono tabular-nums w-6 text-muted-foreground">
+                          <span className="text-[10px] font-mono tabular-nums w-6 text-muted-foreground/80 text-right">
                             {c}
                           </span>
                         </div>
@@ -544,10 +356,10 @@ export default function CounterPage() {
             </div>
           </div>
 
-          {/* Counter cards */}
+          {/* Counter cards grid */}
           {activeCategories.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-              {activeCategories.map((cat) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4 animate-fade-in">
+              {activeCategories.map((cat, idx) => (
                 <CounterCard
                   key={cat.key}
                   cat={cat}
@@ -556,36 +368,36 @@ export default function CounterPage() {
                   onIncrement={() => increment(cat.key)}
                   onDecrement={() => decrement(cat.key)}
                   onRemove={() => removeCategory(cat.key)}
+                  hotkeyIndex={idx < 9 ? idx + 1 : undefined} // Only first 9 cards get shortcuts 1-9
                 />
               ))}
             </div>
           )}
 
-          {/* Add category */}
+          {/* Add category placeholder */}
           <button
             type="button"
             onClick={() => setPickerOpen(true)}
             disabled={catsLoading || availableToAdd.length === 0}
-            className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-border py-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-muted/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation font-[system-ui]"
+            className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 py-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-muted/[0.04] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation font-semibold cursor-pointer"
           >
             <Plus className="size-4" />
             {catsLoading
               ? "Loading categories…"
               : availableToAdd.length === 0 && activeCategories.length === 0
-              ? "No categories in Settings yet"
+              ? "No categories defined in Settings"
               : availableToAdd.length === 0
-              ? "All categories added"
-              : "Add category"}
+              ? "All active categories added"
+              : "Add category to counter"}
           </button>
 
           {/* Empty state */}
           {activeCategories.length === 0 && !catsLoading && categories.length > 0 && (
-            <div className="flex flex-col items-center justify-center gap-3 py-12 text-muted-foreground">
-              <Hash className="size-10 opacity-20" />
-              <p className="text-sm font-[system-ui]">Add a category above to start counting.</p>
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground animate-fade-in">
+              <Hash className="size-10 opacity-20 animate-pulse" />
+              <p className="text-sm font-medium">Select an active category above to begin document tracking.</p>
             </div>
           )}
-
         </div>
       </main>
 

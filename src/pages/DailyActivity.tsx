@@ -103,7 +103,7 @@ export default function DailyActivityPage() {
         )
       : list;
     // Logged + highest total first; not-logged users sink to the bottom.
-    return filtered.toSorted((a, b) => {
+    return [...filtered].sort((a, b) => {
       if (a.logged !== b.logged) return a.logged ? -1 : 1;
       return b.total - a.total;
     });
