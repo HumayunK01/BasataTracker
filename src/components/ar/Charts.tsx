@@ -73,7 +73,7 @@ function ChartCard({ title, subtitle, height = "h-48 sm:h-56", children, classNa
 export const Charts = memo(function Charts({ logs, categories }: Props) {
   const workingLogs = useMemo(() => logs.filter((l) => !l.is_off_day), [logs]);
   const sorted = useMemo(
-    () => workingLogs.toSorted((a, b) => a.log_date.localeCompare(b.log_date)),
+    () => [...workingLogs].sort((a, b) => a.log_date.localeCompare(b.log_date)),
     [workingLogs],
   );
 
@@ -120,7 +120,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
       map.set(key, (map.get(key) ?? 0) + totalForLog(l));
     });
     return [...map.entries()]
-      .toSorted(([a], [b]) => a.localeCompare(b))
+      .sort(([a], [b]) => a.localeCompare(b))
       .slice(-10)
       .map(([iso, total]) => {
         const d = new Date(`${iso}T12:00:00`);

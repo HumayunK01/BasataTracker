@@ -1,5 +1,4 @@
-import { lazy, Suspense, useMemo, useReducer, useState } from "react";
-const ReportBarChart = lazy(() => import("@/components/ar/ReportBarChart"));
+import { useMemo, useReducer, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,23 +11,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
-import { useCategories, type Category } from "@/hooks/useCategories";
+import { useCategories } from "@/hooks/useCategories";
 import { isoDate, formatTableDate, isWeekend, totalForLog, type DailyLog } from "@/types/log";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { downloadCSV, downloadJSON } from "@/lib/log-utils";
-import { Download, FileJson, FileText, ChevronDown, BedDouble, TrendingUp, CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
+import { Download, FileJson, FileText, ChevronDown, CalendarRange } from "lucide-react";
+import Skeleton from "react-loading-skeleton";
+import { colorForKey } from "@/lib/cat-colors";
+
+// Import modular components
+import { ReportStatsGrid } from "@/components/ar/report/ReportStatsGrid";
+import { CategoryBreakdown } from "@/components/ar/report/CategoryBreakdown";
+import { ReportDayTable } from "@/components/ar/report/ReportDayTable";
 
 const TABLE_PAGE_SIZE = 20;
-import Skeleton from "react-loading-skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { colorForKey } from "@/lib/cat-colors";
 
 // ── Date presets ───────────────────────────────────────────────────────────
 function getPresetRange(preset: string): { start: string; end: string } {
@@ -84,7 +80,13 @@ const PRESETS = [
 ];
 
 // ── Reducer ────────────────────────────────────────────────────────────────
-interface ReportFilter { startDate: string; endDate: string; activePreset: string; tablePage: number; }
+interface ReportFilter {
+  startDate: string;
+  endDate: string;
+  activePreset: string;
+  tablePage: number;
+}
+
 type ReportAction =
   | { type: "preset"; id: string; start: string; end: string }
   | { type: "set_start"; v: string }
@@ -99,213 +101,6 @@ function reportReducer(s: ReportFilter, a: ReportAction): ReportFilter {
     case "set_page": return { ...s, tablePage: a.p };
     default: return s;
   }
-}
-
-// ── Sub-components ─────────────────────────────────────────────────────────
-interface StatsGridProps {
-  totalDocs: number;
-  filteredCount: number;
-  workingCount: number;
-  weekendDays: number;
-  offDays: number;
-  avgPerDay: number;
-  bestDay: DailyLog | null;
-}
-
-function ReportStatsGrid({ totalDocs, filteredCount, workingCount, weekendDays, offDays, avgPerDay, bestDay }: StatsGridProps) {
-  return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      <div className="bg-card border border-border rounded-md p-3 sm:p-4">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Docs</p>
-        <p className="text-2xl sm:text-3xl font-bold tabular-nums text-primary mt-1">{totalDocs}</p>
-        <p className="text-xs text-muted-foreground mt-1">{filteredCount} days logged</p>
-      </div>
-      <div className="bg-card border border-border rounded-md p-3 sm:p-4">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide">Working Days</p>
-        <p className="text-2xl sm:text-3xl font-bold tabular-nums mt-1">{workingCount}</p>
-        <p className="text-xs text-muted-foreground mt-1">{weekendDays} weekends · {offDays} off days</p>
-      </div>
-      <div className="bg-card border border-border rounded-md p-3 sm:p-4">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide">Avg / Day</p>
-        <p className="text-2xl sm:text-3xl font-bold tabular-nums text-info mt-1">{avgPerDay}</p>
-        <p className="text-xs text-muted-foreground mt-1">docs per working day</p>
-      </div>
-      <div className="bg-card border border-border rounded-md p-3 sm:p-4">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide">Best Day</p>
-        <p className="text-2xl sm:text-3xl font-bold tabular-nums text-warning mt-1">
-          {bestDay ? totalForLog(bestDay) : "—"}
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          {bestDay ? formatTableDate(bestDay.log_date) : "no data"}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-interface CategoryBreakdownEntry { key: string; label: string; short: string; value: number; color: string; }
-interface CategoryBreakdownProps { breakdown: CategoryBreakdownEntry[]; totalDocs: number; chartData: { date: string; docs: number }[]; }
-
-function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryBreakdownProps) {
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div className="bg-card border border-border rounded-md p-4 space-y-3">
-        <h2 className="text-sm font-medium">By Category</h2>
-        <div className="space-y-2">
-          {breakdown.map((c) => {
-            const pct = totalDocs > 0 ? Math.round((c.value / totalDocs) * 100) : 0;
-            return (
-              <div key={c.label} className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
-                    <span className="text-muted-foreground">{c.label}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold tabular-nums" style={{ color: c.color }}>{c.value}</span>
-                    <span className="text-muted-foreground/60 w-8 text-right">{pct}%</span>
-                  </div>
-                </div>
-                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: c.color }} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      <div className="bg-card border border-border rounded-md p-4">
-        <h2 className="text-sm font-medium mb-3">
-          Daily docs
-          <TrendingUp className="inline size-3.5 ml-1.5 text-muted-foreground" />
-        </h2>
-        <div className="h-44 sm:h-52">
-          <Suspense fallback={null}>
-            <ReportBarChart data={chartData} />
-          </Suspense>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-interface ReportDayTableProps {
-  filtered: DailyLog[];
-  categories: Category[];
-  workingLogs: DailyLog[];
-  totalDocs: number;
-  avgPerDay: number;
-  tablePage: number;
-  totalTablePages: number;
-  tablePageNumbers: (number | "…")[];
-  paginatedRows: DailyLog[];
-  onPageChange: (p: number) => void;
-}
-
-function ReportDayTable({ filtered, categories, workingLogs, totalDocs, avgPerDay, tablePage, totalTablePages, tablePageNumbers, paginatedRows, onPageChange }: ReportDayTableProps) {
-  return (
-    <div className="bg-card border border-border rounded-md overflow-hidden">
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-        <h2 className="text-sm font-medium">Day-by-Day Breakdown</h2>
-        <span className="text-xs text-muted-foreground sm:hidden">{"← scroll →"}</span>
-      </div>
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent border-b border-border">
-              <TableHead className="font-medium text-xs w-[120px]">Date</TableHead>
-              {categories.map((c) => (
-                <TableHead key={c.key} className="font-medium text-xs text-center w-[72px]">
-                  <span style={{ color: colorForKey(c.key) }}>{c.short}</span>
-                </TableHead>
-              ))}
-              <TableHead className="font-medium text-xs text-center w-[72px]">Total</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedRows.map((l) => {
-              const rowTotal = totalForLog(l);
-              return l.is_off_day ? (
-                <TableRow key={l.id} className="border-b border-border/50 last:border-0 bg-muted/20">
-                  <TableCell className="tabular-nums text-sm font-medium py-2.5 text-muted-foreground">
-                    {formatTableDate(l.log_date)}
-                  </TableCell>
-                  <TableCell colSpan={categories.length + 1} className="py-2.5">
-                    <div className="flex items-center gap-1.5">
-                      <BedDouble className="size-3.5 text-muted-foreground" />
-                      <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">
-                        {isWeekend(l.log_date) ? "Weekend" : "Off Day"}
-                      </span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                <TableRow key={l.id} className="border-b border-border/50 last:border-0">
-                  <TableCell className="tabular-nums text-sm font-medium py-2.5">
-                    {formatTableDate(l.log_date)}
-                  </TableCell>
-                  {categories.map((c) => {
-                    const v = (l.counts ?? {})[c.key] ?? 0;
-                    return (
-                      <TableCell key={c.key} className="text-center tabular-nums text-sm py-2.5">
-                        {v > 0 ? (
-                          <span className="font-medium" style={{ color: colorForKey(c.key) }}>{v}</span>
-                        ) : (
-                          <span className="text-muted-foreground/30" aria-hidden="true">{"—"}</span>
-                        )}
-                      </TableCell>
-                    );
-                  })}
-                  <TableCell className="text-center tabular-nums py-2.5">
-                    <span className="font-bold text-sm">{rowTotal}</span>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
-
-      {totalTablePages > 1 && (
-        <div className="border-t border-border px-4 py-2.5 flex items-center justify-between gap-2">
-          <span className="text-xs text-muted-foreground">
-            {(tablePage - 1) * TABLE_PAGE_SIZE + 1}–{Math.min(tablePage * TABLE_PAGE_SIZE, filtered.length)} of {filtered.length}
-          </span>
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="size-9" onClick={() => onPageChange(Math.max(1, tablePage - 1))} disabled={tablePage === 1}>
-              <ChevronLeft className="size-4" />
-            </Button>
-            {tablePageNumbers.map((p, i) =>
-              p === "…" ? (
-                <span key={`ellipsis-${tablePageNumbers[i + 1] ?? i}`} className="w-9 text-center text-xs text-muted-foreground">…</span>
-              ) : (
-                <Button key={p} variant={tablePage === p ? "default" : "ghost"} size="icon" className="size-9 text-xs" onClick={() => onPageChange(p as number)}>
-                  {p}
-                </Button>
-              )
-            )}
-            <Button variant="ghost" size="icon" className="size-9" onClick={() => onPageChange(Math.min(totalTablePages, tablePage + 1))} disabled={tablePage === totalTablePages}>
-              <ChevronRight className="size-4" />
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {workingLogs.length > 0 && (
-        <div className="border-t border-border px-4 py-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground bg-muted/20">
-          <span><span className="font-semibold text-foreground">{totalDocs}</span> total docs</span>
-          <span><span className="font-semibold text-foreground">{workingLogs.length}</span> working days</span>
-          <span>Avg <span className="font-semibold text-foreground">{avgPerDay}</span> docs/day</span>
-          {categories.map((c) => {
-            const val = workingLogs.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0);
-            return val > 0 ? (
-              <span key={c.key}>{c.short}: <span className="font-semibold text-foreground">{val}</span></span>
-            ) : null;
-          })}
-        </div>
-      )}
-    </div>
-  );
 }
 
 // ── Page ───────────────────────────────────────────────────────────────────
@@ -342,20 +137,31 @@ const ReportPage = () => {
     return workingLogs.reduce((best, l) => totalForLog(l) > totalForLog(best) ? l : best, workingLogs[0]);
   }, [workingLogs]);
 
-  const categoryBreakdown = useMemo(() =>
-    categories.reduce<CategoryBreakdownEntry[]>((acc, c) => {
-      const value = workingLogs.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0);
-      if (value > 0) acc.push({ key: c.key, label: c.label, short: c.short, value, color: colorForKey(c.key) });
-      return acc;
-    }, []),
-    [categories, workingLogs],
-  );
+  const categoryBreakdown = useMemo(() => {
+    const breakdown = categories.reduce<{ key: string; label: string; short: string; value: number; color: string }[]>(
+      (acc, c) => {
+        const value = workingLogs.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0);
+        if (value > 0) {
+          acc.push({
+            key: c.key,
+            label: c.label,
+            short: c.short,
+            value,
+            color: c.key.startsWith("#") ? c.key : colorForKey(c.key),
+          });
+        }
+        return acc;
+      },
+      []
+    );
+    return breakdown;
+  }, [categories, workingLogs]);
 
   const chartData = useMemo(() =>
-    workingLogs
-      .toSorted((a, b) => a.log_date.localeCompare(b.log_date))
+    [...workingLogs]
+      .sort((a, b) => a.log_date.localeCompare(b.log_date))
       .map((l) => ({ date: formatTableDate(l.log_date), docs: totalForLog(l) })),
-    [workingLogs],
+    [workingLogs]
   );
 
   const totalTablePages = Math.ceil(filtered.length / TABLE_PAGE_SIZE);
@@ -371,8 +177,8 @@ const ReportPage = () => {
   }, [totalTablePages, tablePage]);
 
   const exportedLogs = useMemo(
-    () => filtered.toSorted((a, b) => b.log_date.localeCompare(a.log_date)),
-    [filtered],
+    () => [...filtered].sort((a, b) => b.log_date.localeCompare(a.log_date)),
+    [filtered]
   );
   const exportFilename = `report-${startDate}-to-${endDate}`;
   const handleExportCSV = () => downloadCSV(exportedLogs, categories, `${exportFilename}.csv`);
@@ -399,7 +205,7 @@ const ReportPage = () => {
                 <Download className="size-4 mr-1" /> Export <ChevronDown className="size-3 ml-1 opacity-60" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-48 font-[system-ui]">
               <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Export filtered range</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleExportCSV}>
@@ -412,8 +218,7 @@ const ReportPage = () => {
           </DropdownMenu>
         }
       />
-      <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6">
-
+      <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6 font-[system-ui]">
         {/* Date range controls */}
         <div className="bg-card border border-border rounded-md p-4 space-y-4">
           <div className="flex gap-2 overflow-x-auto pb-0.5 no-scrollbar snap-x snap-mandatory">
@@ -435,11 +240,21 @@ const ReportPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3 items-end">
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Start date</Label>
-              <Input type="date" value={startDate} onChange={(e) => filterDispatch({ type: "set_start", v: e.target.value })} className="w-full sm:w-44 tabular-nums" />
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => filterDispatch({ type: "set_start", v: e.target.value })}
+                className="w-full sm:w-44 tabular-nums"
+              />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">End date</Label>
-              <Input type="date" value={endDate} onChange={(e) => filterDispatch({ type: "set_end", v: e.target.value })} className="w-full sm:w-44 tabular-nums" />
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => filterDispatch({ type: "set_end", v: e.target.value })}
+                className="w-full sm:w-44 tabular-nums"
+              />
             </div>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:pb-2">
               <CalendarRange className="size-3.5 shrink-0" />
