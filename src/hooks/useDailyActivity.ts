@@ -14,7 +14,7 @@ export interface DailyActivityRow {
   updated_at: string | null;
 }
 
-interface DailyActivityResponse {
+export interface DailyActivityResponse {
   date: string;
   activity: DailyActivityRow[];
 }

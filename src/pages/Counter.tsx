@@ -6,10 +6,15 @@ import { isoDate, totalForLog } from "@/types/log";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { RotateCcw, Save, CheckCircle2, Hash, Plus } from "lucide-react";
 import { colorForKey } from "@/lib/cat-colors";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 // Import modular components
 import { CounterCard } from "@/components/ar/counter/CounterCard";
 import { CategoryPicker } from "@/components/ar/counter/CategoryPicker";
+import { PomodoroTimer } from "@/components/ar/counter/PomodoroTimer";
 
 const COUNTS_KEY = "counter_counts";
 const SELECTED_KEY = "counter_selected_keys";
@@ -18,7 +23,9 @@ function load<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
     if (raw) return JSON.parse(raw) as T;
-  } catch {}
+  } catch {
+    // Ignore localStorage parse failures
+  }
   return fallback;
 }
 
@@ -84,10 +91,33 @@ function useAnimatedNumber(value: number, duration = 400) {
   return display;
 }
 
+function triggerKudosAnimation(emoji: string) {
+  const container = document.getElementById("kudos-animation-container");
+  if (!container) return;
+
+  const node = document.createElement("div");
+  node.innerText = emoji;
+  node.className = "absolute text-4xl select-none pointer-events-none z-50";
+  
+  const randomX = Math.random() * 80 + 10;
+  node.style.left = `${randomX}%`;
+  node.style.bottom = "0px";
+  node.style.fontSize = `${Math.random() * 25 + 28}px`;
+  node.style.animation = "kudos-float 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards";
+  
+  container.appendChild(node);
+  setTimeout(() => {
+    node.remove();
+  }, 2000);
+}
+
 export default function CounterPage() {
   const { data: categories = [], isLoading: catsLoading } = useCategories();
   const { data: logs = [] } = useDailyLogs();
   const upsert = useUpsertLog();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   const [{ counts, selectedKeys, saved }, cDispatch] = useReducer(counterReducer, undefined, () => ({
     counts: load<Record<string, number>>(COUNTS_KEY, {}),
@@ -110,6 +140,36 @@ export default function CounterPage() {
   }, []);
 
   useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase.channel("basata_live_activity", {
+      config: {
+        broadcast: { self: false },
+      },
+    });
+
+    channel
+      .on("broadcast", { event: "kudos" }, (payload: { payload: { senderEmail: string; receiverId: string; emoji: string } }) => {
+        if (payload.payload.receiverId === user.id) {
+          toast({
+            title: "Kudos received! 🎉",
+            description: `${payload.payload.senderEmail} sent you a ${payload.payload.emoji}!`,
+          });
+          triggerKudosAnimation(payload.payload.emoji);
+        }
+      })
+      .subscribe();
+
+    channelRef.current = channel;
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [user, toast]);
+
+  useEffect(() => {
     localStorage.setItem(COUNTS_KEY, JSON.stringify(counts));
   }, [counts]);
 
@@ -125,15 +185,34 @@ export default function CounterPage() {
     return categories.filter((c) => !selectedKeys.includes(c.key));
   }, [categories, selectedKeys]);
 
+  const broadcastIncrement = useCallback((key: string, change: number) => {
+    if (channelRef.current && user) {
+      channelRef.current.send({
+        type: "broadcast",
+        event: "activity",
+        payload: {
+          user_id: user.id,
+          email: user.email,
+          category_key: key,
+          change: change,
+          timestamp: Date.now()
+        }
+      });
+    }
+  }, [user]);
+
   const getCount = (key: string) => counts[key] ?? 0;
   const setCount = (key: string, val: number) => cDispatch({ type: "set_count", key, val });
+  
   const increment = useCallback((key: string) => {
     cDispatch({ type: "set_count", key, val: (counts[key] ?? 0) + 1 });
-  }, [counts]);
+    broadcastIncrement(key, 1);
+  }, [counts, broadcastIncrement]);
   
   const decrement = useCallback((key: string) => {
     cDispatch({ type: "set_count", key, val: (counts[key] ?? 0) - 1 });
-  }, [counts]);
+    broadcastIncrement(key, -1);
+  }, [counts, broadcastIncrement]);
 
   const total = activeCategories.reduce((s, c) => s + getCount(c.key), 0);
   const maxCount = activeCategories.reduce((m, c) => Math.max(m, getCount(c.key)), 0);
@@ -292,67 +371,75 @@ export default function CounterPage() {
 
       <main className="flex-1 overflow-y-auto font-[system-ui]">
         <div className="w-full px-4 sm:px-6 py-4 sm:py-6 flex flex-col gap-4 sm:gap-6">
-          {/* Hero total today */}
-          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card/90 to-muted/40 backdrop-blur-md px-5 py-5 sm:px-6 sm:py-6 hover:border-primary/10 transition-all duration-300">
-            <div className="flex items-end justify-between gap-4 flex-wrap">
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
-                    Total today
+          {/* Responsive Hero + Pomodoro Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Hero total today */}
+            <div className="md:col-span-2 relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card/90 to-muted/40 backdrop-blur-md px-5 py-5 sm:px-6 sm:py-6 hover:border-primary/10 transition-all duration-300">
+              <div className="flex items-end justify-between gap-4 flex-wrap">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
+                      Total today
+                    </p>
+                    <span
+                      className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                        saved
+                          ? "bg-success/15 text-success border border-success/10"
+                          : total > 0
+                          ? "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border border-yellow-500/10"
+                          : "bg-muted text-muted-foreground border border-border/40"
+                      }`}
+                    >
+                      {saved ? "Saved" : total > 0 ? "Unsaved" : "Empty"}
+                    </span>
+                  </div>
+                  <p className="text-6xl sm:text-7xl font-black tabular-nums text-primary leading-none mt-1.5 font-[system-ui]">
+                    {animatedTotal}
                   </p>
-                  <span
-                    className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                      saved
-                        ? "bg-success/15 text-success border border-success/10"
-                        : total > 0
-                        ? "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border border-yellow-500/10"
-                        : "bg-muted text-muted-foreground border border-border/40"
-                    }`}
-                  >
-                    {saved ? "Saved" : total > 0 ? "Unsaved" : "Empty"}
-                  </span>
+                  <p className="text-[10px] text-muted-foreground mt-2 font-medium">
+                    {saved
+                      ? "All counts synchronized to database"
+                      : todayLog
+                      ? `Last saved value: ${todayTotal} documents`
+                      : "No documents saved yet today"}
+                  </p>
                 </div>
-                <p className="text-6xl sm:text-7xl font-black tabular-nums text-primary leading-none mt-1.5 font-[system-ui]">
-                  {animatedTotal}
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-2 font-medium">
-                  {saved
-                    ? "All counts synchronized to database"
-                    : todayLog
-                    ? `Last saved value: ${todayTotal} documents`
-                    : "No documents saved yet today"}
-                </p>
-              </div>
 
-              {activeCategories.length > 0 && (
-                <div className="flex-1 min-w-[180px] max-w-xs space-y-1.5">
-                  {activeCategories
-                    .filter((c) => getCount(c.key) > 0)
-                    .sort((a, b) => getCount(b.key) - getCount(a.key))
-                    .slice(0, 5)
-                    .map((cat) => {
-                      const clr = colorForKey(cat.key);
-                      const c = getCount(cat.key);
-                      const pct = total > 0 ? (c / total) * 100 : 0;
-                      return (
-                        <div key={cat.key} className="flex items-center gap-2 animate-fade-in">
-                          <span className="text-[10px] font-mono font-bold w-10 shrink-0 text-right" style={{ color: clr }}>
-                            {cat.short}
-                          </span>
-                          <div className="flex-1 h-1.5 rounded-full bg-muted/40 border border-border/20 overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-[width] duration-500 ease-out"
-                              style={{ width: `${pct}%`, backgroundColor: clr }}
-                            />
+                {activeCategories.length > 0 && (
+                  <div className="flex-1 min-w-[180px] max-w-xs space-y-1.5">
+                    {activeCategories
+                      .filter((c) => getCount(c.key) > 0)
+                      .sort((a, b) => getCount(b.key) - getCount(a.key))
+                      .slice(0, 5)
+                      .map((cat) => {
+                        const clr = colorForKey(cat.key);
+                        const c = getCount(cat.key);
+                        const pct = total > 0 ? (c / total) * 100 : 0;
+                        return (
+                          <div key={cat.key} className="flex items-center gap-2 animate-fade-in">
+                            <span className="text-[10px] font-mono font-bold w-10 shrink-0 text-right" style={{ color: clr }}>
+                              {cat.short}
+                            </span>
+                            <div className="flex-1 h-1.5 rounded-full bg-muted/40 border border-border/20 overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-[width] duration-500 ease-out"
+                                style={{ width: `${pct}%`, backgroundColor: clr }}
+                              />
+                            </div>
+                            <span className="text-[10px] font-mono tabular-nums w-6 text-muted-foreground/80 text-right">
+                              {c}
+                            </span>
                           </div>
-                          <span className="text-[10px] font-mono tabular-nums w-6 text-muted-foreground/80 text-right">
-                            {c}
-                          </span>
-                        </div>
-                      );
-                    })}
-                </div>
-              )}
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Pomodoro Focus Timer */}
+            <div className="md:col-span-1">
+              <PomodoroTimer />
             </div>
           </div>
 

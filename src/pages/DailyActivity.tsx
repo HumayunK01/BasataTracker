@@ -1,13 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { Input } from "@/components/ui/input";
 import Skeleton from "react-loading-skeleton";
 import { Button } from "@/components/ui/button";
-import { useDailyActivity, type DailyActivityRow } from "@/hooks/useDailyActivity";
+import { useDailyActivity, type DailyActivityRow, type DailyActivityResponse } from "@/hooks/useDailyActivity";
 import { useCategories } from "@/hooks/useCategories";
 import { colorForKey } from "@/lib/cat-colors";
 import { formatTableDate } from "@/types/log";
 import { Activity, Search, AlertCircle, RefreshCw } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 function relativeTime(ms: number): string {
   if (!ms) return "never";
@@ -76,10 +81,34 @@ function Breakdown({
   );
 }
 
+function triggerKudosAnimation(emoji: string) {
+  const container = document.getElementById("kudos-animation-container");
+  if (!container) return;
+
+  const node = document.createElement("div");
+  node.innerText = emoji;
+  node.className = "absolute text-4xl select-none pointer-events-none z-50";
+  
+  const randomX = Math.random() * 80 + 10;
+  node.style.left = `${randomX}%`;
+  node.style.bottom = "0px";
+  node.style.fontSize = `${Math.random() * 25 + 28}px`;
+  node.style.animation = "kudos-float 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards";
+  
+  container.appendChild(node);
+  setTimeout(() => {
+    node.remove();
+  }, 2000);
+}
+
 export default function DailyActivityPage() {
   const [search, setSearch] = useState("");
   const { data, isLoading, isFetching, error, dataUpdatedAt, refetch } = useDailyActivity();
   const { data: categories = [] } = useCategories();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   // Re-render every 10s so the "updated Xs ago" label stays accurate between
   // refetches (the query data itself doesn't change, only elapsed time does).
@@ -88,6 +117,77 @@ export default function DailyActivityPage() {
     const id = setInterval(() => tick((n) => n + 1), 10_000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    const channel = supabase.channel("basata_live_activity");
+
+    channel
+      .on("broadcast", { event: "activity" }, (payload: { payload: { user_id: string; category_key: string; change: number } }) => {
+        const { user_id, category_key, change } = payload.payload;
+        
+        queryClient.setQueryData(["daily-activity"], (old: DailyActivityResponse | undefined) => {
+          if (!old || !old.activity) return old;
+          
+          const updatedActivity = old.activity.map((row: DailyActivityRow) => {
+            if (row.user_id === user_id) {
+              const currentCounts = { ...(row.counts ?? {}) };
+              const currentCount = currentCounts[category_key] ?? 0;
+              const nextCount = Math.max(0, currentCount + change);
+              const nextTotal = Math.max(0, row.total + change);
+              return {
+                ...row,
+                logged: true,
+                total: nextTotal,
+                counts: {
+                  ...currentCounts,
+                  [category_key]: nextCount,
+                }
+              };
+            }
+            return row;
+          });
+
+          return {
+            ...old,
+            activity: updatedActivity
+          };
+        });
+      })
+      .on("broadcast", { event: "kudos" }, (payload: { payload: { senderEmail: string; receiverId: string; emoji: string } }) => {
+        if (payload.payload.receiverId === user?.id) {
+          toast({
+            title: "Kudos received! 🎉",
+            description: `${payload.payload.senderEmail} sent you a ${payload.payload.emoji}!`,
+          });
+          triggerKudosAnimation(payload.payload.emoji);
+        }
+      })
+      .subscribe();
+
+    channelRef.current = channel;
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, user, toast]);
+
+  const sendKudos = (receiverId: string, emoji: string) => {
+    if (channelRef.current && user) {
+      channelRef.current.send({
+        type: "broadcast",
+        event: "kudos",
+        payload: {
+          senderEmail: user.email,
+          receiverId: receiverId,
+          emoji: emoji,
+        }
+      });
+      toast({
+        title: "Kudos sent!",
+        description: `You sent a ${emoji} reaction to your teammate!`,
+      });
+    }
+  };
 
   const labelFor = useMemo(() => {
     const map = new Map(categories.map((c) => [c.key, c.short || c.label]));
@@ -275,7 +375,23 @@ export default function DailyActivityPage() {
                         <StatusBadge r={r} />
                       </div>
                     </div>
-                    <Breakdown r={r} labelFor={labelFor} />
+                    <div className="flex items-center justify-between gap-4 pt-1 flex-wrap">
+                      <Breakdown r={r} labelFor={labelFor} />
+                      {r.user_id !== user?.id && (
+                        <div className="flex items-center gap-2">
+                          {["🎉", "🔥", "👏", "🚀"].map((emoji) => (
+                            <button
+                              key={emoji}
+                              onClick={() => sendKudos(r.user_id, emoji)}
+                              className="hover:scale-125 hover:rotate-6 text-xs transition-transform active:scale-95 duration-100 shrink-0 select-none"
+                              title={`Send ${emoji} kudos`}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -289,6 +405,7 @@ export default function DailyActivityPage() {
                       <th className="px-4 py-2.5 font-semibold text-right w-20">Total</th>
                       <th className="px-4 py-2.5 font-semibold">Breakdown</th>
                       <th className="px-4 py-2.5 font-semibold w-28">Status</th>
+                      <th className="px-4 py-2.5 font-semibold w-32 text-center">Celebrate</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -314,6 +431,24 @@ export default function DailyActivityPage() {
                         </td>
                         <td className="px-4 py-3">
                           <StatusBadge r={r} />
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {r.user_id !== user?.id ? (
+                            <div className="flex justify-center gap-2">
+                              {["🎉", "🔥", "👏", "🚀"].map((emoji) => (
+                                <button
+                                  key={emoji}
+                                  onClick={() => sendKudos(r.user_id, emoji)}
+                                  className="hover:scale-125 hover:rotate-6 text-base transition-transform active:scale-95 duration-100 select-none"
+                                  title={`Send ${emoji} kudos`}
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider bg-muted border border-border/40 px-2 py-0.5 rounded">You</span>
+                          )}
                         </td>
                       </tr>
                     ))}

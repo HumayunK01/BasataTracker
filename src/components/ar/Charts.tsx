@@ -24,9 +24,7 @@ import {
 } from "recharts";
 import { totalForLog, formatShortDate, type DailyLog } from "@/types/log";
 import type { Category } from "@/hooks/useCategories";
-import { CAT_COLORS, colorForKey } from "@/lib/cat-colors";
-
-export { CAT_COLORS };
+import { colorForKey } from "@/lib/cat-colors";
 
 interface Props {
   logs: DailyLog[];

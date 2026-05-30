@@ -334,7 +334,7 @@ export function DaysTable({ logs, onEdit }: Props) {
       workingLogs.reduce((s, l) => s + categories.reduce((cs, c) => cs + getVal(l, c.key), 0), 0) /
         workingLogs.length,
     );
-  }, [workingLogs, categories]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [workingLogs, categories]);
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginated = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
