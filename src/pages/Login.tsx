@@ -10,7 +10,7 @@ const PASSWORD_RULES = [
   { label: "Lowercase letter", test: (p: string) => /[a-z]/.test(p) },
   { label: "Uppercase letter", test: (p: string) => /[A-Z]/.test(p) },
   { label: "Number", test: (p: string) => /[0-9]/.test(p) },
-  { label: "Special character", test: (p: string) => /[!@#$%^&*()_+\-=\[\]{};':"\\|<>?,./`~]/.test(p) },
+  { label: "Special character", test: (p: string) => /[!@#$%^&*()_+\-=[\]{};':"\\|<>?,./`~]/.test(p) },
 ];
 
 type Mode = "login" | "signup";

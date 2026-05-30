@@ -9,6 +9,7 @@ import { isoDate, totalForLog, type DailyLog } from "@/types/log";
 import { Plus, BarChart2 } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { PageHeader } from "@/components/ar/PageHeader";
+import { ActivityRing } from "@/components/ar/ActivityRing";
 
 import { colorForKey } from "@/lib/cat-colors";
 
@@ -94,14 +95,26 @@ const Index = () => {
                         <Skeleton width={40} height={24} borderRadius={4} />
                       </div>
                     ))
-                  : stats.categoryTotals.map((c) => (
-                      <div key={c.key} className="bg-card border border-border rounded-md p-3 sm:p-4">
-                        <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate">{c.label}</p>
-                        <p className="text-xl sm:text-2xl font-bold mt-1 tabular-nums" style={{ color: colorForKey(c.key) }}>
-                          {c.value}
-                        </p>
-                      </div>
-                    ))
+                  : (() => {
+                      const grandTotal = stats.categoryTotals.reduce((s, c) => s + c.value, 0) || 1;
+                      return stats.categoryTotals.map((c) => (
+                        <div key={c.key} className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-center justify-between gap-2 group hover:border-primary/20 transition-all duration-300">
+                          <div className="min-w-0">
+                            <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate">{c.label}</p>
+                            <p className="text-xl sm:text-2xl font-bold mt-1 tabular-nums" style={{ color: colorForKey(c.key) }}>
+                              {c.value}
+                            </p>
+                          </div>
+                          <ActivityRing
+                            value={c.value}
+                            target={grandTotal}
+                            size={32}
+                            strokeWidth={3}
+                            color={colorForKey(c.key)}
+                          />
+                        </div>
+                      ));
+                    })()
                 }
               </div>
             </section>

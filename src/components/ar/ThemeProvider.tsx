@@ -7,7 +7,9 @@ function getInitialTheme(): Theme {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "light" || stored === "dark") return stored;
-  } catch {}
+  } catch {
+    // Ignore localStorage access failures
+  }
   return "dark";
 }
 
@@ -24,7 +26,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     applyTheme(theme);
-    try { localStorage.setItem(STORAGE_KEY, theme); } catch {}
+    try { localStorage.setItem(STORAGE_KEY, theme); } catch {
+      // Ignore localStorage access failures
+    }
   }, [theme]);
 
   const toggle = useCallback(() => {
