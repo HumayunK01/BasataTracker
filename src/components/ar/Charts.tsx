@@ -204,6 +204,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
               fill="url(#grad-daily)"
               dot={{ fill: "hsl(var(--background))", stroke: "hsl(var(--primary))", strokeWidth: 2, r: 3 }}
               activeDot={{ fill: "hsl(var(--primary))", stroke: "hsl(var(--background))", strokeWidth: 2, r: 5 }}
+              isAnimationActive={false}
             />
           </AreaChart>
         </ChartCard>
@@ -213,7 +214,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
           <div className="h-40 sm:h-44">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={categoryTotals} dataKey="value" nameKey="name" innerRadius="40%" outerRadius="65%" paddingAngle={2}>
+                <Pie data={categoryTotals} dataKey="value" nameKey="name" innerRadius="40%" outerRadius="65%" paddingAngle={2} isAnimationActive={false}>
                   {categoryTotals.map((d) => <Cell key={d.key} fill={colorForKey(d.key)} />)}
                 </Pie>
                 <Tooltip contentStyle={T.container} labelStyle={T.text} itemStyle={T.text} />
@@ -239,7 +240,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
             <XAxis dataKey="week" {...T.axis} tickLine={false} axisLine={false} dy={8} />
             <YAxis {...T.axis} allowDecimals={false} width={32} tickLine={false} axisLine={false} />
             <Tooltip contentStyle={T.container} labelStyle={{ ...T.text, fontWeight: 600 }} itemStyle={T.text} cursor={{ fill: "hsl(var(--accent))", radius: 4 }} />
-            <Bar dataKey="total" name="Documents" radius={[6, 6, 0, 0]} maxBarSize={36}>
+            <Bar dataKey="total" name="Documents" radius={[6, 6, 0, 0]} maxBarSize={36} isAnimationActive={false}>
               {weeklyTotals.map((entry, i) => (
                 <Cell key={`week-${entry.week}`} fill={i === weeklyTotals.length - 1 ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.4)"} />
               ))}
@@ -253,7 +254,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
             <XAxis dataKey="day" {...T.axis} tickLine={false} axisLine={false} dy={8} />
             <YAxis {...T.axis} allowDecimals={false} width={32} tickLine={false} axisLine={false} />
             <Tooltip contentStyle={T.container} labelStyle={{ ...T.text, fontWeight: 600 }} itemStyle={T.text} cursor={{ fill: "hsl(var(--accent))" }} />
-            <Bar dataKey="avg" name="Avg docs" radius={[6, 6, 0, 0]} maxBarSize={44}>
+            <Bar dataKey="avg" name="Avg docs" radius={[6, 6, 0, 0]} maxBarSize={44} isAnimationActive={false}>
               {dowAvg.map((entry) => (
                 <Cell key={`dow-${entry.day}`} fill={entry.avg === Math.max(...dowAvg.map((d) => d.avg)) ? "hsl(var(--warning))" : "hsl(var(--info) / 0.55)"} />
               ))}
@@ -290,6 +291,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
                 strokeWidth={2}
                 dot={false}
                 activeDot={{ r: 4, strokeWidth: 0 }}
+                isAnimationActive={false}
               />
             ))}
           </AreaChart>
@@ -327,6 +329,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
                   fill={colorForKey(c.key)}
                   // Bottom segment gets bottom rounding, all others flat
                   radius={i === 0 ? [0, 0, 3, 3] : [0, 0, 0, 0]}
+                  isAnimationActive={false}
                   shape={(props: Record<string, unknown>) => {
                     const { x, y, width, height, fill } = props as {
                       x: number; y: number; width: number; height: number; fill: string;
