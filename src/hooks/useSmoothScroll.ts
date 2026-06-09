@@ -45,7 +45,18 @@ export function useSmoothScroll() {
     // the tree. Re-measure on any DOM mutation or size change in the scroller
     // so Lenis's max scroll stays in sync (otherwise the bottom is unreachable
     // until a manual resize).
-    const resize = () => lenis.resize();
+    //
+    // Coalesce resizes to once per frame: chart re-renders and ring/clock
+    // updates fire DOM mutations in bursts, and an un-throttled lenis.resize()
+    // on each one stutters scrolling on heavy pages like the dashboard.
+    let resizeScheduled = 0;
+    const resize = () => {
+      if (resizeScheduled) return;
+      resizeScheduled = requestAnimationFrame(() => {
+        resizeScheduled = 0;
+        lenis.resize();
+      });
+    };
     const ro = new ResizeObserver(resize);
     ro.observe(main);
     const mo = new MutationObserver(resize);
@@ -53,6 +64,7 @@ export function useSmoothScroll() {
 
     return () => {
       cancelAnimationFrame(rafId);
+      if (resizeScheduled) cancelAnimationFrame(resizeScheduled);
       ro.disconnect();
       mo.disconnect();
       lenis.destroy();
