@@ -57,7 +57,6 @@ export function ActivityRing({
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
-          className="transition-[stroke-dashoffset] duration-700 ease-out"
         />
       </svg>
       {children && (

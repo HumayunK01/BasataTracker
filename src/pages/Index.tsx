@@ -98,7 +98,7 @@ const Index = () => {
                   : (() => {
                       const grandTotal = stats.categoryTotals.reduce((s, c) => s + c.value, 0) || 1;
                       return stats.categoryTotals.map((c) => (
-                        <div key={c.key} className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-center justify-between gap-2 group hover:border-primary/20 transition-all duration-300">
+                        <div key={c.key} className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-center justify-between gap-2 group hover:border-primary/20 transition-[border-color] duration-200">
                           <div className="min-w-0">
                             <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate">{c.label}</p>
                             <p className="text-xl sm:text-2xl font-bold mt-1 tabular-nums" style={{ color: colorForKey(c.key) }}>
