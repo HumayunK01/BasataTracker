@@ -19,7 +19,7 @@
 
 @layer base {
   html, body {
-    font-family: "Hubot Sans", system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
   }
 
   :root {
@@ -153,7 +153,8 @@
 
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    /* Inter: enable contextual alternates + tabular-friendly defaults */
+    font-feature-settings: "cv11", "ss01";
     -webkit-tap-highlight-color: transparent;
   }
 
