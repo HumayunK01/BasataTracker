@@ -21,7 +21,7 @@ export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryB
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 font-[system-ui]">
       {/* Category breakdown progress list */}
-      <div className="bg-card/75 backdrop-blur-md border border-border/60 rounded-xl p-5 sm:p-6 space-y-4 hover:shadow-sm transition-all duration-300">
+      <div className="bg-card/75 backdrop-blur-md border border-border/60 rounded-xl p-5 sm:p-6 space-y-4 hover:shadow-sm transition-[box-shadow] duration-200">
         <div className="flex items-center gap-2">
           <BarChart2 className="size-4 text-primary shrink-0" />
           <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/90">Category Breakdown</h2>
@@ -36,7 +36,7 @@ export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryB
                 <div key={c.label} className="space-y-1.5 group">
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2 truncate">
-                      <span className="size-2 rounded-full shrink-0 group-hover:scale-125 transition-transform" style={{ backgroundColor: c.color }} />
+                      <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
                       <span className="text-muted-foreground group-hover:text-foreground font-medium transition-colors truncate">{c.label}</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -48,7 +48,7 @@ export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryB
                   </div>
                   <div className="h-2 bg-muted/30 border border-border/40 rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full transition-all duration-500 ease-out"
+                      className="h-full rounded-full transition-[width] duration-500 ease-out"
                       style={{ 
                         width: `${pct}%`, 
                         backgroundColor: c.color,
@@ -64,7 +64,7 @@ export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryB
       </div>
 
       {/* Daily bar chart container */}
-      <div className="bg-card/75 backdrop-blur-md border border-border/60 rounded-xl p-5 sm:p-6 space-y-4 hover:shadow-sm transition-all duration-300">
+      <div className="bg-card/75 backdrop-blur-md border border-border/60 rounded-xl p-5 sm:p-6 space-y-4 hover:shadow-sm transition-[box-shadow] duration-200">
         <div className="flex items-center gap-2">
           <TrendingUp className="size-4 text-info shrink-0" />
           <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/90">Daily Document Output</h2>

@@ -43,7 +43,7 @@ function CategoryPickerList({ categories, onPick }: Pick<CategoryPickerProps, "c
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search categories…"
-          className="pl-9 bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-all"
+          className="pl-9 bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-colors"
         />
       </div>
       <div className="max-h-[50vh] overflow-y-auto -mx-1 px-1 space-y-1 no-scrollbar">

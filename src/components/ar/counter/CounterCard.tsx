@@ -79,7 +79,7 @@ export function CounterCard({
           {/* Key shortcut indicator badge */}
           {hotkeyIndex !== undefined && (
             <kbd 
-              className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border border-border/40 bg-background/60 shadow-sm shrink-0 select-none cursor-help hover:border-foreground/20 hover:scale-105 active:scale-95 transition-all text-muted-foreground"
+              className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border border-border/40 bg-background/60 shadow-sm shrink-0 select-none cursor-help hover:border-foreground/20 active:scale-95 transition-[border-color,transform] duration-150 text-muted-foreground"
               title={`Press ${hotkeyIndex} key to count`}
             >
               {hotkeyIndex}
@@ -140,7 +140,7 @@ export function CounterCard({
           onPointerLeave={dec.stop}
           onPointerCancel={dec.stop}
           disabled={count === 0}
-          className="flex-1 flex items-center justify-center h-11 rounded-lg border transition-all active:scale-95 disabled:opacity-20 disabled:cursor-not-allowed touch-manipulation border-border/40"
+          className="flex-1 flex items-center justify-center h-11 rounded-lg border transition-transform duration-100 active:scale-95 disabled:opacity-20 disabled:cursor-not-allowed touch-manipulation border-border/40"
           style={{ backgroundColor: `${clr}26` }}
           aria-label={`Decrease ${cat.label}`}
         >
@@ -152,7 +152,7 @@ export function CounterCard({
           onPointerUp={inc.stop}
           onPointerLeave={inc.stop}
           onPointerCancel={inc.stop}
-          className="flex-1 flex items-center justify-center h-11 rounded-lg border transition-all active:scale-95 touch-manipulation border-border/40"
+          className="flex-1 flex items-center justify-center h-11 rounded-lg border transition-transform duration-100 active:scale-95 touch-manipulation border-border/40"
           style={{ backgroundColor: `${clr}26` }}
           aria-label={`Increase ${cat.label}`}
         >
