@@ -13,8 +13,6 @@ import DailyLogPage from "./pages/DailyLog.tsx";
 import SettingsPage from "./pages/Settings.tsx";
 import ReportPage from "./pages/Report.tsx";
 import CounterPage from "./pages/Counter.tsx";
-import HelpPage from "./pages/Help.tsx";
-import PhoenixHeartCheatSheetPage from "./pages/PhoenixHeartCheatSheet.tsx";
 import UsersPage from "./pages/Users.tsx";
 import DailyActivityPage from "./pages/DailyActivity.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -38,8 +36,6 @@ const App = () => (
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/report" element={<ReportPage />} />
                 <Route path="/counter" element={<CounterPage />} />
-                <Route path="/help" element={<HelpPage />} />
-                <Route path="/cheat-sheet" element={<PhoenixHeartCheatSheetPage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/daily-activity" element={<DailyActivityPage />} />
               </Route>
