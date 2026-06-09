@@ -9,7 +9,6 @@ import { isoDate, totalForLog, type DailyLog } from "@/types/log";
 import { Plus, BarChart2 } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { PageHeader } from "@/components/ar/PageHeader";
-import { ActivityRing } from "@/components/ar/ActivityRing";
 
 import { colorForKey } from "@/lib/cat-colors";
 
@@ -87,7 +86,7 @@ const Index = () => {
             {/* ── Per-category breakdown ── */}
             <section className="space-y-2 sm:space-y-3">
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">By Category{"—"}All Time</h2>
-              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
+              <div className="grid gap-2 sm:gap-3 [grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">
                 {isLoading
                   ? Array.from({ length: 6 }).map((_, i) => (
                       <div key={i} className="bg-card border border-border rounded-md p-3 sm:p-4 space-y-2">
@@ -96,22 +95,13 @@ const Index = () => {
                       </div>
                     ))
                   : (() => {
-                      const grandTotal = stats.categoryTotals.reduce((s, c) => s + c.value, 0) || 1;
-                      return stats.categoryTotals.map((c) => (
-                        <div key={c.key} className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-center justify-between gap-2 group hover:border-primary/20 transition-[border-color] duration-200">
-                          <div className="min-w-0">
-                            <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate">{c.label}</p>
-                            <p className="text-xl sm:text-2xl font-bold mt-1 tabular-nums" style={{ color: colorForKey(c.key) }}>
-                              {c.value}
-                            </p>
-                          </div>
-                          <ActivityRing
-                            value={c.value}
-                            target={grandTotal}
-                            size={32}
-                            strokeWidth={3}
-                            color={colorForKey(c.key)}
-                          />
+                      const ranked = [...stats.categoryTotals].sort((a, b) => b.value - a.value);
+                      return ranked.map((c) => (
+                        <div key={c.key} className="bg-card border border-border rounded-md p-3 sm:p-4 group hover:border-primary/20 transition-[border-color] duration-200">
+                          <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate" title={c.label}>{c.label}</p>
+                          <p className="text-xl sm:text-2xl font-bold mt-1 tabular-nums" style={{ color: colorForKey(c.key) }}>
+                            {c.value}
+                          </p>
                         </div>
                       ));
                     })()
