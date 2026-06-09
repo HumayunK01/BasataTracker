@@ -87,13 +87,12 @@ function triggerKudosAnimation(emoji: string) {
 
   const node = document.createElement("div");
   node.innerText = emoji;
-  node.className = "absolute text-4xl select-none pointer-events-none z-50";
-  
+  node.className = "kudos-float absolute text-4xl select-none pointer-events-none z-50";
+
   const randomX = Math.random() * 80 + 10;
   node.style.left = `${randomX}%`;
   node.style.bottom = "0px";
   node.style.fontSize = `${Math.random() * 25 + 28}px`;
-  node.style.animation = "kudos-float 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards";
   
   container.appendChild(node);
   setTimeout(() => {
