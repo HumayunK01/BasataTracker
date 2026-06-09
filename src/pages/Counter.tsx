@@ -14,7 +14,6 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 // Import modular components
 import { CounterCard } from "@/components/ar/counter/CounterCard";
 import { CategoryPicker } from "@/components/ar/counter/CategoryPicker";
-import { PomodoroTimer } from "@/components/ar/counter/PomodoroTimer";
 
 const COUNTS_KEY = "counter_counts";
 const SELECTED_KEY = "counter_selected_keys";
@@ -370,10 +369,8 @@ export default function CounterPage() {
 
       <main className="flex-1 overflow-y-auto font-[system-ui]">
         <div className="w-full px-4 sm:px-6 py-4 sm:py-6 flex flex-col gap-4 sm:gap-6">
-          {/* Responsive Hero + Pomodoro Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Hero total today */}
-            <div className="md:col-span-2 relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card/90 to-muted/40 backdrop-blur-md px-5 py-5 sm:px-6 sm:py-6 hover:border-primary/10 transition-all duration-300">
+          {/* Hero total today */}
+          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card/90 to-muted/40 backdrop-blur-md px-5 py-5 sm:px-6 sm:py-6 hover:border-primary/10 transition-all duration-300">
               <div className="flex items-end justify-between gap-4 flex-wrap">
                 <div>
                   <div className="flex items-center gap-2">
@@ -435,12 +432,6 @@ export default function CounterPage() {
                 )}
               </div>
             </div>
-
-            {/* Pomodoro Focus Timer */}
-            <div className="md:col-span-1">
-              <PomodoroTimer />
-            </div>
-          </div>
 
           {/* Counter cards grid */}
           {activeCategories.length > 0 && (

@@ -1,7 +1,6 @@
-import { useState } from "react";
 import { AppLogo } from "@/components/ar/AppLogo";
 import { Button } from "@/components/ui/button";
-import { Info, ShieldCheck, Download, Database, Volume2 } from "lucide-react";
+import { Info, ShieldCheck, Download, Database } from "lucide-react";
 
 interface AboutCardProps {
   categoriesCount: number;
@@ -11,24 +10,6 @@ interface AboutCardProps {
 }
 
 export function AboutCard({ categoriesCount, logsCount, onExport, exportDisabled }: AboutCardProps) {
-  const [chimeEnabled, setChimeEnabled] = useState(() => {
-    try {
-      const v = localStorage.getItem("basata_timer_chime");
-      return v === null ? true : v === "true";
-    } catch {
-      return true;
-    }
-  });
-
-  const handleChimeToggle = (checked: boolean) => {
-    setChimeEnabled(checked);
-    try {
-      localStorage.setItem("basata_timer_chime", String(checked));
-    } catch {
-      // Ignore localStorage access failures
-    }
-  };
-
   return (
     <div className="bg-card/70 backdrop-blur-md border border-border/60 rounded-xl p-5 sm:p-6 space-y-4 hover:shadow-md hover:shadow-primary/5 hover:border-primary/30 hover:-translate-y-0.5 transition-all duration-300 group">
       <div className="flex items-center gap-3">
@@ -53,22 +34,6 @@ export function AboutCard({ categoriesCount, logsCount, onExport, exportDisabled
             <span className="text-muted-foreground font-medium">Days logged</span>
             <span className="font-mono bg-background/80 border border-border/60 text-foreground/95 px-2 py-0.5 rounded text-[10px]">{logsCount} days</span>
           </div>
-        </div>
-
-        {/* Pomodoro Sound Toggle */}
-        <div className="flex items-center justify-between border border-border/40 rounded-xl p-3 text-xs bg-muted/20">
-          <span className="text-muted-foreground font-semibold flex items-center gap-2">
-            <Volume2 className="size-4 text-muted-foreground" /> Focus Sprint Bell
-          </span>
-          <label className="relative inline-flex items-center cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={chimeEnabled}
-              onChange={(e) => handleChimeToggle(e.target.checked)}
-              className="sr-only peer"
-            />
-            <div className="w-8 h-4.5 bg-muted-foreground/20 border border-border/40 rounded-full peer peer-focus:ring-0 dark:bg-muted-foreground/15 peer-checked:after:translate-x-3.5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-muted-foreground peer-checked:after:bg-primary after:border-border/40 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-primary/10"></div>
-          </label>
         </div>
 
         {/* Custom RLS Security Alert Tip */}
