@@ -87,6 +87,12 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      transitionTimingFunction: {
+        // Strong custom easings — backed by CSS vars in index.css
+        out: "var(--ease-out)",
+        "in-out": "var(--ease-in-out)",
+        drawer: "var(--ease-drawer)",
+      },
       keyframes: {
         "accordion-down": {
           from: {

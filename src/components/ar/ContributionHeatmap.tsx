@@ -144,19 +144,19 @@ function HeatmapGrid({ weeks, monthTicks, maxTotal, setTooltip }: GridProps) {
                 <div
                   key={cell.iso}
                   className={[
-                    "w-full aspect-square rounded-[2px] sm:rounded-sm transition-all duration-100 cursor-default",
+                    "w-full aspect-square rounded-[2px] sm:rounded-sm transition-[filter] duration-100 cursor-default",
                     bgClass,
                     cell.isToday ? "ring-1 ring-white/30 ring-offset-1 ring-offset-card" : "",
                     !cell.isFuture ? "hover:brightness-125" : "",
                   ].join(" ")}
                   onMouseEnter={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect();
-                    const tipX = Math.min(rect.left, window.innerWidth - 180);
                     setTooltip({
                       iso: cell.iso, total: cell.total,
                       isOffDay: cell.isOffDay, isWeekend: cell.isWeekend,
                       isFuture: cell.isFuture, isToday: cell.isToday,
-                      x: tipX, y: rect.top,
+                      x: rect.left + rect.width / 2,
+                      y: rect.top,
                     });
                   }}
                   onMouseLeave={() => setTooltip(null)}
@@ -267,7 +267,7 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
                     key={cell.iso}
                     style={{ width: 16, height: 16, flexShrink: 0 }}
                     className={[
-                      "rounded-[3px] transition-all duration-100",
+                      "rounded-[3px] transition-[filter] duration-100",
                       bgClass,
                       cell.isToday ? "ring-1 ring-white/40 ring-offset-1 ring-offset-card" : "",
                     ].join(" ")}
@@ -277,7 +277,7 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
                         iso: cell.iso, total: cell.total,
                         isOffDay: cell.isOffDay, isWeekend: cell.isWeekend,
                         isFuture: cell.isFuture, isToday: cell.isToday,
-                        x: Math.min(rect.left, window.innerWidth - 180),
+                        x: rect.left + rect.width / 2,
                         y: rect.top,
                       });
                     }}
@@ -299,7 +299,11 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
       {tooltip && (
         <div
           className="fixed z-50 pointer-events-none px-2.5 py-1.5 rounded-lg bg-popover border border-border shadow-lg text-xs whitespace-nowrap"
-          style={{ left: tooltip.x, top: Math.max(8, tooltip.y - 44) }}
+          style={{
+            left: tooltip.x,
+            top: tooltip.y - 48,
+            transform: "translateX(-50%)"
+          }}
         >
           <span className="font-semibold">{tooltip.iso}</span>
           {tooltip.isToday && <span className="ml-1.5 text-primary font-medium">· today</span>}

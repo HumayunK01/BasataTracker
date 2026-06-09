@@ -63,6 +63,11 @@
 
     --radius: 0.5rem;
 
+    /* Motion — strong custom easing curves (built-in CSS easings lack punch) */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);       /* entering/exiting UI */
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);   /* on-screen movement */
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);    /* iOS-like slide */
+
     --sidebar-background: 215 28% 17%; /* #1F2937 gray-800 */
     --sidebar-foreground: 220 9% 95%;
     --sidebar-primary: 204 60% 73%;    /* #95C4E1 */
@@ -205,10 +210,33 @@
 
 @layer utilities {
   .animate-fade-in {
-    animation: fadeSlideIn 0.2s ease forwards;
+    animation: fadeSlideIn 0.2s var(--ease-out) forwards;
   }
   .page-transition {
-    animation: pageSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: pageSlideIn 0.35s var(--ease-out) forwards;
+  }
+}
+
+/* Reduced motion — keep fades/color, drop movement and large transforms */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .page-transition {
+    animation: fadeOnly 0.2s ease forwards;
+  }
+
+  @keyframes fadeOnly {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .kudos-float {
+    animation: kudos-fade 1.2s ease forwards !important;
+  }
+
+  @keyframes kudos-fade {
+    0% { opacity: 0; }
+    15% { opacity: 1; }
+    100% { opacity: 0; }
   }
 }
 
@@ -234,10 +262,14 @@
   }
 }
 
+.kudos-float {
+  animation: kudos-float 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
 @keyframes kudos-float {
   0% {
     opacity: 0;
-    transform: translateY(0) scale(0.5) rotate(0deg);
+    transform: translateY(0) scale(0.85) rotate(0deg);
   }
   15% {
     opacity: 1;
