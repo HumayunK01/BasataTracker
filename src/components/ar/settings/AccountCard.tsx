@@ -9,10 +9,10 @@ interface AccountCardProps {
 
 export function AccountCard({ email, createdAt, lastSignIn }: AccountCardProps) {
   return (
-    <div className="col-span-2 sm:col-span-1 bg-card/70 backdrop-blur-md border border-border/60 rounded-xl p-5 sm:p-6 space-y-4 hover:shadow-md hover:shadow-primary/5 hover:border-primary/30 hover:-translate-y-0.5 transition-all duration-300 group">
+    <div className="col-span-2 sm:col-span-1 bg-card/70 backdrop-blur-md border border-border/60 rounded-xl p-5 sm:p-6 space-y-4 hover:shadow-md hover:shadow-primary/5 hover:border-primary/30 transition-[border-color,box-shadow] duration-200 group">
       <div className="flex items-center gap-3">
-        <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
-          <User className="size-4 text-primary group-hover:rotate-6 transition-transform" />
+        <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors duration-200">
+          <User className="size-4 text-primary" />
         </div>
         <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/95 font-[system-ui]">Account</h2>
       </div>

@@ -85,7 +85,7 @@ export function CategorySection({
 }: CategorySectionProps) {
   return (
     <>
-      <div className="bg-card/70 backdrop-blur-md border border-border/60 rounded-xl overflow-hidden hover:border-primary/10 hover:shadow-sm hover:shadow-primary/[0.02] transition-all duration-300 font-[system-ui]">
+      <div className="bg-card/70 backdrop-blur-md border border-border/60 rounded-xl overflow-hidden hover:border-primary/10 hover:shadow-sm hover:shadow-primary/[0.02] transition-[border-color,box-shadow] duration-200 font-[system-ui]">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border/40 bg-muted/[0.04]">
           <div className="flex items-center gap-3">
             <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -210,7 +210,7 @@ export function CategorySection({
                 id="cat-label"
                 placeholder="e.g. Worked on NG"
                 value={cat.form.label}
-                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-all font-medium"
+                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-colors font-medium"
                 onChange={(e) => catDispatch({ type: "set_form", patch: { label: e.target.value } })}
                 onKeyDown={(e) => e.key === "Enter" && onSave()}
               />
@@ -222,7 +222,7 @@ export function CategorySection({
                 placeholder="e.g. NG"
                 maxLength={10}
                 value={cat.form.short}
-                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-all font-semibold"
+                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-colors font-semibold"
                 onChange={(e) => catDispatch({ type: "set_form", patch: { short: e.target.value } })}
                 onKeyDown={(e) => e.key === "Enter" && onSave()}
               />

@@ -40,7 +40,7 @@ export function ReportDayTable({
   onPageChange,
 }: ReportDayTableProps) {
   return (
-    <div className="bg-card/75 backdrop-blur-md border border-border/60 rounded-xl overflow-hidden hover:border-primary/10 hover:shadow-sm transition-all duration-300 font-[system-ui]">
+    <div className="bg-card/75 backdrop-blur-md border border-border/60 rounded-xl overflow-hidden hover:border-primary/10 hover:shadow-sm transition-[border-color,box-shadow] duration-200 font-[system-ui]">
       <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between bg-muted/[0.04]">
         <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/95">Day-by-Day Breakdown</h2>
         <span className="text-[10px] text-muted-foreground sm:hidden font-medium bg-muted/40 border border-border/60 px-2 py-0.5 rounded">
@@ -134,7 +134,7 @@ export function ReportDayTable({
             <Button
               variant="ghost"
               size="icon"
-              className="size-8 hover:bg-muted/80 text-muted-foreground hover:text-foreground border border-border/40 rounded-lg active:scale-95 transition-all"
+              className="size-8 hover:bg-muted/80 text-muted-foreground hover:text-foreground border border-border/40 rounded-lg active:scale-95 transition-[color,background-color,transform] duration-150"
               onClick={() => onPageChange(Math.max(1, tablePage - 1))}
               disabled={tablePage === 1}
             >
@@ -151,7 +151,7 @@ export function ReportDayTable({
                   variant={tablePage === p ? "default" : "ghost"}
                   size="icon"
                   className={[
-                    "size-8 text-xs font-semibold rounded-lg active:scale-95 transition-all border",
+                    "size-8 text-xs font-semibold rounded-lg active:scale-95 transition-[color,background-color,border-color,transform] duration-150 border",
                     tablePage === p 
                       ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/10" 
                       : "border-border/40 text-muted-foreground hover:text-foreground hover:bg-muted/80"
@@ -165,7 +165,7 @@ export function ReportDayTable({
             <Button
               variant="ghost"
               size="icon"
-              className="size-8 hover:bg-muted/80 text-muted-foreground hover:text-foreground border border-border/40 rounded-lg active:scale-95 transition-all"
+              className="size-8 hover:bg-muted/80 text-muted-foreground hover:text-foreground border border-border/40 rounded-lg active:scale-95 transition-[color,background-color,transform] duration-150"
               onClick={() => onPageChange(Math.min(totalTablePages, tablePage + 1))}
               disabled={tablePage === totalTablePages}
             >

@@ -54,12 +54,12 @@ export function ProfilePasswordCard({
   onChangePassword,
 }: ProfilePasswordCardProps) {
   return (
-    <div className="col-span-2 sm:col-span-1 bg-card/70 backdrop-blur-md border border-border/60 rounded-xl p-5 sm:p-6 space-y-4 hover:shadow-md hover:shadow-primary/5 hover:border-primary/30 hover:-translate-y-0.5 transition-all duration-300 group">
+    <div className="col-span-2 sm:col-span-1 bg-card/70 backdrop-blur-md border border-border/60 rounded-xl p-5 sm:p-6 space-y-4 hover:shadow-md hover:shadow-primary/5 hover:border-primary/30 transition-[border-color,box-shadow] duration-200 group">
       {/* Profile section */}
       <div className="space-y-3 font-[system-ui]">
         <div className="flex items-center gap-3">
-          <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
-            <BadgeCheck className="size-4 text-primary group-hover:rotate-6 transition-transform" />
+          <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors duration-200">
+            <BadgeCheck className="size-4 text-primary" />
           </div>
           <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/95">Profile</h2>
         </div>
@@ -77,7 +77,7 @@ export function ProfilePasswordCard({
             <Button
               size="sm"
               variant="outline"
-              className="w-full border-border/60 hover:bg-muted/80 hover:border-foreground/20 transition-all duration-200"
+              className="w-full border-border/60 hover:bg-muted/80 hover:border-foreground/20 transition-colors duration-200"
               onClick={() =>
                 profileDispatch({
                   type: "open",
@@ -96,7 +96,7 @@ export function ProfilePasswordCard({
               <Input
                 placeholder="First name"
                 value={profileState.first_name}
-                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-all"
+                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-colors"
                 onChange={(e) => profileDispatch({ type: "set", patch: { first_name: e.target.value } })}
               />
             </div>
@@ -105,7 +105,7 @@ export function ProfilePasswordCard({
               <Input
                 placeholder="Last name"
                 value={profileState.last_name}
-                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-all"
+                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-colors"
                 onChange={(e) => profileDispatch({ type: "set", patch: { last_name: e.target.value } })}
                 onKeyDown={(e) => e.key === "Enter" && onUpdateProfile()}
               />
@@ -128,8 +128,8 @@ export function ProfilePasswordCard({
       {/* Password section */}
       <div className="space-y-3 font-[system-ui]">
         <div className="flex items-center gap-3">
-          <div className="size-8 rounded-lg bg-warning/10 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-warning/20 transition-all duration-300">
-            <KeyRound className="size-4 text-warning group-hover:rotate-6 transition-transform" />
+          <div className="size-8 rounded-lg bg-warning/10 flex items-center justify-center shrink-0 group-hover:bg-warning/20 transition-colors duration-200">
+            <KeyRound className="size-4 text-warning" />
           </div>
           <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/95">Password</h2>
         </div>
@@ -142,7 +142,7 @@ export function ProfilePasswordCard({
             <Button 
               size="sm" 
               variant="outline" 
-              className="w-full border-border/60 hover:bg-muted/80 hover:border-foreground/20 transition-all duration-200" 
+              className="w-full border-border/60 hover:bg-muted/80 hover:border-foreground/20 transition-colors duration-200" 
               onClick={() => pwDispatch({ type: "open" })}
             >
               Change password
@@ -165,7 +165,7 @@ export function ProfilePasswordCard({
                 placeholder="••••••••"
                 minLength={6}
                 value={pwState.next}
-                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-all"
+                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-colors"
                 onChange={(e) => pwDispatch({ type: "set", patch: { next: e.target.value } })}
               />
             </div>
@@ -175,7 +175,7 @@ export function ProfilePasswordCard({
                 type="password"
                 placeholder="••••••••"
                 value={pwState.confirm}
-                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-all"
+                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-colors"
                 onChange={(e) => pwDispatch({ type: "set", patch: { confirm: e.target.value } })}
                 onKeyDown={(e) => e.key === "Enter" && onChangePassword()}
               />

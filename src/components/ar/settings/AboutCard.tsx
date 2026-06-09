@@ -11,15 +11,15 @@ interface AboutCardProps {
 
 export function AboutCard({ categoriesCount, logsCount, onExport, exportDisabled }: AboutCardProps) {
   return (
-    <div className="bg-card/70 backdrop-blur-md border border-border/60 rounded-xl p-5 sm:p-6 space-y-4 hover:shadow-md hover:shadow-primary/5 hover:border-primary/30 hover:-translate-y-0.5 transition-all duration-300 group">
+    <div className="bg-card/70 backdrop-blur-md border border-border/60 rounded-xl p-5 sm:p-6 space-y-4 hover:shadow-md hover:shadow-primary/5 hover:border-primary/30 transition-[border-color,box-shadow] duration-200 group">
       <div className="flex items-center gap-3">
-        <div className="size-8 rounded-lg bg-info/10 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-info/20 transition-all duration-300">
-          <Info className="size-4 text-info group-hover:rotate-6 transition-transform" />
+        <div className="size-8 rounded-lg bg-info/10 flex items-center justify-center shrink-0 group-hover:bg-info/20 transition-colors duration-200">
+          <Info className="size-4 text-info" />
         </div>
         <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/95 font-[system-ui]">About</h2>
       </div>
       <div className="space-y-4 font-[system-ui]">
-        <AppLogo className="h-7 sm:h-8 object-contain group-hover:scale-102 transition-transform duration-300 origin-left" />
+        <AppLogo className="h-7 sm:h-8 object-contain origin-left" />
         
         <div className="space-y-2 bg-muted/20 border border-border/40 rounded-xl p-3">
           <div className="flex items-center justify-between text-xs">
@@ -50,7 +50,7 @@ export function AboutCard({ categoriesCount, logsCount, onExport, exportDisabled
         <Button 
           size="sm" 
           variant="outline" 
-          className="w-full border-border/60 hover:bg-muted/80 hover:border-foreground/20 transition-all duration-200 shadow-sm" 
+          className="w-full border-border/60 hover:bg-muted/80 hover:border-foreground/20 transition-colors duration-200 shadow-sm"
           onClick={onExport} 
           disabled={exportDisabled}
         >

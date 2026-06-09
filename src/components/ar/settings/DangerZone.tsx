@@ -37,10 +37,10 @@ interface DangerZoneProps {
 export function DangerZone({ delState, delDispatch, onDeleteAccount }: DangerZoneProps) {
   return (
     <>
-      <div className="bg-card/70 backdrop-blur-md border border-destructive/20 rounded-xl overflow-hidden hover:border-destructive/40 hover:shadow-md hover:shadow-destructive/5 transition-all duration-300 group">
+      <div className="bg-card/70 backdrop-blur-md border border-destructive/20 rounded-xl overflow-hidden hover:border-destructive/40 hover:shadow-md hover:shadow-destructive/5 transition-[border-color,box-shadow] duration-200 group">
         <div className="flex items-center gap-3 px-5 py-4 border-b border-destructive/15 bg-destructive/[0.02]">
-          <div className="size-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-destructive/20 transition-all duration-300">
-            <UserX className="size-4 text-destructive group-hover:rotate-6 transition-transform" />
+          <div className="size-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0 group-hover:bg-destructive/20 transition-colors duration-200">
+            <UserX className="size-4 text-destructive" />
           </div>
           <div>
             <h2 className="text-sm font-bold uppercase tracking-wider text-destructive font-[system-ui]">Danger Zone</h2>
@@ -57,7 +57,7 @@ export function DangerZone({ delState, delDispatch, onDeleteAccount }: DangerZon
           <Button
             size="sm"
             variant="destructive"
-            className="w-full sm:w-auto shrink-0 shadow-sm shadow-destructive/10 transition-transform duration-100 hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full sm:w-auto shrink-0 shadow-sm shadow-destructive/10 transition-transform duration-100 active:scale-[0.98]"
             onClick={() => delDispatch({ type: "open" })}
           >
             Delete account
@@ -94,14 +94,14 @@ export function DangerZone({ delState, delDispatch, onDeleteAccount }: DangerZon
             <Input
               placeholder="Type DELETE"
               value={delState.confirmText}
-              className="border-border/60 focus-visible:ring-destructive/30 focus-visible:border-destructive/60 transition-all font-semibold uppercase"
+              className="border-border/60 focus-visible:ring-destructive/30 focus-visible:border-destructive/60 transition-colors font-semibold uppercase"
               onChange={(e) => delDispatch({ type: "set_text", text: e.target.value })}
             />
             <Input
               type="password"
               placeholder="Enter your current password"
               value={delState.password}
-              className="border-border/60 focus-visible:ring-destructive/30 focus-visible:border-destructive/60 transition-all"
+              className="border-border/60 focus-visible:ring-destructive/30 focus-visible:border-destructive/60 transition-colors"
               onChange={(e) => delDispatch({ type: "set_pw", pw: e.target.value })}
             />
           </div>

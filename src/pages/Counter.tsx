@@ -332,7 +332,7 @@ export default function CounterPage() {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 px-2.5 sm:px-3 mr-2 border-border/60 hover:bg-muted/80 transition-all duration-200"
+              className="h-8 px-2.5 sm:px-3 mr-2 border-border/60 hover:bg-muted/80 transition-colors duration-200"
               onClick={handleReset}
               disabled={total === 0}
             >
@@ -341,7 +341,7 @@ export default function CounterPage() {
             </Button>
             <Button
               size="sm"
-              className={`h-8 px-2.5 sm:px-3 shadow-sm transition-all duration-200 ${
+              className={`h-8 px-2.5 sm:px-3 shadow-sm transition-colors duration-200 ${
                 saved
                   ? "bg-success hover:bg-success/90 text-success-foreground shadow-success/10"
                   : "bg-primary hover:bg-primary/95 text-primary-foreground shadow-primary/10"
@@ -370,7 +370,7 @@ export default function CounterPage() {
       <main className="flex-1 overflow-y-auto font-[system-ui]">
         <div className="w-full px-4 sm:px-6 py-4 sm:py-6 flex flex-col gap-4 sm:gap-6">
           {/* Hero total today */}
-          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card/90 to-muted/40 backdrop-blur-md px-5 py-5 sm:px-6 sm:py-6 hover:border-primary/10 transition-all duration-300">
+          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card/90 to-muted/40 backdrop-blur-md px-5 py-5 sm:px-6 sm:py-6 hover:border-primary/10 transition-[border-color] duration-200">
               <div className="flex items-end justify-between gap-4 flex-wrap">
                 <div>
                   <div className="flex items-center gap-2">
@@ -456,7 +456,7 @@ export default function CounterPage() {
             type="button"
             onClick={() => setPickerOpen(true)}
             disabled={catsLoading || availableToAdd.length === 0}
-            className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 py-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-muted/[0.04] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation font-semibold cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 py-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-muted/[0.04] active:scale-[0.99] transition-[color,background-color,border-color,transform] duration-200 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation font-semibold cursor-pointer"
           >
             <Plus className="size-4" />
             {catsLoading
