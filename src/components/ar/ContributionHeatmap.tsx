@@ -95,10 +95,9 @@ interface GridProps {
   weeks: (Cell | null)[][];
   monthTicks: { label: string; col: number }[];
   maxTotal: number;
-  setTooltip: (t: { iso: string; total: number; isOffDay: boolean; isWeekend: boolean; isFuture: boolean; isToday: boolean; x: number; y: number } | null) => void;
 }
 
-function HeatmapGrid({ weeks, monthTicks, maxTotal, setTooltip }: GridProps) {
+function HeatmapGrid({ weeks, monthTicks, maxTotal }: GridProps) {
   return (
     <div className="w-full">
       {/* Month labels */}
@@ -144,22 +143,10 @@ function HeatmapGrid({ weeks, monthTicks, maxTotal, setTooltip }: GridProps) {
                 <div
                   key={cell.iso}
                   className={[
-                    "w-full aspect-square rounded-[2px] sm:rounded-sm transition-[filter] duration-100 cursor-default",
+                    "w-full aspect-square rounded-[2px] sm:rounded-sm cursor-default",
                     bgClass,
                     cell.isToday ? "ring-1 ring-white/30 ring-offset-1 ring-offset-card" : "",
-                    !cell.isFuture ? "hover:brightness-125" : "",
                   ].join(" ")}
-                  onMouseEnter={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    setTooltip({
-                      iso: cell.iso, total: cell.total,
-                      isOffDay: cell.isOffDay, isWeekend: cell.isWeekend,
-                      isFuture: cell.isFuture, isToday: cell.isToday,
-                      x: rect.left + rect.width / 2,
-                      y: rect.top,
-                    });
-                  }}
-                  onMouseLeave={() => setTooltip(null)}
                 />
               );
             })}
@@ -171,11 +158,6 @@ function HeatmapGrid({ weeks, monthTicks, maxTotal, setTooltip }: GridProps) {
 }
 
 export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: Props) {
-  const [tooltip, setTooltip] = useState<{
-    iso: string; total: number; isOffDay: boolean; isWeekend: boolean;
-    isFuture: boolean; isToday: boolean; x: number; y: number;
-  } | null>(null);
-
   const [currentYear] = useState(() => new Date().getFullYear());
 
   const [weeks365, monthTicks365, maxTotal] = useMemo(() => {
@@ -267,21 +249,10 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
                     key={cell.iso}
                     style={{ width: 16, height: 16, flexShrink: 0 }}
                     className={[
-                      "rounded-[3px] transition-[filter] duration-100",
+                      "rounded-[3px]",
                       bgClass,
                       cell.isToday ? "ring-1 ring-white/40 ring-offset-1 ring-offset-card" : "",
                     ].join(" ")}
-                    onMouseEnter={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      setTooltip({
-                        iso: cell.iso, total: cell.total,
-                        isOffDay: cell.isOffDay, isWeekend: cell.isWeekend,
-                        isFuture: cell.isFuture, isToday: cell.isToday,
-                        x: rect.left + rect.width / 2,
-                        y: rect.top,
-                      });
-                    }}
-                    onMouseLeave={() => setTooltip(null)}
                   />
                 );
               })}
@@ -292,34 +263,8 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
 
       {/* Desktop grid: full year */}
       <div className="hidden sm:block">
-        <HeatmapGrid weeks={weeks365} monthTicks={monthTicks365} maxTotal={maxTotal} setTooltip={setTooltip} />
+        <HeatmapGrid weeks={weeks365} monthTicks={monthTicks365} maxTotal={maxTotal} />
       </div>
-
-      {/* Tooltip */}
-      {tooltip && (
-        <div
-          className="fixed z-50 pointer-events-none px-2.5 py-1.5 rounded-lg bg-popover border border-border shadow-lg text-xs whitespace-nowrap"
-          style={{
-            left: tooltip.x,
-            top: tooltip.y - 48,
-            transform: "translateX(-50%)"
-          }}
-        >
-          <span className="font-semibold">{tooltip.iso}</span>
-          {tooltip.isToday && <span className="ml-1.5 text-primary font-medium">· today</span>}
-          <span className="text-muted-foreground ml-2">
-            {tooltip.isFuture
-              ? "—"
-              : tooltip.isWeekend
-              ? "Weekend"
-              : tooltip.isOffDay
-              ? "Off day"
-              : tooltip.total === 0
-              ? "No data"
-              : `${tooltip.total} doc${tooltip.total !== 1 ? "s" : ""}`}
-          </span>
-        </div>
-      )}
     </div>
   );
 });
