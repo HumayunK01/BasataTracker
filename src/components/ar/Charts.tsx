@@ -54,7 +54,7 @@ function ChartCard({ title, subtitle, height = "h-48 sm:h-56", children, classNa
   className?: string;
 }) {
   return (
-    <div className={`bg-card border border-border rounded-md p-4 sm:p-5 ${className}`}>
+    <div className={`cv-auto bg-card border border-border rounded-md p-4 sm:p-5 ${className}`}>
       <div className="mb-3 sm:mb-4">
         <h3 className="text-sm font-semibold">{title}</h3>
         {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
@@ -308,7 +308,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
       </DeferRender>
 
       {/* Row 4: Full-width stacked bar breakdown */}
-      <DeferRender minHeight={320} id="breakdown" className="bg-card border border-border rounded-md p-4 sm:p-5">
+      <DeferRender minHeight={320} id="breakdown" className="cv-auto bg-card border border-border rounded-md p-4 sm:p-5">
         <div className="mb-3 sm:mb-4">
           <h3 className="text-sm font-semibold">Document Breakdown</h3>
           <p className="text-xs text-muted-foreground mt-0.5">Last 14 working days by category</p>

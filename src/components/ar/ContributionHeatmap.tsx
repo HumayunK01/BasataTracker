@@ -183,7 +183,7 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
 
 
   return (
-    <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-3 sm:space-y-4">
+    <div className="cv-auto bg-card border border-border rounded-md p-4 sm:p-5 space-y-3 sm:space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>

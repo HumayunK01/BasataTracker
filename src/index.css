@@ -2,21 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Lenis smooth scroll (custom wrapper mode) */
-.lenis,
-.lenis .lenis-content {
-  scroll-behavior: auto !important;
-}
-.lenis.lenis-smooth {
-  scroll-behavior: auto !important;
-}
-.lenis.lenis-stopped {
-  overflow: hidden;
-}
-.lenis.lenis-smooth iframe {
-  pointer-events: none;
-}
-
 @layer base {
   html, body {
     font-family: "Inter", system-ui, sans-serif;
@@ -215,6 +200,13 @@
   }
   .page-transition {
     animation: pageSlideIn 0.35s var(--ease-out) forwards;
+  }
+
+  /* Skip rendering/painting for offscreen heavy blocks (charts, heatmap).
+     `contain-intrinsic-size` reserves space so the scrollbar stays stable. */
+  .cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 300px;
   }
 }
 
