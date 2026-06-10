@@ -1,5 +1,5 @@
 import { formatTableDate, isWeekend, totalForLog, type DailyLog } from "@/types/log";
-import { colorForKey, withAlpha } from "@/lib/cat-colors";
+import { colorForKey } from "@/lib/cat-colors";
 import type { Category } from "@/hooks/useCategories";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { BedDouble, ChevronLeft, ChevronRight, Palmtree } from "lucide-react";
+import { BedDouble, ChevronLeft, ChevronRight } from "lucide-react";
 
 const TABLE_PAGE_SIZE = 20;
 
@@ -40,51 +40,42 @@ export function ReportDayTable({
   onPageChange,
 }: ReportDayTableProps) {
   return (
-    <div className="bg-card/75 backdrop-blur-md border border-border/60 rounded-xl overflow-hidden hover:border-primary/10 hover:shadow-sm transition-[border-color,box-shadow] duration-200 font-[system-ui]">
+    <div className="bg-card border border-border rounded-md overflow-hidden hover:border-primary/20 transition-[border-color] duration-200">
       <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between bg-muted/[0.04]">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/95">Day-by-Day Breakdown</h2>
+        <h2 className="text-sm font-semibold">Day-by-Day Breakdown</h2>
         <span className="text-[10px] text-muted-foreground sm:hidden font-medium bg-muted/40 border border-border/60 px-2 py-0.5 rounded">
           {"← swipe to scroll →"}
         </span>
       </div>
       <div className="overflow-x-auto no-scrollbar">
-        <Table>
+        <Table className="[&_th]:border-r [&_th]:border-border [&_th:last-child]:border-r-0 [&_td]:border-r [&_td]:border-border/40 [&_td:last-child]:border-r-0">
           <TableHeader>
-            <TableRow className="hover:bg-transparent border-b border-border/40 bg-muted/[0.02]">
-              <TableHead className="font-semibold text-xs text-muted-foreground w-[120px] px-5">Date</TableHead>
+            <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
+              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center py-3">Date</TableHead>
               {categories.map((c) => (
-                <TableHead key={c.key} className="font-semibold text-xs text-center w-[72px] py-3.5">
-                  <span className="font-bold font-mono text-[10px] px-2 py-0.5 rounded shadow-sm" style={{ backgroundColor: withAlpha(colorForKey(c.key), 0.1), color: colorForKey(c.key) }}>
-                    {c.short}
-                  </span>
+                <TableHead key={c.key} className="font-bold text-xs uppercase tracking-wider text-center text-foreground">
+                  {c.short}
                 </TableHead>
               ))}
-              <TableHead className="font-semibold text-xs text-center text-foreground/80 w-[80px] py-3.5">Total</TableHead>
+              <TableHead className="font-bold text-xs uppercase tracking-wider text-center text-foreground">Total</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedRows.map((l) => {
               const rowTotal = totalForLog(l);
               const isWeekendRow = isWeekend(l.log_date);
-              
+
               return l.is_off_day ? (
-                <TableRow key={l.id} className="border-b border-border/20 last:border-0 bg-muted/[0.08] hover:bg-muted/[0.12] transition-colors">
-                  <TableCell className="tabular-nums text-sm font-medium py-3 px-5 text-muted-foreground">
+                <TableRow key={l.id} className="border-b border-border/40 last:border-0 bg-muted/10">
+                  <TableCell className="tabular-nums text-sm font-medium py-3 text-muted-foreground text-center">
                     {formatTableDate(l.log_date)}
                   </TableCell>
                   <TableCell colSpan={categories.length + 1} className="py-3">
-                    <div className="flex items-center gap-2">
-                      {isWeekendRow ? (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 animate-fade-in">
-                          <BedDouble className="size-3 shrink-0" />
-                          <span>WEEKEND</span>
-                        </div>
-                      ) : (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-warning/10 text-warning border border-warning/20 animate-fade-in">
-                          <Palmtree className="size-3 shrink-0" />
-                          <span>OFF DAY</span>
-                        </div>
-                      )}
+                    <div className="flex items-center gap-1.5">
+                      <BedDouble className="size-3.5 text-muted-foreground" />
+                      <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">
+                        {isWeekendRow ? "Weekend" : "Off Day"}
+                      </span>
                       {l.notes && (
                         <span className="text-[11px] text-muted-foreground/80 italic font-medium truncate max-w-[200px] sm:max-w-xs">
                           &ldquo;{l.notes}&rdquo;
@@ -94,8 +85,8 @@ export function ReportDayTable({
                   </TableCell>
                 </TableRow>
               ) : (
-                <TableRow key={l.id} className="border-b border-border/20 last:border-0 hover:bg-muted/[0.04] transition-colors">
-                  <TableCell className="tabular-nums text-sm font-medium py-3 px-5">
+                <TableRow key={l.id} className="border-b border-border/40 last:border-0 hover:bg-muted/20 transition-colors">
+                  <TableCell className="tabular-nums text-sm font-medium py-3 text-foreground text-center">
                     {formatTableDate(l.log_date)}
                   </TableCell>
                   {categories.map((c) => {
@@ -103,19 +94,15 @@ export function ReportDayTable({
                     return (
                       <TableCell key={c.key} className="text-center tabular-nums text-sm py-3">
                         {v > 0 ? (
-                          <span className="font-semibold" style={{ color: colorForKey(c.key) }}>
-                            {v}
-                          </span>
+                          <span className="font-medium text-foreground">{v}</span>
                         ) : (
-                          <span className="text-muted-foreground/20 font-light" aria-hidden="true">
-                            {"—"}
-                          </span>
+                          <span className="text-muted-foreground/30" aria-hidden="true">{"—"}</span>
                         )}
                       </TableCell>
                     );
                   })}
                   <TableCell className="text-center tabular-nums py-3">
-                    <span className="font-black text-sm text-foreground/90">{rowTotal}</span>
+                    <span className="font-bold text-sm text-foreground">{rowTotal}</span>
                   </TableCell>
                 </TableRow>
               );
@@ -125,7 +112,7 @@ export function ReportDayTable({
       </div>
 
       {totalTablePages > 1 && (
-        <div className="border-t border-border/40 px-5 py-3 flex items-center justify-between gap-2 bg-muted/[0.02]">
+        <div className="border-t border-border/40 px-4 sm:px-5 py-3 flex flex-wrap items-center justify-center sm:justify-between gap-2 bg-muted/[0.02]">
           <span className="text-xs text-muted-foreground font-medium">
             Displaying {(tablePage - 1) * TABLE_PAGE_SIZE + 1}–{Math.min(tablePage * TABLE_PAGE_SIZE, filtered.length)} of{" "}
             {filtered.length} log rows
@@ -134,7 +121,7 @@ export function ReportDayTable({
             <Button
               variant="ghost"
               size="icon"
-              className="size-8 hover:bg-muted/80 text-muted-foreground hover:text-foreground border border-border/40 rounded-lg active:scale-95 transition-[color,background-color,transform] duration-150"
+              className="size-8 hover:bg-muted/80 text-muted-foreground hover:text-foreground border border-border/40 rounded-md active:scale-95 transition-[color,background-color,transform] duration-150"
               onClick={() => onPageChange(Math.max(1, tablePage - 1))}
               disabled={tablePage === 1}
             >
@@ -151,7 +138,7 @@ export function ReportDayTable({
                   variant={tablePage === p ? "default" : "ghost"}
                   size="icon"
                   className={[
-                    "size-8 text-xs font-semibold rounded-lg active:scale-95 transition-[color,background-color,border-color,transform] duration-150 border",
+                    "size-8 text-xs font-semibold rounded-md active:scale-95 transition-[color,background-color,border-color,transform] duration-150 border",
                     tablePage === p 
                       ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/10" 
                       : "border-border/40 text-muted-foreground hover:text-foreground hover:bg-muted/80"
@@ -165,7 +152,7 @@ export function ReportDayTable({
             <Button
               variant="ghost"
               size="icon"
-              className="size-8 hover:bg-muted/80 text-muted-foreground hover:text-foreground border border-border/40 rounded-lg active:scale-95 transition-[color,background-color,transform] duration-150"
+              className="size-8 hover:bg-muted/80 text-muted-foreground hover:text-foreground border border-border/40 rounded-md active:scale-95 transition-[color,background-color,transform] duration-150"
               onClick={() => onPageChange(Math.min(totalTablePages, tablePage + 1))}
               disabled={tablePage === totalTablePages}
             >

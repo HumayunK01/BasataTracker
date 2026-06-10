@@ -1,11 +1,11 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { DayEntrySheet } from "@/components/ar/DayEntrySheet";
 const Charts = lazy(() => import("@/components/ar/Charts").then((m) => ({ default: m.Charts })));
 import { ContributionHeatmap } from "@/components/ar/ContributionHeatmap";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
-import { isoDate, totalForLog, type DailyLog } from "@/types/log";
+import { isoDate, totalForLog } from "@/types/log";
 import { Plus, BarChart2 } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { PageHeader } from "@/components/ar/PageHeader";
@@ -17,26 +17,12 @@ const chicagoWeekdayFmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/
 const Index = () => {
   const { data: logs = [], isLoading } = useDailyLogs();
   const { data: categories = [] } = useCategories();
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<DailyLog | null>(null);
+  const navigate = useNavigate();
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(id);
-  }, []);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement;
-      if (t && ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName)) return;
-      if (e.key !== "n" && e.key !== "N") return;
-      e.preventDefault();
-      setEditing(null);
-      setOpen(true);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   const stats = useMemo(() => {
@@ -51,9 +37,6 @@ const Index = () => {
     }));
     return { todayLog, todayTotal, categoryTotals, workingCount: working.length };
   }, [logs, categories]);
-
-  const existingDates = useMemo(() => logs.map((l) => l.log_date), [logs]);
-  const openNew = () => { setEditing(null); setOpen(true); };
 
   const isWeekendToday = useMemo(() => {
     const day = chicagoWeekdayFmt.format(now);
@@ -73,20 +56,14 @@ const Index = () => {
             <span className="text-success">{stats.todayTotal} docs logged today</span>
           ) : undefined
         }
-        actions={
-          <Button size="sm" className="h-8" onClick={openNew}>
-            <Plus className="size-4 sm:mr-1" />
-            <span className="hidden sm:inline">Log day</span>
-            <kbd className="ml-2 hidden sm:inline-flex text-xs border border-primary-foreground/30 rounded px-1">N</kbd>
-          </Button>
-        }
       />
-      <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6 space-y-5 sm:space-y-8">
+      <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
+        <div className="w-full space-y-5 sm:space-y-8">
 
             {/* ── Per-category breakdown ── */}
             <section className="space-y-2 sm:space-y-3">
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">By Category{"—"}All Time</h2>
-              <div className="grid gap-2 sm:gap-3 [grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">
+              <div className="grid gap-2 sm:gap-3 [grid-template-columns:repeat(auto-fill,minmax(124px,1fr))] sm:[grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">
                 {isLoading
                   ? Array.from({ length: 6 }).map((_, i) => (
                       <div key={i} className="bg-card border border-border rounded-md p-3 sm:p-4 space-y-2">
@@ -150,7 +127,7 @@ const Index = () => {
                     <p className="text-sm font-medium text-foreground">No data yet</p>
                     <p className="text-xs">Log your first day to see trends and charts here.</p>
                   </div>
-                  <Button size="sm" onClick={openNew}>
+                  <Button size="sm" onClick={() => navigate("/log")}>
                     <Plus className="size-4 mr-1" /> Log your first day
                   </Button>
                 </div>
@@ -161,9 +138,8 @@ const Index = () => {
               )}
             </section>
 
-          </main>
-
-        <DayEntrySheet open={open} onOpenChange={setOpen} editing={editing} existingDates={existingDates} />
+        </div>
+      </main>
     </>
   );
 };

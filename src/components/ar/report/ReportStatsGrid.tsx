@@ -25,12 +25,12 @@ export function ReportStatsGrid({
   const docsTarget = Math.max(50, workingCount * 50);
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 font-[system-ui]">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Total Docs */}
-      <div className="bg-card/75 backdrop-blur-md border border-border/60 rounded-xl p-4 sm:p-5 hover:shadow-md hover:shadow-primary/5 hover:border-primary/30 transition-[border-color,box-shadow] duration-200 group flex items-start justify-between">
-        <div className="space-y-1">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Total Documents</p>
-          <p className="text-2xl sm:text-3xl font-bold tabular-nums text-primary mt-1.5 leading-none">{totalDocs}</p>
+      <div className="bg-card border border-border rounded-md p-3 sm:p-4 hover:border-primary/20 transition-[border-color] duration-200 group flex items-start justify-between">
+        <div className="space-y-1 min-w-0">
+          <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">Total Documents</p>
+          <p className="text-xl sm:text-2xl font-bold tabular-nums text-primary mt-1.5 leading-none">{totalDocs}</p>
           <p className="text-[10px] text-muted-foreground mt-2 font-medium">{filteredCount} days tracked</p>
         </div>
         <ActivityRing
@@ -46,10 +46,10 @@ export function ReportStatsGrid({
       </div>
 
       {/* Working Days */}
-      <div className="bg-card/75 backdrop-blur-md border border-border/60 rounded-xl p-4 sm:p-5 hover:shadow-md hover:shadow-foreground/5 hover:border-foreground/20 transition-[border-color,box-shadow] duration-200 group flex items-start justify-between">
-        <div className="space-y-1">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Working Days</p>
-          <p className="text-2xl sm:text-3xl font-bold tabular-nums text-foreground/90 mt-1.5 leading-none">{workingCount}</p>
+      <div className="bg-card border border-border rounded-md p-3 sm:p-4 hover:border-primary/20 transition-[border-color] duration-200 group flex items-start justify-between">
+        <div className="space-y-1 min-w-0">
+          <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">Working Days</p>
+          <p className="text-xl sm:text-2xl font-bold tabular-nums text-foreground/90 mt-1.5 leading-none">{workingCount}</p>
           <p className="text-[10px] text-muted-foreground mt-2 font-medium">
             {weekendDays} weekends · {offDays} off days
           </p>
@@ -67,10 +67,10 @@ export function ReportStatsGrid({
       </div>
 
       {/* Avg / Day */}
-      <div className="bg-card/75 backdrop-blur-md border border-border/60 rounded-xl p-4 sm:p-5 hover:shadow-md hover:shadow-info/5 hover:border-info/30 transition-[border-color,box-shadow] duration-200 group flex items-start justify-between">
-        <div className="space-y-1">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Average / Day</p>
-          <p className="text-2xl sm:text-3xl font-bold tabular-nums text-info mt-1.5 leading-none">{avgPerDay}</p>
+      <div className="bg-card border border-border rounded-md p-3 sm:p-4 hover:border-primary/20 transition-[border-color] duration-200 group flex items-start justify-between">
+        <div className="space-y-1 min-w-0">
+          <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">Average / Day</p>
+          <p className="text-xl sm:text-2xl font-bold tabular-nums text-info mt-1.5 leading-none">{avgPerDay}</p>
           <p className="text-[10px] text-muted-foreground mt-2 font-medium">docs per working day</p>
         </div>
         <ActivityRing
@@ -86,10 +86,10 @@ export function ReportStatsGrid({
       </div>
 
       {/* Best Day */}
-      <div className="bg-card/75 backdrop-blur-md border border-border/60 rounded-xl p-4 sm:p-5 hover:shadow-md hover:shadow-warning/5 hover:border-warning/30 transition-[border-color,box-shadow] duration-200 group flex items-start justify-between">
-        <div className="space-y-1">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Best Day</p>
-          <p className="text-2xl sm:text-3xl font-bold tabular-nums text-warning mt-1.5 leading-none">
+      <div className="bg-card border border-border rounded-md p-3 sm:p-4 hover:border-primary/20 transition-[border-color] duration-200 group flex items-start justify-between">
+        <div className="space-y-1 min-w-0">
+          <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">Best Day</p>
+          <p className="text-xl sm:text-2xl font-bold tabular-nums text-warning mt-1.5 leading-none">
             {bestDay ? totalForLog(bestDay) : "—"}
           </p>
           <p className="text-[10px] text-muted-foreground mt-2 font-medium">
