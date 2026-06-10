@@ -1,15 +1,16 @@
 import { useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
@@ -25,7 +26,11 @@ interface CategoryPickerProps {
   onPick: (cat: Category) => void;
 }
 
-function CategoryPickerList({ categories, onPick }: Pick<CategoryPickerProps, "categories" | "onPick">) {
+function CategoryPickerList({
+  categories,
+  onPick,
+  autoFocusSearch = false,
+}: Pick<CategoryPickerProps, "categories" | "onPick"> & { autoFocusSearch?: boolean }) {
   const [q, setQ] = useState("");
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -36,19 +41,28 @@ function CategoryPickerList({ categories, onPick }: Pick<CategoryPickerProps, "c
   }, [q, categories]);
 
   return (
-    <div className="space-y-3 font-[system-ui]">
+    <div className="space-y-3">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          // Search is the modal's single purpose; skipped on mobile so the
+          // keyboard doesn't pop over the drawer
+          autoFocus={autoFocusSearch}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && filtered.length > 0) onPick(filtered[0]);
+          }}
           placeholder="Search categories…"
-          className="pl-9 bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-colors"
+          className="pl-9"
         />
       </div>
       <div className="max-h-[50vh] overflow-y-auto -mx-1 px-1 space-y-1 no-scrollbar">
         {filtered.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">No categories match.</p>
+          <div className="flex flex-col items-center gap-2 py-10 text-muted-foreground">
+            <Search className="size-8 opacity-20" />
+            <p className="text-sm">No categories match &ldquo;{q}&rdquo;.</p>
+          </div>
         ) : (
           filtered.map((cat) => {
             const clr = colorForKey(cat.key);
@@ -57,16 +71,22 @@ function CategoryPickerList({ categories, onPick }: Pick<CategoryPickerProps, "c
                 key={cat.key}
                 type="button"
                 onClick={() => onPick(cat)}
-                className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted/60 active:bg-muted transition-colors text-left touch-manipulation group"
+                className="w-full flex items-center gap-3 p-2.5 rounded-md border border-transparent hover:border-border/60 hover:bg-muted/50 active:bg-muted active:scale-[0.99] transition-[background-color,border-color,transform] duration-150 text-left touch-manipulation group"
               >
                 <span
-                  className="size-7 rounded-md flex items-center justify-center text-[10px] font-mono font-bold shrink-0 shadow-sm group-hover:scale-105 transition-transform"
-                  style={{ color: clr, backgroundColor: withAlpha(clr, 0.13) }}
+                  className="size-8 rounded-md flex items-center justify-center text-[10px] font-mono font-bold shrink-0 group-hover:scale-105 transition-transform"
+                  style={{
+                    color: clr,
+                    backgroundColor: withAlpha(clr, 0.13),
+                    border: `1px solid ${withAlpha(clr, 0.25)}`,
+                  }}
                 >
                   {cat.short.slice(0, 3)}
                 </span>
-                <span className="text-sm flex-1 font-[system-ui] font-medium truncate text-foreground/90">{cat.label}</span>
-                <Plus className="size-4 text-muted-foreground shrink-0 group-hover:text-foreground transition-colors" />
+                <span className="text-sm flex-1 font-medium truncate">{cat.label}</span>
+                <span className="size-6 rounded-full flex items-center justify-center text-muted-foreground bg-muted/40 group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0">
+                  <Plus className="size-3.5" />
+                </span>
               </button>
             );
           })
@@ -83,12 +103,15 @@ export function CategoryPicker({ open, onOpenChange, categories, onPick }: Categ
     onOpenChange(false);
   };
 
+  const subtitle = `${categories.length} ${categories.length === 1 ? "category" : "categories"} available — pick one to start counting`;
+
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="font-[system-ui] bg-background/95 backdrop-blur-lg border-t border-border/60">
+        <DrawerContent className="bg-background/95 backdrop-blur-lg border-t border-border/60">
           <DrawerHeader className="text-left pb-2">
-            <DrawerTitle className="text-base font-bold text-foreground">Add category</DrawerTitle>
+            <DrawerTitle className="text-base font-semibold">Add category</DrawerTitle>
+            <DrawerDescription className="text-xs text-muted-foreground">{subtitle}</DrawerDescription>
           </DrawerHeader>
           <div className="px-4 pb-6">
             <CategoryPickerList categories={categories} onPick={handlePick} />
@@ -100,11 +123,12 @@ export function CategoryPicker({ open, onOpenChange, categories, onPick }: Categ
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md font-[system-ui] bg-background/95 backdrop-blur-lg border border-border/60">
+      <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-lg border border-border/60">
         <DialogHeader>
-          <DialogTitle className="text-base font-bold text-foreground">Add category</DialogTitle>
+          <DialogTitle className="text-base font-semibold">Add category</DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">{subtitle}</DialogDescription>
         </DialogHeader>
-        <CategoryPickerList categories={categories} onPick={handlePick} />
+        <CategoryPickerList categories={categories} onPick={handlePick} autoFocusSearch />
       </DialogContent>
     </Dialog>
   );
