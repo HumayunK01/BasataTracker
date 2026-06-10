@@ -134,9 +134,9 @@ function HeatmapGrid({ weeks, monthTicks, maxTotal }: GridProps) {
               const bgClass = cell.isFuture
                 ? "bg-muted/10 border border-foreground/[0.05]"
                 : cell.isWeekend
-                ? "bg-slate-500/30 border border-slate-400/20"
+                ? "bg-muted-foreground/30 border border-muted-foreground/20"
                 : cell.isOffDay
-                ? "bg-red-500/40 border border-red-400/20"
+                ? "bg-destructive/40 border border-destructive/20"
                 : `${INTENSITY_BG[intensity]} border border-foreground/[0.07]`;
 
               return (
@@ -198,11 +198,11 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
         {/* Legend */}
         <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-muted-foreground select-none flex-wrap">
           <div className="flex items-center gap-1">
-            <span className="size-2.5 sm:w-3 sm:h-3 rounded-sm bg-slate-500/30 border border-slate-400/20" />
+            <span className="size-2.5 sm:w-3 sm:h-3 rounded-sm bg-muted-foreground/30 border border-muted-foreground/20" />
             <span>Weekend</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="size-2.5 sm:w-3 sm:h-3 rounded-sm bg-red-500/50" />
+            <span className="size-2.5 sm:w-3 sm:h-3 rounded-sm bg-destructive/50" />
             <span>Off</span>
           </div>
           <div className="flex items-center gap-1 sm:gap-1.5">
@@ -245,9 +245,9 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
                 const bgClass = cell.isFuture
                   ? "bg-muted/10"
                   : cell.isWeekend
-                  ? "bg-slate-500/30"
+                  ? "bg-muted-foreground/30"
                   : cell.isOffDay
-                  ? "bg-red-500/40"
+                  ? "bg-destructive/40"
                   : INTENSITY_BG[intensity];
                 return (
                   <div

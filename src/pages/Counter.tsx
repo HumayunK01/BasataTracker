@@ -125,12 +125,11 @@ export default function CounterPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
-  // Cross-device persistence. The counter auto-saves (debounced) into today's
-  // daily_logs row, and on first load it hydrates from the server so a device
-  // that wasn't the last writer continues where the others left off.
+  // Cross-device persistence. Saving is manual (Save button) into today's
+  // daily_logs row; on first load the counter hydrates from the server so a
+  // device that wasn't the last writer continues where the others left off.
   const hydratedRef = useRef(false);
-  const skipAutoSaveRef = useRef(false);
-  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const skipUnsavedMarkRef = useRef(false);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
@@ -200,8 +199,7 @@ export default function CounterPage() {
   }, [user]);
 
   const getCount = (key: string) => counts[key] ?? 0;
-  const setCount = (key: string, val: number) => cDispatch({ type: "set_count", key, val });
-  
+
   const increment = useCallback((key: string) => {
     cDispatch({ type: "set_count", key, val: (counts[key] ?? 0) + 1 });
     broadcastIncrement(key, 1);
@@ -251,7 +249,7 @@ export default function CounterPage() {
     const localTotal = Object.values(counts).reduce((s, v) => s + (v || 0), 0);
     const serverTotal = Object.values(serverCounts).reduce((s, v) => s + (v || 0), 0);
     if (localTotal === 0 && serverTotal > 0) {
-      skipAutoSaveRef.current = true;
+      skipUnsavedMarkRef.current = true;
       const next = new Set(selectedKeys);
       for (const k of Object.keys(serverCounts)) {
         if ((serverCounts[k] ?? 0) > 0 && categories.some((c) => c.key === k)) next.add(k);
@@ -261,30 +259,14 @@ export default function CounterPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todayLog, categories]);
 
-  // Debounced auto-save: ~1s after taps settle, push to the server.
+  // Mark progress as unsaved whenever counts change after initial hydration.
   useEffect(() => {
     if (!hydratedRef.current) return;
-    if (skipAutoSaveRef.current) {
-      skipAutoSaveRef.current = false;
+    if (skipUnsavedMarkRef.current) {
+      skipUnsavedMarkRef.current = false;
       return;
     }
     cDispatch({ type: "set_saved", v: false });
-    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => {
-      const keys = categories.reduce<string[]>((acc, c) => {
-        if (selectedKeys.includes(c.key)) acc.push(c.key);
-        return acc;
-      }, []);
-      if (keys.length === 0) return;
-      flush(counts, keys).then(
-        () => cDispatch({ type: "set_saved", v: true }),
-        () => {} // error toast handled by the mutation hook
-      );
-    }, 1000);
-    return () => {
-      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [counts]);
 
   // Global Keyboard Shortcuts: Keys 1 to 9 instantly increment the 1st through 9th cards
@@ -309,7 +291,6 @@ export default function CounterPage() {
   const handleReset = () => cDispatch({ type: "reset" });
 
   const handleSave = async () => {
-    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     const keys = activeCategories.map((c) => c.key);
     try {
       await flush(counts, keys);
@@ -328,7 +309,7 @@ export default function CounterPage() {
         now={now}
         subtitle="Counter"
         actions={
-          <div className="font-[system-ui]">
+          <div className="flex items-center">
             <Button
               variant="outline"
               size="sm"
@@ -367,14 +348,14 @@ export default function CounterPage() {
         }
       />
 
-      <main className="flex-1 overflow-y-auto font-[system-ui]">
-        <div className="w-full px-4 sm:px-6 py-4 sm:py-6 flex flex-col gap-4 sm:gap-6">
+      <main className="flex-1 overflow-y-auto">
+        <div className="w-full px-3 sm:px-6 py-4 sm:py-6 flex flex-col gap-4">
           {/* Hero total today */}
-          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card/90 to-muted/40 backdrop-blur-md px-5 py-5 sm:px-6 sm:py-6 hover:border-primary/10 transition-[border-color] duration-200">
+          <div className="relative overflow-hidden bg-card border border-border rounded-md p-4 sm:p-5 hover:border-primary/20 transition-[border-color] duration-200">
               <div className="flex items-end justify-between gap-4 flex-wrap">
                 <div>
                   <div className="flex items-center gap-2">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">
                       Total today
                     </p>
                     <span
@@ -382,14 +363,14 @@ export default function CounterPage() {
                         saved
                           ? "bg-success/15 text-success border border-success/10"
                           : total > 0
-                          ? "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border border-yellow-500/10"
+                          ? "bg-warning/15 text-warning border border-warning/10"
                           : "bg-muted text-muted-foreground border border-border/40"
                       }`}
                     >
                       {saved ? "Saved" : total > 0 ? "Unsaved" : "Empty"}
                     </span>
                   </div>
-                  <p className="text-6xl sm:text-7xl font-black tabular-nums text-primary leading-none mt-1.5 font-[system-ui]">
+                  <p className="text-6xl sm:text-7xl font-black tabular-nums text-primary leading-none mt-1.5">
                     {animatedTotal}
                   </p>
                   <p className="text-[10px] text-muted-foreground mt-2 font-medium">
@@ -435,7 +416,7 @@ export default function CounterPage() {
 
           {/* Counter cards grid */}
           {activeCategories.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4 animate-fade-in">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 animate-fade-in">
               {activeCategories.map((cat, idx) => (
                 <CounterCard
                   key={cat.key}
@@ -456,7 +437,7 @@ export default function CounterPage() {
             type="button"
             onClick={() => setPickerOpen(true)}
             disabled={catsLoading || availableToAdd.length === 0}
-            className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 py-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-muted/[0.04] active:scale-[0.99] transition-[color,background-color,border-color,transform] duration-200 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation font-semibold cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 rounded-md border border-dashed border-border/60 py-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-muted/[0.04] active:scale-[0.99] transition-[color,background-color,border-color,transform] duration-200 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation font-semibold cursor-pointer"
           >
             <Plus className="size-4" />
             {catsLoading

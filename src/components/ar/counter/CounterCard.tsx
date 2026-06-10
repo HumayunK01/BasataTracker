@@ -59,7 +59,7 @@ export function CounterCard({
 
   return (
     <div
-      className="group rounded-xl border flex flex-col relative overflow-hidden transition-shadow hover:shadow-md hover:shadow-primary/[0.02] focus-within:ring-2 focus-within:ring-primary/40 font-[system-ui]"
+      className="group rounded-md border flex flex-col relative overflow-hidden transition-shadow hover:shadow-md hover:shadow-primary/[0.02] focus-within:ring-2 focus-within:ring-primary/40"
       style={{ borderColor: withAlpha(clr, 0.25), backgroundColor: withAlpha(clr, 0.07) }}
     >
       {/* Progress fill (share of the busiest category) */}
@@ -70,29 +70,21 @@ export function CounterCard({
       />
 
       {/* Header */}
-      <div className="relative flex items-center justify-between gap-1.5 px-3.5 pt-3.5 pb-1 pr-9">
-        <div className="flex items-center gap-1.5 truncate">
-          <p className="text-xs font-bold truncate text-foreground/90" style={{ color: clr }}>
-            {cat.label}
-          </p>
-          
-          {/* Key shortcut indicator badge */}
-          {hotkeyIndex !== undefined && (
-            <kbd 
-              className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border border-border/40 bg-background/60 shadow-sm shrink-0 select-none cursor-help hover:border-foreground/20 active:scale-95 transition-[border-color,transform] duration-150 text-muted-foreground"
-              title={`Press ${hotkeyIndex} key to count`}
-            >
-              {hotkeyIndex}
-            </kbd>
-          )}
-        </div>
+      <div className="relative flex items-center gap-2 px-3.5 pt-3.5 pb-1 pr-9 min-w-0">
+        <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: clr }} aria-hidden />
+        <p className="text-xs font-semibold truncate text-foreground/90 flex-1 min-w-0" title={cat.label}>
+          {cat.label}
+        </p>
 
-        <span
-          className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
-          style={{ color: clr, backgroundColor: `${clr}2e` }}
-        >
-          {cat.short}
-        </span>
+        {/* Key shortcut indicator badge */}
+        {hotkeyIndex !== undefined && (
+          <kbd
+            className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border border-border/40 bg-background/60 shadow-sm shrink-0 select-none cursor-help hover:border-foreground/20 transition-[border-color] duration-150 text-muted-foreground"
+            title={`Press ${hotkeyIndex} key to count`}
+          >
+            {hotkeyIndex}
+          </kbd>
+        )}
       </div>
 
       <button
@@ -118,14 +110,14 @@ export function CounterCard({
             onDecrement();
           }
         }}
-        className="relative flex items-center justify-center py-7 sm:py-8 mx-2 rounded-lg active:scale-[0.97] transition-transform duration-100 touch-manipulation select-none outline-none cursor-pointer"
+        className="relative flex-1 flex items-center justify-center py-6 sm:py-7 mx-2 rounded-md active:scale-[0.97] transition-transform duration-100 touch-manipulation select-none outline-none cursor-pointer"
         title="Tap to count (or press ↑ / +)"
         aria-label={`${cat.label}: ${count}. Tap to add one.`}
       >
         <span
           key={bump}
           className="text-5xl sm:text-6xl font-black tabular-nums leading-none [animation:counter-pop_180ms_ease-out] select-none"
-          style={{ color: count > 0 ? clr : "hsl(var(--muted-foreground) / 0.2)" }}
+          style={{ color: count > 0 ? clr : "hsl(var(--muted-foreground) / 0.3)" }}
         >
           {count}
         </span>
@@ -140,8 +132,8 @@ export function CounterCard({
           onPointerLeave={dec.stop}
           onPointerCancel={dec.stop}
           disabled={count === 0}
-          className="flex-1 flex items-center justify-center h-11 rounded-lg border transition-transform duration-100 active:scale-95 disabled:opacity-20 disabled:cursor-not-allowed touch-manipulation border-border/40"
-          style={{ backgroundColor: `${clr}26` }}
+          className="flex-1 flex items-center justify-center h-11 rounded-md border transition-transform duration-100 active:scale-95 disabled:opacity-35 disabled:cursor-not-allowed touch-manipulation border-border/40"
+          style={{ backgroundColor: withAlpha(clr, 0.15) }}
           aria-label={`Decrease ${cat.label}`}
         >
           <Minus className="size-4" style={{ color: clr }} />
@@ -152,8 +144,8 @@ export function CounterCard({
           onPointerUp={inc.stop}
           onPointerLeave={inc.stop}
           onPointerCancel={inc.stop}
-          className="flex-1 flex items-center justify-center h-11 rounded-lg border transition-transform duration-100 active:scale-95 touch-manipulation border-border/40"
-          style={{ backgroundColor: `${clr}26` }}
+          className="flex-1 flex items-center justify-center h-11 rounded-md border transition-transform duration-100 active:scale-95 touch-manipulation border-border/40"
+          style={{ backgroundColor: withAlpha(clr, 0.15) }}
           aria-label={`Increase ${cat.label}`}
         >
           <Plus className="size-4" style={{ color: clr }} />

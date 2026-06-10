@@ -185,7 +185,7 @@ export default function LoginPage() {
                 return (
                   <div key={label} className={[
                     "flex items-center gap-1.5 text-xs transition-colors",
-                    untouched ? "text-muted-foreground" : passed ? "text-green-500" : "text-destructive",
+                    untouched ? "text-muted-foreground" : passed ? "text-success" : "text-destructive",
                   ].join(" ")}>
                     {untouched || passed
                       ? <Check className="size-3 shrink-0" />
