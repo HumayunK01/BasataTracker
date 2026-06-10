@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, Sun, Moon, Check, X, MailCheck } from "lucide-react";
+import { Loader2, Eye, EyeOff, Sun, Moon, Check, X } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 
 const PASSWORD_RULES = [
@@ -122,11 +122,6 @@ export default function LoginPage() {
         {confirmEmail ? (
           /* ── Account created — confirm email ── */
           <div className="space-y-4 animate-fade-in">
-            <div className="flex justify-center">
-              <div className="size-12 rounded-full bg-success/15 border border-success/20 flex items-center justify-center">
-                <MailCheck className="size-6 text-success" />
-              </div>
-            </div>
             <div className="space-y-1.5 text-center">
               <h1 className="text-2xl font-semibold text-foreground">Account created!</h1>
               <p className="text-sm text-muted-foreground">
