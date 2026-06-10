@@ -190,6 +190,19 @@
     touch-action: manipulation;
   }
 
+  /* Interaction affordances — clickable things show a pointer */
+  input[type="date"],
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  select,
+  label[for],
+  summary {
+    cursor: pointer;
+  }
+
+  input[type="date"]:disabled {
+    cursor: not-allowed;
+  }
+
   table, table * {
     font-family: system-ui, sans-serif;
   }

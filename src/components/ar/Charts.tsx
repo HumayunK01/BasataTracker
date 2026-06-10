@@ -8,7 +8,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Legend,
   Line,
   LineChart,
   Pie,
@@ -46,12 +45,13 @@ const T = {
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-function ChartCard({ title, subtitle, height = "h-48 sm:h-56", children, className = "" }: {
+function ChartCard({ title, subtitle, height = "h-48 sm:h-56", children, className = "", footer }: {
   title: string;
   subtitle?: string;
   height?: string;
   children: React.ReactNode;
   className?: string;
+  footer?: React.ReactNode;
 }) {
   return (
     <div className={`cv-auto bg-card border border-border rounded-md p-4 sm:p-5 ${className}`}>
@@ -64,6 +64,25 @@ function ChartCard({ title, subtitle, height = "h-48 sm:h-56", children, classNa
           {children as React.ReactElement}
         </ResponsiveContainer>
       </div>
+      {footer}
+    </div>
+  );
+}
+
+// Compact legend rendered outside the chart so it never eats plot height.
+// Short codes on phones, full labels from sm up.
+function CategoryLegend({ categories }: { categories: Category[] }) {
+  return (
+    <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs mt-3">
+      {categories.map((c) => (
+        <div key={c.key} className="flex items-center gap-1 min-w-0">
+          <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: colorForKey(c.key) }} />
+          <span className="text-muted-foreground truncate">
+            <span className="sm:hidden">{c.short}</span>
+            <span className="hidden sm:inline">{c.label}</span>
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -169,7 +188,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
         <ChartCard
           title="Daily Documents"
           subtitle="Last 21 working days"
-          height="h-48 sm:h-56 md:h-60"
+          height="h-48 sm:h-56 md:h-60 xl:h-72"
           className="lg:col-span-2"
         >
           <AreaChart data={trend} margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
@@ -211,7 +230,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
 
         <div className="bg-card border border-border rounded-md p-4 sm:p-5">
           <h3 className="text-sm font-semibold mb-3">Work mix{"—"}all time</h3>
-          <div className="h-40 sm:h-44">
+          <div className="h-40 sm:h-44 xl:h-56">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={categoryTotals} dataKey="value" nameKey="name" innerRadius="40%" outerRadius="65%" paddingAngle={2} isAnimationActive={false}>
@@ -234,7 +253,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
 
       {/* Row 2: Weekly totals + Day-of-week avg */}
       <DeferRender minHeight={224} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ChartCard title="Weekly Totals" subtitle="Last 10 weeks" height="h-44 sm:h-48 md:h-52">
+        <ChartCard title="Weekly Totals" subtitle="Last 10 weeks" height="h-44 sm:h-48 md:h-52 xl:h-60">
           <BarChart data={weeklyTotals} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={T.grid} vertical={false} />
             <XAxis dataKey="week" {...T.axis} tickLine={false} axisLine={false} dy={8} />
@@ -248,7 +267,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
           </BarChart>
         </ChartCard>
 
-        <ChartCard title="Avg by Day of Week" subtitle="Based on all working days" height="h-44 sm:h-48 md:h-52">
+        <ChartCard title="Avg by Day of Week" subtitle="Based on all working days" height="h-44 sm:h-48 md:h-52 xl:h-60">
           <BarChart data={dowAvg} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={T.grid} vertical={false} />
             <XAxis dataKey="day" {...T.axis} tickLine={false} axisLine={false} dy={8} />
@@ -265,7 +284,13 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
 
       {/* Row 3: Category area trend + Radar */}
       <DeferRender minHeight={272} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <ChartCard title="Category Trends" subtitle="Last 30 working days" height="h-48 sm:h-56 md:h-60" className="lg:col-span-2">
+        <ChartCard
+          title="Category Trends"
+          subtitle="Last 30 working days"
+          height="h-48 sm:h-56 md:h-60 xl:h-72"
+          className="lg:col-span-2"
+          footer={<CategoryLegend categories={categories} />}
+        >
           <AreaChart data={categoryTrend} margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
             <defs>
               {categories.map((c) => (
@@ -279,7 +304,6 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
             <XAxis dataKey="date" {...T.axis} tickLine={false} axisLine={false} dy={8} />
             <YAxis {...T.axis} allowDecimals={false} width={32} tickLine={false} axisLine={false} />
             <Tooltip contentStyle={T.container} labelStyle={{ ...T.text, fontWeight: 600 }} itemStyle={T.text} />
-            <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }} />
             {categories.map((c) => (
               <Area
                 key={c.key}
@@ -297,7 +321,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
           </AreaChart>
         </ChartCard>
 
-        <ChartCard title="Category Balance" subtitle="Avg documents per day" height="h-48 sm:h-56 md:h-60">
+        <ChartCard title="Category Balance" subtitle="Avg documents per day" height="h-48 sm:h-56 md:h-60 xl:h-72">
           <RadarChart data={radarData} outerRadius="65%">
             <PolarGrid stroke={T.grid} />
             <PolarAngleAxis dataKey="category" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
@@ -313,14 +337,13 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
           <h3 className="text-sm font-semibold">Document Breakdown</h3>
           <p className="text-xs text-muted-foreground mt-0.5">Last 14 working days by category</p>
         </div>
-        <div className="h-48 sm:h-56 md:h-64">
+        <div className="h-48 sm:h-56 md:h-64 xl:h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={stacked} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
+            <BarChart data={stacked} margin={{ top: 4, right: 8, left: -4, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={T.grid} vertical={false} />
               <XAxis dataKey="date" {...T.axis} tickLine={false} axisLine={false} dy={8} />
-              <YAxis {...T.axis} allowDecimals={false} width={32} tickLine={false} axisLine={false} />
+              <YAxis {...T.axis} allowDecimals={false} width={40} tickLine={false} axisLine={false} />
               <Tooltip contentStyle={T.container} cursor={{ fill: "hsl(var(--accent))" }} labelStyle={{ ...T.text, fontWeight: 600 }} itemStyle={T.text} />
-              <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }} />
               {categories.map((c, i) => (
                 <Bar
                   key={c.key}
@@ -354,6 +377,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
             </BarChart>
           </ResponsiveContainer>
         </div>
+        <CategoryLegend categories={categories} />
       </DeferRender>
 
     </div>

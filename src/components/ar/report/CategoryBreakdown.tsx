@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { TrendingUp, BarChart2 } from "lucide-react";
+import { withAlpha } from "@/lib/cat-colors";
 
 const ReportBarChart = lazy(() => import("@/components/ar/ReportBarChart"));
 
@@ -19,14 +20,14 @@ interface CategoryBreakdownProps {
 
 export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryBreakdownProps) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 font-[system-ui]">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Category breakdown progress list */}
-      <div className="bg-card/75 backdrop-blur-md border border-border/60 rounded-xl p-5 sm:p-6 space-y-4 hover:shadow-sm transition-[box-shadow] duration-200">
+      <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-4 hover:border-primary/20 transition-[border-color] duration-200">
         <div className="flex items-center gap-2">
           <BarChart2 className="size-4 text-primary shrink-0" />
-          <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/90">Category Breakdown</h2>
+          <h2 className="text-sm font-semibold">Category Breakdown</h2>
         </div>
-        <div className="space-y-3.5 max-h-[220px] overflow-y-auto pr-1">
+        <div className="space-y-3.5 max-h-[220px] xl:max-h-[260px] overflow-y-auto pr-1">
           {breakdown.length === 0 ? (
             <p className="text-xs text-muted-foreground py-8 text-center">No categories recorded in this range.</p>
           ) : (
@@ -49,10 +50,10 @@ export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryB
                   <div className="h-2 bg-muted/30 border border-border/40 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-[width] duration-500 ease-out"
-                      style={{ 
-                        width: `${pct}%`, 
+                      style={{
+                        width: `${pct}%`,
                         backgroundColor: c.color,
-                        boxShadow: `0 0 4px ${c.color}60`
+                        boxShadow: `0 0 4px ${withAlpha(c.color, 0.4)}`,
                       }}
                     />
                   </div>
@@ -64,12 +65,12 @@ export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryB
       </div>
 
       {/* Daily bar chart container */}
-      <div className="bg-card/75 backdrop-blur-md border border-border/60 rounded-xl p-5 sm:p-6 space-y-4 hover:shadow-sm transition-[box-shadow] duration-200">
+      <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-4 hover:border-primary/20 transition-[border-color] duration-200">
         <div className="flex items-center gap-2">
           <TrendingUp className="size-4 text-info shrink-0" />
-          <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/90">Daily Document Output</h2>
+          <h2 className="text-sm font-semibold">Daily Document Output</h2>
         </div>
-        <div className="h-44 sm:h-52 relative">
+        <div className="h-44 sm:h-48 md:h-52 xl:h-60 relative">
           <Suspense fallback={
             <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground animate-pulse">
               Generating active output trend...

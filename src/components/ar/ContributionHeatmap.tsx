@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { isoDate, isWeekend, totalForLog, type DailyLog } from "@/types/log";
 
 interface Props {
@@ -125,19 +125,19 @@ function HeatmapGrid({ weeks, monthTicks, maxTotal }: GridProps) {
                 return (
                   <div
                     key={`empty-${col}-${row}`}
-                    className="w-full aspect-square rounded-[2px] sm:rounded-sm bg-muted/10 border border-white/[0.05]"
+                    className="w-full aspect-square rounded-[2px] sm:rounded-sm bg-muted/10 border border-foreground/[0.05]"
                   />
                 );
               }
 
               const intensity = getIntensity(cell.total, maxTotal);
               const bgClass = cell.isFuture
-                ? "bg-muted/10 border border-white/[0.05]"
+                ? "bg-muted/10 border border-foreground/[0.05]"
                 : cell.isWeekend
                 ? "bg-slate-500/30 border border-slate-400/20"
                 : cell.isOffDay
                 ? "bg-red-500/40 border border-red-400/20"
-                : `${INTENSITY_BG[intensity]} border border-white/[0.07]`;
+                : `${INTENSITY_BG[intensity]} border border-foreground/[0.07]`;
 
               return (
                 <div
@@ -145,7 +145,7 @@ function HeatmapGrid({ weeks, monthTicks, maxTotal }: GridProps) {
                   className={[
                     "w-full aspect-square rounded-[2px] sm:rounded-sm cursor-default",
                     bgClass,
-                    cell.isToday ? "ring-1 ring-white/30 ring-offset-1 ring-offset-card" : "",
+                    cell.isToday ? "ring-1 ring-foreground/40 ring-offset-1 ring-offset-card" : "",
                   ].join(" ")}
                 />
               );
@@ -167,20 +167,25 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
     return [weeks, monthTicks, maxTotal] as const;
   }, [logs, currentYear]);
 
-  // Mobile: last 16 weeks ending today
+  // Compact view (below lg): last 26 weeks ending today
   const [weeksMobile, monthTicksMobile] = useMemo(() => {
     const { weeks, monthTicks } = buildGrid(logs, currentYear);
     const todayIso = isoDate();
     const todayCol = weeks.findIndex((week) => week.some((c) => c && c.iso === todayIso));
     const end = todayCol >= 0 ? todayCol : weeks.length - 1;
-    const start = Math.max(0, end - 15); // 16 weeks
+    const start = Math.max(0, end - 25); // 26 weeks
     return [
       weeks.slice(start, end + 1),
       monthTicks.reduce<{ label: string; col: number }[]>((acc, t) => { if (t.col >= start && t.col <= end) acc.push({ ...t, col: t.col - start }); return acc; }, []),
     ] as const;
   }, [logs, currentYear]);
 
-
+  // Keep the most recent weeks in view when the compact grid overflows
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [weeksMobile]);
 
   return (
     <div className="cv-auto bg-card border border-border rounded-md p-4 sm:p-5 space-y-3 sm:space-y-4">
@@ -210,17 +215,17 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
         </div>
       </div>
 
-      {/* Mobile grid: last 16 weeks, fixed small cells, horizontal scroll */}
-      <div className="block sm:hidden overflow-x-auto no-scrollbar -mx-1">
-        <div style={{ width: `${weeksMobile.length * 18}px` }} className="px-1">
+      {/* Compact grid (phones + tablets): last 26 weeks, fixed cells, horizontal scroll */}
+      <div ref={scrollRef} className="lg:hidden overflow-x-auto no-scrollbar -mx-1">
+        <div className="w-max px-1">
           {/* Month labels */}
-          <div className="flex mb-1" style={{ gap: 2 }}>
+          <div className="flex gap-0.5 mb-1">
             {weeksMobile.map((_, col) => {
               const tick = monthTicksMobile.find((t) => t.col === col);
               return (
-                <div key={`month-m-${col}`} style={{ width: 16, flexShrink: 0 }}>
+                <div key={`month-m-${col}`} className="w-4 sm:w-5 shrink-0">
                   {tick && (
-                    <span className="text-[9px] text-muted-foreground whitespace-nowrap select-none">
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground whitespace-nowrap select-none">
                       {tick.label}
                     </span>
                   )}
@@ -230,11 +235,11 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
           </div>
           {/* Rows = days of week (0=Sun … 6=Sat) */}
           {[0, 1, 2, 3, 4, 5, 6].map((dow) => (
-            <div key={`dow-${dow}`} className="flex" style={{ gap: 2, marginBottom: 2 }}>
+            <div key={`dow-${dow}`} className="flex gap-0.5 mb-0.5">
               {weeksMobile.map((week, col) => {
                 const cell = week[dow];
                 if (!cell) {
-                  return <div key={`empty-m-${col}-${dow}`} style={{ width: 16, height: 16, flexShrink: 0 }} className="rounded-[3px] bg-muted/10" />;
+                  return <div key={`empty-m-${col}-${dow}`} className="size-4 sm:size-5 shrink-0 rounded-[3px] bg-muted/10" />;
                 }
                 const intensity = getIntensity(cell.total, maxTotal);
                 const bgClass = cell.isFuture
@@ -247,11 +252,10 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
                 return (
                   <div
                     key={cell.iso}
-                    style={{ width: 16, height: 16, flexShrink: 0 }}
                     className={[
-                      "rounded-[3px]",
+                      "size-4 sm:size-5 shrink-0 rounded-[3px]",
                       bgClass,
-                      cell.isToday ? "ring-1 ring-white/40 ring-offset-1 ring-offset-card" : "",
+                      cell.isToday ? "ring-1 ring-foreground/50 ring-offset-1 ring-offset-card" : "",
                     ].join(" ")}
                   />
                 );
@@ -261,8 +265,8 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
         </div>
       </div>
 
-      {/* Desktop grid: full year */}
-      <div className="hidden sm:block">
+      {/* Desktop grid: full year — only at lg+ where 53 columns have room */}
+      <div className="hidden lg:block">
         <HeatmapGrid weeks={weeks365} monthTicks={monthTicks365} maxTotal={maxTotal} />
       </div>
     </div>

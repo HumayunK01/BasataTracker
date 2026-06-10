@@ -1,7 +1,6 @@
-import { useMemo, useReducer, useState } from "react";
+import { useLayoutEffect, useMemo, useReducer, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -77,6 +76,7 @@ const PRESETS = [
   { id: "last_month", label: "Last Month" },
   { id: "last_30", label: "Last 30 Days" },
   { id: "last_90", label: "Last 90 Days" },
+  { id: "all_time", label: "All Time" },
 ];
 
 // ── Reducer ────────────────────────────────────────────────────────────────
@@ -110,14 +110,43 @@ const ReportPage = () => {
   const [now] = useState(() => new Date());
 
   const [filter, filterDispatch] = useReducer(reportReducer, undefined, () => {
-    const r = getPresetRange("this_month");
-    return { startDate: r.start, endDate: r.end, activePreset: "this_month", tablePage: 1 };
+    const r = getPresetRange("this_week");
+    return { startDate: r.start, endDate: r.end, activePreset: "this_week", tablePage: 1 };
   });
   const { startDate, endDate, activePreset, tablePage } = filter;
 
   const applyPreset = (id: string) => {
-    const range = getPresetRange(id);
+    const range = id === "all_time"
+      ? {
+          // Span from the earliest log to today
+          start: logs.length
+            ? logs.reduce((min, l) => (l.log_date < min ? l.log_date : min), logs[0].log_date)
+            : isoDate(),
+          end: isoDate(),
+        }
+      : getPresetRange(id);
     filterDispatch({ type: "preset", id, start: range.start, end: range.end });
+  };
+
+  // Sliding indicator for the preset segmented control
+  const presetRefs = useRef(new Map<string, HTMLElement>());
+  const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
+  const activeSegment = activePreset || "custom";
+
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = presetRefs.current.get(activeSegment);
+      if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
+    };
+    measure();
+    // Re-measure when the responsive root font-size changes segment widths
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [activeSegment]);
+
+  const registerSegment = (id: string) => (el: HTMLElement | null) => {
+    if (el) presetRefs.current.set(id, el);
+    else presetRefs.current.delete(id);
   };
 
   const filtered = useMemo(() => {
@@ -184,9 +213,11 @@ const ReportPage = () => {
   const handleExportCSV = () => downloadCSV(exportedLogs, categories, `${exportFilename}.csv`);
   const handleExportJSON = () => downloadJSON(exportedLogs, categories, `${exportFilename}.json`);
 
-  const rangeLabel = startDate && endDate
-    ? `${formatTableDate(startDate)} – ${formatTableDate(endDate)}`
-    : "Select a date range";
+  const rangeDays = useMemo(() => {
+    if (!startDate || !endDate) return 0;
+    const ms = new Date(`${endDate}T12:00:00`).getTime() - new Date(`${startDate}T12:00:00`).getTime();
+    return ms >= 0 ? Math.round(ms / 86_400_000) + 1 : 0;
+  }, [startDate, endDate]);
 
   return (
     <>
@@ -218,67 +249,118 @@ const ReportPage = () => {
           </DropdownMenu>
         }
       />
-      <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6 font-[system-ui]">
+      <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
+        <div className="w-full space-y-4">
         {/* Date range controls */}
-        <div className="bg-card border border-border rounded-md p-4 space-y-4">
-          <div className="flex gap-2 overflow-x-auto pb-0.5 no-scrollbar snap-x snap-mandatory">
-            {PRESETS.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => applyPreset(p.id)}
-                className={[
-                  "snap-start shrink-0 rounded-full px-4 py-1.5 text-xs font-medium transition-colors whitespace-nowrap",
-                  activePreset === p.id
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground",
-                ].join(" ")}
-              >
-                {p.label}
-              </button>
-            ))}
+        <div className="bg-card border border-border rounded-md p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+          <div className="overflow-x-auto no-scrollbar -mx-1 px-1 max-w-full">
+            <div className="relative inline-flex items-center gap-1 rounded-lg border border-border bg-muted/30 p-1 snap-x snap-mandatory">
+              {/* Sliding active-segment highlight */}
+              {indicator && (
+                <span
+                  aria-hidden
+                  className="absolute top-1 bottom-1 rounded-md bg-primary shadow-sm transition-[left,width] duration-300 ease-out motion-reduce:transition-none"
+                  style={{ left: indicator.left, width: indicator.width }}
+                />
+              )}
+              {PRESETS.map((p) => {
+                const active = activePreset === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    ref={registerSegment(p.id)}
+                    onClick={() => applyPreset(p.id)}
+                    aria-pressed={active}
+                    className={[
+                      "relative z-10 snap-start shrink-0 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap",
+                      "transition-[color,background-color,transform] duration-300 active:scale-[0.97]",
+                      active
+                        ? "text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+                    ].join(" ")}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+              {activePreset === "" && (
+                <span
+                  ref={registerSegment("custom")}
+                  className="relative z-10 snap-start shrink-0 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap text-primary-foreground select-none animate-fade-in"
+                >
+                  Custom
+                </span>
+              )}
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3 items-end">
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Start date</Label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => filterDispatch({ type: "set_start", v: e.target.value })}
-                className="w-full sm:w-44 tabular-nums"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">End date</Label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => filterDispatch({ type: "set_end", v: e.target.value })}
-                className="w-full sm:w-44 tabular-nums"
-              />
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:pb-2">
-              <CalendarRange className="size-3.5 shrink-0" />
-              <span className="truncate">{rangeLabel}</span>
-            </div>
+          <div className="grid grid-cols-1 xs:grid-cols-2 lg:flex gap-2 sm:gap-3 max-w-full grow lg:grow-0">
+              <div
+                className={[
+                  "flex items-center h-10 rounded-md border bg-background/50 overflow-hidden cursor-pointer transition-colors",
+                  rangeDays === 0
+                    ? "border-destructive/70 focus-within:border-destructive focus-within:ring-1 focus-within:ring-destructive"
+                    : "border-input hover:border-primary/40 focus-within:border-primary/60 focus-within:ring-1 focus-within:ring-ring",
+                ].join(" ")}
+                title={rangeDays === 0 ? "Invalid range — end date is before start date" : undefined}
+                onClick={(e) => {
+                  const input = e.currentTarget.querySelector("input");
+                  try { input?.showPicker(); } catch { input?.focus(); }
+                }}
+              >
+                <span className="h-full flex items-center px-3 text-xs font-medium text-muted-foreground bg-muted/40 border-r border-input select-none shrink-0">
+                  From
+                </span>
+                <Input
+                  type="date"
+                  aria-label="Start date"
+                  value={startDate}
+                  onChange={(e) => filterDispatch({ type: "set_start", v: e.target.value })}
+                  className="h-full w-full lg:w-40 tabular-nums border-0 rounded-none bg-transparent shadow-none cursor-pointer focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+              </div>
+              <div
+                className={[
+                  "flex items-center h-10 rounded-md border bg-background/50 overflow-hidden cursor-pointer transition-colors",
+                  rangeDays === 0
+                    ? "border-destructive/70 focus-within:border-destructive focus-within:ring-1 focus-within:ring-destructive"
+                    : "border-input hover:border-primary/40 focus-within:border-primary/60 focus-within:ring-1 focus-within:ring-ring",
+                ].join(" ")}
+                title={rangeDays === 0 ? "Invalid range — end date is before start date" : undefined}
+                onClick={(e) => {
+                  const input = e.currentTarget.querySelector("input");
+                  try { input?.showPicker(); } catch { input?.focus(); }
+                }}
+              >
+                <span className="h-full flex items-center px-3 text-xs font-medium text-muted-foreground bg-muted/40 border-r border-input select-none shrink-0">
+                  To
+                </span>
+                <Input
+                  type="date"
+                  aria-label="End date"
+                  value={endDate}
+                  onChange={(e) => filterDispatch({ type: "set_end", v: e.target.value })}
+                  className="h-full w-full lg:w-40 tabular-nums border-0 rounded-none bg-transparent shadow-none cursor-pointer focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+              </div>
           </div>
         </div>
 
         {isLoading ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-card border border-border rounded-md p-4 space-y-2">
+                <div key={i} className="bg-card border border-border rounded-md p-3 sm:p-4 space-y-2">
                   <Skeleton width={80} height={12} borderRadius={4} />
                   <Skeleton width={64} height={32} borderRadius={4} />
                   <Skeleton width={96} height={12} borderRadius={4} />
                 </div>
               ))}
             </div>
-            <div className="bg-card border border-border rounded-md p-4 space-y-3">
+            <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-3">
               <Skeleton width={144} height={16} borderRadius={4} />
               <Skeleton height={176} borderRadius={6} />
             </div>
-          </div>
+          </>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
             <CalendarRange className="size-10 opacity-20" />
@@ -310,6 +392,7 @@ const ReportPage = () => {
             />
           </>
         )}
+        </div>
       </main>
     </>
   );
