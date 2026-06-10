@@ -22,7 +22,7 @@ export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryB
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Category breakdown progress list */}
-      <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-4 hover:border-primary/20 transition-[border-color] duration-200">
+      <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-4">
         <div className="flex items-center gap-2">
           <BarChart2 className="size-4 text-primary shrink-0" />
           <h2 className="text-sm font-semibold">Category Breakdown</h2>
@@ -65,7 +65,7 @@ export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryB
       </div>
 
       {/* Daily bar chart container */}
-      <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-4 hover:border-primary/20 transition-[border-color] duration-200">
+      <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-4">
         <div className="flex items-center gap-2">
           <TrendingUp className="size-4 text-info shrink-0" />
           <h2 className="text-sm font-semibold">Daily Document Output</h2>

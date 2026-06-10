@@ -85,14 +85,14 @@ export function CategorySection({
 }: CategorySectionProps) {
   return (
     <>
-      <div className="bg-card/70 backdrop-blur-md border border-border/60 rounded-xl overflow-hidden hover:border-primary/10 hover:shadow-sm hover:shadow-primary/[0.02] transition-[border-color,box-shadow] duration-200 font-[system-ui]">
+      <div className="bg-card border border-border rounded-md overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border/40 bg-muted/[0.04]">
           <div className="flex items-center gap-3">
             <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
               <Tag className="size-4 text-primary" />
             </div>
             <div>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/95">Categories</h2>
+              <h2 className="text-sm font-semibold">Categories</h2>
               <p className="text-[10px] text-muted-foreground mt-0.5 hidden xs:block">
                 Drag to rearrange keys · {categories.length} active categories
               </p>
@@ -113,82 +113,93 @@ export function CategorySection({
         </div>
 
         {isLoading ? (
-          <div className="p-5 space-y-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 p-2 bg-muted/[0.02] rounded-lg">
-                <Skeleton width={16} height={16} borderRadius={4} />
-                <Skeleton width="100%" height={16} borderRadius={4} />
-                <Skeleton width={56} height={20} borderRadius={4} />
+          <div className="p-4 sm:p-5 grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(220px,1fr))]">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 rounded-md border border-border/60 p-3">
+                <Skeleton circle width={10} height={10} />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton width="80%" height={14} borderRadius={4} />
+                  <Skeleton width={48} height={10} borderRadius={4} />
+                </div>
               </div>
             ))}
           </div>
         ) : categories.length === 0 ? (
           <div className="py-16 flex flex-col items-center gap-3 text-muted-foreground">
-            <Tag className="size-10 opacity-20 animate-pulse" />
+            <Tag className="size-10 opacity-20" />
             <p className="text-sm">No categories yet. Click Add Category or Seed Defaults.</p>
           </div>
         ) : (
-          <div className="divide-y divide-border/40">
-            {categories.map((c) => (
-              <div
-                key={c.key}
-                draggable
-                onDragStart={() => onDragStart(c.key)}
-                onDragOver={(e) => onDragOver(e, c.key)}
-                onDrop={() => onDrop(c.key)}
-                onDragEnd={() => catDispatch({ type: "drag_end" })}
-                className={[
-                  "group flex items-center gap-4 px-5 py-4 transition-all duration-200 select-none touch-manipulation",
-                  cat.dragOver === c.key && cat.dragging !== c.key 
-                    ? "bg-primary/10 border-t border-b border-primary/20 scale-[0.99] shadow-inner" 
-                    : "hover:bg-muted/[0.07]",
-                  cat.dragging === c.key ? "opacity-35 scale-[0.98] border-dashed border-border" : "",
-                ].join(" ")}
-              >
-                <div className="cursor-grab active:cursor-grabbing p-1 -m-1 shrink-0">
-                  <GripVertical className="size-4 text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors" />
+          <div className="p-4 sm:p-5 grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(220px,1fr))]">
+            {categories.map((c) => {
+              const clr = colorForKey(c.key);
+              return (
+                <div
+                  key={c.key}
+                  draggable
+                  onDragStart={(e) => {
+                    // Firefox refuses to start a drag without data; Chrome
+                    // cancels it if the node re-renders during dragstart, so
+                    // defer the state update until the drag image is captured.
+                    e.dataTransfer.setData("text/plain", c.key);
+                    e.dataTransfer.effectAllowed = "move";
+                    setTimeout(() => onDragStart(c.key), 0);
+                  }}
+                  onDragOver={(e) => onDragOver(e, c.key)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    onDrop(c.key);
+                  }}
+                  onDragEnd={() => catDispatch({ type: "drag_end" })}
+                  className={[
+                    "group flex items-center gap-2.5 rounded-md border p-3 select-none touch-manipulation",
+                    "transition-[border-color,background-color,opacity,transform] duration-150",
+                    cat.dragOver === c.key && cat.dragging !== c.key
+                      ? "border-primary/50 bg-primary/10 scale-[0.99]"
+                      : "border-border bg-card hover:bg-muted/40",
+                    cat.dragging === c.key ? "opacity-35 scale-[0.98] border-dashed" : "",
+                  ].join(" ")}
+                >
+                  <div className="cursor-grab active:cursor-grabbing shrink-0 -ml-1">
+                    <GripVertical className="size-4 text-muted-foreground/40" />
+                  </div>
+                  <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: clr }} aria-hidden />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate" title={c.label}>{c.label}</p>
+                    <p className="text-[10px] font-mono text-muted-foreground truncate">{c.short}</p>
+                  </div>
+                  <div className="flex items-center shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-7 text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                      title={`Edit ${c.label}`}
+                      onClick={() => onEdit(c)}
+                    >
+                      <Pencil className="size-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      title={`Delete ${c.label}`}
+                      onClick={() => catDispatch({ type: "set_delete_target", cat: c })}
+                    >
+                      <Trash2 className="size-3.5" />
+                    </Button>
+                  </div>
                 </div>
-                <span className="size-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: colorForKey(c.key) }} />
-                <div className="flex-1 min-w-0 flex items-center gap-3">
-                  <span className="text-sm font-bold text-foreground/90 truncate">{c.label}</span>
-                  <span
-                    className="text-[10px] font-mono font-bold px-2 py-0.5 rounded shrink-0 shadow-sm"
-                    style={{ backgroundColor: withAlpha(colorForKey(c.key), 0.1), color: colorForKey(c.key) }}
-                  >
-                    {c.short}
-                  </span>
-                </div>
-                <div className="flex items-center gap-0.5 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 text-muted-foreground hover:text-foreground hover:bg-muted/80"
-                    title={`Edit ${c.label}`}
-                    onClick={() => onEdit(c)}
-                  >
-                    <Pencil className="size-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                    title={`Delete ${c.label}`}
-                    onClick={() => catDispatch({ type: "set_delete_target", cat: c })}
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
       {/* Add / Edit dialog */}
       <Dialog open={cat.dialogOpen} onOpenChange={(o) => !o && catDispatch({ type: "close_dialog" })}>
-        <DialogContent className="sm:max-w-sm font-[system-ui] bg-background/95 backdrop-blur-lg">
+        <DialogContent className="sm:max-w-sm bg-background/95 backdrop-blur-lg">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold text-foreground flex items-center gap-2">
+            <DialogTitle className="text-base font-semibold text-foreground flex items-center gap-2">
               <Tag className="size-4 text-primary" />
               {cat.editingKey ? "Edit Category" : "Add New Category"}
             </DialogTitle>
@@ -196,9 +207,9 @@ export function CategorySection({
           <div className="space-y-4 py-2">
             {/* Custom Info Banner */}
             {!cat.editingKey && (
-              <div className="flex gap-2 bg-info/10 border border-info/20 rounded-xl p-2.5 text-xs leading-normal">
+              <div className="flex gap-2 bg-info/10 border border-info/20 rounded-md p-2.5 text-xs leading-normal">
                 <HelpCircle className="size-4 text-info shrink-0 mt-0.5" />
-                <span className="text-info-foreground/90">
+                <span className="text-muted-foreground">
                   Labels drive dynamic key binding (e.g. <strong>&ldquo;Worked on NG&rdquo;</strong> will generate the database target key <strong>&ldquo;worked_on_ng&rdquo;</strong>).
                 </span>
               </div>
@@ -210,7 +221,7 @@ export function CategorySection({
                 id="cat-label"
                 placeholder="e.g. Worked on NG"
                 value={cat.form.label}
-                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-colors font-medium"
+                className="font-medium"
                 onChange={(e) => catDispatch({ type: "set_form", patch: { label: e.target.value } })}
                 onKeyDown={(e) => e.key === "Enter" && onSave()}
               />
@@ -222,7 +233,7 @@ export function CategorySection({
                 placeholder="e.g. NG"
                 maxLength={10}
                 value={cat.form.short}
-                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-colors font-semibold"
+                className="font-semibold"
                 onChange={(e) => catDispatch({ type: "set_form", patch: { short: e.target.value } })}
                 onKeyDown={(e) => e.key === "Enter" && onSave()}
               />
@@ -253,10 +264,10 @@ export function CategorySection({
         open={!!cat.deleteTarget}
         onOpenChange={(o) => !o && catDispatch({ type: "set_delete_target", cat: null })}
       >
-        <AlertDialogContent className="font-[system-ui] bg-background/95 backdrop-blur-lg border-destructive/25">
+        <AlertDialogContent className="bg-background/95 backdrop-blur-lg border-destructive/25">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-destructive flex items-center gap-2">
-              <Info className="size-5 shrink-0 animate-pulse" />
+              <Info className="size-5 shrink-0" />
               Remove Document Category?
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-3 mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -264,9 +275,9 @@ export function CategorySection({
                 Removing <strong>&ldquo;{cat.deleteTarget?.label}&rdquo;</strong> (`{cat.deleteTarget?.short}`) will delete it from counters and form selections.
               </span>
               
-              <span className="flex gap-2.5 bg-warning/10 border border-warning/20 rounded-xl p-3 text-xs leading-normal">
+              <span className="flex gap-2.5 bg-warning/10 border border-warning/20 rounded-md p-3 text-xs leading-normal">
                 <Info className="size-4 text-warning shrink-0 mt-0.5" />
-                <span className="text-warning-foreground/90">
+                <span className="text-muted-foreground">
                   Existing logging history in your daily tables is not erased, but this category will no longer appear on the Counter active list.
                 </span>
               </span>

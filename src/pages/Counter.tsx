@@ -351,7 +351,7 @@ export default function CounterPage() {
       <main className="flex-1 overflow-y-auto">
         <div className="w-full px-3 sm:px-6 py-4 sm:py-6 flex flex-col gap-4">
           {/* Hero total today */}
-          <div className="relative overflow-hidden bg-card border border-border rounded-md p-4 sm:p-5 hover:border-primary/20 transition-[border-color] duration-200">
+          <div className="relative overflow-hidden bg-card border border-border rounded-md p-4 sm:p-5">
               <div className="flex items-end justify-between gap-4 flex-wrap">
                 <div>
                   <div className="flex items-center gap-2">
