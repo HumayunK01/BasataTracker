@@ -194,12 +194,19 @@
     font-family: system-ui, sans-serif;
   }
 
-  /* Smooth theme transition — only active during toggle, not on every interaction */
-  html.theme-transitioning,
-  html.theme-transitioning *,
-  html.theme-transitioning *::before,
-  html.theme-transitioning *::after {
-    transition: background-color 0.15s ease, color 0.15s ease !important;
+  /* Theme toggle crossfade — View Transitions API snapshots the page and
+     fades the two frames on the GPU; far cheaper than per-element transitions */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.18s;
+    animation-timing-function: ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation: none;
+    }
   }
 
   /* Subtle scrollbars — desktop only */
