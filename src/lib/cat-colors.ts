@@ -1,21 +1,11 @@
-export const CAT_COLORS = [
-  "hsl(155 55% 62%)",   // green
-  "hsl(214 70% 68%)",   // blue
-  "hsl(38 88% 60%)",    // amber
-  "hsl(340 75% 65%)",   // pink
-  "hsl(280 70% 68%)",   // purple
-  "hsl(20 85% 60%)",    // orange
-  "hsl(190 70% 58%)",   // teal
-  "hsl(60 70% 58%)",    // yellow
-  "hsl(0 72% 65%)",     // red
-  "hsl(168 60% 55%)",   // mint
-  "hsl(240 65% 70%)",   // indigo
-  "hsl(300 55% 65%)",   // magenta
-  "hsl(25 90% 55%)",    // deep orange
-  "hsl(174 55% 55%)",   // cyan
-  "hsl(80 60% 55%)",    // lime
-  "hsl(320 60% 62%)",   // rose
-];
+// Category colors live as `--cat-N` CSS variables in index.css so each
+// theme gets its own palette (pastels on dark, deeper tones on light).
+const CAT_COUNT = 16;
+
+export const CAT_COLORS = Array.from(
+  { length: CAT_COUNT },
+  (_, i) => `hsl(var(--cat-${i}))`,
+);
 
 // Returns a stable color for a given category key so the same
 // category always gets the same color regardless of list order.
@@ -29,4 +19,14 @@ function hashKey(key: string): number {
 
 export function colorForKey(key: string): string {
   return CAT_COLORS[hashKey(key) % CAT_COLORS.length];
+}
+
+// Translucent variant of a palette color, e.g. withAlpha(clr, 0.15).
+// Works on the `hsl(var(--cat-N))` strings above; hex/other colors
+// are returned unchanged.
+export function withAlpha(color: string, alpha: number): string {
+  if (color.startsWith("hsl(") && color.endsWith(")")) {
+    return `${color.slice(0, -1)} / ${alpha})`;
+  }
+  return color;
 }

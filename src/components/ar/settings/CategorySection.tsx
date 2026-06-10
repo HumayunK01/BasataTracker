@@ -1,5 +1,5 @@
 import type { Dispatch, DragEvent } from "react";
-import { colorForKey } from "@/lib/cat-colors";
+import { colorForKey, withAlpha } from "@/lib/cat-colors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -153,7 +153,7 @@ export function CategorySection({
                   <span className="text-sm font-bold text-foreground/90 truncate">{c.label}</span>
                   <span
                     className="text-[10px] font-mono font-bold px-2 py-0.5 rounded shrink-0 shadow-sm"
-                    style={{ backgroundColor: `${colorForKey(c.key)}18`, color: colorForKey(c.key) }}
+                    style={{ backgroundColor: withAlpha(colorForKey(c.key), 0.1), color: colorForKey(c.key) }}
                   >
                     {c.short}
                   </span>

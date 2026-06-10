@@ -20,7 +20,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <ThemeProvider>
-  <SkeletonTheme baseColor="#2d3748" highlightColor="#3d4f66">
+  <SkeletonTheme baseColor="hsl(var(--skeleton-base))" highlightColor="hsl(var(--skeleton-highlight))">
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
