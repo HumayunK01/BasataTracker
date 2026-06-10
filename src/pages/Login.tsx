@@ -95,15 +95,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex h-screen w-screen items-center justify-center bg-background relative">
+    <div className="flex min-h-screen w-full items-center justify-center bg-background px-4 py-8">
 
       {/* Card */}
-      <div className={`w-full bg-card rounded-md p-5 space-y-4 relative transition-[max-width] duration-200 ${mode === "signup" ? "max-w-xs" : "max-w-[16rem]"}`}>
+      <div className={`w-full bg-card border border-border rounded-md shadow-sm p-5 sm:p-6 space-y-4 relative transition-[max-width] duration-300 ease-out ${mode === "signup" ? "max-w-md" : "max-w-sm"}`}>
 
         {/* Theme toggle */}
         <button
           onClick={toggle}
-          className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+          title={theme === "dark" ? "Light mode" : "Dark mode"}
+          className="absolute top-3 right-3 size-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
         >
           {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
         </button>
@@ -114,9 +115,16 @@ export default function LoginPage() {
         </div>
 
         {/* Title */}
-        <h1 className="text-center text-2xl font-semibold text-foreground">
-          {mode === "login" ? "Login" : "Sign Up"}
-        </h1>
+        <div className="space-y-1 text-center">
+          <h1 className="text-2xl font-semibold text-foreground">
+            {mode === "login" ? "Welcome back" : "Create your account"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {mode === "login"
+              ? "Sign in to continue to Basata Tracker"
+              : "Start tracking your daily document work"}
+          </p>
+        </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -131,7 +139,7 @@ export default function LoginPage() {
                 onChange={(e) => dispatch({ type: "set_first", v: e.target.value })}
                 required
                 autoComplete="given-name"
-                className="h-11 bg-muted border-0 placeholder:text-muted-foreground"
+                className="h-11"
               />
               <Input
                 type="text"
@@ -140,7 +148,7 @@ export default function LoginPage() {
                 onChange={(e) => dispatch({ type: "set_last", v: e.target.value })}
                 required
                 autoComplete="family-name"
-                className="h-11 bg-muted border-0 placeholder:text-muted-foreground"
+                className="h-11"
               />
             </div>
           )}
@@ -152,7 +160,7 @@ export default function LoginPage() {
             onChange={(e) => dispatch({ type: "set_email", v: e.target.value })}
             required
             autoComplete="email"
-            className="h-11 bg-muted border-0 placeholder:text-muted-foreground"
+            className="h-11"
           />
 
           <div className="relative">
@@ -164,15 +172,21 @@ export default function LoginPage() {
               required
               minLength={6}
               autoComplete={mode === "login" ? "current-password" : "new-password"}
-              className="h-11 bg-muted border-0 placeholder:text-muted-foreground pr-10"
+              className="h-11 pr-10"
             />
             <button
               type="button"
               onClick={() => dispatch({ type: "toggle_pw" })}
               tabIndex={-1}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              title={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-[color,transform] duration-150 active:scale-90"
             >
-              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              <span
+                key={showPassword ? "visible" : "hidden"}
+                className="block animate-in fade-in zoom-in-50 spin-in-45 duration-200 motion-reduce:animate-none"
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </span>
             </button>
           </div>
 

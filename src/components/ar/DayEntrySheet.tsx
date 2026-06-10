@@ -83,7 +83,7 @@ function Stepper({
             if (e.key === "ArrowUp") { e.preventDefault(); inc(); }
             if (e.key === "ArrowDown") { e.preventDefault(); dec(); }
           }}
-          className="w-12 h-8 text-center text-sm font-bold tabular-nums bg-muted/50 border border-border rounded-md outline-none focus:ring-1 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          className="w-12 h-8 text-center text-sm font-bold tabular-nums bg-muted/50 border border-border rounded-md outline-none transition-colors focus:border-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           style={{ color: value > 0 ? color : "hsl(var(--muted-foreground))" }}
         />
         <button
