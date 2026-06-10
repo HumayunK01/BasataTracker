@@ -22,15 +22,6 @@ const CategorySchema = z.object({
 
 export type Category = z.infer<typeof CategorySchema>;
 
-const DEFAULT_CATEGORIES: Category[] = [
-  { key: "worked_on_ng", label: "Worked on NG", short: "NG", position: 0 },
-  { key: "moved_to_indexing", label: "Moved to Indexing", short: "IDX", position: 1 },
-  { key: "ekg", label: "EKG", short: "EKG", position: 2 },
-  { key: "cath_lab", label: "Cath Lab", short: "CATH", position: 3 },
-  { key: "roi", label: "ROI", short: "ROI", position: 4 },
-  { key: "fax_back", label: "Fax Back", short: "FAX", position: 5 },
-];
-
 async function getUserId(): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
@@ -146,22 +137,5 @@ export function useReorderCategories() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["categories"] }),
     onError: (e: unknown) => toast.error(formatZodError(e)),
-  });
-}
-
-export function useSeedDefaultCategories() {
-  const qc = useQueryClient();
-  const { checkLimit } = useMutationRateLimit({ maxRequests: 3, windowMs: 60_000 });
-  return useMutation({
-    mutationFn: async () => {
-      if (!checkLimit()) throw new Error("Too many requests. Please wait a moment.");
-      const user_id = await getUserId();
-      const rows = DEFAULT_CATEGORIES.map((c) => ({ ...c, user_id }));
-      const { error } = await supabase
-        .from("categories")
-        .upsert(rows, { onConflict: "user_id,key" });
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["categories"] }),
   });
 }

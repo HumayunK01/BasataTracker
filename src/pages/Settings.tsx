@@ -9,7 +9,6 @@ import {
   useUpdateCategory,
   useDeleteCategory,
   useReorderCategories,
-  useSeedDefaultCategories,
 } from "@/hooks/useCategories";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useAuth } from "@/hooks/useAuth";
@@ -118,7 +117,6 @@ export default function SettingsPage() {
   const updateCategory = useUpdateCategory();
   const deleteCategory = useDeleteCategory();
   const reorderCategories = useReorderCategories();
-  const seedDefaults = useSeedDefaultCategories();
 
   const [cat, catDispatch] = useReducer(catReducer, catInit);
   const [pwState, pwDispatch] = useReducer(pwReducer, pwInit);
@@ -251,8 +249,6 @@ export default function SettingsPage() {
             onEdit={(c) => catDispatch({ type: "open_edit", cat: c })}
             onSave={handleSave}
             onDelete={handleDelete}
-            onSeedDefaults={() => seedDefaults.mutate()}
-            isSeedingPending={seedDefaults.isPending}
             onDragStart={(key) => catDispatch({ type: "drag_start", key })}
             onDragOver={(e, key) => {
               e.preventDefault();
