@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { flushSync } from "react-dom";
 import { ThemeContext, type Theme } from "@/hooks/useTheme";
 
 const STORAGE_KEY = "basata-theme";
@@ -32,11 +33,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [theme]);
 
   const toggle = useCallback(() => {
-    document.documentElement.classList.add("theme-transitioning");
-    setTheme((t) => (t === "dark" ? "light" : "dark"));
-    setTimeout(() => {
-      document.documentElement.classList.remove("theme-transitioning");
-    }, 200);
+    const next: Theme = document.documentElement.classList.contains("light")
+      ? "dark"
+      : "light";
+
+    // The class flip must happen synchronously inside the view-transition
+    // callback so the browser snapshots the correct before/after frames.
+    const flip = () => {
+      applyTheme(next);
+      flushSync(() => setTheme(next));
+    };
+
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => void) => void;
+    };
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (doc.startViewTransition && !reduceMotion) {
+      doc.startViewTransition(flip);
+    } else {
+      flip();
+    }
   }, []);
 
   return (
