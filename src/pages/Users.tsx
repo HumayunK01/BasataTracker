@@ -80,7 +80,7 @@ export default function UsersPage() {
           )}
 
           {/* Table */}
-          <div className="bg-card border border-border rounded-md overflow-hidden hover:border-primary/20 transition-[border-color] duration-200">
+          <div className="bg-card border border-border rounded-md overflow-hidden">
             <div className="px-4 sm:px-5 py-4 border-b border-border/40 bg-muted/[0.04]">
               <h2 className="text-sm font-semibold">All Users</h2>
             </div>

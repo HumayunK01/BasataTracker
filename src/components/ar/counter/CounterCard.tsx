@@ -59,7 +59,7 @@ export function CounterCard({
 
   return (
     <div
-      className="group rounded-md border flex flex-col relative overflow-hidden transition-shadow hover:shadow-md hover:shadow-primary/[0.02] focus-within:ring-2 focus-within:ring-primary/40"
+      className="group rounded-md border flex flex-col relative overflow-hidden focus-within:ring-2 focus-within:ring-primary/40"
       style={{ borderColor: withAlpha(clr, 0.25), backgroundColor: withAlpha(clr, 0.07) }}
     >
       {/* Progress fill (share of the busiest category) */}

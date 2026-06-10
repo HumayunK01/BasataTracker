@@ -2,7 +2,6 @@ import type { Dispatch } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { BadgeCheck, Loader2, KeyRound, Info, ShieldAlert } from "lucide-react";
 
 export interface ProfileState {
@@ -54,20 +53,20 @@ export function ProfilePasswordCard({
   onChangePassword,
 }: ProfilePasswordCardProps) {
   return (
-    <div className="col-span-2 sm:col-span-1 bg-card/70 backdrop-blur-md border border-border/60 rounded-xl p-5 sm:p-6 space-y-4 hover:shadow-md hover:shadow-primary/5 hover:border-primary/30 transition-[border-color,box-shadow] duration-200 group">
-      {/* Profile section */}
-      <div className="space-y-3 font-[system-ui]">
+    <>
+    {/* Profile card */}
+    <div className="bg-card border border-border rounded-md p-4 sm:p-5 flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors duration-200">
+          <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <BadgeCheck className="size-4 text-primary" />
           </div>
-          <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/95">Profile</h2>
+          <h2 className="text-sm font-semibold">Profile</h2>
         </div>
-        
+
         {!profileState.open ? (
-          <div className="space-y-3">
+          <div className="flex-1 flex flex-col gap-3">
             <div className="space-y-1">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Associate Name</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Associate Name</p>
               <p className="text-sm font-semibold text-foreground/90">
                 {profile?.first_name || profile?.last_name
                   ? `${profile.first_name} ${profile.last_name}`.trim()
@@ -77,7 +76,7 @@ export function ProfilePasswordCard({
             <Button
               size="sm"
               variant="outline"
-              className="w-full border-border/60 hover:bg-muted/80 hover:border-foreground/20 transition-colors duration-200"
+              className="w-full mt-auto border-border/60 hover:bg-muted/80 hover:border-foreground/20 transition-colors duration-200"
               onClick={() =>
                 profileDispatch({
                   type: "open",
@@ -96,7 +95,7 @@ export function ProfilePasswordCard({
               <Input
                 placeholder="First name"
                 value={profileState.first_name}
-                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-colors"
+               
                 onChange={(e) => profileDispatch({ type: "set", patch: { first_name: e.target.value } })}
               />
             </div>
@@ -105,7 +104,7 @@ export function ProfilePasswordCard({
               <Input
                 placeholder="Last name"
                 value={profileState.last_name}
-                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-colors"
+               
                 onChange={(e) => profileDispatch({ type: "set", patch: { last_name: e.target.value } })}
                 onKeyDown={(e) => e.key === "Enter" && onUpdateProfile()}
               />
@@ -121,28 +120,26 @@ export function ProfilePasswordCard({
             </div>
           </div>
         )}
-      </div>
+    </div>
 
-      <Separator className="bg-border/40" />
-
-      {/* Password section */}
-      <div className="space-y-3 font-[system-ui]">
+    {/* Password card */}
+    <div className="bg-card border border-border rounded-md p-4 sm:p-5 flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <div className="size-8 rounded-lg bg-warning/10 flex items-center justify-center shrink-0 group-hover:bg-warning/20 transition-colors duration-200">
+          <div className="size-8 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
             <KeyRound className="size-4 text-warning" />
           </div>
-          <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/95">Password</h2>
+          <h2 className="text-sm font-semibold">Password</h2>
         </div>
-        
+
         {!pwState.open ? (
-          <div className="space-y-3">
+          <div className="flex-1 flex flex-col gap-3">
             <p className="text-xs text-muted-foreground leading-relaxed">
               Change your login password. You&#39;ll stay signed in after updating.
             </p>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="w-full border-border/60 hover:bg-muted/80 hover:border-foreground/20 transition-colors duration-200" 
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full mt-auto border-border/60 hover:bg-muted/80 hover:border-foreground/20 transition-colors duration-200"
               onClick={() => pwDispatch({ type: "open" })}
             >
               Change password
@@ -151,9 +148,9 @@ export function ProfilePasswordCard({
         ) : (
           <div className="space-y-3 animate-fade-in">
             {/* Custom Alert Box */}
-            <div className="flex items-start gap-2 bg-warning/10 border border-warning/20 rounded-lg p-2.5">
+            <div className="flex items-start gap-2 bg-warning/10 border border-warning/20 rounded-md p-2.5">
               <Info className="size-4 text-warning shrink-0 mt-0.5" />
-              <p className="text-[10px] text-warning-foreground/90 leading-normal">
+              <p className="text-[10px] text-muted-foreground leading-normal">
                 Must be at least 6 characters. Make it strong with numbers and special symbols.
               </p>
             </div>
@@ -165,7 +162,7 @@ export function ProfilePasswordCard({
                 placeholder="••••••••"
                 minLength={6}
                 value={pwState.next}
-                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-colors"
+               
                 onChange={(e) => pwDispatch({ type: "set", patch: { next: e.target.value } })}
               />
             </div>
@@ -175,7 +172,7 @@ export function ProfilePasswordCard({
                 type="password"
                 placeholder="••••••••"
                 value={pwState.confirm}
-                className="bg-muted/20 border-border/60 focus-visible:ring-primary/40 focus-visible:border-primary/70 transition-colors"
+               
                 onChange={(e) => pwDispatch({ type: "set", patch: { confirm: e.target.value } })}
                 onKeyDown={(e) => e.key === "Enter" && onChangePassword()}
               />
@@ -199,7 +196,7 @@ export function ProfilePasswordCard({
             </div>
           </div>
         )}
-      </div>
     </div>
+    </>
   );
 }

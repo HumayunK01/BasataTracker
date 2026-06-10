@@ -37,17 +37,17 @@ interface DangerZoneProps {
 export function DangerZone({ delState, delDispatch, onDeleteAccount }: DangerZoneProps) {
   return (
     <>
-      <div className="bg-card/70 backdrop-blur-md border border-destructive/20 rounded-xl overflow-hidden hover:border-destructive/40 hover:shadow-md hover:shadow-destructive/5 transition-[border-color,box-shadow] duration-200 group">
+      <div className="bg-card border border-destructive/30 rounded-md overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-4 border-b border-destructive/15 bg-destructive/[0.02]">
-          <div className="size-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0 group-hover:bg-destructive/20 transition-colors duration-200">
+          <div className="size-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
             <UserX className="size-4 text-destructive" />
           </div>
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-wider text-destructive font-[system-ui]">Danger Zone</h2>
-            <p className="text-[10px] text-muted-foreground mt-0.5 font-[system-ui]">Irreversible system actions · Proceed with caution</p>
+            <h2 className="text-sm font-semibold text-destructive">Danger Zone</h2>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Irreversible system actions · Proceed with caution</p>
           </div>
         </div>
-        <div className="px-5 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-[system-ui]">
+        <div className="px-5 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="min-w-0 flex-1 space-y-1">
             <p className="text-sm font-bold text-foreground">Delete Account</p>
             <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
@@ -66,11 +66,11 @@ export function DangerZone({ delState, delDispatch, onDeleteAccount }: DangerZon
       </div>
 
       <AlertDialog open={delState.open} onOpenChange={(o) => !o && delDispatch({ type: "close" })}>
-        <AlertDialogContent className="font-[system-ui] sm:max-w-md border-destructive/20 bg-background/95 backdrop-blur-lg">
+        <AlertDialogContent className="sm:max-w-md border-destructive/20 bg-background/95 backdrop-blur-lg">
           <AlertDialogHeader>
             <div className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="size-5 shrink-0 animate-bounce" />
-              <AlertDialogTitle className="text-lg font-bold">Wipe Account and Data?</AlertDialogTitle>
+              <AlertTriangle className="size-5 shrink-0" />
+              <AlertDialogTitle className="text-lg font-semibold">Wipe Account and Data?</AlertDialogTitle>
             </div>
             <AlertDialogDescription className="space-y-3 mt-2 text-sm leading-relaxed">
               <span className="block text-foreground/90 font-medium">
@@ -78,9 +78,9 @@ export function DangerZone({ delState, delDispatch, onDeleteAccount }: DangerZon
               </span>
               
               {/* Premium Warning Alert */}
-              <span className="flex gap-2.5 bg-destructive/10 border border-destructive/20 rounded-xl p-3 text-xs leading-normal">
+              <span className="flex gap-2.5 bg-destructive/10 border border-destructive/20 rounded-md p-3 text-xs leading-normal">
                 <ShieldAlert className="size-4 text-destructive shrink-0 mt-0.5" />
-                <span className="text-destructive-foreground/90 leading-relaxed">
+                <span className="text-muted-foreground leading-relaxed">
                   All your historical counts, logs, custom shortnames, and data indices will be immediately deleted from Supabase. You will be logged out and cannot register with the same state again.
                 </span>
               </span>
@@ -94,14 +94,14 @@ export function DangerZone({ delState, delDispatch, onDeleteAccount }: DangerZon
             <Input
               placeholder="Type DELETE"
               value={delState.confirmText}
-              className="border-border/60 focus-visible:ring-destructive/30 focus-visible:border-destructive/60 transition-colors font-semibold uppercase"
+              className="focus-visible:border-destructive font-semibold uppercase"
               onChange={(e) => delDispatch({ type: "set_text", text: e.target.value })}
             />
             <Input
               type="password"
               placeholder="Enter your current password"
               value={delState.password}
-              className="border-border/60 focus-visible:ring-destructive/30 focus-visible:border-destructive/60 transition-colors"
+              className="focus-visible:border-destructive"
               onChange={(e) => delDispatch({ type: "set_pw", pw: e.target.value })}
             />
           </div>

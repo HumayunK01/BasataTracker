@@ -40,7 +40,7 @@ export function ReportDayTable({
   onPageChange,
 }: ReportDayTableProps) {
   return (
-    <div className="bg-card border border-border rounded-md overflow-hidden hover:border-primary/20 transition-[border-color] duration-200">
+    <div className="bg-card border border-border rounded-md overflow-hidden">
       <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between bg-muted/[0.04]">
         <h2 className="text-sm font-semibold">Day-by-Day Breakdown</h2>
         <span className="text-[10px] text-muted-foreground sm:hidden font-medium bg-muted/40 border border-border/60 px-2 py-0.5 rounded">

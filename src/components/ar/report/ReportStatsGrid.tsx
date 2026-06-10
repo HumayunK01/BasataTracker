@@ -27,7 +27,7 @@ export function ReportStatsGrid({
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Total Docs */}
-      <div className="bg-card border border-border rounded-md p-3 sm:p-4 hover:border-primary/20 transition-[border-color] duration-200 group flex items-start justify-between">
+      <div className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-start justify-between">
         <div className="space-y-1 min-w-0">
           <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">Total Documents</p>
           <p className="text-xl sm:text-2xl font-bold tabular-nums text-primary mt-1.5 leading-none">{totalDocs}</p>
@@ -46,7 +46,7 @@ export function ReportStatsGrid({
       </div>
 
       {/* Working Days */}
-      <div className="bg-card border border-border rounded-md p-3 sm:p-4 hover:border-primary/20 transition-[border-color] duration-200 group flex items-start justify-between">
+      <div className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-start justify-between">
         <div className="space-y-1 min-w-0">
           <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">Working Days</p>
           <p className="text-xl sm:text-2xl font-bold tabular-nums text-foreground/90 mt-1.5 leading-none">{workingCount}</p>
@@ -67,7 +67,7 @@ export function ReportStatsGrid({
       </div>
 
       {/* Avg / Day */}
-      <div className="bg-card border border-border rounded-md p-3 sm:p-4 hover:border-primary/20 transition-[border-color] duration-200 group flex items-start justify-between">
+      <div className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-start justify-between">
         <div className="space-y-1 min-w-0">
           <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">Average / Day</p>
           <p className="text-xl sm:text-2xl font-bold tabular-nums text-info mt-1.5 leading-none">{avgPerDay}</p>
@@ -86,7 +86,7 @@ export function ReportStatsGrid({
       </div>
 
       {/* Best Day */}
-      <div className="bg-card border border-border rounded-md p-3 sm:p-4 hover:border-primary/20 transition-[border-color] duration-200 group flex items-start justify-between">
+      <div className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-start justify-between">
         <div className="space-y-1 min-w-0">
           <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">Best Day</p>
           <p className="text-xl sm:text-2xl font-bold tabular-nums text-warning mt-1.5 leading-none">

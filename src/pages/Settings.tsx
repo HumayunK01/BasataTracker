@@ -182,25 +182,6 @@ export default function SettingsPage() {
     pwDispatch({ type: "done" });
   };
 
-  const handleExportData = () => {
-    const safeStr = (s: string | null | undefined) =>
-      s && /^[=+@\-|%]/.test(s) ? `'${s}` : s;
-    const payload = {
-      exported_at: new Date().toISOString(),
-      user_email: safeStr(user?.email),
-      logs: logs.map((l) => ({ ...l, notes: safeStr(l.notes) })),
-      categories,
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `basata-export-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Data exported.");
-  };
-
   const handleDeleteAccount = async () => {
     if (delState.confirmText !== "DELETE") return;
     if (!delState.password) { toast.error("Password is required to delete your account."); return; }
@@ -244,17 +225,10 @@ export default function SettingsPage() {
     <>
       <PageHeader subtitle="Settings" />
 
-      <main className="flex-1 overflow-y-auto font-[system-ui]">
-        <div className="w-full px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">Settings</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              Manage your categories, account, and preferences.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            <AccountCard email={user?.email} createdAt={user?.created_at} lastSignIn={user?.last_sign_in_at} />
+      <main className="flex-1 overflow-y-auto">
+        <div className="w-full px-3 sm:px-6 py-4 sm:py-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            <AccountCard email={user?.email} createdAt={user?.created_at} />
             <ProfilePasswordCard
               profile={profile}
               profileState={profileState}
@@ -264,12 +238,7 @@ export default function SettingsPage() {
               onUpdateProfile={handleUpdateProfile}
               onChangePassword={handleChangePassword}
             />
-            <AboutCard
-              categoriesCount={categories.length}
-              logsCount={logs.length}
-              onExport={handleExportData}
-              exportDisabled={logs.length === 0 && categories.length === 0}
-            />
+            <AboutCard categoriesCount={categories.length} logsCount={logs.length} />
           </div>
 
           <CategorySection
@@ -287,7 +256,8 @@ export default function SettingsPage() {
             onDragStart={(key) => catDispatch({ type: "drag_start", key })}
             onDragOver={(e, key) => {
               e.preventDefault();
-              catDispatch({ type: "drag_over", key });
+              e.dataTransfer.dropEffect = "move";
+              if (cat.dragOver !== key) catDispatch({ type: "drag_over", key });
             }}
             onDrop={handleDrop}
           />
