@@ -14,7 +14,7 @@ import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
 import { downloadCSV, downloadJSON } from "@/lib/log-utils";
 import { isoDate, totalForLog, type DailyLog } from "@/types/log";
-import { Download, FileJson, FileText, Plus, ChevronDown } from "lucide-react";
+import { CalendarDays, Download, FileJson, FileText, Plus, ChevronDown } from "lucide-react";
 import { PageHeader } from "@/components/ar/PageHeader";
 import Skeleton from "react-loading-skeleton";
 
@@ -91,7 +91,7 @@ const DailyLogPage = () => {
           </>
         }
       />
-      <main className="flex-1 overflow-hidden flex flex-col px-4 sm:px-6 py-4 font-[system-ui]">
+      <main className="flex-1 overflow-hidden flex flex-col px-3 sm:px-6 py-4 sm:py-6">
             {isLoading ? (
               <div className="flex-1 flex flex-col gap-3 pt-2">
                 <div className="flex gap-3">
@@ -112,11 +112,13 @@ const DailyLogPage = () => {
               </div>
             ) : logs.length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-4xl mb-3">📋</div>
-                  <h2 className="font-semibold mb-1">No logs yet</h2>
-                  <p className="text-sm text-muted-foreground mb-4">Start by logging your first day of work.</p>
-                  <Button onClick={openNew}>
+                <div className="flex flex-col items-center gap-4 text-muted-foreground">
+                  <CalendarDays className="size-12 opacity-20" />
+                  <div className="text-center space-y-1">
+                    <p className="text-sm font-medium text-foreground">No logs yet</p>
+                    <p className="text-xs">Start by logging your first day of work.</p>
+                  </div>
+                  <Button size="sm" onClick={openNew}>
                     <Plus className="size-4 mr-1" /> Log your first day
                   </Button>
                 </div>

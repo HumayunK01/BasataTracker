@@ -148,7 +148,7 @@ export function AppSidebar() {
           </ul>
         )}
         <div className="text-center group-data-[collapsible=icon]:hidden pb-1">
-          <p className="text-xs text-muted-foreground/50">Version 1.1.1</p>
+          <p className="text-xs text-muted-foreground/50">Version 1.2.0</p>
         </div>
       </SidebarFooter>
 
