@@ -44,7 +44,7 @@ function Pagination({ page, totalPages, pageNumbers, itemsPerPage, goTo, onItems
   return (
     <div className="shrink-0 py-2.5 flex items-center relative">
       <div className="flex items-center gap-1 mx-auto">
-        <Button size="sm" className="h-8 px-3 text-sm rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(1)} disabled={page === 1}>First</Button>
+        <Button size="sm" className="hidden sm:inline-flex h-8 px-3 text-sm rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(1)} disabled={page === 1}>First</Button>
         <Button size="icon" className="size-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page - 1)} disabled={page === 1}>
           <ChevronLeft className="size-4" />
         </Button>
@@ -65,9 +65,9 @@ function Pagination({ page, totalPages, pageNumbers, itemsPerPage, goTo, onItems
         <Button size="icon" className="size-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page + 1)} disabled={page === totalPages}>
           <ChevronRight className="size-4" />
         </Button>
-        <Button size="sm" className="h-8 px-3 text-sm rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(totalPages)} disabled={page === totalPages}>Last</Button>
+        <Button size="sm" className="hidden sm:inline-flex h-8 px-3 text-sm rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(totalPages)} disabled={page === totalPages}>Last</Button>
       </div>
-      <div className="absolute right-0 flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="absolute right-0 hidden md:flex items-center gap-2 text-sm text-muted-foreground">
         <span>Items per page</span>
         <Select value={String(itemsPerPage)} onValueChange={(v) => onItemsPerPageChange(Number(v))}>
           <SelectTrigger className="h-8 w-16 text-sm">
@@ -386,11 +386,11 @@ export function DaysTable({ logs, onEdit }: Props) {
 
   return (
     <>
-      <div className="flex flex-col h-full min-h-0 gap-3 font-[system-ui]">
+      <div className="flex flex-col h-full min-h-0 gap-4">
 
         {/* Search + summary */}
-        <div className="flex items-center gap-3 shrink-0 px-0">
-          <div className="relative w-64">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 shrink-0">
+          <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
             <Input
               className="pl-9 h-10 text-sm w-full bg-card border-border"
@@ -399,7 +399,7 @@ export function DaysTable({ logs, onEdit }: Props) {
               onChange={(e) => tDispatch({ type: "set_search", q: e.target.value })}
             />
           </div>
-          <div className="ml-auto flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="sm:ml-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
             <span><span className="font-semibold text-foreground">{workingLogs.length}</span> working days</span>
             <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && isWeekend(l.log_date)).length}</span> weekends</span>
             <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && !isWeekend(l.log_date)).length}</span> off days</span>
