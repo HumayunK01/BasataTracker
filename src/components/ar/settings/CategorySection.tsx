@@ -60,8 +60,6 @@ interface CategorySectionProps {
   onEdit: (c: Category) => void;
   onSave: () => void;
   onDelete: () => void;
-  onSeedDefaults: () => void;
-  isSeedingPending: boolean;
   onDragStart: (key: string) => void;
   onDragOver: (e: DragEvent, key: string) => void;
   onDrop: (key: string) => void;
@@ -77,8 +75,6 @@ export function CategorySection({
   onEdit,
   onSave,
   onDelete,
-  onSeedDefaults,
-  isSeedingPending,
   onDragStart,
   onDragOver,
   onDrop,
@@ -99,12 +95,6 @@ export function CategorySection({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {categories.length === 0 && !isLoading && (
-              <Button size="sm" variant="outline" className="border-border/60 text-xs h-8" onClick={onSeedDefaults} disabled={isSeedingPending}>
-                {isSeedingPending && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
-                <span className="hidden xs:inline">Load </span>defaults
-              </Button>
-            )}
             <Button size="sm" className="bg-primary hover:bg-primary/95 text-primary-foreground text-xs h-8 shadow-sm" onClick={onAdd}>
               <Plus className="size-3.5 sm:mr-1.5" />
               <span className="hidden sm:inline">Add category</span>
@@ -127,7 +117,7 @@ export function CategorySection({
         ) : categories.length === 0 ? (
           <div className="py-16 flex flex-col items-center gap-3 text-muted-foreground">
             <Tag className="size-10 opacity-20" />
-            <p className="text-sm">No categories yet. Click Add Category or Seed Defaults.</p>
+            <p className="text-sm">No categories yet. Click Add category to create your first one.</p>
           </div>
         ) : (
           <div className="p-4 sm:p-5 grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(220px,1fr))]">

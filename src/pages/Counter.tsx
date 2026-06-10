@@ -4,16 +4,17 @@ import { useCategories, type Category } from "@/hooks/useCategories";
 import { useUpsertLog, useDailyLogs } from "@/hooks/useDailyLogs";
 import { isoDate, totalForLog } from "@/types/log";
 import { PageHeader } from "@/components/ar/PageHeader";
-import { RotateCcw, Save, CheckCircle2, Hash, Plus } from "lucide-react";
+import { RotateCcw, Save, CheckCircle2, Hash, Plus, Tag } from "lucide-react";
 import { colorForKey } from "@/lib/cat-colors";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 // Import modular components
 import { CounterCard } from "@/components/ar/counter/CounterCard";
 import { CategoryPicker } from "@/components/ar/counter/CategoryPicker";
+import { NewCategoryDialog } from "@/components/ar/counter/NewCategoryDialog";
 
 const COUNTS_KEY = "counter_counts";
 const SELECTED_KEY = "counter_selected_keys";
@@ -114,7 +115,6 @@ export default function CounterPage() {
   const { data: logs = [] } = useDailyLogs();
   const upsert = useUpsertLog();
   const { user } = useAuth();
-  const { toast } = useToast();
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   const [{ counts, selectedKeys, saved }, cDispatch] = useReducer(counterReducer, undefined, () => ({
@@ -123,6 +123,7 @@ export default function CounterPage() {
     saved: false,
   }));
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [newCatOpen, setNewCatOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
   // Cross-device persistence. Saving is manual (Save button) into today's
@@ -148,8 +149,7 @@ export default function CounterPage() {
     channel
       .on("broadcast", { event: "kudos" }, (payload: { payload: { senderEmail: string; receiverId: string; emoji: string } }) => {
         if (payload.payload.receiverId === user.id) {
-          toast({
-            title: "Kudos received! 🎉",
+          toast("Kudos received! 🎉", {
             description: `${payload.payload.senderEmail} sent you a ${payload.payload.emoji}!`,
           });
           triggerKudosAnimation(payload.payload.emoji);
@@ -164,7 +164,7 @@ export default function CounterPage() {
         supabase.removeChannel(channel);
       }
     };
-  }, [user, toast]);
+  }, [user]);
 
   useEffect(() => {
     localStorage.setItem(COUNTS_KEY, JSON.stringify(counts));
@@ -432,22 +432,33 @@ export default function CounterPage() {
             </div>
           )}
 
-          {/* Add category placeholder */}
-          <button
-            type="button"
-            onClick={() => setPickerOpen(true)}
-            disabled={catsLoading || availableToAdd.length === 0}
-            className="w-full flex items-center justify-center gap-2 rounded-md border border-dashed border-border/60 py-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-muted/[0.04] active:scale-[0.99] transition-[color,background-color,border-color,transform] duration-200 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation font-semibold cursor-pointer"
-          >
-            <Plus className="size-4" />
-            {catsLoading
-              ? "Loading categories…"
-              : availableToAdd.length === 0 && activeCategories.length === 0
-              ? "No categories defined in Settings"
-              : availableToAdd.length === 0
-              ? "All active categories added"
-              : "Add category to counter"}
-          </button>
+          {/* Add to counter + create new */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              disabled={catsLoading || availableToAdd.length === 0}
+              className="flex-1 flex items-center justify-center gap-2 rounded-md border border-dashed border-border/60 py-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-muted/[0.04] active:scale-[0.99] transition-[color,background-color,border-color,transform] duration-200 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation font-semibold cursor-pointer"
+            >
+              <Plus className="size-4" />
+              {catsLoading
+                ? "Loading categories…"
+                : availableToAdd.length === 0 && activeCategories.length === 0
+                ? "No categories yet"
+                : availableToAdd.length === 0
+                ? "All active categories added"
+                : "Add category to counter"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setNewCatOpen(true)}
+              disabled={catsLoading}
+              className="sm:px-8 flex items-center justify-center gap-2 rounded-md border border-dashed border-primary/40 py-4 text-sm text-primary hover:border-primary/70 hover:bg-primary/5 active:scale-[0.99] transition-[color,background-color,border-color,transform] duration-200 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation font-semibold cursor-pointer"
+            >
+              <Tag className="size-4" />
+              New category
+            </button>
+          </div>
 
           {/* Empty state */}
           {activeCategories.length === 0 && !catsLoading && categories.length > 0 && (
@@ -464,6 +475,12 @@ export default function CounterPage() {
         onOpenChange={setPickerOpen}
         categories={availableToAdd}
         onPick={addCategory}
+      />
+
+      <NewCategoryDialog
+        open={newCatOpen}
+        onOpenChange={setNewCatOpen}
+        onCreated={addCategory}
       />
     </>
   );
