@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, Sun, Moon, Check, X } from "lucide-react";
+import { Loader2, Eye, EyeOff, Sun, Moon, Check, X, MailCheck } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 
 const PASSWORD_RULES = [
@@ -18,6 +18,7 @@ type Mode = "login" | "signup";
 interface LoginState {
   mode: Mode; email: string; password: string;
   firstName: string; lastName: string; showPassword: boolean; loading: boolean;
+  confirmEmail: string | null;
 }
 type LoginAction =
   | { type: "set_mode"; mode: Mode }
@@ -27,9 +28,11 @@ type LoginAction =
   | { type: "set_last"; v: string }
   | { type: "toggle_pw" }
   | { type: "submitting" }
-  | { type: "done" };
+  | { type: "done" }
+  | { type: "signup_success"; email: string }
+  | { type: "back_to_login" };
 
-const loginInit: LoginState = { mode: "login", email: "", password: "", firstName: "", lastName: "", showPassword: false, loading: false };
+const loginInit: LoginState = { mode: "login", email: "", password: "", firstName: "", lastName: "", showPassword: false, loading: false, confirmEmail: null };
 
 function loginReducer(s: LoginState, a: LoginAction): LoginState {
   switch (a.type) {
@@ -41,6 +44,8 @@ function loginReducer(s: LoginState, a: LoginAction): LoginState {
     case "toggle_pw": return { ...s, showPassword: !s.showPassword };
     case "submitting": return { ...s, loading: true };
     case "done": return { ...s, loading: false };
+    case "signup_success": return { ...loginInit, confirmEmail: a.email };
+    case "back_to_login": return { ...loginInit };
     default: return s;
   }
 }
@@ -51,7 +56,7 @@ const WINDOW_MS = 60_000;
 export default function LoginPage() {
   const { theme, toggle } = useTheme();
   const [s, dispatch] = useReducer(loginReducer, loginInit);
-  const { mode, email, password, firstName, lastName, showPassword, loading } = s;
+  const { mode, email, password, firstName, lastName, showPassword, loading, confirmEmail } = s;
   const attemptTimestamps = useRef<number[]>([]);
 
   const checkRateLimit = (): boolean => {
@@ -84,8 +89,8 @@ export default function LoginPage() {
           options: { data: { first_name: firstName.trim(), last_name: lastName.trim() } },
         });
         if (error) throw error;
-        toast.success("Account created! Check your email to confirm.");
-        dispatch({ type: "set_mode", mode: "login" });
+        dispatch({ type: "signup_success", email });
+        return;
       }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
@@ -114,6 +119,34 @@ export default function LoginPage() {
           <img src="/favicon.png" alt="Basata.ai Tracker" className="size-14 object-contain" />
         </div>
 
+        {confirmEmail ? (
+          /* ── Account created — confirm email ── */
+          <div className="space-y-4 animate-fade-in">
+            <div className="flex justify-center">
+              <div className="size-12 rounded-full bg-success/15 border border-success/20 flex items-center justify-center">
+                <MailCheck className="size-6 text-success" />
+              </div>
+            </div>
+            <div className="space-y-1.5 text-center">
+              <h1 className="text-2xl font-semibold text-foreground">Account created!</h1>
+              <p className="text-sm text-muted-foreground">
+                We sent a confirmation link to{" "}
+                <span className="font-medium text-foreground break-all">{confirmEmail}</span>.
+                Please check your inbox to activate your account.
+              </p>
+            </div>
+            <Button
+              className="w-full h-11 text-base font-semibold"
+              onClick={() => dispatch({ type: "back_to_login" })}
+            >
+              Back to sign in
+            </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              Didn&apos;t get it? Check your spam folder.
+            </p>
+          </div>
+        ) : (
+        <>
         {/* Title */}
         <div className="space-y-1 text-center">
           <h1 className="text-2xl font-semibold text-foreground">
@@ -233,6 +266,8 @@ export default function LoginPage() {
             </>
           )}
         </p>
+        </>
+        )}
       </div>
     </div>
   );
