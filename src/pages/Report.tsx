@@ -298,8 +298,8 @@ const ReportPage = () => {
                 className={[
                   "flex items-center h-10 rounded-md border bg-background/50 overflow-hidden cursor-pointer transition-colors",
                   rangeDays === 0
-                    ? "border-destructive/70 focus-within:border-destructive focus-within:ring-1 focus-within:ring-destructive"
-                    : "border-input hover:border-primary/40 focus-within:border-primary/60 focus-within:ring-1 focus-within:ring-ring",
+                    ? "border-destructive/70 focus-within:border-destructive"
+                    : "border-input hover:border-primary/40 focus-within:border-primary",
                 ].join(" ")}
                 title={rangeDays === 0 ? "Invalid range — end date is before start date" : undefined}
                 onClick={(e) => {
@@ -322,8 +322,8 @@ const ReportPage = () => {
                 className={[
                   "flex items-center h-10 rounded-md border bg-background/50 overflow-hidden cursor-pointer transition-colors",
                   rangeDays === 0
-                    ? "border-destructive/70 focus-within:border-destructive focus-within:ring-1 focus-within:ring-destructive"
-                    : "border-input hover:border-primary/40 focus-within:border-primary/60 focus-within:ring-1 focus-within:ring-ring",
+                    ? "border-destructive/70 focus-within:border-destructive"
+                    : "border-input hover:border-primary/40 focus-within:border-primary",
                 ].join(" ")}
                 title={rangeDays === 0 ? "Invalid range — end date is before start date" : undefined}
                 onClick={(e) => {
