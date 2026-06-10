@@ -1,6 +1,6 @@
 import { useMemo, useReducer } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { colorForKey } from "@/lib/cat-colors";
+import { colorForKey, withAlpha } from "@/lib/cat-colors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -157,7 +157,7 @@ function MobileCardList({ paginated, categories, search, copiedId, onEdit, onDel
                       <span
                         key={c.key}
                         className="text-xs font-medium px-2 py-0.5 rounded-full tabular-nums"
-                        style={{ color: clr, backgroundColor: `${clr}20`, border: `1px solid ${clr}33` }}
+                        style={{ color: clr, backgroundColor: withAlpha(clr, 0.13), border: `1px solid ${withAlpha(clr, 0.2)}` }}
                       >
                         {c.short} · {getVal(l, c.key)}
                       </span>

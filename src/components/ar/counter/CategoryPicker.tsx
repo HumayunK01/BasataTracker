@@ -14,7 +14,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { colorForKey } from "@/lib/cat-colors";
+import { colorForKey, withAlpha } from "@/lib/cat-colors";
 import type { Category } from "@/hooks/useCategories";
 import { Plus, Search } from "lucide-react";
 
@@ -61,7 +61,7 @@ function CategoryPickerList({ categories, onPick }: Pick<CategoryPickerProps, "c
               >
                 <span
                   className="size-7 rounded-md flex items-center justify-center text-[10px] font-mono font-bold shrink-0 shadow-sm group-hover:scale-105 transition-transform"
-                  style={{ color: clr, backgroundColor: `${clr}22` }}
+                  style={{ color: clr, backgroundColor: withAlpha(clr, 0.13) }}
                 >
                   {cat.short.slice(0, 3)}
                 </span>

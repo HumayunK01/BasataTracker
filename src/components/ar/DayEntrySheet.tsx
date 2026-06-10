@@ -16,7 +16,7 @@ import { useUpsertLog } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
 import { Minus, Plus, CalendarCheck, BedDouble, CalendarIcon, TriangleAlert } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import { colorForKey } from "@/lib/cat-colors";
+import { colorForKey, withAlpha } from "@/lib/cat-colors";
 
 interface Props {
   open: boolean;
@@ -56,7 +56,7 @@ function Stepper({
         <span className="text-sm font-medium text-foreground truncate">{label}</span>
         <span
           className="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
-          style={{ color, backgroundColor: `${color}20` }}
+          style={{ color, backgroundColor: withAlpha(color, 0.13) }}
         >
           {shortLabel}
         </span>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { colorForKey } from "@/lib/cat-colors";
+import { colorForKey, withAlpha } from "@/lib/cat-colors";
 import type { Category } from "@/hooks/useCategories";
 import { Minus, Plus, X } from "lucide-react";
 
@@ -60,12 +60,12 @@ export function CounterCard({
   return (
     <div
       className="group rounded-xl border flex flex-col relative overflow-hidden transition-shadow hover:shadow-md hover:shadow-primary/[0.02] focus-within:ring-2 focus-within:ring-primary/40 font-[system-ui]"
-      style={{ borderColor: `${clr}40`, backgroundColor: `${clr}12` }}
+      style={{ borderColor: withAlpha(clr, 0.25), backgroundColor: withAlpha(clr, 0.07) }}
     >
       {/* Progress fill (share of the busiest category) */}
       <div
         className="absolute inset-x-0 bottom-0 transition-[height] duration-500 ease-out pointer-events-none"
-        style={{ height: `${fill}%`, backgroundColor: `${clr}1f` }}
+        style={{ height: `${fill}%`, backgroundColor: withAlpha(clr, 0.12) }}
         aria-hidden
       />
 

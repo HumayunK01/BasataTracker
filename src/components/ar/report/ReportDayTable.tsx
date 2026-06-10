@@ -1,5 +1,5 @@
 import { formatTableDate, isWeekend, totalForLog, type DailyLog } from "@/types/log";
-import { colorForKey } from "@/lib/cat-colors";
+import { colorForKey, withAlpha } from "@/lib/cat-colors";
 import type { Category } from "@/hooks/useCategories";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,7 +54,7 @@ export function ReportDayTable({
               <TableHead className="font-semibold text-xs text-muted-foreground w-[120px] px-5">Date</TableHead>
               {categories.map((c) => (
                 <TableHead key={c.key} className="font-semibold text-xs text-center w-[72px] py-3.5">
-                  <span className="font-bold font-mono text-[10px] px-2 py-0.5 rounded shadow-sm" style={{ backgroundColor: `${colorForKey(c.key)}18`, color: colorForKey(c.key) }}>
+                  <span className="font-bold font-mono text-[10px] px-2 py-0.5 rounded shadow-sm" style={{ backgroundColor: withAlpha(colorForKey(c.key), 0.1), color: colorForKey(c.key) }}>
                     {c.short}
                   </span>
                 </TableHead>
