@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, ChevronDown, Settings, Sun, Moon, LogOut, Users } from "lucide-react";
+import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, ChevronDown, Settings, Sun, Moon, LogOut, Users, BookOpen, Tags, ExternalLink } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import {
@@ -30,6 +30,19 @@ const groups = [
       { title: "Counter", icon: Hash, path: "/counter" },
       { title: "Daily Log", icon: CalendarDays, path: "/log" },
     ],
+  },
+];
+
+const externalLinks = [
+  {
+    title: "Phoenix Heart Cheat Sheet",
+    icon: BookOpen,
+    href: "https://docs.google.com/document/d/1y7xmLogt9vMhUKO-ADUEtZgqXp39q9Ts_V8TTiKlgUg/edit?tab=t.0",
+  },
+  {
+    title: "Test Patients & Labeling",
+    icon: Tags,
+    href: "https://docs.google.com/document/d/1C0aKOgsXKyU0XzDUB2oPnxaW0QUhUDSppSiL81JEvr8/edit?pli=1&tab=t.0",
   },
 ];
 
@@ -110,6 +123,35 @@ export function AppSidebar() {
             </ul>
           </div>
         ))}
+
+        <div className="mb-1 group-data-[collapsible=icon]:mb-0">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:h-0 group-data-[collapsible=icon]:py-0 group-data-[collapsible=icon]:overflow-hidden">
+            <ChevronDown className="size-3.5 text-foreground shrink-0" />
+            <span className="text-xs font-bold text-foreground uppercase tracking-wide font-[system-ui]">Resources</span>
+          </div>
+
+          <ul className="space-y-0.5 px-2 group-data-[collapsible=icon]:px-1">
+            {externalLinks.map((link) => (
+              <li key={link.href}>
+                <a
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={link.title}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-md text-base transition-colors",
+                    "group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-2 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:mx-auto",
+                    "text-foreground hover:bg-sidebar-accent/60",
+                  )}
+                >
+                  <link.icon className="size-4 shrink-0" />
+                  <span className="group-data-[collapsible=icon]:hidden truncate font-[system-ui] flex-1">{link.title}</span>
+                  <ExternalLink className="size-3 shrink-0 text-muted-foreground group-data-[collapsible=icon]:hidden" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       </SidebarContent>
 
       <SidebarFooter>
