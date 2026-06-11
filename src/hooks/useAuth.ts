@@ -10,20 +10,40 @@ function isExpired(session: Session): boolean {
 // ── Hard session cap: force logout 10 hours after sign-in, no matter what ──
 const SESSION_START_KEY = "basata-session-started-at";
 const MAX_SESSION_MS = 10 * 60 * 60 * 1000; // 10 hours
+const WARN_BEFORE_MS = 15 * 60 * 1000; // warn 15 minutes before the cap trips
 
-// Several components mount useAuth; this guards against duplicate
-// signOut calls + toasts when the cap trips.
+// Several components mount useAuth; these guard against duplicate
+// signOut calls + toasts when the cap trips or the warning fires.
 let forcedLogoutInFlight = false;
+let capWarningShown = false;
 
-function sessionCapExceeded(): boolean {
+function sessionElapsedMs(): number | null {
   try {
     const raw = localStorage.getItem(SESSION_START_KEY);
-    if (!raw) return false;
+    if (!raw) return null;
     const started = Number(raw);
-    return Number.isFinite(started) && Date.now() - started > MAX_SESSION_MS;
+    if (!Number.isFinite(started)) return null;
+    return Date.now() - started;
   } catch {
-    return false;
+    return null;
   }
+}
+
+function sessionCapExceeded(): boolean {
+  const elapsed = sessionElapsedMs();
+  return elapsed !== null && elapsed > MAX_SESSION_MS;
+}
+
+function maybeWarnSessionEnding() {
+  if (capWarningShown) return;
+  const elapsed = sessionElapsedMs();
+  if (elapsed === null || elapsed <= MAX_SESSION_MS - WARN_BEFORE_MS || elapsed > MAX_SESSION_MS) return;
+  capWarningShown = true;
+  const minutesLeft = Math.max(1, Math.round((MAX_SESSION_MS - elapsed) / 60_000));
+  toast.warning(
+    `Your session ends in about ${minutesLeft} minute${minutesLeft === 1 ? "" : "s"}. Save your work — you'll need to sign in again.`,
+    { duration: 15_000 },
+  );
 }
 
 function markSessionStart() {
@@ -38,6 +58,7 @@ function markSessionStart() {
 }
 
 function clearSessionStart() {
+  capWarningShown = false;
   try {
     localStorage.removeItem(SESSION_START_KEY);
   } catch {
@@ -78,7 +99,10 @@ export function useAuth() {
         forceLogout();
         dispatch({ type: "clear" });
       } else {
-        if (session) markSessionStart();
+        if (session) {
+          markSessionStart();
+          maybeWarnSessionEnding();
+        }
         dispatch({ type: "set", session });
       }
     });
@@ -103,6 +127,8 @@ export function useAuth() {
       if (sessionCapExceeded()) {
         forceLogout();
         dispatch({ type: "clear" });
+      } else {
+        maybeWarnSessionEnding();
       }
     }, 60_000);
 

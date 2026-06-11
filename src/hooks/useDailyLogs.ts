@@ -29,6 +29,8 @@ export function useDailyLogs() {
     enabled: !!user,
     // Pull remote changes so the counter/logs stay in sync across the user's
     // devices (another device's auto-save shows up here on focus/interval).
+    // staleTime 0 opts out of the global default so focus always refetches.
+    staleTime: 0,
     refetchOnWindowFocus: true,
     refetchInterval: 60_000,
     queryFn: async (): Promise<DailyLog[]> => {
