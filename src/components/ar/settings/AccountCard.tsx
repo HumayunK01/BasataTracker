@@ -1,4 +1,4 @@
-﻿import { User } from "lucide-react";
+import { User } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 interface AccountCardProps {
@@ -30,7 +30,7 @@ export function AccountCard({ email, createdAt }: AccountCardProps) {
           <p className="text-sm font-medium text-foreground/90" suppressHydrationWarning>
             {createdAt
               ? new Date(createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
-              : "â€”"}
+              : "—"}
           </p>
         </div>
       </div>

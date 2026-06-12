@@ -11,10 +11,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
+import { useProfile } from "@/hooks/useProfile";
 import { isoDate, formatTableDate, isWeekend, totalForLog, type DailyLog } from "@/types/log";
 import { PageHeader } from "@/components/ar/PageHeader";
-import { downloadCSV, downloadJSON } from "@/lib/log-utils";
-import { Download, FileJson, FileText, ChevronDown, CalendarRange } from "lucide-react";
+import { downloadCSV, downloadJSON, downloadPDF, formatUSDate } from "@/lib/log-utils";
+import { Download, FileJson, FileText, FileType, ChevronDown, CalendarRange } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { colorForKey } from "@/lib/cat-colors";
 
@@ -107,6 +108,8 @@ function reportReducer(s: ReportFilter, a: ReportAction): ReportFilter {
 const ReportPage = () => {
   const { data: logs = [], isLoading } = useDailyLogs();
   const { data: categories = [] } = useCategories();
+  const { data: profile } = useProfile();
+  const userName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || undefined;
   const [now] = useState(() => new Date());
 
   const [filter, filterDispatch] = useReducer(reportReducer, undefined, () => {
@@ -212,6 +215,12 @@ const ReportPage = () => {
   const exportFilename = `report-${startDate}-to-${endDate}`;
   const handleExportCSV = () => downloadCSV(exportedLogs, categories, `${exportFilename}.csv`);
   const handleExportJSON = () => downloadJSON(exportedLogs, categories, `${exportFilename}.json`);
+  const handleExportPDF = () =>
+    downloadPDF(exportedLogs, categories, `${exportFilename}.pdf`, {
+      title: "Basata Tracker Report",
+      subtitle: `${formatUSDate(startDate)} to ${formatUSDate(endDate)}`,
+      userName,
+    });
 
   const rangeDays = useMemo(() => {
     if (!startDate || !endDate) return 0;
@@ -244,6 +253,9 @@ const ReportPage = () => {
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleExportJSON}>
                 <FileJson className="size-4 mr-2" /> JSON (.json)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportPDF}>
+                <FileType className="size-4 mr-2" /> PDF (.pdf)
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -117,3 +117,166 @@ export function downloadJSON(logs: DailyLog[], categories: Category[], filename 
   a.click();
   URL.revokeObjectURL(url);
 }
+
+/** ISO `YYYY-MM-DD` → `MM-DD-YYYY` (US display format used in PDF exports). */
+export function formatUSDate(iso: string): string {
+  const [y, m, d] = iso.split("-");
+  return `${m}-${d}-${y}`;
+}
+
+/**
+ * Print-ready PDF export. jspdf + autotable are dynamically imported so the
+ * ~300KB library only loads when a user actually exports a PDF.
+ */
+export async function downloadPDF(
+  logs: DailyLog[],
+  categories: Category[],
+  filename = "ar-record.pdf",
+  opts: { title?: string; subtitle?: string; userName?: string } = {},
+) {
+  const [{ default: JsPDF }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ]);
+
+  const working = logs.filter((l) => !l.is_off_day);
+
+  // Skip categories with no counts in the exported range — all-zero columns are noise
+  const activeCategories = categories.filter((c) =>
+    working.some((l) => ((l.counts ?? {})[c.key] ?? 0) > 0),
+  );
+
+  // Landscape keeps many category columns readable
+  const orientation = activeCategories.length > 6 ? "landscape" : "portrait";
+  const doc = new JsPDF({ orientation, unit: "pt", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 40;
+
+  const totalDocs = working.reduce((s, l) => s + totalForLog(l), 0);
+  const avg = working.length ? Math.round(totalDocs / working.length) : 0;
+  const sorted = [...logs].sort((a, b) => a.log_date.localeCompare(b.log_date));
+  const rangeLabel = sorted.length
+    ? `${formatUSDate(sorted[0].log_date)} to ${formatUSDate(sorted[sorted.length - 1].log_date)}`
+    : "No data";
+
+  // ── Header ──
+  // App logo, top-right (the light-theme logo — PDF pages are white).
+  // Non-fatal if it can't be loaded; the export still completes.
+  try {
+    const img = new Image();
+    img.src = "/lightlogo.png";
+    await img.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    canvas.getContext("2d")!.drawImage(img, 0, 0);
+    const logoH = 28;
+    const logoW = (img.naturalWidth / img.naturalHeight) * logoH;
+    doc.addImage(canvas.toDataURL("image/png"), "PNG", pageWidth - margin - logoW, 24, logoW, logoH);
+  } catch {
+    // logo unavailable — skip it
+  }
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.setTextColor(30);
+  doc.text(opts.title ?? "Basata Tracker Daily Log", margin, 44);
+
+  let y = 60;
+  if (opts.userName) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(60);
+    doc.text(opts.userName, margin, y);
+    y += 14;
+  }
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(110);
+  doc.text(opts.subtitle ?? rangeLabel, margin, y);
+  doc.text(
+    `Exported ${new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}`,
+    pageWidth - margin,
+    y,
+    { align: "right" },
+  );
+  y += 20;
+
+  // ── Summary line ──
+  doc.setFontSize(10);
+  doc.setTextColor(60);
+  doc.text(
+    `${totalDocs} documents  ·  ${working.length} working days  ·  ${logs.length - working.length} weekend/off days  ·  avg ${avg} docs/day`,
+    margin,
+    y,
+  );
+  y += 16;
+
+  // ── Table ──
+  const dayName = (iso: string) =>
+    new Date(`${iso}T12:00:00`).toLocaleDateString("en-US", { timeZone: "America/Chicago", weekday: "long" });
+
+  const body = sorted.map((l) => {
+    if (l.is_off_day) {
+      return [
+        formatUSDate(l.log_date),
+        dayName(l.log_date),
+        ...activeCategories.map(() => "—"),
+        isWeekend(l.log_date) ? "Weekend" : "Off day",
+      ];
+    }
+    return [
+      formatUSDate(l.log_date),
+      dayName(l.log_date),
+      ...activeCategories.map((c) => String((l.counts ?? {})[c.key] ?? 0)),
+      String(totalForLog(l)),
+    ];
+  });
+
+  const catTotals = activeCategories.map((c) =>
+    working.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0),
+  );
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: margin, right: margin },
+    head: [["Date", "Day", ...activeCategories.map((c) => c.short), "Total"]],
+    body,
+    foot: [["Total", "", ...catTotals.map(String), String(totalDocs)]],
+    theme: "grid",
+    styles: { font: "helvetica", fontSize: 8, cellPadding: 4, textColor: 40, lineColor: [220, 220, 225], lineWidth: 0.5 },
+    headStyles: { fillColor: [37, 42, 60], textColor: 255, fontStyle: "bold", halign: "center" },
+    footStyles: { fillColor: [240, 241, 245], textColor: 30, fontStyle: "bold" },
+    columnStyles: {
+      0: { cellWidth: 64 },
+      1: { cellWidth: 64 },
+      ...Object.fromEntries(activeCategories.map((_, i) => [i + 2, { halign: "center" as const }])),
+      [activeCategories.length + 2]: { halign: "center" as const, fontStyle: "bold" as const },
+    },
+    didParseCell: (data) => {
+      // Mute weekend/off-day rows so working days stand out
+      if (data.section === "body" && sorted[data.row.index]?.is_off_day) {
+        data.cell.styles.textColor = 150;
+        data.cell.styles.fillColor = [248, 248, 250];
+      }
+      // columnStyles only apply to the body, so center the foot totals here
+      if (data.section === "foot" && data.column.index >= 2) {
+        data.cell.styles.halign = "center";
+      }
+    },
+    didDrawPage: () => {
+      const pageHeight = doc.internal.pageSize.getHeight();
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text(
+        `Page ${doc.getCurrentPageInfo().pageNumber}`,
+        pageWidth - margin,
+        pageHeight - 20,
+        { align: "right" },
+      );
+    },
+  });
+
+  doc.save(filename);
+}

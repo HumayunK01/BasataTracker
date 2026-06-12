@@ -1,4 +1,4 @@
-﻿import { formatTableDate, totalForLog, type DailyLog } from "@/types/log";
+import { formatTableDate, totalForLog, type DailyLog } from "@/types/log";
 import { FileCheck, CalendarDays, TrendingUp, Award } from "lucide-react";
 import { ActivityRing } from "@/components/ar/ActivityRing";
 
@@ -51,7 +51,7 @@ export function ReportStatsGrid({
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Working Days</p>
           <p className="text-xl sm:text-2xl font-bold tabular-nums text-foreground/90 mt-1.5 leading-none">{workingCount}</p>
           <p className="text-xs text-muted-foreground mt-2 font-medium">
-            {weekendDays} weekends Â· {offDays} off days
+            {weekendDays} weekends · {offDays} off days
           </p>
         </div>
         <ActivityRing
@@ -90,7 +90,7 @@ export function ReportStatsGrid({
         <div className="space-y-1 min-w-0">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Best Day</p>
           <p className="text-xl sm:text-2xl font-bold tabular-nums text-warning mt-1.5 leading-none">
-            {bestDay ? totalForLog(bestDay) : "â€”"}
+            {bestDay ? totalForLog(bestDay) : "—"}
           </p>
           <p className="text-xs text-muted-foreground mt-2 font-medium">
             {bestDay ? formatTableDate(bestDay.log_date) : "No logs recorded"}
