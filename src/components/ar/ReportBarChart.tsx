@@ -6,7 +6,8 @@ interface ChartEntry { date: string; docs: number; }
 const T = {
   grid: "hsl(var(--border))",
   axis: { tick: { fontSize: 11, fill: "hsl(var(--muted-foreground))" } },
-  text: { fontSize: 12, fill: "hsl(var(--foreground))" },
+  // Tooltip is HTML, not SVG — text color must use `color`, not `fill`
+  text: { fontSize: 12, color: "hsl(var(--popover-foreground))" },
   container: { background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 },
 };
 
