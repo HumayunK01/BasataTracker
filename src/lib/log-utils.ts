@@ -1,5 +1,54 @@
 import type { Category } from "@/hooks/useCategories";
-import { type DailyLog, totalForLog } from "@/types/log";
+import { type DailyLog, totalForLog, isoDate, isWeekend } from "@/types/log";
+
+const DAY_MS = 86_400_000;
+
+/**
+ * Logging streaks in working days. A day with docs logged extends the streak;
+ * weekends, off-days, and a not-yet-logged today are neutral (skipped, not
+ * broken); a weekday with no log breaks it.
+ */
+export function computeStreaks(logs: DailyLog[]): { current: number; best: number } {
+  if (logs.length === 0) return { current: 0, best: 0 };
+  const byDate = new Map(logs.map((l) => [l.log_date, l]));
+  const today = isoDate();
+
+  type DayKind = "count" | "neutral" | "break";
+  const dayKind = (iso: string): DayKind => {
+    const log = byDate.get(iso);
+    if (log && !log.is_off_day && totalForLog(log) > 0) return "count";
+    if (isWeekend(iso) || log?.is_off_day) return "neutral";
+    return "break";
+  };
+
+  // Current streak: walk back from today (bounded ~3y, matching the query's 1000-row cap)
+  let current = 0;
+  for (let t = Date.now(), i = 0; i < 1100; i++, t -= DAY_MS) {
+    const iso = isoDate(new Date(t));
+    const kind = dayKind(iso);
+    if (kind === "count") current++;
+    else if (kind === "break" && iso !== today) break;
+  }
+
+  // Best streak: walk from the earliest logged day up to today
+  const earliest = [...byDate.keys()].sort()[0];
+  let best = 0;
+  let run = 0;
+  for (let t = new Date(`${earliest}T12:00:00`).getTime(), i = 0; i < 4000; i++, t += DAY_MS) {
+    const iso = isoDate(new Date(t));
+    if (iso > today) break;
+    const kind = dayKind(iso);
+    if (kind === "count") {
+      run++;
+      if (run > best) best = run;
+    } else if (kind === "break") {
+      run = 0;
+    }
+    if (iso === today) break;
+  }
+
+  return { current, best: Math.max(best, current) };
+}
 
 export function toCSV(logs: DailyLog[], categories: Category[]): string {
   const headers = ["Date", "Day", ...categories.map((c) => c.label), "Total", "Off Day", "Notes"];
