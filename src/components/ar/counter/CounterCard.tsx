@@ -79,7 +79,7 @@ export function CounterCard({
         {/* Key shortcut indicator badge */}
         {hotkeyIndex !== undefined && (
           <kbd
-            className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border border-border/40 bg-background/60 shadow-sm shrink-0 select-none cursor-help hover:border-foreground/20 transition-[border-color] duration-150 text-muted-foreground"
+            className="hidden md:inline text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border border-border/40 bg-background/60 shadow-sm shrink-0 select-none cursor-help hover:border-foreground/20 transition-[border-color] duration-150 text-muted-foreground"
             title={`Press ${hotkeyIndex} key to count`}
           >
             {hotkeyIndex}
@@ -90,11 +90,11 @@ export function CounterCard({
       <button
         type="button"
         onClick={onRemove}
-        className="absolute top-2.5 right-2.5 size-6 rounded-full flex items-center justify-center text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 transition-colors touch-manipulation z-10 opacity-60 group-hover:opacity-100"
+        className="absolute top-1.5 right-1.5 size-9 md:size-6 md:top-2.5 md:right-2.5 rounded-full flex items-center justify-center text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 transition-colors touch-manipulation z-10 opacity-60 group-hover:opacity-100"
         title={`Remove ${cat.label}`}
         aria-label={`Remove ${cat.label}`}
       >
-        <X className="size-3" />
+        <X className="size-4 md:size-3" />
       </button>
 
       {/* Big tap area */}

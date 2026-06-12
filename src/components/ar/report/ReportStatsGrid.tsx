@@ -1,4 +1,4 @@
-import { formatTableDate, totalForLog, type DailyLog } from "@/types/log";
+﻿import { formatTableDate, totalForLog, type DailyLog } from "@/types/log";
 import { FileCheck, CalendarDays, TrendingUp, Award } from "lucide-react";
 import { ActivityRing } from "@/components/ar/ActivityRing";
 
@@ -29,9 +29,9 @@ export function ReportStatsGrid({
       {/* Total Docs */}
       <div className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-start justify-between">
         <div className="space-y-1 min-w-0">
-          <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">Total Documents</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Documents</p>
           <p className="text-xl sm:text-2xl font-bold tabular-nums text-primary mt-1.5 leading-none">{totalDocs}</p>
-          <p className="text-[10px] text-muted-foreground mt-2 font-medium">{filteredCount} days tracked</p>
+          <p className="text-xs text-muted-foreground mt-2 font-medium">{filteredCount} days tracked</p>
         </div>
         <ActivityRing
           value={totalDocs}
@@ -48,10 +48,10 @@ export function ReportStatsGrid({
       {/* Working Days */}
       <div className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-start justify-between">
         <div className="space-y-1 min-w-0">
-          <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">Working Days</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">Working Days</p>
           <p className="text-xl sm:text-2xl font-bold tabular-nums text-foreground/90 mt-1.5 leading-none">{workingCount}</p>
-          <p className="text-[10px] text-muted-foreground mt-2 font-medium">
-            {weekendDays} weekends · {offDays} off days
+          <p className="text-xs text-muted-foreground mt-2 font-medium">
+            {weekendDays} weekends Â· {offDays} off days
           </p>
         </div>
         <ActivityRing
@@ -69,9 +69,9 @@ export function ReportStatsGrid({
       {/* Avg / Day */}
       <div className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-start justify-between">
         <div className="space-y-1 min-w-0">
-          <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">Average / Day</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">Average / Day</p>
           <p className="text-xl sm:text-2xl font-bold tabular-nums text-info mt-1.5 leading-none">{avgPerDay}</p>
-          <p className="text-[10px] text-muted-foreground mt-2 font-medium">docs per working day</p>
+          <p className="text-xs text-muted-foreground mt-2 font-medium">docs per working day</p>
         </div>
         <ActivityRing
           value={avgPerDay}
@@ -88,11 +88,11 @@ export function ReportStatsGrid({
       {/* Best Day */}
       <div className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-start justify-between">
         <div className="space-y-1 min-w-0">
-          <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">Best Day</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">Best Day</p>
           <p className="text-xl sm:text-2xl font-bold tabular-nums text-warning mt-1.5 leading-none">
-            {bestDay ? totalForLog(bestDay) : "—"}
+            {bestDay ? totalForLog(bestDay) : "â€”"}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-2 font-medium">
+          <p className="text-xs text-muted-foreground mt-2 font-medium">
             {bestDay ? formatTableDate(bestDay.log_date) : "No logs recorded"}
           </p>
         </div>

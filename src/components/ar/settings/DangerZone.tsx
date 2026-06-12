@@ -1,4 +1,4 @@
-import type { Dispatch } from "react";
+﻿import type { Dispatch } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -44,7 +44,7 @@ export function DangerZone({ delState, delDispatch, onDeleteAccount }: DangerZon
           </div>
           <div>
             <h2 className="text-sm font-semibold text-destructive">Danger Zone</h2>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Irreversible system actions · Proceed with caution</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Irreversible system actions Â· Proceed with caution</p>
           </div>
         </div>
         <div className="px-5 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

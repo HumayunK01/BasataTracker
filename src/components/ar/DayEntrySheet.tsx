@@ -68,9 +68,9 @@ function Stepper({
           type="button"
           onClick={dec}
           disabled={value === 0}
-          className="size-8 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-25 disabled:cursor-not-allowed touch-manipulation"
+          className="size-10 sm:size-8 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-25 disabled:cursor-not-allowed touch-manipulation"
         >
-          <Minus className="size-3.5" />
+          <Minus className="size-4 sm:size-3.5" />
         </button>
         <input
           type="number"
@@ -83,15 +83,15 @@ function Stepper({
             if (e.key === "ArrowUp") { e.preventDefault(); inc(); }
             if (e.key === "ArrowDown") { e.preventDefault(); dec(); }
           }}
-          className="w-12 h-8 text-center text-sm font-bold tabular-nums bg-muted/50 border border-border rounded-md outline-none transition-colors focus:border-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          className="w-12 h-10 sm:h-8 text-center text-sm font-bold tabular-nums bg-muted/50 border border-border rounded-md outline-none transition-colors focus:border-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           style={{ color: value > 0 ? color : "hsl(var(--muted-foreground))" }}
         />
         <button
           type="button"
           onClick={inc}
-          className="size-8 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors touch-manipulation"
+          className="size-10 sm:size-8 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors touch-manipulation"
         >
-          <Plus className="size-3.5" />
+          <Plus className="size-4 sm:size-3.5" />
         </button>
       </div>
     </div>

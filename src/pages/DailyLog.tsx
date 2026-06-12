@@ -63,8 +63,8 @@ const DailyLogPage = () => {
           <>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="size-8 sm:hidden" disabled={logs.length === 0}>
-                  <Download className="size-4" />
+                <Button variant="outline" size="icon" className="size-10 sm:hidden" disabled={logs.length === 0}>
+                  <Download className="size-5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuTrigger asChild>
@@ -83,8 +83,8 @@ const DailyLogPage = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button size="sm" className="h-8" onClick={openNew}>
-              <Plus className="size-4 sm:mr-1" />
+            <Button size="sm" className="h-10 sm:h-8" onClick={openNew}>
+              <Plus className="size-5 sm:size-4 sm:mr-1" />
               <span className="hidden sm:inline">Log day</span>
               <kbd className="ml-2 hidden sm:inline-flex text-xs border border-primary-foreground/30 rounded px-1">N</kbd>
             </Button>

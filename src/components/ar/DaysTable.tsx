@@ -45,7 +45,7 @@ function Pagination({ page, totalPages, pageNumbers, itemsPerPage, goTo, onItems
     <div className="shrink-0 py-2.5 flex items-center relative">
       <div className="flex items-center gap-1 mx-auto">
         <Button size="sm" className="hidden sm:inline-flex h-8 px-3 text-sm rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(1)} disabled={page === 1}>First</Button>
-        <Button size="icon" className="size-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page - 1)} disabled={page === 1}>
+        <Button size="icon" className="size-9 sm:size-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page - 1)} disabled={page === 1}>
           <ChevronLeft className="size-4" />
         </Button>
         {pageNumbers.map((p, i) =>
@@ -55,14 +55,14 @@ function Pagination({ page, totalPages, pageNumbers, itemsPerPage, goTo, onItems
             <Button
               key={p}
               size="icon"
-              className={`size-8 text-sm rounded-md border border-border ${page === p ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-sidebar text-foreground hover:bg-muted"}`}
+              className={`size-9 sm:size-8 text-sm rounded-md border border-border ${page === p ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-sidebar text-foreground hover:bg-muted"}`}
               onClick={() => goTo(p as number)}
             >
               {p}
             </Button>
           ),
         )}
-        <Button size="icon" className="size-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page + 1)} disabled={page === totalPages}>
+        <Button size="icon" className="size-9 sm:size-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page + 1)} disabled={page === totalPages}>
           <ChevronRight className="size-4" />
         </Button>
         <Button size="sm" className="hidden sm:inline-flex h-8 px-3 text-sm rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(totalPages)} disabled={page === totalPages}>Last</Button>
@@ -121,11 +121,11 @@ function MobileCardList({ paginated, categories, search, copiedId, onEdit, onDel
                   {weekend ? "Weekend" : "Off day"}
                 </span>
                 <div className="flex items-center gap-0.5 ml-1">
-                  <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/40 hover:text-foreground" onClick={() => onEdit(l)}>
-                    <Pencil className="size-3" />
+                  <Button variant="ghost" size="icon" className="size-9 text-muted-foreground/40 hover:text-foreground" onClick={() => onEdit(l)}>
+                    <Pencil className="size-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/40 hover:text-destructive" onClick={() => onDelete(l)}>
-                    <Trash2 className="size-3" />
+                  <Button variant="ghost" size="icon" className="size-9 text-muted-foreground/40 hover:text-destructive" onClick={() => onDelete(l)}>
+                    <Trash2 className="size-4" />
                   </Button>
                 </div>
               </div>
@@ -138,14 +138,14 @@ function MobileCardList({ paginated, categories, search, copiedId, onEdit, onDel
                 <span className="text-sm font-bold tabular-nums flex-1">{formatTableDate(l.log_date)}</span>
                 <span className="text-2xl font-black tabular-nums text-primary leading-none">{total}</span>
                 <div className="flex items-center gap-0.5 ml-1">
-                  <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/50 hover:text-foreground" onClick={() => onCopy(l)}>
-                    {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                  <Button variant="ghost" size="icon" className="size-9 text-muted-foreground/50 hover:text-foreground" onClick={() => onCopy(l)}>
+                    {copiedId === l.id ? <Check className="size-4" /> : <Copy className="size-4" />}
                   </Button>
-                  <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/50 hover:text-foreground" onClick={() => onEdit(l)}>
-                    <Pencil className="size-3.5" />
+                  <Button variant="ghost" size="icon" className="size-9 text-muted-foreground/50 hover:text-foreground" onClick={() => onEdit(l)}>
+                    <Pencil className="size-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="size-7 text-muted-foreground/50 hover:text-destructive" onClick={() => onDelete(l)}>
-                    <Trash2 className="size-3.5" />
+                  <Button variant="ghost" size="icon" className="size-9 text-muted-foreground/50 hover:text-destructive" onClick={() => onDelete(l)}>
+                    <Trash2 className="size-4" />
                   </Button>
                 </div>
               </div>

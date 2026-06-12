@@ -285,7 +285,7 @@ export default function CounterPage() {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 px-2.5 sm:px-3 mr-2 border-border/60 hover:bg-muted/80 transition-colors duration-200"
+              className="h-10 md:h-8 px-3 mr-2 border-border/60 hover:bg-muted/80 transition-colors duration-200"
               onClick={handleReset}
               disabled={total === 0}
             >
@@ -294,7 +294,7 @@ export default function CounterPage() {
             </Button>
             <Button
               size="sm"
-              className={`h-8 px-2.5 sm:px-3 shadow-sm transition-colors duration-200 ${
+              className={`h-10 md:h-8 px-3 shadow-sm transition-colors duration-200 ${
                 saved
                   ? "bg-success hover:bg-success/90 text-success-foreground shadow-success/10"
                   : "bg-primary hover:bg-primary/95 text-primary-foreground shadow-primary/10"
@@ -327,11 +327,11 @@ export default function CounterPage() {
               <div className="flex items-end justify-between gap-4 flex-wrap">
                 <div>
                   <div className="flex items-center gap-2">
-                    <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">
                       Total today
                     </p>
                     <span
-                      className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                         saved
                           ? "bg-success/15 text-success border border-success/10"
                           : total > 0
@@ -345,7 +345,7 @@ export default function CounterPage() {
                   <p className="text-6xl sm:text-7xl font-black tabular-nums text-primary leading-none mt-1.5">
                     {animatedTotal}
                   </p>
-                  <p className="text-[10px] text-muted-foreground mt-2 font-medium">
+                  <p className="text-xs text-muted-foreground mt-2 font-medium">
                     {saved
                       ? "All counts synchronized to database"
                       : todayLog

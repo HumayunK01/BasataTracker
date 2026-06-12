@@ -1,4 +1,4 @@
-import type { Dispatch } from "react";
+﻿import type { Dispatch } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -66,7 +66,7 @@ export function ProfilePasswordCard({
         {!profileState.open ? (
           <div className="flex-1 flex flex-col gap-3">
             <div className="space-y-1">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Associate Name</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Associate Name</p>
               <p className="text-sm font-semibold text-foreground/90">
                 {profile?.first_name || profile?.last_name
                   ? `${profile.first_name} ${profile.last_name}`.trim()
@@ -150,7 +150,7 @@ export function ProfilePasswordCard({
             {/* Custom Alert Box */}
             <div className="flex items-start gap-2 bg-warning/10 border border-warning/20 rounded-md p-2.5">
               <Info className="size-4 text-warning shrink-0 mt-0.5" />
-              <p className="text-[10px] text-muted-foreground leading-normal">
+              <p className="text-xs text-muted-foreground leading-normal">
                 Must be at least 6 characters. Make it strong with numbers and special symbols.
               </p>
             </div>
@@ -159,7 +159,7 @@ export function ProfilePasswordCard({
               <Label className="text-xs text-muted-foreground font-semibold">New password</Label>
               <Input
                 type="password"
-                placeholder="••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 minLength={6}
                 value={pwState.next}
                
@@ -170,7 +170,7 @@ export function ProfilePasswordCard({
               <Label className="text-xs text-muted-foreground font-semibold">Confirm password</Label>
               <Input
                 type="password"
-                placeholder="••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 value={pwState.confirm}
                
                 onChange={(e) => pwDispatch({ type: "set", patch: { confirm: e.target.value } })}

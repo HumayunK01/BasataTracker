@@ -21,17 +21,17 @@ export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
 
   return (
     <header className="sticky top-0 z-10 border-b border-border bg-card shrink-0">
-      <div className="px-3 sm:px-4 py-1 sm:py-2 flex items-center justify-between gap-2">
+      <div className="px-3 sm:px-4 py-2 flex items-center justify-between gap-2">
 
         {/* Left: hamburger + date/title */}
         <div className="flex items-center gap-2 min-w-0 -ml-2">
-          <SidebarTrigger className="shrink-0 size-9 [&>svg]:h-7 [&>svg]:w-7" />
+          <SidebarTrigger className="shrink-0 size-11 md:size-9 [&>svg]:h-7 [&>svg]:w-7" />
           <div className="min-w-0">
             <p className="text-sm text-muted-foreground truncate leading-tight">
               {formatHeaderDate(date)}
             </p>
             {(title || subtitle) && (
-              <div className="text-sm font-medium truncate leading-tight mt-0.5">
+              <div className="text-base md:text-sm font-medium truncate leading-tight mt-0.5">
                 {title ?? subtitle}
               </div>
             )}
@@ -56,13 +56,13 @@ export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="hidden md:flex size-10 text-foreground hover:text-foreground/80"
+            className="flex size-11 md:size-10 text-foreground hover:text-foreground/80"
             onClick={toggle}
             title={theme === "dark" ? "Light mode" : "Dark mode"}
           >
             {theme === "dark"
-              ? <Sun className="size-9" />
-              : <Moon className="size-9" />}
+              ? <Sun className="size-8 md:size-9" />
+              : <Moon className="size-8 md:size-9" />}
           </Button>
           <Button
             variant="ghost"
