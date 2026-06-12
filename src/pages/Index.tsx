@@ -9,6 +9,7 @@ import { isoDate, totalForLog } from "@/types/log";
 import { Plus, BarChart2 } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { PageHeader } from "@/components/ar/PageHeader";
+import { TodayHero } from "@/components/ar/TodayHero";
 
 import { colorForKey } from "@/lib/cat-colors";
 
@@ -59,6 +60,23 @@ const Index = () => {
       />
       <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
         <div className="w-full space-y-5 sm:space-y-8">
+
+            {/* ── Today hero: goal ring, streak, vs average ── */}
+            {isLoading ? (
+              <section className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-center gap-4">
+                    <Skeleton circle width={52} height={52} />
+                    <div className="space-y-1.5">
+                      <Skeleton width={72} height={12} borderRadius={4} />
+                      <Skeleton width={56} height={24} borderRadius={4} />
+                    </div>
+                  </div>
+                ))}
+              </section>
+            ) : !isEmpty && (
+              <TodayHero logs={logs} />
+            )}
 
             {/* ── Per-category breakdown ── */}
             <section className="space-y-2 sm:space-y-3">
