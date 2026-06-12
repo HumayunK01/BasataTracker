@@ -4,7 +4,7 @@ import { useCategories, type Category } from "@/hooks/useCategories";
 import { useUpsertLog, useDailyLogs } from "@/hooks/useDailyLogs";
 import { isoDate, totalForLog } from "@/types/log";
 import { PageHeader } from "@/components/ar/PageHeader";
-import { RotateCcw, Save, CheckCircle2, Hash, Plus, Tag } from "lucide-react";
+import { RotateCcw, Save, CheckCircle2, Hash, Plus, Tag, ChevronRight } from "lucide-react";
 import { colorForKey } from "@/lib/cat-colors";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -410,25 +410,44 @@ export default function CounterPage() {
               type="button"
               onClick={() => setPickerOpen(true)}
               disabled={catsLoading || availableToAdd.length === 0}
-              className="flex-1 flex items-center justify-center gap-2 rounded-md border border-dashed border-border/60 py-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-muted/[0.04] active:scale-[0.99] transition-[color,background-color,border-color,transform] duration-200 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation font-semibold cursor-pointer"
+              className="flex-1 flex items-center gap-3 rounded-md border border-border bg-card px-4 py-3 text-left hover:bg-muted/40 hover:border-foreground/20 active:scale-[0.99] transition-[background-color,border-color,transform] duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:border-border touch-manipulation cursor-pointer"
             >
-              <Plus className="size-4" />
-              {catsLoading
-                ? "Loading categories…"
-                : availableToAdd.length === 0 && activeCategories.length === 0
-                ? "No categories yet"
-                : availableToAdd.length === 0
-                ? "All active categories added"
-                : "Add category to counter"}
+              <span className="size-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Plus className="size-5 text-primary" />
+              </span>
+              <span className="flex-1 min-w-0">
+                <span className="block text-sm font-semibold text-foreground">
+                  {catsLoading
+                    ? "Loading categories…"
+                    : availableToAdd.length === 0 && activeCategories.length === 0
+                    ? "No categories yet"
+                    : availableToAdd.length === 0
+                    ? "All active categories added"
+                    : "Add category to counter"}
+                </span>
+                <span className="block text-xs text-muted-foreground mt-0.5 truncate">
+                  {availableToAdd.length > 0
+                    ? `Pick from ${availableToAdd.length} available categor${availableToAdd.length === 1 ? "y" : "ies"}`
+                    : "Create a new category to keep counting"}
+                </span>
+              </span>
+              {availableToAdd.length > 0 && !catsLoading && (
+                <ChevronRight className="size-4 text-muted-foreground shrink-0" />
+              )}
             </button>
             <button
               type="button"
               onClick={() => setNewCatOpen(true)}
               disabled={catsLoading}
-              className="sm:px-8 flex items-center justify-center gap-2 rounded-md border border-dashed border-primary/40 py-4 text-sm text-primary hover:border-primary/70 hover:bg-primary/5 active:scale-[0.99] transition-[color,background-color,border-color,transform] duration-200 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation font-semibold cursor-pointer"
+              className="sm:w-64 flex items-center gap-3 rounded-md border border-primary/30 bg-card px-4 py-3 text-left hover:bg-primary/5 hover:border-primary/60 active:scale-[0.99] transition-[background-color,border-color,transform] duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:border-primary/30 touch-manipulation cursor-pointer"
             >
-              <Tag className="size-4" />
-              New category
+              <span className="size-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Tag className="size-5 text-primary" />
+              </span>
+              <span className="flex-1 min-w-0">
+                <span className="block text-sm font-semibold text-primary">New category</span>
+                <span className="block text-xs text-muted-foreground mt-0.5 truncate">Create your own from scratch</span>
+              </span>
             </button>
           </div>
 
