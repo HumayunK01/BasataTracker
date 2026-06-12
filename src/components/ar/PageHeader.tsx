@@ -41,7 +41,7 @@ export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
         {/* Right: actions + settings + sign out + theme toggle (hidden on mobile, shown on desktop) */}
         <div className="flex items-center gap-1 shrink-0">
           {actions}
-          <span className="hidden md:inline text-sm font-medium text-foreground">
+          <span className="hidden md:inline text-sm font-medium text-foreground ml-3 mr-1">
             Pheonix Heart
           </span>
           <Button
