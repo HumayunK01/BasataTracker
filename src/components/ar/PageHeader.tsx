@@ -25,13 +25,13 @@ export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
 
         {/* Left: hamburger + date/title */}
         <div className="flex items-center gap-2 min-w-0 -ml-2">
-          <SidebarTrigger className="shrink-0 size-8 [&>svg]:h-6 [&>svg]:w-6" />
+          <SidebarTrigger className="shrink-0 size-9 [&>svg]:h-7 [&>svg]:w-7" />
           <div className="min-w-0">
-            <p className="text-xs text-muted-foreground truncate leading-tight">
+            <p className="text-sm text-muted-foreground truncate leading-tight">
               {formatHeaderDate(date)}
             </p>
             {(title || subtitle) && (
-              <div className="text-xs font-medium truncate leading-tight mt-0.5">
+              <div className="text-sm font-medium truncate leading-tight mt-0.5">
                 {title ?? subtitle}
               </div>
             )}
@@ -41,34 +41,37 @@ export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
         {/* Right: actions + settings + sign out + theme toggle (hidden on mobile, shown on desktop) */}
         <div className="flex items-center gap-1 shrink-0">
           {actions}
+          <span className="hidden md:inline text-sm font-medium text-foreground">
+            Pheonix Heart
+          </span>
           <Button
             variant="ghost"
             size="icon"
-            className="hidden md:flex size-9 text-foreground hover:text-foreground/80"
+            className="hidden md:flex size-10 text-foreground hover:text-foreground/80"
             onClick={() => navigate("/settings")}
             title="Settings"
           >
-            <Settings className="size-8" />
+            <Settings className="size-9" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="hidden md:flex size-9 text-foreground hover:text-foreground/80"
+            className="hidden md:flex size-10 text-foreground hover:text-foreground/80"
             onClick={toggle}
             title={theme === "dark" ? "Light mode" : "Dark mode"}
           >
             {theme === "dark"
-              ? <Sun className="size-8" />
-              : <Moon className="size-8" />}
+              ? <Sun className="size-9" />
+              : <Moon className="size-9" />}
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="hidden md:flex size-9 text-foreground hover:text-destructive"
+            className="hidden md:flex size-10 text-foreground hover:text-destructive"
             onClick={signOut}
             title="Sign out"
           >
-            <LogOut className="size-8" />
+            <LogOut className="size-9" />
           </Button>
         </div>
       </div>
