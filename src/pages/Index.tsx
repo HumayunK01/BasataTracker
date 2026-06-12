@@ -93,7 +93,7 @@ const Index = () => {
                       const ranked = [...stats.categoryTotals].sort((a, b) => b.value - a.value);
                       return ranked.map((c) => (
                         <div key={c.key} className="bg-card border border-border rounded-md p-3 sm:p-4">
-                          <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate" title={c.label}>{c.label}</p>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide truncate" title={c.label}>{c.label}</p>
                           <p className="text-xl sm:text-2xl font-bold mt-1 tabular-nums" style={{ color: colorForKey(c.key) }}>
                             {c.value}
                           </p>

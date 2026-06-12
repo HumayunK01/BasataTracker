@@ -102,7 +102,7 @@ export function NewCategoryDialog({ open, onOpenChange, onCreated }: NewCategory
               onChange={(e) => { setShort(e.target.value); setError(""); }}
               onKeyDown={(e) => e.key === "Enter" && save()}
             />
-            <p className="text-[10px] text-muted-foreground">Displayed on counters and mobile screens (Max 10 chars)</p>
+            <p className="text-xs text-muted-foreground">Displayed on counters and mobile screens (Max 10 chars)</p>
           </div>
 
           {error && (

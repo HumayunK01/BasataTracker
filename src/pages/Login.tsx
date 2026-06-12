@@ -109,9 +109,9 @@ export default function LoginPage() {
         <button
           onClick={toggle}
           title={theme === "dark" ? "Light mode" : "Dark mode"}
-          className="absolute top-3 right-3 size-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          className="absolute top-2 right-2 size-10 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
         >
-          {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+          {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
         </button>
 
         {/* Logo */}
@@ -200,14 +200,14 @@ export default function LoginPage() {
               required
               minLength={6}
               autoComplete={mode === "login" ? "current-password" : "new-password"}
-              className="h-11 pr-10"
+              className="h-11 pr-12"
             />
             <button
               type="button"
               onClick={() => dispatch({ type: "toggle_pw" })}
               tabIndex={-1}
               title={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-[color,transform] duration-150 active:scale-90"
+              className="absolute right-1 top-1/2 -translate-y-1/2 size-9 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-[color,transform] duration-150 active:scale-90"
             >
               <span
                 key={showPassword ? "visible" : "hidden"}

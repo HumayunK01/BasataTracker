@@ -1,4 +1,4 @@
-import type { Dispatch, DragEvent } from "react";
+﻿import type { Dispatch, DragEvent } from "react";
 import { colorForKey, withAlpha } from "@/lib/cat-colors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -89,14 +89,14 @@ export function CategorySection({
             </div>
             <div>
               <h2 className="text-sm font-semibold">Categories</h2>
-              <p className="text-[10px] text-muted-foreground mt-0.5 hidden xs:block">
-                Drag to rearrange keys · {categories.length} active categories
+              <p className="text-xs text-muted-foreground mt-0.5 hidden xs:block">
+                Drag to rearrange keys Â· {categories.length} active categories
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button size="sm" className="bg-primary hover:bg-primary/95 text-primary-foreground text-xs h-8 shadow-sm" onClick={onAdd}>
-              <Plus className="size-3.5 sm:mr-1.5" />
+            <Button size="sm" className="bg-primary hover:bg-primary/95 text-primary-foreground text-xs h-10 sm:h-8 shadow-sm" onClick={onAdd}>
+              <Plus className="size-4 sm:size-3.5 sm:mr-1.5" />
               <span className="hidden sm:inline">Add category</span>
             </Button>
           </div>
@@ -156,26 +156,26 @@ export function CategorySection({
                   <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: clr }} aria-hidden />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate" title={c.label}>{c.label}</p>
-                    <p className="text-[10px] font-mono text-muted-foreground truncate">{c.short}</p>
+                    <p className="text-xs font-mono text-muted-foreground truncate">{c.short}</p>
                   </div>
                   <div className="flex items-center shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="size-7 text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                      className="size-9 sm:size-7 text-muted-foreground hover:text-foreground hover:bg-muted/80"
                       title={`Edit ${c.label}`}
                       onClick={() => onEdit(c)}
                     >
-                      <Pencil className="size-3.5" />
+                      <Pencil className="size-4 sm:size-3.5" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      className="size-9 sm:size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                       title={`Delete ${c.label}`}
                       onClick={() => catDispatch({ type: "set_delete_target", cat: c })}
                     >
-                      <Trash2 className="size-3.5" />
+                      <Trash2 className="size-4 sm:size-3.5" />
                     </Button>
                   </div>
                 </div>
@@ -227,7 +227,7 @@ export function CategorySection({
                 onChange={(e) => catDispatch({ type: "set_form", patch: { short: e.target.value } })}
                 onKeyDown={(e) => e.key === "Enter" && onSave()}
               />
-              <p className="text-[10px] text-muted-foreground">Displayed on counters and mobile screens (Max 10 chars)</p>
+              <p className="text-xs text-muted-foreground">Displayed on counters and mobile screens (Max 10 chars)</p>
             </div>
             
             {cat.formError && (

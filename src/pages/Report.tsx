@@ -227,8 +227,8 @@ const ReportPage = () => {
         actions={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="size-8 sm:hidden shrink-0" disabled={filtered.length === 0}>
-                <Download className="size-4" />
+              <Button variant="outline" size="icon" className="size-10 sm:hidden shrink-0" disabled={filtered.length === 0}>
+                <Download className="size-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuTrigger asChild>
@@ -272,7 +272,7 @@ const ReportPage = () => {
                     onClick={() => applyPreset(p.id)}
                     aria-pressed={active}
                     className={[
-                      "relative z-10 snap-start shrink-0 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap",
+                      "relative z-10 snap-start shrink-0 rounded-md px-3 py-2.5 sm:py-1.5 text-sm sm:text-xs font-medium whitespace-nowrap",
                       "transition-[color,background-color,transform] duration-300 active:scale-[0.97]",
                       active
                         ? "text-primary-foreground"
@@ -286,7 +286,7 @@ const ReportPage = () => {
               {activePreset === "" && (
                 <span
                   ref={registerSegment("custom")}
-                  className="relative z-10 snap-start shrink-0 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap text-primary-foreground select-none animate-fade-in"
+                  className="relative z-10 snap-start shrink-0 rounded-md px-3 py-2.5 sm:py-1.5 text-sm sm:text-xs font-medium whitespace-nowrap text-primary-foreground select-none animate-fade-in"
                 >
                   Custom
                 </span>
