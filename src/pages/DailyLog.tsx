@@ -12,15 +12,18 @@ import { DayEntrySheet } from "@/components/ar/DayEntrySheet";
 import { DaysTable } from "@/components/ar/DaysTable";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
-import { downloadCSV, downloadJSON } from "@/lib/log-utils";
+import { useProfile } from "@/hooks/useProfile";
+import { downloadCSV, downloadJSON, downloadPDF } from "@/lib/log-utils";
 import { isoDate, totalForLog, type DailyLog } from "@/types/log";
-import { CalendarDays, Download, FileJson, FileText, Plus, ChevronDown } from "lucide-react";
+import { CalendarDays, Download, FileJson, FileText, FileType, Plus, ChevronDown } from "lucide-react";
 import { PageHeader } from "@/components/ar/PageHeader";
 import Skeleton from "react-loading-skeleton";
 
 const DailyLogPage = () => {
   const { data: logs = [], isLoading } = useDailyLogs();
   const { data: categories = [] } = useCategories();
+  const { data: profile } = useProfile();
+  const userName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || undefined;
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<DailyLog | null>(null);
   const [now, setNow] = useState(() => new Date());
@@ -80,6 +83,9 @@ const DailyLogPage = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => downloadJSON(logs, categories, "daily-log.json")}>
                   <FileJson className="size-4 mr-2" /> JSON (.json)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => downloadPDF(logs, categories, "daily-log.pdf", { title: "", userName })}>
+                  <FileType className="size-4 mr-2" /> PDF (.pdf)
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

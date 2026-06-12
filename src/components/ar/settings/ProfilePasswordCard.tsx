@@ -1,4 +1,4 @@
-﻿import type { Dispatch } from "react";
+import type { Dispatch } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -159,7 +159,7 @@ export function ProfilePasswordCard({
               <Label className="text-xs text-muted-foreground font-semibold">New password</Label>
               <Input
                 type="password"
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                placeholder="••••••••"
                 minLength={6}
                 value={pwState.next}
                
@@ -170,7 +170,7 @@ export function ProfilePasswordCard({
               <Label className="text-xs text-muted-foreground font-semibold">Confirm password</Label>
               <Input
                 type="password"
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                placeholder="••••••••"
                 value={pwState.confirm}
                
                 onChange={(e) => pwDispatch({ type: "set", patch: { confirm: e.target.value } })}
