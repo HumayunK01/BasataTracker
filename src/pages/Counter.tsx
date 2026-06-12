@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useCategories, type Category } from "@/hooks/useCategories";
 import { useUpsertLog, useDailyLogs } from "@/hooks/useDailyLogs";
 import { isoDate, totalForLog } from "@/types/log";
@@ -55,7 +65,7 @@ function counterReducer(s: CounterState, a: CounterAction): CounterState {
     case "set_saved":
       return { ...s, saved: a.v };
     case "reset":
-      return { ...s, counts: {}, saved: false };
+      return { ...s, counts: {}, selectedKeys: [], saved: false };
     case "hydrate":
       return { counts: { ...a.counts }, selectedKeys: a.keys, saved: true };
     default:
@@ -96,6 +106,7 @@ export default function CounterPage() {
   }));
   const [pickerOpen, setPickerOpen] = useState(false);
   const [newCatOpen, setNewCatOpen] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
   // Cross-device persistence. Saving is manual (Save button) into today's
@@ -260,7 +271,10 @@ export default function CounterPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [activeCategories, increment]);
 
-  const handleReset = () => cDispatch({ type: "reset" });
+  const handleReset = () => {
+    cDispatch({ type: "reset" });
+    setResetOpen(false);
+  };
 
   const handleSave = async () => {
     const keys = activeCategories.map((c) => c.key);
@@ -286,8 +300,8 @@ export default function CounterPage() {
               variant="outline"
               size="sm"
               className="h-10 md:h-8 px-3 mr-2 border-border/60 hover:bg-muted/80 transition-colors duration-200"
-              onClick={handleReset}
-              disabled={total === 0}
+              onClick={() => setResetOpen(true)}
+              disabled={total === 0 && activeCategories.length === 0}
             >
               <RotateCcw className="size-4" />
               <span className="hidden xs:inline ml-1 font-semibold">Reset</span>
@@ -473,6 +487,28 @@ export default function CounterPage() {
         onOpenChange={setNewCatOpen}
         onCreated={addCategory}
       />
+
+      <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset the counter?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will clear {total} unsaved count{total === 1 ? "" : "s"} and remove all{" "}
+              {activeCategories.length} categor{activeCategories.length === 1 ? "y" : "ies"} from the counter.
+              {todayLog ? " Counts already saved to today's log are not affected." : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleReset}
+            >
+              Reset counter
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

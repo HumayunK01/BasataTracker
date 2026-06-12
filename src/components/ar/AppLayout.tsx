@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/ar/AppSidebar";
+import { MobileTabBar } from "@/components/ar/MobileTabBar";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -6,6 +7,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <AppSidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden page-transition">
         {children}
+        <MobileTabBar />
       </div>
       <div id="kudos-animation-container" className="fixed inset-0 pointer-events-none z-50 overflow-hidden" />
     </div>
