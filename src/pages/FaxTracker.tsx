@@ -47,7 +47,7 @@ function stepClasses(status: FaxStepStatus | null): string {
 function overallClasses(status: string): string {
   if (status.startsWith("Resolved"))    return "text-emerald-700 dark:text-emerald-400";
   if (status === "All Steps Failed")    return "text-rose-700 dark:text-rose-400";
-  if (status.startsWith("Waiting"))     return "text-sky-700 dark:text-sky-400";
+  if (status.startsWith("Waiting"))     return "text-amber-700 dark:text-amber-400";
   if (status.startsWith("Move to"))     return "text-amber-600 dark:text-amber-400";
   return "text-muted-foreground";
 }
@@ -75,7 +75,7 @@ function rowClasses(status: string): string {
   switch (statusGroup(status)) {
     case "Resolved": return "bg-emerald-500/[0.18] hover:bg-emerald-500/25";
     case "Failed":   return "bg-rose-500/[0.18] hover:bg-rose-500/25";
-    case "Waiting":  return "bg-sky-500/10 hover:bg-sky-500/15";
+    case "Waiting":  return "bg-amber-400/[0.18] hover:bg-amber-400/25";
     default:         return "hover:bg-muted/30";
   }
 }
