@@ -36,19 +36,19 @@ import { cn } from "@/lib/utils";
 // Spreadsheet style: bold colored text (no badge boxes) on a tinted row.
 function stepClasses(status: FaxStepStatus | null): string {
   switch (status) {
-    case "Successfully Sent": return "text-emerald-700 dark:text-emerald-400";
-    case "Failed":            return "text-rose-700 dark:text-rose-400";
-    case "Waiting":           return "text-amber-600 dark:text-amber-400";
+    case "Successfully Sent": return "text-emerald-700 dark:text-emerald-300";
+    case "Failed":            return "text-rose-700 dark:text-rose-300";
+    case "Waiting":           return "text-amber-600 dark:text-amber-300";
     case "Pending":           return "text-muted-foreground";
     default:                  return "text-muted-foreground/40";
   }
 }
 
 function overallClasses(status: string): string {
-  if (status.startsWith("Resolved"))    return "text-emerald-700 dark:text-emerald-400";
-  if (status === "All Steps Failed")    return "text-rose-700 dark:text-rose-400";
-  if (status.startsWith("Waiting"))     return "text-amber-700 dark:text-amber-400";
-  if (status.startsWith("Move to"))     return "text-amber-600 dark:text-amber-400";
+  if (status.startsWith("Resolved"))    return "text-emerald-700 dark:text-emerald-300";
+  if (status === "All Steps Failed")    return "text-rose-700 dark:text-rose-300";
+  if (status.startsWith("Waiting"))     return "text-amber-700 dark:text-amber-300";
+  if (status.startsWith("Move to"))     return "text-amber-600 dark:text-amber-300";
   return "text-muted-foreground";
 }
 
@@ -73,9 +73,9 @@ function statusGroup(status: string): StatusGroup | null {
 // Whole-row tint: green for resolved, red for all-steps-failed (like the sheet).
 function rowClasses(status: string): string {
   switch (statusGroup(status)) {
-    case "Resolved": return "bg-emerald-500/[0.18] hover:bg-emerald-500/25";
-    case "Failed":   return "bg-rose-500/[0.18] hover:bg-rose-500/25";
-    case "Waiting":  return "bg-amber-400/[0.18] hover:bg-amber-400/25";
+    case "Resolved": return "bg-emerald-500/[0.18] hover:bg-emerald-500/25 dark:bg-emerald-500/[0.08] dark:hover:bg-emerald-500/[0.14]";
+    case "Failed":   return "bg-rose-500/[0.18] hover:bg-rose-500/25 dark:bg-rose-500/[0.08] dark:hover:bg-rose-500/[0.14]";
+    case "Waiting":  return "bg-amber-400/[0.18] hover:bg-amber-400/25 dark:bg-amber-400/[0.08] dark:hover:bg-amber-400/[0.14]";
     default:         return "hover:bg-muted/30";
   }
 }
