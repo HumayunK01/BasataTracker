@@ -10,7 +10,10 @@ export type AuditEvent =
   | "categories_reordered"
   | "account_deleted"
   | "password_changed"
-  | "data_exported";
+  | "data_exported"
+  | "fax_created"
+  | "fax_updated"
+  | "fax_deleted";
 
 export async function logAuditEvent(
   event: AuditEvent,

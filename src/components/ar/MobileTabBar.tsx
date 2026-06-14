@@ -1,11 +1,12 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { CalendarDays, LayoutDashboard, FileBarChart, Hash } from "lucide-react";
+import { CalendarDays, LayoutDashboard, FileBarChart, Hash, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/" },
   { title: "Counter", icon: Hash, path: "/counter" },
   { title: "Daily Log", icon: CalendarDays, path: "/log" },
+  { title: "Fax", icon: Send, path: "/fax-tracker" },
   { title: "Report", icon: FileBarChart, path: "/report" },
 ];
 

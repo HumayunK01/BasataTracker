@@ -104,6 +104,43 @@ export type Database = {
         }
         Relationships: []
       }
+      fax_tracker: {
+        Row: {
+          id: string
+          patient_name: string
+          step1: Database["public"]["Enums"]["fax_step_status"]
+          step2: Database["public"]["Enums"]["fax_step_status"] | null
+          step3: Database["public"]["Enums"]["fax_step_status"] | null
+          overall_status: string
+          notes: string | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          patient_name: string
+          step1?: Database["public"]["Enums"]["fax_step_status"]
+          step2?: Database["public"]["Enums"]["fax_step_status"] | null
+          step3?: Database["public"]["Enums"]["fax_step_status"] | null
+          notes?: string | null
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          patient_name?: string
+          step1?: Database["public"]["Enums"]["fax_step_status"]
+          step2?: Database["public"]["Enums"]["fax_step_status"] | null
+          step3?: Database["public"]["Enums"]["fax_step_status"] | null
+          notes?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -112,7 +149,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      fax_step_status: "Failed" | "Successfully Sent" | "Waiting" | "Pending"
     }
     CompositeTypes: {
       [_ in never]: never
