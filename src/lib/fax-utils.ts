@@ -46,7 +46,7 @@ export async function downloadFaxPDF(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
   doc.setTextColor(30);
-  doc.text("Phoenix Heart — Fax Tracker", margin, 44);
+  doc.text("Phoenix Heart Fax Tracker", margin, 44);
 
   let y = 60;
   if (opts.userName) {
