@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, ChevronDown, Settings, Sun, Moon, LogOut, Users, BookOpen, Tags, ExternalLink } from "lucide-react";
+import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, ChevronDown, Settings, Sun, Moon, LogOut, Users, BookOpen, Tags, ExternalLink, Send } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import {
@@ -29,6 +29,7 @@ const groups = [
     items: [
       { title: "Counter", icon: Hash, path: "/counter" },
       { title: "Daily Log", icon: CalendarDays, path: "/log" },
+      { title: "Fax Tracker", icon: Send, path: "/fax-tracker" },
     ],
   },
 ];
