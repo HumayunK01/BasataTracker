@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import {
   useFaxTracker,
   useDeleteFax,
   type FaxRow,
   type FaxStepStatus,
 } from "@/hooks/useFaxTracker";
+import { downloadFaxPDF } from "@/lib/fax-utils";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { FaxEntryDialog } from "@/components/ar/fax/FaxEntryDialog";
 import { Button } from "@/components/ui/button";
@@ -28,9 +30,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Pencil, Trash2, Search, ListFilter, FileWarning, MoreVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ListFilter, FileWarning, MoreVertical, FileText } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+async function copyName(name: string) {
+  try {
+    await navigator.clipboard.writeText(name);
+    toast.success(`Copied "${name}"`);
+  } catch {
+    toast.error("Couldn't copy to clipboard");
+  }
+}
 
 // ── Status → color classes ──────────────────────────────────────────────────
 // Spreadsheet style: bold colored text (no badge boxes) on a tinted row.
@@ -91,8 +103,10 @@ function StepCell({ status }: { status: FaxStepStatus | null }) {
 
 const FaxTrackerPage = () => {
   const { user } = useAuth();
+  const { data: profile } = useProfile();
   const { data: rows = [], isLoading } = useFaxTracker();
   const deleteFax = useDeleteFax();
+  const [exporting, setExporting] = useState(false);
 
   const [now] = useState(() => new Date());
   const [search, setSearch] = useState("");
@@ -124,6 +138,25 @@ const FaxTrackerPage = () => {
   const openAdd = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (row: FaxRow) => { setEditing(row); setDialogOpen(true); };
 
+  // Export whatever is currently on screen (filters + search applied).
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const userName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || undefined;
+      const activeFilters = statusFilter.size ? Array.from(statusFilter).join(", ") : null;
+      const subtitleBits = [
+        activeFilters ? `Status: ${activeFilters}` : "All patients",
+        search.trim() ? `Search: "${search.trim()}"` : null,
+      ].filter(Boolean);
+      await downloadFaxPDF(filtered, "fax-tracker.pdf", {
+        userName,
+        subtitle: subtitleBits.join("  ·  "),
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const toggleStatus = (s: string) => {
     setStatusFilter((prev) => {
       const next = new Set(prev);
@@ -139,9 +172,22 @@ const FaxTrackerPage = () => {
         now={now}
         subtitle="Fax Tracker"
         actions={
-          <Button size="sm" className="h-8 shrink-0 bg-primary hover:bg-primary/95 text-primary-foreground" onClick={openAdd}>
-            <Plus className="size-4 mr-1" /> Add Patient
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 shrink-0"
+              onClick={handleExport}
+              disabled={exporting || filtered.length === 0}
+              title={filtered.length === 0 ? "Nothing to export" : "Export the current view to PDF"}
+            >
+              <FileText className="size-4 mr-1" />
+              {exporting ? "Exporting…" : "Export PDF"}
+            </Button>
+            <Button size="sm" className="h-8 shrink-0 bg-primary hover:bg-primary/95 text-primary-foreground" onClick={openAdd}>
+              <Plus className="size-4 mr-1" /> Add Patient
+            </Button>
+          </div>
         }
       />
 
@@ -238,7 +284,16 @@ const FaxTrackerPage = () => {
                       const mine = row.created_by === user?.id;
                       return (
                         <tr key={row.id} className={cn("border-t border-border transition-colors", rowClasses(row.overall_status))}>
-                          <td className="px-3 py-2 font-medium text-foreground whitespace-nowrap">{row.patient_name}</td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => copyName(row.patient_name)}
+                              title="Click to copy name"
+                              className="font-medium text-foreground rounded px-1 -mx-1 text-left hover:bg-foreground/10 hover:underline underline-offset-2 transition-colors cursor-pointer"
+                            >
+                              {row.patient_name}
+                            </button>
+                          </td>
                           <StepCell status={row.step1} />
                           <StepCell status={row.step2} />
                           <StepCell status={row.step3} />
