@@ -59,7 +59,7 @@ export function useFaxTracker() {
       const { data, error } = await supabase
         .from("fax_tracker")
         .select("*")
-        .order("created_at", { ascending: false })
+        .order("created_at", { ascending: true })
         .limit(2000);
       if (error) throw error;
       return data ?? [];

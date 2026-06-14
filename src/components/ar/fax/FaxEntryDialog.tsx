@@ -56,17 +56,25 @@ export function FaxEntryDialog({ open, onOpenChange, row }: FaxEntryDialogProps)
     setError("");
   }, [open, row]);
 
+  // Once an earlier step succeeds, the case is resolved there — later steps
+  // don't apply, so disable (and clear) them.
+  const step2Disabled = step1 === "Successfully Sent";
+  const step3Disabled = step1 === "Successfully Sent" || step2 === "Successfully Sent";
+
   const save = () => {
     const name = patientName.trim();
     if (!name) { setError("Patient name is required."); return; }
+    // Disabled steps are treated as "not attempted" regardless of any stale value.
+    const s2 = step2Disabled ? null : (step2 === NONE ? null : (step2 as FaxStepStatus));
+    const s3 = step3Disabled ? null : (step3 === NONE ? null : (step3 as FaxStepStatus));
     upsert.mutate(
       {
         id: row?.id,
         input: {
           patient_name: name,
           step1,
-          step2: step2 === NONE ? null : (step2 as FaxStepStatus),
-          step3: step3 === NONE ? null : (step3 as FaxStepStatus),
+          step2: s2,
+          step3: s3,
           notes: notes.trim() || null,
         },
       },
@@ -105,15 +113,19 @@ export function FaxEntryDialog({ open, onOpenChange, row }: FaxEntryDialogProps)
             />
             <StepSelect
               label="Step 2 — Refax New"
-              value={step2}
+              value={step2Disabled ? NONE : step2}
               onChange={setStep2}
               allowNone
+              disabled={step2Disabled}
+              hint="Not needed — Step 1 was successfully sent."
             />
             <StepSelect
               label="Step 3 — Reupload ROI"
-              value={step3}
+              value={step3Disabled ? NONE : step3}
               onChange={setStep3}
               allowNone
+              disabled={step3Disabled}
+              hint="Not needed — an earlier step was successfully sent."
             />
           </div>
 
@@ -164,16 +176,20 @@ function StepSelect({
   value,
   onChange,
   allowNone,
+  disabled,
+  hint,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   allowNone: boolean;
+  disabled?: boolean;
+  hint?: string;
 }) {
   return (
     <div className="space-y-1.5">
       <Label className="text-xs font-semibold text-muted-foreground">{label}</Label>
-      <Select value={value} onValueChange={onChange}>
+      <Select value={value} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger>
           <SelectValue />
         </SelectTrigger>
@@ -184,6 +200,7 @@ function StepSelect({
           ))}
         </SelectContent>
       </Select>
+      {disabled && hint && <p className="text-xs text-muted-foreground/70 italic">{hint}</p>}
     </div>
   );
 }
