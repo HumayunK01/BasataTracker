@@ -33,43 +33,58 @@ import Skeleton from "react-loading-skeleton";
 import { cn } from "@/lib/utils";
 
 // ── Status → color classes ──────────────────────────────────────────────────
-// Mirrors the spreadsheet: green = success/resolved, red = failed, yellow = waiting.
+// Spreadsheet style: bold colored text (no badge boxes) on a tinted row.
 function stepClasses(status: FaxStepStatus | null): string {
   switch (status) {
-    case "Successfully Sent": return "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300";
-    case "Failed":            return "bg-rose-500/15 text-rose-700 dark:text-rose-300";
-    case "Waiting":           return "bg-amber-400/20 text-amber-700 dark:text-amber-300";
-    case "Pending":           return "bg-muted text-muted-foreground";
+    case "Successfully Sent": return "text-emerald-700 dark:text-emerald-400";
+    case "Failed":            return "text-rose-700 dark:text-rose-400";
+    case "Waiting":           return "text-amber-600 dark:text-amber-400";
+    case "Pending":           return "text-muted-foreground";
     default:                  return "text-muted-foreground/40";
   }
 }
 
 function overallClasses(status: string): string {
-  if (status.startsWith("Resolved"))    return "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300";
-  if (status === "All Steps Failed")    return "bg-rose-500/15 text-rose-700 dark:text-rose-300";
-  if (status.startsWith("Waiting"))     return "bg-sky-500/15 text-sky-700 dark:text-sky-300";
-  if (status.startsWith("Move to"))     return "bg-amber-400/20 text-amber-700 dark:text-amber-300";
-  return "bg-muted text-muted-foreground";
+  if (status.startsWith("Resolved"))    return "text-emerald-700 dark:text-emerald-400";
+  if (status === "All Steps Failed")    return "text-rose-700 dark:text-rose-400";
+  if (status.startsWith("Waiting"))     return "text-sky-700 dark:text-sky-400";
+  if (status.startsWith("Move to"))     return "text-amber-600 dark:text-amber-400";
+  return "text-muted-foreground";
 }
 
-const ALL_OVERALL = [
-  "Resolved – Refax Same #",
-  "Resolved – Refax New #",
-  "Resolved – Reupload ROI",
-  "All Steps Failed",
-  "Move to Refax New #",
-  "Move to Reupload ROI",
-  "Waiting",
-  "Pending",
-];
+// The DB's auto-computed overall_status carries a trailing "#" (e.g.
+// "Resolved – Refax Same #"). Strip it for display only; the raw value is kept
+// for filtering/color logic so it still matches what the database stores.
+function displayStatus(status: string): string {
+  return status.replace(/\s*#\s*$/, "").trim();
+}
+
+// High-level filter groups. Each maps to one or more raw overall_status values.
+const STATUS_GROUPS = ["Resolved", "Failed", "Waiting"] as const;
+type StatusGroup = (typeof STATUS_GROUPS)[number];
+
+function statusGroup(status: string): StatusGroup | null {
+  if (status.startsWith("Resolved")) return "Resolved";
+  if (status === "All Steps Failed") return "Failed";
+  if (status.startsWith("Waiting")) return "Waiting";
+  return null; // "Move to …" / "Pending" don't fall into the three buckets
+}
+
+// Whole-row tint: green for resolved, red for all-steps-failed (like the sheet).
+function rowClasses(status: string): string {
+  switch (statusGroup(status)) {
+    case "Resolved": return "bg-emerald-500/[0.18] hover:bg-emerald-500/25";
+    case "Failed":   return "bg-rose-500/[0.18] hover:bg-rose-500/25";
+    case "Waiting":  return "bg-sky-500/10 hover:bg-sky-500/15";
+    default:         return "hover:bg-muted/30";
+  }
+}
 
 function StepCell({ status }: { status: FaxStepStatus | null }) {
   if (!status) return <td className="px-3 py-2 text-center text-muted-foreground/40">—</td>;
   return (
-    <td className="px-3 py-2">
-      <span className={cn("inline-block w-full text-center rounded px-2 py-1 text-xs font-medium", stepClasses(status))}>
-        {status}
-      </span>
+    <td className={cn("px-3 py-2 text-center text-sm font-semibold", stepClasses(status))}>
+      {status}
     </td>
   );
 }
@@ -89,7 +104,10 @@ const FaxTrackerPage = () => {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
-      if (statusFilter.size && !statusFilter.has(r.overall_status)) return false;
+      if (statusFilter.size) {
+        const group = statusGroup(r.overall_status);
+        if (!group || !statusFilter.has(group)) return false;
+      }
       if (q && !r.patient_name.toLowerCase().includes(q) && !(r.notes ?? "").toLowerCase().includes(q)) return false;
       return true;
     });
@@ -159,7 +177,7 @@ const FaxTrackerPage = () => {
               <DropdownMenuContent align="end" className="w-56 font-[system-ui]">
                 <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Filter by overall status</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {ALL_OVERALL.map((s) => (
+                {STATUS_GROUPS.map((s) => (
                   <DropdownMenuCheckboxItem
                     key={s}
                     checked={statusFilter.has(s)}
@@ -219,15 +237,13 @@ const FaxTrackerPage = () => {
                     filtered.map((row) => {
                       const mine = row.created_by === user?.id;
                       return (
-                        <tr key={row.id} className="border-t border-border hover:bg-muted/30 transition-colors">
+                        <tr key={row.id} className={cn("border-t border-border transition-colors", rowClasses(row.overall_status))}>
                           <td className="px-3 py-2 font-medium text-foreground whitespace-nowrap">{row.patient_name}</td>
                           <StepCell status={row.step1} />
                           <StepCell status={row.step2} />
                           <StepCell status={row.step3} />
-                          <td className="px-3 py-2">
-                            <span className={cn("inline-block w-full text-center rounded px-2 py-1 text-xs font-semibold", overallClasses(row.overall_status))}>
-                              {row.overall_status}
-                            </span>
+                          <td className={cn("px-3 py-2 text-center text-sm font-semibold", overallClasses(row.overall_status))}>
+                            {displayStatus(row.overall_status)}
                           </td>
                           <td className="px-3 py-2 text-muted-foreground max-w-xs truncate" title={row.notes ?? ""}>
                             {row.notes || <span className="text-muted-foreground/40">—</span>}
