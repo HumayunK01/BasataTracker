@@ -14,8 +14,24 @@ export const STEP_STATUSES: FaxStepStatus[] = ["Pending", "Waiting", "Successful
 
 const stepEnum = z.enum(["Failed", "Successfully Sent", "Waiting", "Pending"]);
 
+// Normalize names to Title Case so "GRECIA DENIZ" / "grecia deniz" both save as
+// "Grecia Deniz". Re-cases around spaces, hyphens, and apostrophes (e.g. "O'Brien").
+export function toTitleCase(name: string): string {
+  return name
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[A-Za-z]+(?:[-'][A-Za-z]+)*/g, (word) =>
+      word.replace(/[A-Za-z]+/g, (part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()),
+    );
+}
+
 const FaxInsertSchema = z.object({
-  patient_name: z.string().trim().min(1, "Patient name is required").max(200, "Name too long"),
+  patient_name: z
+    .string()
+    .trim()
+    .min(1, "Patient name is required")
+    .max(200, "Name too long")
+    .transform(toTitleCase),
   step1: stepEnum,
   step2: stepEnum.nullable(),
   step3: stepEnum.nullable(),
