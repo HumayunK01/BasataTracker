@@ -10,12 +10,13 @@ import {
   type FaxStepStatus,
   type StepField,
 } from "@/hooks/useFaxTracker";
-import { useFaxAccounts } from "@/hooks/useFaxAccounts";
+import { useFaxAccounts, useDeleteFaxAccount, type FaxAccount } from "@/hooks/useFaxAccounts";
 import { downloadFaxPDF } from "@/lib/fax-utils";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { FaxEntryDialog } from "@/components/ar/fax/FaxEntryDialog";
 import { NewAccountDialog } from "@/components/ar/fax/NewAccountDialog";
+import { RenameAccountDialog } from "@/components/ar/fax/RenameAccountDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,7 +38,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Pencil, Trash2, Search, ListFilter, FileWarning, MoreVertical, FileText, X, ArrowUp, ArrowDown, ArrowUpDown, Check, ChevronDown, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ListFilter, FileWarning, MoreVertical, FileText, X, ArrowUp, ArrowDown, ArrowUpDown, Check, ChevronDown, ChevronLeft, ChevronRight, Users } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -327,14 +328,18 @@ function SortHeader({
 }
 
 const ACCOUNT_KEY = "fax-tracker-account";
+const PAGE_SIZE = 25;
 
 const FaxTrackerPage = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile();
   const { data: accounts = [], isLoading: accountsLoading } = useFaxAccounts();
 
+  const deleteAccount = useDeleteFaxAccount();
   const [accountId, setAccountId] = useState<string | null>(() => localStorage.getItem(ACCOUNT_KEY));
   const [accountDialogOpen, setAccountDialogOpen] = useState(false);
+  const [accountToDelete, setAccountToDelete] = useState<FaxAccount | null>(null);
+  const [accountToRename, setAccountToRename] = useState<FaxAccount | null>(null);
 
   // Keep the selection valid: default to the first account, and drop a stale
   // id (e.g. a deleted account) back to the first available one.
@@ -347,6 +352,7 @@ const FaxTrackerPage = () => {
 
   useEffect(() => {
     if (accountId) localStorage.setItem(ACCOUNT_KEY, accountId);
+    setPage(1); // different account → start at the first page
   }, [accountId]);
 
   const activeAccount = accounts.find((a) => a.id === accountId) ?? null;
@@ -360,6 +366,7 @@ const FaxTrackerPage = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set());
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" } | null>(null);
+  const [page, setPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<FaxRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FaxRow | null>(null);
@@ -384,6 +391,28 @@ const FaxTrackerPage = () => {
       return av.localeCompare(bv, undefined, { sensitivity: "base" }) * dir;
     });
   }, [rows, search, statusFilter, sort]);
+
+  // ── Pagination ──
+  // A narrowing of the result set should bring you back to the first page.
+  useEffect(() => { setPage(1); }, [search, statusFilter]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  // Clamp the page when the filtered set shrinks (filter/search/account change).
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+  const paginated = useMemo(
+    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filtered, page],
+  );
+  const pageNumbers = useMemo<(number | "…")[]>(() => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const nums: (number | "…")[] = [1];
+    if (page > 3) nums.push("…");
+    for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) nums.push(i);
+    if (page < totalPages - 2) nums.push("…");
+    nums.push(totalPages);
+    return nums;
+  }, [totalPages, page]);
 
   // Track which row IDs are new since the last render so we can animate just
   // those in (not the whole table on every refetch). Skips the first load.
@@ -562,10 +591,32 @@ const FaxTrackerPage = () => {
                   <DropdownMenuItem
                     key={a.id}
                     onClick={() => setAccountId(a.id)}
-                    className="flex items-center justify-between gap-2"
+                    className="flex items-center justify-between gap-2 pr-1"
                   >
-                    <span className="truncate">{a.name}</span>
-                    {a.id === accountId && <Check className="size-3.5 opacity-80 shrink-0" />}
+                    <span className="flex items-center gap-2 min-w-0">
+                      {a.id === accountId
+                        ? <Check className="size-3.5 opacity-80 shrink-0" />
+                        : <span className="size-3.5 shrink-0" />}
+                      <span className="truncate">{a.name}</span>
+                    </span>
+                    <span className="flex items-center shrink-0">
+                      <button
+                        type="button"
+                        title={`Rename ${a.name}`}
+                        onClick={(e) => { e.stopPropagation(); setAccountToRename(a); }}
+                        className="press-scale p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-foreground/10 transition-colors"
+                      >
+                        <Pencil className="size-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        title={`Delete ${a.name}`}
+                        onClick={(e) => { e.stopPropagation(); setAccountToDelete(a); }}
+                        className="press-scale p-1 rounded text-muted-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </span>
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
@@ -653,7 +704,7 @@ const FaxTrackerPage = () => {
                       </td>
                     </tr>
                   ) : (
-                    filtered.map((row) => {
+                    paginated.map((row) => {
                       const mine = row.created_by === user?.id;
                       return (
                         <tr key={row.id} className={cn("border-t border-border transition-colors", rowClasses(row.overall_status), newIds.has(row.id) && "animate-row-in")}>
@@ -716,6 +767,16 @@ const FaxTrackerPage = () => {
                 </tbody>
               </table>
             </div>
+            {!isLoading && (
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                pageNumbers={pageNumbers}
+                total={filtered.length}
+                pageSize={PAGE_SIZE}
+                onPageChange={setPage}
+              />
+            )}
           </div>
 
           {/* Cards — phones */}
@@ -736,17 +797,31 @@ const FaxTrackerPage = () => {
                 </p>
               </div>
             ) : (
-              filtered.map((row) => (
-                <FaxCard
-                  key={row.id}
-                  row={row}
-                  mine={row.created_by === user?.id}
-                  isNew={newIds.has(row.id)}
-                  onEdit={openEdit}
-                  onDelete={setDeleteTarget}
-                  onPickStep={(field, value) => updateStep.mutate({ row, field, value })}
-                />
-              ))
+              <>
+                {paginated.map((row) => (
+                  <FaxCard
+                    key={row.id}
+                    row={row}
+                    mine={row.created_by === user?.id}
+                    isNew={newIds.has(row.id)}
+                    onEdit={openEdit}
+                    onDelete={setDeleteTarget}
+                    onPickStep={(field, value) => updateStep.mutate({ row, field, value })}
+                  />
+                ))}
+                {totalPages > 1 && (
+                  <div className="rounded-lg border border-border">
+                    <Pagination
+                      page={page}
+                      totalPages={totalPages}
+                      pageNumbers={pageNumbers}
+                      total={filtered.length}
+                      pageSize={PAGE_SIZE}
+                      onPageChange={setPage}
+                    />
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -758,6 +833,12 @@ const FaxTrackerPage = () => {
         open={accountDialogOpen}
         onOpenChange={setAccountDialogOpen}
         onCreated={(account) => setAccountId(account.id)}
+      />
+
+      <RenameAccountDialog
+        open={!!accountToRename}
+        onOpenChange={(o) => !o && setAccountToRename(null)}
+        account={accountToRename}
       />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
@@ -782,9 +863,111 @@ const FaxTrackerPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={!!accountToDelete} onOpenChange={(o) => !o && setAccountToDelete(null)}>
+        <AlertDialogContent className="sm:max-w-md border-destructive/20 bg-background/95 backdrop-blur-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-lg font-semibold">Delete account?</AlertDialogTitle>
+            <AlertDialogDescription className="mt-2 text-sm leading-relaxed">
+              This deletes the account <span className="font-medium text-foreground">{accountToDelete?.name}</span>
+              {" "}and <span className="font-medium text-destructive">all of its patients</span>
+              {accountToDelete?.id === accountId ? ` (${rows.length} on this account)` : ""}. This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4">
+            <AlertDialogCancel className="border-border/60">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              onClick={() => {
+                const target = accountToDelete;
+                if (!target) return;
+                deleteAccount.mutate(target.id, {
+                  // If we deleted the active account, fall back to another one.
+                  onSuccess: () => {
+                    if (target.id === accountId) {
+                      const next = accounts.find((a) => a.id !== target.id);
+                      setAccountId(next ? next.id : null);
+                    }
+                  },
+                });
+                setAccountToDelete(null);
+              }}
+            >
+              Delete account
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
+
+function Pagination({
+  page,
+  totalPages,
+  pageNumbers,
+  total,
+  pageSize,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  pageNumbers: (number | "…")[];
+  total: number;
+  pageSize: number;
+  onPageChange: (p: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="border-t border-border/40 px-4 sm:px-5 py-3 flex flex-wrap items-center justify-center sm:justify-between gap-2">
+      <span className="text-xs text-muted-foreground font-medium">
+        Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total} patients
+      </span>
+      <div className="flex items-center gap-1.5">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-9 sm:size-8 border border-border/40 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 active:scale-95 transition-[color,background-color,transform] duration-150"
+          onClick={() => onPageChange(Math.max(1, page - 1))}
+          disabled={page === 1}
+          aria-label="Previous page"
+        >
+          <ChevronLeft className="size-4" />
+        </Button>
+        {pageNumbers.map((p, i) =>
+          p === "…" ? (
+            <span key={`ellipsis-${pageNumbers[i + 1] ?? i}`} className="w-8 text-center text-xs text-muted-foreground/60 select-none">…</span>
+          ) : (
+            <Button
+              key={p}
+              variant={page === p ? "default" : "ghost"}
+              size="icon"
+              className={cn(
+                "size-9 sm:size-8 text-xs font-semibold rounded-md border active:scale-95 transition-[color,background-color,border-color,transform] duration-150",
+                page === p
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/10"
+                  : "border-border/40 text-muted-foreground hover:text-foreground hover:bg-muted/80",
+              )}
+              onClick={() => onPageChange(p as number)}
+            >
+              {p}
+            </Button>
+          ),
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-9 sm:size-8 border border-border/40 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 active:scale-95 transition-[color,background-color,transform] duration-150"
+          onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+          disabled={page === totalPages}
+          aria-label="Next page"
+        >
+          <ChevronRight className="size-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 function StatCard({
   label,
