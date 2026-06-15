@@ -87,14 +87,16 @@ function statusGroup(status: string): StatusGroup | null {
   return null;
 }
 
-// Whole-row tint: green for resolved, red for all-steps-failed (like the sheet).
+// Whole-row tint: a soft wash in light mode, but in dark mode the heavy wash
+// reads as muddy olive/maroon, so we keep dark tints very faint and lean on the
+// already-colored status text to carry the meaning.
 function rowClasses(status: string): string {
   switch (statusGroup(status)) {
-    case "Resolved": return "bg-emerald-500/[0.18] hover:bg-emerald-500/25 dark:bg-emerald-500/[0.08] dark:hover:bg-emerald-500/[0.14]";
-    case "Failed":   return "bg-rose-500/[0.18] hover:bg-rose-500/25 dark:bg-rose-500/[0.08] dark:hover:bg-rose-500/[0.14]";
-    case "Waiting":  return "bg-amber-400/[0.18] hover:bg-amber-400/25 dark:bg-amber-400/[0.08] dark:hover:bg-amber-400/[0.14]";
-    case "Incomplete": return "bg-slate-400/[0.14] hover:bg-slate-400/20 dark:bg-slate-400/[0.07] dark:hover:bg-slate-400/[0.12]";
-    default:         return "hover:bg-muted/30";
+    case "Resolved":   return "bg-emerald-500/[0.16] hover:bg-emerald-500/25 dark:bg-emerald-500/[0.04] dark:hover:bg-emerald-500/[0.08]";
+    case "Failed":     return "bg-rose-500/[0.16] hover:bg-rose-500/25 dark:bg-rose-500/[0.04] dark:hover:bg-rose-500/[0.08]";
+    case "Waiting":    return "bg-amber-400/[0.16] hover:bg-amber-400/25 dark:bg-amber-400/[0.045] dark:hover:bg-amber-400/[0.09]";
+    case "Incomplete": return "bg-slate-400/[0.12] hover:bg-slate-400/20 dark:bg-slate-400/[0.04] dark:hover:bg-slate-400/[0.08]";
+    default:           return "hover:bg-muted/30";
   }
 }
 
