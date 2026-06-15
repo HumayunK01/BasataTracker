@@ -92,16 +92,6 @@ function displayStatus(status: string): string {
   return status.replace(/\s*#\s*$/, "").trim();
 }
 
-// Split a timestamp into a numeric date (MM/DD/YYYY) and time (h:mm AM/PM) so
-// they can stack on two lines, e.g. "06/12/2026" over "2:20 PM".
-const dateFmt = new Intl.DateTimeFormat("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
-const timeFmt = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
-function formatDateParts(iso: string): { date: string; time: string } | null {
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return null;
-  return { date: dateFmt.format(d), time: timeFmt.format(d) };
-}
-
 // High-level filter groups. Each maps to one or more raw overall_status values.
 const STATUS_GROUPS = ["Resolved", "Failed", "Waiting", "Incomplete"] as const;
 type StatusGroup = (typeof STATUS_GROUPS)[number];
@@ -313,15 +303,6 @@ function FaxCard({
           {row.notes}
         </p>
       )}
-
-      {(() => {
-        const t = formatDateParts(row.updated_at);
-        return t ? (
-          <p className="mt-3 text-xs text-foreground/80 tabular-nums">
-            Updated {t.date} · {t.time}
-          </p>
-        ) : null;
-      })()}
     </div>
   );
 }
@@ -716,7 +697,6 @@ const FaxTrackerPage = () => {
                       <SortHeader label="Overall Status" sortKey="overall_status" sort={sort} onSort={toggleSort} align="center" />
                     </th>
                     <th className="px-3 py-2.5 text-left font-semibold">Notes</th>
-                    <th className="px-3 py-2.5 text-left font-semibold whitespace-nowrap">Last Updated</th>
                     <th className="px-3 py-2.5 text-center font-semibold w-12" aria-label="Actions" />
                   </tr>
                 </thead>
@@ -724,12 +704,12 @@ const FaxTrackerPage = () => {
                   {isLoading ? (
                     Array.from({ length: 6 }).map((_, i) => (
                       <tr key={i} className="border-t border-border">
-                        <td colSpan={8} className="px-3 py-2.5"><Skeleton height={28} borderRadius={4} /></td>
+                        <td colSpan={7} className="px-3 py-2.5"><Skeleton height={28} borderRadius={4} /></td>
                       </tr>
                     ))
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-3 py-16 text-center text-muted-foreground animate-fade-in">
+                      <td colSpan={7} className="px-3 py-16 text-center text-muted-foreground animate-fade-in">
                         <FileWarning className="size-10 opacity-20 mx-auto mb-3" />
                         <p className="text-sm">
                           {rows.length === 0 ? "No patients tracked yet. Add your first one." : "No patients match your filters."}
@@ -765,17 +745,6 @@ const FaxTrackerPage = () => {
                           </td>
                           <td className="px-3 py-2 text-muted-foreground max-w-xs truncate" title={row.notes ?? ""}>
                             {row.notes || <span className="text-muted-foreground/40">—</span>}
-                          </td>
-                          <td className="px-3 py-2 text-foreground/90 whitespace-nowrap text-xs tabular-nums leading-tight">
-                            {(() => {
-                              const t = formatDateParts(row.updated_at);
-                              return t ? (
-                                <>
-                                  <div>{t.date}</div>
-                                  <div>{t.time}</div>
-                                </>
-                              ) : "—";
-                            })()}
                           </td>
                           <td className="px-3 py-2 text-center">
                             {mine ? (
