@@ -325,7 +325,18 @@ const FaxTrackerPage = () => {
         activeFilters ? `Status: ${activeFilters}` : "All patients",
         search.trim() ? `Search: "${search.trim()}"` : null,
       ].filter(Boolean);
-      await downloadFaxPDF(filtered, "fax-tracker.pdf", {
+
+      // Build a filename that reflects the active filter, e.g.
+      // fax-tracker-failed-2026-06-15.pdf  /  fax-tracker-resolved-waiting-...
+      const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      const statusPart = statusFilter.size
+        ? STATUS_GROUPS.filter((g) => statusFilter.has(g)).map(slug).join("-")
+        : "all";
+      const searchPart = search.trim() ? `-${slug(search.trim())}` : "";
+      const datePart = new Date().toISOString().slice(0, 10);
+      const filename = `fax-tracker-${statusPart}${searchPart}-${datePart}.pdf`;
+
+      await downloadFaxPDF(filtered, filename, {
         userName,
         subtitle: subtitleBits.join("  ·  "),
       });
