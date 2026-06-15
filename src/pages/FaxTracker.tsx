@@ -72,14 +72,16 @@ function displayStatus(status: string): string {
 }
 
 // High-level filter groups. Each maps to one or more raw overall_status values.
-const STATUS_GROUPS = ["Resolved", "Failed", "Waiting"] as const;
+const STATUS_GROUPS = ["Resolved", "Failed", "Waiting", "Incomplete"] as const;
 type StatusGroup = (typeof STATUS_GROUPS)[number];
 
 function statusGroup(status: string): StatusGroup | null {
   if (status.startsWith("Resolved")) return "Resolved";
   if (status === "All Steps Failed") return "Failed";
   if (status.startsWith("Waiting")) return "Waiting";
-  return null; // "Move to …" / "Pending" don't fall into the three buckets
+  // A step failed but the next hasn't been attempted yet — work still pending.
+  if (status.startsWith("Move to") || status === "Pending") return "Incomplete";
+  return null;
 }
 
 // Whole-row tint: green for resolved, red for all-steps-failed (like the sheet).
@@ -88,6 +90,7 @@ function rowClasses(status: string): string {
     case "Resolved": return "bg-emerald-500/[0.18] hover:bg-emerald-500/25 dark:bg-emerald-500/[0.08] dark:hover:bg-emerald-500/[0.14]";
     case "Failed":   return "bg-rose-500/[0.18] hover:bg-rose-500/25 dark:bg-rose-500/[0.08] dark:hover:bg-rose-500/[0.14]";
     case "Waiting":  return "bg-amber-400/[0.18] hover:bg-amber-400/25 dark:bg-amber-400/[0.08] dark:hover:bg-amber-400/[0.14]";
+    case "Incomplete": return "bg-slate-400/[0.14] hover:bg-slate-400/20 dark:bg-slate-400/[0.07] dark:hover:bg-slate-400/[0.12]";
     default:         return "hover:bg-muted/30";
   }
 }
