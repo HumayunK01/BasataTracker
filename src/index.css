@@ -265,6 +265,19 @@
     animation: pageSlideIn 0.35s var(--ease-out) forwards;
   }
 
+  /* Table row entering the list (new patient added). ease-out, under 250ms. */
+  .animate-row-in {
+    animation: rowIn 0.22s var(--ease-out) forwards;
+  }
+
+  /* Pressable feedback: scale down on press. Subtle, instant, ease-out. */
+  .press-scale {
+    transition: transform 0.14s var(--ease-out);
+  }
+  .press-scale:active {
+    transform: scale(0.97);
+  }
+
   /* Skip rendering/painting for offscreen heavy blocks (charts, heatmap).
      `contain-intrinsic-size` reserves space so the scrollbar stays stable. */
   .cv-auto {
@@ -276,8 +289,12 @@
 /* Reduced motion — keep fades/color, drop movement and large transforms */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
-  .page-transition {
+  .page-transition,
+  .animate-row-in {
     animation: fadeOnly 0.2s ease forwards;
+  }
+  .press-scale:active {
+    transform: none;
   }
 
   @keyframes fadeOnly {
@@ -311,6 +328,18 @@
   from {
     opacity: 0;
     transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* New row: never from scale(0); start from a near-final state and settle. */
+@keyframes rowIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
   }
   to {
     opacity: 1;
