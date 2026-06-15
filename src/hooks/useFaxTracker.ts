@@ -46,12 +46,12 @@ async function getUserId(): Promise<string> {
   return user.id;
 }
 
-export function useFaxTracker() {
+export function useFaxTracker(accountId?: string) {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ["fax_tracker", user?.id],
-    enabled: !!user,
-    // Shared team tracker — keep it reasonably fresh across devices.
+    queryKey: ["fax_tracker", user?.id, accountId],
+    enabled: !!user && !!accountId,
+    // Per-account list — keep it reasonably fresh across devices.
     staleTime: 0,
     refetchOnWindowFocus: true,
     refetchInterval: 60_000,
@@ -59,6 +59,7 @@ export function useFaxTracker() {
       const { data, error } = await supabase
         .from("fax_tracker")
         .select("*")
+        .eq("account_id", accountId!)
         .order("created_at", { ascending: true })
         .limit(2000);
       if (error) throw error;
@@ -71,12 +72,12 @@ export function useUpsertFax() {
   const qc = useQueryClient();
   const { checkLimit } = useMutationRateLimit({ maxRequests: 30, windowMs: 60_000 });
   return useMutation({
-    mutationFn: async ({ id, input }: { id?: string; input: FaxInput }) => {
+    mutationFn: async ({ id, input, accountId }: { id?: string; input: FaxInput; accountId?: string }) => {
       if (!checkLimit()) throw new Error("Too many saves. Please wait a moment.");
       const validated = FaxInsertSchema.parse(input);
       const created_by = await getUserId();
       if (id) {
-        // RLS restricts updates to the row owner.
+        // RLS restricts updates to the row owner. account_id is not changed on edit.
         const { error } = await supabase
           .from("fax_tracker")
           .update(validated)
@@ -85,11 +86,12 @@ export function useUpsertFax() {
         if (error) throw error;
         await logAuditEvent("fax_updated", { fax_id: id });
       } else {
+        if (!accountId) throw new Error("No account selected.");
         const { error } = await supabase
           .from("fax_tracker")
-          .insert({ ...validated, created_by });
+          .insert({ ...validated, created_by, account_id: accountId });
         if (error) throw error;
-        await logAuditEvent("fax_created", { patient_name: validated.patient_name });
+        await logAuditEvent("fax_created", { patient_name: validated.patient_name, account_id: accountId });
       }
     },
     onSuccess: (_d, { id }) => {

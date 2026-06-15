@@ -34,9 +34,11 @@ interface FaxEntryDialogProps {
   onOpenChange: (open: boolean) => void;
   /** When set, the dialog edits this row; otherwise it creates a new one. */
   row?: FaxRow | null;
+  /** Account the new row is added to (ignored when editing). */
+  accountId?: string;
 }
 
-export function FaxEntryDialog({ open, onOpenChange, row }: FaxEntryDialogProps) {
+export function FaxEntryDialog({ open, onOpenChange, row, accountId }: FaxEntryDialogProps) {
   const upsert = useUpsertFax();
   const [patientName, setPatientName] = useState("");
   const [step1, setStep1] = useState<FaxStepStatus>("Pending");
@@ -70,6 +72,7 @@ export function FaxEntryDialog({ open, onOpenChange, row }: FaxEntryDialogProps)
     upsert.mutate(
       {
         id: row?.id,
+        accountId,
         input: {
           patient_name: name,
           step1,

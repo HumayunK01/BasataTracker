@@ -104,9 +104,34 @@ export type Database = {
         }
         Relationships: []
       }
+      fax_accounts: {
+        Row: {
+          id: string
+          name: string
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fax_tracker: {
         Row: {
           id: string
+          account_id: string
           patient_name: string
           step1: Database["public"]["Enums"]["fax_step_status"]
           step2: Database["public"]["Enums"]["fax_step_status"] | null
@@ -119,6 +144,7 @@ export type Database = {
         }
         Insert: {
           id?: string
+          account_id: string
           patient_name: string
           step1?: Database["public"]["Enums"]["fax_step_status"]
           step2?: Database["public"]["Enums"]["fax_step_status"] | null
@@ -130,6 +156,7 @@ export type Database = {
         }
         Update: {
           id?: string
+          account_id?: string
           patient_name?: string
           step1?: Database["public"]["Enums"]["fax_step_status"]
           step2?: Database["public"]["Enums"]["fax_step_status"] | null
