@@ -53,8 +53,21 @@ async function copyName(name: string) {
 }
 
 // ── Status → color classes ──────────────────────────────────────────────────
-// Spreadsheet style: bold colored text (no badge boxes) on a tinted row.
+// In rows/cards: colored text in light mode, plain white in dark mode (the row
+// tints make colored text hard to read). The dropdown menu choices, which sit on
+// a plain dark popover, use stepMenuClasses below to keep their colors.
 function stepClasses(status: FaxStepStatus | null): string {
+  switch (status) {
+    case "Successfully Sent": return "text-emerald-700 dark:text-white";
+    case "Failed":            return "text-rose-700 dark:text-white";
+    case "Waiting":           return "text-amber-600 dark:text-white";
+    case "Pending":           return "text-muted-foreground dark:text-white";
+    default:                  return "text-muted-foreground/40";
+  }
+}
+
+// Colored choices for the status dropdown menu (on a dark popover, not a tint).
+function stepMenuClasses(status: FaxStepStatus | null): string {
   switch (status) {
     case "Successfully Sent": return "text-emerald-700 dark:text-emerald-300";
     case "Failed":            return "text-rose-700 dark:text-rose-300";
@@ -65,11 +78,11 @@ function stepClasses(status: FaxStepStatus | null): string {
 }
 
 function overallClasses(status: string): string {
-  if (status.startsWith("Resolved"))    return "text-emerald-700 dark:text-emerald-300";
-  if (status === "All Steps Failed")    return "text-rose-700 dark:text-rose-300";
-  if (status.startsWith("Waiting"))     return "text-amber-700 dark:text-amber-300";
-  if (status.startsWith("Move to"))     return "text-amber-600 dark:text-amber-300";
-  return "text-muted-foreground";
+  if (status.startsWith("Resolved"))    return "text-emerald-700 dark:text-white";
+  if (status === "All Steps Failed")    return "text-rose-700 dark:text-white";
+  if (status.startsWith("Waiting"))     return "text-amber-700 dark:text-white";
+  if (status.startsWith("Move to"))     return "text-amber-600 dark:text-white";
+  return "text-muted-foreground dark:text-white";
 }
 
 // The DB's auto-computed overall_status carries a trailing "#" (e.g.
@@ -162,7 +175,7 @@ function StepPicker({
           <DropdownMenuItem
             key={s}
             onClick={() => { if (s !== status) onPick(s); }}
-            className={cn("flex items-center justify-between gap-2", stepClasses(s))}
+            className={cn("flex items-center justify-between gap-2", stepMenuClasses(s))}
           >
             <span className="font-medium">{s}</span>
             {s === status && <Check className="size-3.5 opacity-80" />}
