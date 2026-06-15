@@ -79,6 +79,15 @@ export async function downloadFaxPDF(
   );
   y += 16;
 
+  const fmtDate = (iso: string) => {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    // Two lines: MM/DD/YYYY over h:mm AM/PM, matching the on-screen table.
+    const date = d.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
+    const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+    return `${date}\n${time}`;
+  };
+
   const body = rows.map((r) => [
     r.patient_name,
     r.step1 ?? "—",
@@ -86,23 +95,25 @@ export async function downloadFaxPDF(
     r.step3 ?? "—",
     stripHash(r.overall_status),
     r.notes ?? "",
+    fmtDate(r.updated_at),
   ]);
 
   autoTable(doc, {
     startY: y,
     margin: { left: margin, right: margin },
-    head: [["Patient", "Step 1 – Refax Same", "Step 2 – Refax New", "Step 3 – Reupload ROI", "Overall Status", "Notes"]],
+    head: [["Patient", "Step 1 – Refax Same", "Step 2 – Refax New", "Step 3 – Reupload ROI", "Overall Status", "Notes", "Last Updated"]],
     body,
     theme: "grid",
     styles: { font: "helvetica", fontSize: 8, cellPadding: 4, textColor: 40, lineColor: [220, 220, 225], lineWidth: 0.5, overflow: "linebreak" },
     headStyles: { fillColor: [37, 42, 60], textColor: 255, fontStyle: "bold", halign: "center" },
     columnStyles: {
-      0: { cellWidth: 110, fontStyle: "bold" },
+      0: { cellWidth: 100, fontStyle: "bold" },
       1: { halign: "center" },
       2: { halign: "center" },
       3: { halign: "center" },
-      4: { halign: "center", cellWidth: 120 },
+      4: { halign: "center", cellWidth: 110 },
       5: { cellWidth: "auto" },
+      6: { halign: "center", cellWidth: 90 },
     },
     didParseCell: (data) => {
       if (data.section !== "body") return;
