@@ -100,6 +100,71 @@ export function useUpsertFax() {
   });
 }
 
+export type StepField = "step1" | "step2" | "step3";
+
+// Apply a single-step change and enforce the workflow rules:
+//  - a step set to "Successfully Sent" resolves the case → clear later steps
+//  - step2/step3 only apply once the prior step has Failed
+// Returns the normalized {step1, step2, step3}.
+export function normalizeSteps(
+  row: Pick<FaxRow, "step1" | "step2" | "step3">,
+  field: StepField,
+  value: FaxStepStatus,
+): { step1: FaxStepStatus; step2: FaxStepStatus | null; step3: FaxStepStatus | null } {
+  let step1 = row.step1;
+  let step2 = row.step2;
+  let step3 = row.step3;
+  if (field === "step1") step1 = value;
+  if (field === "step2") step2 = value;
+  if (field === "step3") step3 = value;
+
+  // Later steps only exist while the prior step is a Failure.
+  if (step1 === "Successfully Sent") { step2 = null; step3 = null; }
+  else if (step1 !== "Failed") { step2 = null; step3 = null; }
+  else if (step2 === "Successfully Sent") { step3 = null; }
+  else if (step2 !== "Failed") { step3 = null; }
+
+  return { step1, step2, step3 };
+}
+
+export function useUpdateStep() {
+  const qc = useQueryClient();
+  const { checkLimit } = useMutationRateLimit({ maxRequests: 40, windowMs: 60_000 });
+  return useMutation({
+    mutationFn: async ({ row, field, value }: { row: FaxRow; field: StepField; value: FaxStepStatus }) => {
+      if (!checkLimit()) throw new Error("Too many updates. Please wait a moment.");
+      const created_by = await getUserId();
+      const patch = normalizeSteps(row, field, value);
+      const { error } = await supabase
+        .from("fax_tracker")
+        .update(patch)
+        .eq("id", row.id)
+        .eq("created_by", created_by);
+      if (error) throw error;
+      await logAuditEvent("fax_updated", { fax_id: row.id, field, value });
+    },
+    // Optimistic: reflect the change instantly, roll back on error.
+    onMutate: async ({ row, field, value }) => {
+      await qc.cancelQueries({ queryKey: ["fax_tracker"] });
+      const key = ["fax_tracker"];
+      const snapshots = qc.getQueriesData<FaxRow[]>({ queryKey: key });
+      const patch = normalizeSteps(row, field, value);
+      for (const [qKey, data] of snapshots) {
+        if (!data) continue;
+        qc.setQueryData<FaxRow[]>(qKey, data.map((r) => (r.id === row.id ? { ...r, ...patch } : r)));
+      }
+      return { snapshots };
+    },
+    onError: (e: Error, _vars, ctx) => {
+      ctx?.snapshots.forEach(([qKey, data]) => qc.setQueryData(qKey, data));
+      toast.error(e.message);
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["fax_tracker"] });
+    },
+  });
+}
+
 export function useDeleteFax() {
   const qc = useQueryClient();
   const { checkLimit } = useMutationRateLimit({ maxRequests: 15, windowMs: 60_000 });
