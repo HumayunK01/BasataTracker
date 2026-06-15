@@ -4,8 +4,11 @@ import { useProfile } from "@/hooks/useProfile";
 import {
   useFaxTracker,
   useDeleteFax,
+  useUpdateStep,
+  STEP_STATUSES,
   type FaxRow,
   type FaxStepStatus,
+  type StepField,
 } from "@/hooks/useFaxTracker";
 import { downloadFaxPDF } from "@/lib/fax-utils";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
@@ -27,11 +30,12 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Pencil, Trash2, Search, ListFilter, FileWarning, MoreVertical, FileText, X, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ListFilter, FileWarning, MoreVertical, FileText, X, ArrowUp, ArrowDown, ArrowUpDown, Check, ChevronDown } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -100,11 +104,90 @@ function rowClasses(status: string): string {
   }
 }
 
-function StepCell({ status }: { status: FaxStepStatus | null }) {
-  if (!status) return <td className="px-3 py-2 text-center text-muted-foreground/40">—</td>;
+// Whether a step is "in play" — i.e. it applies given the prior steps' state.
+// Step 1 always applies; step2 only after step1 Failed; step3 after both Failed.
+function stepIsActive(row: FaxRow, field: StepField): boolean {
+  if (field === "step1") return true;
+  if (field === "step2") return row.step1 === "Failed";
+  return row.step1 === "Failed" && row.step2 === "Failed";
+}
+
+// The dropdown of status choices shared by the table cell and the mobile card.
+function StepPicker({
+  row,
+  field,
+  status,
+  onPick,
+  triggerClassName,
+}: {
+  row: FaxRow;
+  field: StepField;
+  status: FaxStepStatus | null;
+  onPick: (value: FaxStepStatus) => void;
+  triggerClassName?: string;
+}) {
   return (
-    <td className={cn("px-3 py-2 text-center text-sm font-semibold", stepClasses(status))}>
-      {status}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          title="Click to change status"
+          className={cn(
+            "press-scale inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-sm font-semibold transition-colors hover:bg-foreground/10",
+            status ? stepClasses(status) : "text-muted-foreground/50",
+            triggerClassName,
+          )}
+        >
+          {status ?? "Set status"}
+          <ChevronDown className="size-3 opacity-50" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="center" className="w-44 font-[system-ui]">
+        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">{STEP_LABELS[Number(field.slice(-1)) - 1]}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {STEP_STATUSES.map((s) => (
+          <DropdownMenuItem
+            key={s}
+            onClick={() => { if (s !== status) onPick(s); }}
+            className={cn("flex items-center justify-between gap-2", stepClasses(s))}
+          >
+            <span className="font-medium">{s}</span>
+            {s === status && <Check className="size-3.5 opacity-80" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function StepCell({
+  row,
+  field,
+  editable,
+  onPick,
+}: {
+  row: FaxRow;
+  field: StepField;
+  editable: boolean;
+  onPick: (value: FaxStepStatus) => void;
+}) {
+  const status = row[field];
+  const active = stepIsActive(row, field);
+
+  // Not applicable for this row's path (an earlier step resolved/blocked it).
+  if (!active) return <td className="px-3 py-2 text-center text-muted-foreground/40">—</td>;
+
+  if (!editable) {
+    return (
+      <td className={cn("px-3 py-2 text-center text-sm font-semibold", status ? stepClasses(status) : "text-muted-foreground/40")}>
+        {status ?? "—"}
+      </td>
+    );
+  }
+
+  return (
+    <td className="px-3 py-2 text-center">
+      <StepPicker row={row} field={field} status={status} onPick={onPick} />
     </td>
   );
 }
@@ -118,14 +201,16 @@ function FaxCard({
   isNew,
   onEdit,
   onDelete,
+  onPickStep,
 }: {
   row: FaxRow;
   mine: boolean;
   isNew: boolean;
   onEdit: (row: FaxRow) => void;
   onDelete: (row: FaxRow) => void;
+  onPickStep: (field: StepField, value: FaxStepStatus) => void;
 }) {
-  const steps = [row.step1, row.step2, row.step3];
+  const fields: StepField[] = ["step1", "step2", "step3"];
   return (
     <div
       className={cn(
@@ -174,15 +259,27 @@ function FaxCard({
       </div>
 
       {/* Steps */}
-      <dl className="mt-3 space-y-1.5">
-        {steps.map((status, i) => (
-          <div key={i} className="flex items-center justify-between gap-3 text-sm">
-            <dt className="text-muted-foreground">{STEP_LABELS[i]}</dt>
-            <dd className={cn("font-semibold text-right", status ? stepClasses(status) : "text-muted-foreground/40")}>
-              {status ?? "—"}
-            </dd>
-          </div>
-        ))}
+      <dl className="mt-3 space-y-1">
+        {fields.map((field, i) => {
+          const status = row[field];
+          const active = stepIsActive(row, field);
+          return (
+            <div key={field} className="flex items-center justify-between gap-3 text-sm min-h-8">
+              <dt className="text-muted-foreground">{STEP_LABELS[i]}</dt>
+              <dd className="text-right">
+                {!active ? (
+                  <span className="font-semibold text-muted-foreground/40">—</span>
+                ) : mine ? (
+                  <StepPicker row={row} field={field} status={status} onPick={(v) => onPickStep(field, v)} />
+                ) : (
+                  <span className={cn("font-semibold", status ? stepClasses(status) : "text-muted-foreground/40")}>
+                    {status ?? "—"}
+                  </span>
+                )}
+              </dd>
+            </div>
+          );
+        })}
       </dl>
 
       {row.notes && (
@@ -232,6 +329,7 @@ const FaxTrackerPage = () => {
   const { data: profile } = useProfile();
   const { data: rows = [], isLoading } = useFaxTracker();
   const deleteFax = useDeleteFax();
+  const updateStep = useUpdateStep();
   const [exporting, setExporting] = useState(false);
 
   const [now] = useState(() => new Date());
@@ -505,9 +603,15 @@ const FaxTrackerPage = () => {
                               {row.patient_name}
                             </button>
                           </td>
-                          <StepCell status={row.step1} />
-                          <StepCell status={row.step2} />
-                          <StepCell status={row.step3} />
+                          {(["step1", "step2", "step3"] as StepField[]).map((field) => (
+                            <StepCell
+                              key={field}
+                              row={row}
+                              field={field}
+                              editable={mine}
+                              onPick={(value) => updateStep.mutate({ row, field, value })}
+                            />
+                          ))}
                           <td className={cn("px-3 py-2 text-center text-sm font-semibold", overallClasses(row.overall_status))}>
                             {displayStatus(row.overall_status)}
                           </td>
@@ -576,6 +680,7 @@ const FaxTrackerPage = () => {
                   isNew={newIds.has(row.id)}
                   onEdit={openEdit}
                   onDelete={setDeleteTarget}
+                  onPickStep={(field, value) => updateStep.mutate({ row, field, value })}
                 />
               ))
             )}
