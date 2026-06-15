@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import {
@@ -8,6 +8,7 @@ import {
   type FaxStepStatus,
 } from "@/hooks/useFaxTracker";
 import { downloadFaxPDF } from "@/lib/fax-utils";
+import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { FaxEntryDialog } from "@/components/ar/fax/FaxEntryDialog";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Pencil, Trash2, Search, ListFilter, FileWarning, MoreVertical, FileText } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ListFilter, FileWarning, MoreVertical, FileText, X, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -75,6 +76,8 @@ function displayStatus(status: string): string {
 const STATUS_GROUPS = ["Resolved", "Failed", "Waiting", "Incomplete"] as const;
 type StatusGroup = (typeof STATUS_GROUPS)[number];
 
+type SortKey = "patient_name" | "overall_status";
+
 function statusGroup(status: string): StatusGroup | null {
   if (status.startsWith("Resolved")) return "Resolved";
   if (status === "All Steps Failed") return "Failed";
@@ -104,6 +107,39 @@ function StepCell({ status }: { status: FaxStepStatus | null }) {
   );
 }
 
+function SortHeader({
+  label,
+  sortKey,
+  sort,
+  onSort,
+  align,
+}: {
+  label: string;
+  sortKey: SortKey;
+  sort: { key: SortKey; dir: "asc" | "desc" } | null;
+  onSort: (key: SortKey) => void;
+  align: "left" | "center";
+}) {
+  const active = sort?.key === sortKey;
+  const Icon = !active ? ArrowUpDown : sort.dir === "asc" ? ArrowUp : ArrowDown;
+  return (
+    <button
+      type="button"
+      onClick={() => onSort(sortKey)}
+      className={cn(
+        "press-scale inline-flex items-center gap-1 hover:text-foreground transition-colors uppercase tracking-wide",
+        align === "center" ? "mx-auto" : "",
+        active && "text-foreground",
+      )}
+      title={`Sort by ${label.toLowerCase()}`}
+    >
+      {label}
+      {/* Icon swaps direction on sort change — a quick scale-in masks the swap. */}
+      <Icon key={active ? sort.dir : "idle"} className={cn("size-3 animate-fade-in", active ? "opacity-100" : "opacity-40")} />
+    </button>
+  );
+}
+
 const FaxTrackerPage = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile();
@@ -114,13 +150,14 @@ const FaxTrackerPage = () => {
   const [now] = useState(() => new Date());
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set());
+  const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" } | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<FaxRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FaxRow | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return rows.filter((r) => {
+    const rowsFiltered = rows.filter((r) => {
       if (statusFilter.size) {
         const group = statusGroup(r.overall_status);
         if (!group || !statusFilter.has(group)) return false;
@@ -128,15 +165,67 @@ const FaxTrackerPage = () => {
       if (q && !r.patient_name.toLowerCase().includes(q) && !(r.notes ?? "").toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [rows, search, statusFilter]);
+
+    // No sort → keep insert order (the query's ascending created_at).
+    if (!sort) return rowsFiltered;
+    const dir = sort.dir === "asc" ? 1 : -1;
+    return [...rowsFiltered].sort((a, b) => {
+      const av = sort.key === "patient_name" ? a.patient_name : displayStatus(a.overall_status);
+      const bv = sort.key === "patient_name" ? b.patient_name : displayStatus(b.overall_status);
+      return av.localeCompare(bv, undefined, { sensitivity: "base" }) * dir;
+    });
+  }, [rows, search, statusFilter, sort]);
+
+  // Track which row IDs are new since the last render so we can animate just
+  // those in (not the whole table on every refetch). Skips the first load.
+  const seenIds = useRef<Set<string> | null>(null);
+  const [newIds, setNewIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const current = new Set(rows.map((r) => r.id));
+    if (seenIds.current === null) {
+      seenIds.current = current; // first load: no entrance animation
+      return;
+    }
+    const added = [...current].filter((id) => !seenIds.current!.has(id));
+    seenIds.current = current;
+    if (added.length === 0) return;
+    setNewIds(new Set(added));
+    // Clear the flag once the animation has played so re-renders don't replay it.
+    const t = setTimeout(() => setNewIds(new Set()), 400);
+    return () => clearTimeout(t);
+  }, [rows]);
+
+  // Counts per filter group (over all rows) — shown in the filter dropdown.
+  const groupCounts = useMemo(() => {
+    const counts: Record<StatusGroup, number> = { Resolved: 0, Failed: 0, Waiting: 0, Incomplete: 0 };
+    for (const r of rows) {
+      const g = statusGroup(r.overall_status);
+      if (g) counts[g]++;
+    }
+    return counts;
+  }, [rows]);
 
   // Summary counts (over all rows, matching the spreadsheet header).
-  const stats = useMemo(() => {
-    const resolved = rows.filter((r) => r.overall_status.startsWith("Resolved")).length;
-    const allFailed = rows.filter((r) => r.overall_status === "All Steps Failed").length;
-    const waiting = rows.filter((r) => r.overall_status.startsWith("Waiting")).length;
-    return { resolved, allFailed, waiting, total: rows.length };
-  }, [rows]);
+  const stats = useMemo(
+    () => ({
+      resolved: groupCounts.Resolved,
+      allFailed: groupCounts.Failed,
+      waiting: groupCounts.Waiting,
+      total: rows.length,
+    }),
+    [groupCounts, rows.length],
+  );
+
+  const hasActiveFilters = search.trim() !== "" || statusFilter.size > 0;
+  const clearAll = () => { setSearch(""); setStatusFilter(new Set()); };
+
+  const toggleSort = (key: SortKey) => {
+    setSort((prev) => {
+      if (prev?.key !== key) return { key, dir: "asc" };
+      if (prev.dir === "asc") return { key, dir: "desc" };
+      return null; // third click clears the sort
+    });
+  };
 
   const openAdd = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (row: FaxRow) => { setEditing(row); setDialogOpen(true); };
@@ -213,8 +302,18 @@ const FaxTrackerPage = () => {
                 placeholder="Search patient or notes…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-10"
+                className="pl-9 pr-9 h-10"
               />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  title="Clear search"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -232,8 +331,10 @@ const FaxTrackerPage = () => {
                     checked={statusFilter.has(s)}
                     onCheckedChange={() => toggleStatus(s)}
                     onSelect={(e) => e.preventDefault()}
+                    className="flex items-center justify-between"
                   >
-                    {s}
+                    <span>{s}</span>
+                    <span className="ml-2 text-xs text-muted-foreground tabular-nums">{groupCounts[s]}</span>
                   </DropdownMenuCheckboxItem>
                 ))}
                 {statusFilter.size > 0 && (
@@ -249,6 +350,11 @@ const FaxTrackerPage = () => {
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" className="h-10 shrink-0 text-muted-foreground animate-fade-in" onClick={clearAll}>
+                <X className="size-4 mr-1.5" /> Clear all
+              </Button>
+            )}
           </div>
 
           {/* Table */}
@@ -257,11 +363,15 @@ const FaxTrackerPage = () => {
               <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
-                    <th className="px-3 py-2.5 text-left font-semibold">Patient</th>
+                    <th className="px-3 py-2.5 text-left font-semibold">
+                      <SortHeader label="Patient" sortKey="patient_name" sort={sort} onSort={toggleSort} align="left" />
+                    </th>
                     <th className="px-3 py-2.5 text-center font-semibold">Step 1 – Refax Same</th>
                     <th className="px-3 py-2.5 text-center font-semibold">Step 2 – Refax New</th>
                     <th className="px-3 py-2.5 text-center font-semibold">Step 3 – Reupload ROI</th>
-                    <th className="px-3 py-2.5 text-center font-semibold">Overall Status</th>
+                    <th className="px-3 py-2.5 text-center font-semibold">
+                      <SortHeader label="Overall Status" sortKey="overall_status" sort={sort} onSort={toggleSort} align="center" />
+                    </th>
                     <th className="px-3 py-2.5 text-left font-semibold">Notes</th>
                     <th className="px-3 py-2.5 text-center font-semibold w-12" aria-label="Actions" />
                   </tr>
@@ -275,7 +385,7 @@ const FaxTrackerPage = () => {
                     ))
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-3 py-16 text-center text-muted-foreground">
+                      <td colSpan={7} className="px-3 py-16 text-center text-muted-foreground animate-fade-in">
                         <FileWarning className="size-10 opacity-20 mx-auto mb-3" />
                         <p className="text-sm">
                           {rows.length === 0 ? "No patients tracked yet. Add your first one." : "No patients match your filters."}
@@ -286,13 +396,13 @@ const FaxTrackerPage = () => {
                     filtered.map((row) => {
                       const mine = row.created_by === user?.id;
                       return (
-                        <tr key={row.id} className={cn("border-t border-border transition-colors", rowClasses(row.overall_status))}>
+                        <tr key={row.id} className={cn("border-t border-border transition-colors", rowClasses(row.overall_status), newIds.has(row.id) && "animate-row-in")}>
                           <td className="px-3 py-2 whitespace-nowrap">
                             <button
                               type="button"
                               onClick={() => copyName(row.patient_name)}
                               title="Click to copy name"
-                              className="font-medium text-foreground rounded px-1 -mx-1 text-left hover:bg-foreground/10 hover:underline underline-offset-2 transition-colors cursor-pointer"
+                              className="press-scale font-medium text-foreground rounded px-1 -mx-1 text-left hover:bg-foreground/10 hover:underline underline-offset-2 transition-colors cursor-pointer"
                             >
                               {row.patient_name}
                             </button>
@@ -389,13 +499,16 @@ function StatCard({
     sky: "text-sky-600 dark:text-sky-400",
     neutral: "text-foreground",
   }[tone];
+  // Ease the count toward its new value so it ticks up/down on changes
+  // (state indication) instead of snapping.
+  const display = useAnimatedNumber(value);
   return (
     <div className="bg-card border border-border rounded-md p-3 sm:p-4">
       <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
       {loading ? (
         <Skeleton width={48} height={32} borderRadius={4} />
       ) : (
-        <p className={cn("text-2xl sm:text-3xl font-bold tabular-nums", toneClasses)}>{value}</p>
+        <p className={cn("text-2xl sm:text-3xl font-bold tabular-nums", toneClasses)}>{display}</p>
       )}
     </div>
   );
