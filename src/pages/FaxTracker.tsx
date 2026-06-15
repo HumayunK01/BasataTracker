@@ -107,6 +107,91 @@ function StepCell({ status }: { status: FaxStepStatus | null }) {
   );
 }
 
+const STEP_LABELS = ["Step 1 – Refax Same", "Step 2 – Refax New", "Step 3 – Reupload ROI"];
+
+// Stacked card used on phones, where the 7-column table needs scrolling.
+function FaxCard({
+  row,
+  mine,
+  isNew,
+  onEdit,
+  onDelete,
+}: {
+  row: FaxRow;
+  mine: boolean;
+  isNew: boolean;
+  onEdit: (row: FaxRow) => void;
+  onDelete: (row: FaxRow) => void;
+}) {
+  const steps = [row.step1, row.step2, row.step3];
+  return (
+    <div
+      className={cn(
+        "rounded-lg border border-border p-3.5 transition-colors",
+        rowClasses(row.overall_status),
+        isNew && "animate-row-in",
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => copyName(row.patient_name)}
+          title="Tap to copy name"
+          className="press-scale font-semibold text-base text-foreground rounded px-1 -mx-1 text-left active:bg-foreground/10 transition-colors"
+        >
+          {row.patient_name}
+        </button>
+        {mine ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="size-9 -mr-1.5 -mt-1 shrink-0">
+                <MoreVertical className="size-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-36 font-[system-ui]">
+              <button
+                className="w-full flex items-center gap-2 px-2 py-2 text-sm hover:bg-accent rounded-sm"
+                onClick={() => onEdit(row)}
+              >
+                <Pencil className="size-4" /> Edit
+              </button>
+              <button
+                className="w-full flex items-center gap-2 px-2 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-sm"
+                onClick={() => onDelete(row)}
+              >
+                <Trash2 className="size-4" /> Delete
+              </button>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
+      </div>
+
+      {/* Overall status badge */}
+      <div className={cn("mt-1 text-sm font-semibold", overallClasses(row.overall_status))}>
+        {displayStatus(row.overall_status)}
+      </div>
+
+      {/* Steps */}
+      <dl className="mt-3 space-y-1.5">
+        {steps.map((status, i) => (
+          <div key={i} className="flex items-center justify-between gap-3 text-sm">
+            <dt className="text-muted-foreground">{STEP_LABELS[i]}</dt>
+            <dd className={cn("font-semibold text-right", status ? stepClasses(status) : "text-muted-foreground/40")}>
+              {status ?? "—"}
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      {row.notes && (
+        <p className="mt-3 pt-3 border-t border-border/60 text-sm text-muted-foreground leading-snug">
+          {row.notes}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function SortHeader({
   label,
   sortKey,
@@ -357,8 +442,8 @@ const FaxTrackerPage = () => {
             )}
           </div>
 
-          {/* Table */}
-          <div className="bg-card border border-border rounded-md overflow-hidden">
+          {/* Table — desktop / tablet */}
+          <div className="hidden md:block bg-card border border-border rounded-md overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
@@ -450,6 +535,37 @@ const FaxTrackerPage = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          {/* Cards — phones */}
+          <div className="md:hidden space-y-3">
+            {isLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="rounded-lg border border-border p-3.5">
+                  <Skeleton height={20} width="55%" borderRadius={4} />
+                  <Skeleton height={14} width="40%" borderRadius={4} className="!mt-2" />
+                  <Skeleton height={64} borderRadius={6} className="!mt-3" />
+                </div>
+              ))
+            ) : filtered.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground animate-fade-in">
+                <FileWarning className="size-10 opacity-20 mb-3" />
+                <p className="text-sm">
+                  {rows.length === 0 ? "No patients tracked yet. Add your first one." : "No patients match your filters."}
+                </p>
+              </div>
+            ) : (
+              filtered.map((row) => (
+                <FaxCard
+                  key={row.id}
+                  row={row}
+                  mine={row.created_by === user?.id}
+                  isNew={newIds.has(row.id)}
+                  onEdit={openEdit}
+                  onDelete={setDeleteTarget}
+                />
+              ))
+            )}
           </div>
         </div>
       </main>
