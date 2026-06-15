@@ -10,6 +10,7 @@ import { Plus, BarChart2 } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { TodayHero } from "@/components/ar/TodayHero";
+import { useProfile } from "@/hooks/useProfile";
 
 import { colorForKey } from "@/lib/cat-colors";
 
@@ -18,7 +19,10 @@ const chicagoWeekdayFmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/
 const Index = () => {
   const { data: logs = [], isLoading } = useDailyLogs();
   const { data: categories = [] } = useCategories();
+  const { data: profile } = useProfile();
   const navigate = useNavigate();
+
+  const displayName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ").trim();
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -51,11 +55,14 @@ const Index = () => {
       <PageHeader
         now={now}
         subtitle={
-          isWeekendToday ? (
-            <span className="text-primary">Enjoy your weekend!</span>
-          ) : stats.todayLog ? (
-            <span className="text-success">{stats.todayTotal} docs logged today</span>
-          ) : undefined
+          <span className="flex items-center gap-x-2 flex-wrap">
+            <span>Welcome back{displayName ? `, ${displayName}` : ""}</span>
+            {isWeekendToday ? (
+              <span className="text-primary font-normal">· Enjoy your weekend!</span>
+            ) : stats.todayLog ? (
+              <span className="text-success font-normal">· {stats.todayTotal} docs logged today</span>
+            ) : null}
+          </span>
         }
       />
       <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
