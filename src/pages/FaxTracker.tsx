@@ -10,10 +10,12 @@ import {
   type FaxStepStatus,
   type StepField,
 } from "@/hooks/useFaxTracker";
+import { useFaxAccounts } from "@/hooks/useFaxAccounts";
 import { downloadFaxPDF } from "@/lib/fax-utils";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { FaxEntryDialog } from "@/components/ar/fax/FaxEntryDialog";
+import { NewAccountDialog } from "@/components/ar/fax/NewAccountDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -35,7 +37,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Pencil, Trash2, Search, ListFilter, FileWarning, MoreVertical, FileText, X, ArrowUp, ArrowDown, ArrowUpDown, Check, ChevronDown } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ListFilter, FileWarning, MoreVertical, FileText, X, ArrowUp, ArrowDown, ArrowUpDown, Check, ChevronDown, Users } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -324,10 +326,32 @@ function SortHeader({
   );
 }
 
+const ACCOUNT_KEY = "fax-tracker-account";
+
 const FaxTrackerPage = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile();
-  const { data: rows = [], isLoading } = useFaxTracker();
+  const { data: accounts = [], isLoading: accountsLoading } = useFaxAccounts();
+
+  const [accountId, setAccountId] = useState<string | null>(() => localStorage.getItem(ACCOUNT_KEY));
+  const [accountDialogOpen, setAccountDialogOpen] = useState(false);
+
+  // Keep the selection valid: default to the first account, and drop a stale
+  // id (e.g. a deleted account) back to the first available one.
+  useEffect(() => {
+    if (accountsLoading || accounts.length === 0) return;
+    if (!accountId || !accounts.some((a) => a.id === accountId)) {
+      setAccountId(accounts[0].id);
+    }
+  }, [accounts, accountsLoading, accountId]);
+
+  useEffect(() => {
+    if (accountId) localStorage.setItem(ACCOUNT_KEY, accountId);
+  }, [accountId]);
+
+  const activeAccount = accounts.find((a) => a.id === accountId) ?? null;
+
+  const { data: rows = [], isLoading } = useFaxTracker(accountId ?? undefined);
   const deleteFax = useDeleteFax();
   const updateStep = useUpdateStep();
   const [exporting, setExporting] = useState(false);
@@ -396,6 +420,7 @@ const FaxTrackerPage = () => {
       resolved: groupCounts.Resolved,
       allFailed: groupCounts.Failed,
       waiting: groupCounts.Waiting,
+      incomplete: groupCounts.Incomplete,
       total: rows.length,
     }),
     [groupCounts, rows.length],
@@ -422,19 +447,21 @@ const FaxTrackerPage = () => {
       const userName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || undefined;
       const activeFilters = statusFilter.size ? Array.from(statusFilter).join(", ") : null;
       const subtitleBits = [
+        activeAccount ? `Account: ${activeAccount.name}` : null,
         activeFilters ? `Status: ${activeFilters}` : "All patients",
         search.trim() ? `Search: "${search.trim()}"` : null,
       ].filter(Boolean);
 
-      // Build a filename that reflects the active filter, e.g.
-      // fax-tracker-failed-2026-06-15.pdf  /  fax-tracker-resolved-waiting-...
+      // Build a filename that reflects the account + active filter, e.g.
+      // fax-tracker-ayush-rathi-failed-2026-06-15.pdf
       const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      const accountPart = activeAccount ? `${slug(activeAccount.name)}-` : "";
       const statusPart = statusFilter.size
         ? STATUS_GROUPS.filter((g) => statusFilter.has(g)).map(slug).join("-")
         : "all";
       const searchPart = search.trim() ? `-${slug(search.trim())}` : "";
       const datePart = new Date().toISOString().slice(0, 10);
-      const filename = `fax-tracker-${statusPart}${searchPart}-${datePart}.pdf`;
+      const filename = `fax-tracker-${accountPart}${statusPart}${searchPart}-${datePart}.pdf`;
 
       await downloadFaxPDF(filtered, filename, {
         userName,
@@ -472,7 +499,13 @@ const FaxTrackerPage = () => {
               <FileText className="size-4 mr-1" />
               {exporting ? "Exporting…" : "Export PDF"}
             </Button>
-            <Button size="sm" className="h-8 shrink-0 bg-primary hover:bg-primary/95 text-primary-foreground" onClick={openAdd}>
+            <Button
+              size="sm"
+              className="h-8 shrink-0 bg-primary hover:bg-primary/95 text-primary-foreground"
+              onClick={openAdd}
+              disabled={!accountId}
+              title={!accountId ? "Create an account first" : undefined}
+            >
               <Plus className="size-4 mr-1" /> Add Patient
             </Button>
           </div>
@@ -483,10 +516,11 @@ const FaxTrackerPage = () => {
         <div className="w-full space-y-4">
 
           {/* Summary stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
             <StatCard label="Resolved" value={stats.resolved} tone="emerald" loading={isLoading} />
             <StatCard label="All Steps Failed" value={stats.allFailed} tone="rose" loading={isLoading} />
             <StatCard label="Waiting" value={stats.waiting} tone="sky" loading={isLoading} />
+            <StatCard label="Incomplete" value={stats.incomplete} tone="slate" loading={isLoading} />
             <StatCard label="Total Patients" value={stats.total} tone="neutral" loading={isLoading} />
           </div>
 
@@ -511,6 +545,36 @@ const FaxTrackerPage = () => {
                 </button>
               )}
             </div>
+
+            {/* Account (ID) selector — fax-tracker-specific, so it lives here, not the shared header */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-10 shrink-0 max-w-[12rem]" disabled={accountsLoading}>
+                  <Users className="size-4 mr-1.5 shrink-0" />
+                  <span className="truncate">{activeAccount?.name ?? (accountsLoading ? "Loading…" : "No account")}</span>
+                  <ChevronDown className="size-3 ml-1 opacity-60 shrink-0" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56 font-[system-ui]">
+                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Switch account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {accounts.map((a) => (
+                  <DropdownMenuItem
+                    key={a.id}
+                    onClick={() => setAccountId(a.id)}
+                    className="flex items-center justify-between gap-2"
+                  >
+                    <span className="truncate">{a.name}</span>
+                    {a.id === accountId && <Check className="size-3.5 opacity-80 shrink-0" />}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setAccountDialogOpen(true)} className="text-primary">
+                  <Plus className="size-3.5 mr-1.5" /> New account
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="h-10 shrink-0">
@@ -688,7 +752,13 @@ const FaxTrackerPage = () => {
         </div>
       </main>
 
-      <FaxEntryDialog open={dialogOpen} onOpenChange={setDialogOpen} row={editing} />
+      <FaxEntryDialog open={dialogOpen} onOpenChange={setDialogOpen} row={editing} accountId={accountId ?? undefined} />
+
+      <NewAccountDialog
+        open={accountDialogOpen}
+        onOpenChange={setAccountDialogOpen}
+        onCreated={(account) => setAccountId(account.id)}
+      />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent className="sm:max-w-md border-destructive/20 bg-background/95 backdrop-blur-lg">
@@ -724,13 +794,14 @@ function StatCard({
 }: {
   label: string;
   value: number;
-  tone: "emerald" | "rose" | "sky" | "neutral";
+  tone: "emerald" | "rose" | "sky" | "slate" | "neutral";
   loading: boolean;
 }) {
   const toneClasses = {
     emerald: "text-emerald-600 dark:text-emerald-400",
     rose: "text-rose-600 dark:text-rose-400",
     sky: "text-sky-600 dark:text-sky-400",
+    slate: "text-slate-500 dark:text-slate-300",
     neutral: "text-foreground",
   }[tone];
   // Ease the count toward its new value so it ticks up/down on changes
