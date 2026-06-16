@@ -26,6 +26,8 @@ import { NewAccountDialog } from "@/components/ar/fax/NewAccountDialog";
 import { RenameAccountDialog } from "@/components/ar/fax/RenameAccountDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,7 +47,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Pencil, Trash2, Search, ListFilter, FileWarning, MoreVertical, FileText, X, ArrowUp, ArrowDown, ArrowUpDown, Check, ChevronDown, ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ListFilter, CalendarDays, FileWarning, MoreVertical, FileText, X, ArrowUp, ArrowDown, ArrowUpDown, Check, ChevronDown, ChevronLeft, ChevronRight, Users } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -99,11 +101,33 @@ function displayStatus(status: string): string {
   return status.replace(/\s*#\s*$/, "").trim();
 }
 
+// Formats a timestamp into a stacked MM/DD/YYYY date with the time below it.
+function formatDateTime(value: string | null | undefined): { date: string; time: string } | null {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return {
+    date: d.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }),
+    time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+  };
+}
+
+// Stable per-day key (local time) used to group/filter rows by date.
+function dateKey(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 // High-level filter groups. Each maps to one or more raw overall_status values.
 const STATUS_GROUPS = ["Resolved", "Failed", "Waiting", "Incomplete"] as const;
 type StatusGroup = (typeof STATUS_GROUPS)[number];
 
-type SortKey = "patient_name" | "overall_status";
+type SortKey = "patient_name" | "overall_status" | "updated_at";
 
 function statusGroup(status: string): StatusGroup | null {
   if (status.startsWith("Resolved")) return "Resolved";
@@ -440,6 +464,7 @@ const FaxTrackerPage = () => {
   const [now] = useState(() => new Date());
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set());
+  const [dateFilter, setDateFilter] = useState<Set<string>>(new Set());
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" } | null>(null);
   const [page, setPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -453,23 +478,39 @@ const FaxTrackerPage = () => {
         const group = statusGroup(r.overall_status);
         if (!group || !statusFilter.has(group)) return false;
       }
+      if (dateFilter.size) {
+        const key = dateKey(r.updated_at);
+        if (!key || !dateFilter.has(key)) return false;
+      }
       if (q && !r.patient_name.toLowerCase().includes(q) && !(r.notes ?? "").toLowerCase().includes(q)) return false;
       return true;
     });
 
-    // No sort → keep insert order (the query's ascending created_at).
-    if (!sort) return rowsFiltered;
+    // No explicit sort → newest first by the date shown in the table (updated_at),
+    // so the most recent date is on top and the oldest at the bottom.
+    if (!sort) {
+      return [...rowsFiltered].sort((a, b) => {
+        const at = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+        const bt = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+        return bt - at;
+      });
+    }
     const dir = sort.dir === "asc" ? 1 : -1;
     return [...rowsFiltered].sort((a, b) => {
+      if (sort.key === "updated_at") {
+        const at = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+        const bt = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+        return (at - bt) * dir;
+      }
       const av = sort.key === "patient_name" ? a.patient_name : displayStatus(a.overall_status);
       const bv = sort.key === "patient_name" ? b.patient_name : displayStatus(b.overall_status);
       return av.localeCompare(bv, undefined, { sensitivity: "base" }) * dir;
     });
-  }, [rows, search, statusFilter, sort]);
+  }, [rows, search, statusFilter, dateFilter, sort]);
 
   // ── Pagination ──
   // A narrowing of the result set should bring you back to the first page.
-  useEffect(() => { setPage(1); }, [search, statusFilter]);
+  useEffect(() => { setPage(1); }, [search, statusFilter, dateFilter]);
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   // Clamp the page when the filtered set shrinks (filter/search/account change).
   useEffect(() => {
@@ -518,6 +559,27 @@ const FaxTrackerPage = () => {
     return counts;
   }, [rows]);
 
+  // Distinct days that actually have rows (as yyyy-MM-dd keys, newest first) —
+  // drives which calendar days are selectable / marked in the date filter.
+  const dataDayKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const r of rows) {
+      const key = dateKey(r.updated_at);
+      if (key) keys.add(key);
+    }
+    return [...keys].sort((a, b) => b.localeCompare(a));
+  }, [rows]);
+  const dataKeySet = useMemo(() => new Set(dataDayKeys), [dataDayKeys]);
+  // Local-noon Date objects (avoids TZ edge cases) for the calendar.
+  const datesWithData = useMemo(
+    () => dataDayKeys.map((k) => new Date(`${k}T12:00:00`)),
+    [dataDayKeys],
+  );
+  const selectedDates = useMemo(
+    () => [...dateFilter].map((k) => new Date(`${k}T12:00:00`)),
+    [dateFilter],
+  );
+
   // Summary counts (over all rows, matching the spreadsheet header).
   const stats = useMemo(
     () => ({
@@ -530,8 +592,16 @@ const FaxTrackerPage = () => {
     [groupCounts, rows.length],
   );
 
-  const hasActiveFilters = search.trim() !== "" || statusFilter.size > 0;
-  const clearAll = () => { setSearch(""); setStatusFilter(new Set()); };
+  const hasActiveFilters = search.trim() !== "" || statusFilter.size > 0 || dateFilter.size > 0;
+  const clearAll = () => { setSearch(""); setStatusFilter(new Set()); setDateFilter(new Set()); };
+
+  // The calendar (mode="multiple") hands back the full set of selected days.
+  const handleSelectDates = (days: Date[] | undefined) => {
+    const keys = (days ?? [])
+      .map((d) => dateKey(d.toISOString()))
+      .filter((k): k is string => k !== null);
+    setDateFilter(new Set(keys));
+  };
 
   const toggleSort = (key: SortKey) => {
     setSort((prev) => {
@@ -597,30 +667,26 @@ const FaxTrackerPage = () => {
             {/* Category toggle — Fax vs Indexable share accounts, separate rows.
                 Two equal-width segments with a pill that slides under the active
                 one (translate by 100% of one segment). */}
-            <div className="relative inline-grid grid-cols-2 items-center rounded-md border border-border bg-muted/30 p-0.5">
-              {/* Sliding active-segment highlight. */}
-              <span
-                aria-hidden
-                className="absolute top-0.5 bottom-0.5 left-0.5 w-[calc(50%-2px)] rounded-[5px] bg-primary shadow-sm transition-transform duration-300 ease-out motion-reduce:transition-none"
-                style={{ transform: mode === "indexable" ? "translateX(100%)" : "translateX(0)" }}
-              />
-              {MODES.map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => setMode(m.id)}
-                  aria-pressed={mode === m.id}
-                  className={cn(
-                    "relative z-10 px-2.5 py-1.5 text-xs font-semibold rounded-[5px] transition-colors duration-300 text-center whitespace-nowrap",
-                    mode === m.id
-                      ? "text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {m.label}
-                </button>
-              ))}
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 shrink-0 min-w-32 justify-between">
+                  {MODES.find((m) => m.id === mode)?.label ?? "Fax"}
+                  <ChevronDown className="size-4 ml-1.5 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-32 font-[system-ui]">
+                {MODES.map((m) => (
+                  <DropdownMenuItem
+                    key={m.id}
+                    onClick={() => setMode(m.id)}
+                    className="flex items-center justify-between"
+                  >
+                    {m.label}
+                    {mode === m.id && <Check className="size-3.5 text-primary" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               variant="outline"
               size="sm"
@@ -768,6 +834,51 @@ const FaxTrackerPage = () => {
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="h-10 shrink-0">
+                  <CalendarDays className="size-4 mr-1.5" />
+                  Date{dateFilter.size ? ` (${dateFilter.size})` : ""}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-auto p-0 font-[system-ui]">
+                <Calendar
+                  mode="multiple"
+                  selected={selectedDates}
+                  onSelect={handleSelectDates}
+                  defaultMonth={selectedDates[0] ?? datesWithData[0]}
+                  modifiers={{ hasData: datesWithData }}
+                  modifiersClassNames={{
+                    hasData: "font-semibold after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:size-1 after:rounded-full after:bg-primary after:transition-opacity data-[selected=true]:after:opacity-0",
+                  }}
+                  classNames={{
+                    // Each selected day reads as its own rounded pill (not a
+                    // connected bar) and animates in.
+                    cell: "size-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                    day: "day-cell inline-flex items-center justify-center size-9 rounded-full p-0 font-normal hover:bg-accent hover:text-accent-foreground aria-selected:opacity-100",
+                    day_selected:
+                      "bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                    day_today: "ring-1 ring-inset ring-primary/40",
+                    day_disabled: "text-muted-foreground/40 opacity-50",
+                  }}
+                  disabled={(day) => !dataKeySet.has(dateKey(day.toISOString())!)}
+                />
+                {dateFilter.size > 0 && (
+                  <div className="border-t border-border px-3 py-2 flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      {dateFilter.size} day{dateFilter.size > 1 ? "s" : ""} selected
+                    </span>
+                    <button
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => setDateFilter(new Set())}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
             {hasActiveFilters && (
               <Button variant="ghost" size="sm" className="h-10 shrink-0 text-muted-foreground animate-fade-in" onClick={clearAll}>
                 <X className="size-4 mr-1.5" /> Clear all
@@ -791,6 +902,9 @@ const FaxTrackerPage = () => {
                       <SortHeader label="Overall Status" sortKey="overall_status" sort={sort} onSort={toggleSort} align="center" />
                     </th>
                     <th className="px-3 py-2.5 text-left font-semibold">Notes</th>
+                    <th className="px-3 py-2.5 text-left font-semibold">
+                      <SortHeader label="Date & Time" sortKey="updated_at" sort={sort} onSort={toggleSort} align="left" />
+                    </th>
                     <th className="px-3 py-2.5 text-center font-semibold w-12" aria-label="Actions" />
                   </tr>
                 </thead>
@@ -798,12 +912,12 @@ const FaxTrackerPage = () => {
                   {isLoading ? (
                     Array.from({ length: 6 }).map((_, i) => (
                       <tr key={i} className="border-t border-border">
-                        <td colSpan={7} className="px-3 py-2.5"><Skeleton height={28} borderRadius={4} /></td>
+                        <td colSpan={8} className="px-3 py-2.5"><Skeleton height={28} borderRadius={4} /></td>
                       </tr>
                     ))
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-3 py-16 text-center text-muted-foreground animate-fade-in">
+                      <td colSpan={8} className="px-3 py-16 text-center text-muted-foreground animate-fade-in">
                         <FileWarning className="size-10 opacity-20 mx-auto mb-3" />
                         <p className="text-sm">
                           {rows.length === 0 ? "No patients tracked yet. Add your first one." : "No patients match your filters."}
@@ -840,6 +954,19 @@ const FaxTrackerPage = () => {
                           </td>
                           <td className="px-3 py-2 text-muted-foreground max-w-xs truncate" title={row.notes ?? ""}>
                             {row.notes || <span className="text-muted-foreground/40">—</span>}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            {(() => {
+                              const dd = formatDateTime(row.updated_at);
+                              return dd ? (
+                                <div className="leading-tight">
+                                  <div className="text-foreground">{dd.date}</div>
+                                  <div className="text-xs text-muted-foreground">{dd.time}</div>
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground/40">—</span>
+                              );
+                            })()}
                           </td>
                           <td className="px-3 py-2 text-center">
                             {mine ? (
