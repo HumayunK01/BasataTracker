@@ -139,29 +139,21 @@ export function useUpsertIndexable() {
 
 export type StepField = "step1" | "step2" | "step3";
 
-// Apply a single-step change and enforce the workflow rules:
-//  - a step set to "Successfully Sent" resolves the case → clear later steps
-//  - step2/step3 only apply once the prior step has Failed
-// Returns the normalized {step1, step2, step3}.
+// Apply a single-step change. Indexable steps are independent — any step can be
+// set on its own (e.g. mark step 3 "Successfully Sent" without touching 1 & 2),
+// so we only write the changed step and leave the others as they were. step2/
+// step3 default to "Pending" rather than null so they remain selectable, and a
+// "Successfully Sent" on any step resolves the case (see isResolved).
 export function normalizeSteps(
   row: Pick<IndexableRow, "step1" | "step2" | "step3">,
   field: StepField,
   value: IndexableStepStatus,
 ): { step1: IndexableStepStatus; step2: IndexableStepStatus | null; step3: IndexableStepStatus | null } {
-  let step1 = row.step1;
-  let step2 = row.step2;
-  let step3 = row.step3;
-  if (field === "step1") step1 = value;
-  if (field === "step2") step2 = value;
-  if (field === "step3") step3 = value;
-
-  // Later steps only exist while the prior step is a Failure.
-  if (step1 === "Successfully Sent") { step2 = null; step3 = null; }
-  else if (step1 !== "Failed") { step2 = null; step3 = null; }
-  else if (step2 === "Successfully Sent") { step3 = null; }
-  else if (step2 !== "Failed") { step3 = null; }
-
-  return { step1, step2, step3 };
+  return {
+    step1: field === "step1" ? value : row.step1,
+    step2: field === "step2" ? value : (row.step2 ?? "Pending"),
+    step3: field === "step3" ? value : (row.step3 ?? "Pending"),
+  };
 }
 
 export function useUpdateStep() {
