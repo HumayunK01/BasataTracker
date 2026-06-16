@@ -168,6 +168,46 @@ export type Database = {
         }
         Relationships: []
       }
+      indexable_tracker: {
+        Row: {
+          id: string
+          account_id: string
+          patient_name: string
+          step1: Database["public"]["Enums"]["fax_step_status"]
+          step2: Database["public"]["Enums"]["fax_step_status"] | null
+          step3: Database["public"]["Enums"]["fax_step_status"] | null
+          overall_status: string
+          notes: string | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          account_id: string
+          patient_name: string
+          step1?: Database["public"]["Enums"]["fax_step_status"]
+          step2?: Database["public"]["Enums"]["fax_step_status"] | null
+          step3?: Database["public"]["Enums"]["fax_step_status"] | null
+          notes?: string | null
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          account_id?: string
+          patient_name?: string
+          step1?: Database["public"]["Enums"]["fax_step_status"]
+          step2?: Database["public"]["Enums"]["fax_step_status"] | null
+          step3?: Database["public"]["Enums"]["fax_step_status"] | null
+          notes?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

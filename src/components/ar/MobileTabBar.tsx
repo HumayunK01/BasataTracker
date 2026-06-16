@@ -6,7 +6,7 @@ const tabs = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/" },
   { title: "Counter", icon: Hash, path: "/counter" },
   { title: "Daily Log", icon: CalendarDays, path: "/log" },
-  { title: "Fax", icon: Send, path: "/fax-tracker" },
+  { title: "Tracker", icon: Send, path: "/tracker" },
   { title: "Report", icon: FileBarChart, path: "/report" },
 ];
 

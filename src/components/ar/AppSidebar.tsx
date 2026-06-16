@@ -29,7 +29,7 @@ const groups = [
     items: [
       { title: "Counter", icon: Hash, path: "/counter" },
       { title: "Daily Log", icon: CalendarDays, path: "/log" },
-      { title: "Fax Tracker", icon: Send, path: "/fax-tracker" },
+      { title: "Tracker", icon: Send, path: "/tracker" },
     ],
   },
 ];

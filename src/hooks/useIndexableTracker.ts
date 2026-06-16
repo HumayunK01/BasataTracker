@@ -6,41 +6,31 @@ import { useAuth } from "@/hooks/useAuth";
 import { useMutationRateLimit } from "@/hooks/useMutationRateLimit";
 import { logAuditEvent } from "@/hooks/useAuditLog";
 import { isoDate } from "@/types/log";
+import { toTitleCase } from "@/hooks/useFaxTracker";
 import type { Tables } from "@/integrations/supabase/types";
 
-export type FaxStepStatus = "Failed" | "Successfully Sent" | "Waiting" | "Pending";
-export type FaxRow = Tables<"fax_tracker">;
+export type IndexableStepStatus = "Failed" | "Successfully Sent" | "Waiting" | "Pending";
+export type IndexableRow = Tables<"indexable_tracker">;
 
-// Synthetic category surfaced on the Dashboard/Report for fax work. Not stored
-// in the categories table — derived from fax rows at read time.
-export const FAX_CATEGORY_KEY = "fax_resolved";
-export const FAX_CATEGORY_LABEL = "Fax Resolved";
-export const FAX_CATEGORY_SHORT = "Fax";
+// Synthetic category surfaced on the Dashboard/Report for indexable work. Not
+// stored in the categories table — derived from indexable rows at read time.
+export const INDEXABLE_CATEGORY_KEY = "indexable_resolved";
+export const INDEXABLE_CATEGORY_LABEL = "Indexable Resolved";
+export const INDEXABLE_CATEGORY_SHORT = "Indexable";
 
 // A case is "resolved" once any step is Successfully Sent (matching the DB's
 // generated overall_status).
-export function isResolved(steps: Pick<FaxRow, "step1" | "step2" | "step3">): boolean {
+export function isResolved(steps: Pick<IndexableRow, "step1" | "step2" | "step3">): boolean {
   return steps.step1 === "Successfully Sent"
     || steps.step2 === "Successfully Sent"
     || steps.step3 === "Successfully Sent";
 }
 
-export const STEP_STATUSES: FaxStepStatus[] = ["Pending", "Waiting", "Successfully Sent", "Failed"];
+export const STEP_STATUSES: IndexableStepStatus[] = ["Pending", "Waiting", "Successfully Sent", "Failed"];
 
 const stepEnum = z.enum(["Failed", "Successfully Sent", "Waiting", "Pending"]);
 
-// Normalize names to Title Case so "GRECIA DENIZ" / "grecia deniz" both save as
-// "Grecia Deniz". Re-cases around spaces, hyphens, and apostrophes (e.g. "O'Brien").
-export function toTitleCase(name: string): string {
-  return name
-    .trim()
-    .replace(/\s+/g, " ")
-    .replace(/[A-Za-z]+(?:[-'][A-Za-z]+)*/g, (word) =>
-      word.replace(/[A-Za-z]+/g, (part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()),
-    );
-}
-
-const FaxInsertSchema = z.object({
+const IndexableInsertSchema = z.object({
   patient_name: z
     .string()
     .trim()
@@ -53,7 +43,7 @@ const FaxInsertSchema = z.object({
   notes: z.string().max(1000, "Notes must be 1000 characters or fewer").nullable().optional(),
 });
 
-export type FaxInput = z.infer<typeof FaxInsertSchema>;
+export type IndexableInput = z.infer<typeof IndexableInsertSchema>;
 
 async function getUserId(): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
@@ -61,18 +51,18 @@ async function getUserId(): Promise<string> {
   return user.id;
 }
 
-export function useFaxTracker(accountId?: string) {
+export function useIndexableTracker(accountId?: string) {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ["fax_tracker", user?.id, accountId],
+    queryKey: ["indexable_tracker", user?.id, accountId],
     enabled: !!user && !!accountId,
     // Per-account list — keep it reasonably fresh across devices.
     staleTime: 0,
     refetchOnWindowFocus: true,
     refetchInterval: 60_000,
-    queryFn: async (): Promise<FaxRow[]> => {
+    queryFn: async (): Promise<IndexableRow[]> => {
       const { data, error } = await supabase
-        .from("fax_tracker")
+        .from("indexable_tracker")
         .select("*")
         .eq("account_id", accountId!)
         .order("created_at", { ascending: true })
@@ -84,21 +74,21 @@ export function useFaxTracker(accountId?: string) {
 }
 
 /**
- * Resolved-fax counts per day across ALL of the user's accounts, keyed by the
- * day the patient was last updated (its best available "resolved on" date).
+ * Resolved-indexable counts per day across ALL of the user's accounts, keyed by
+ * the day the patient was last updated (its best available "resolved on" date).
  * Derived at read time — fully retroactive, no writes. Feeds the Dashboard and
- * Report so fax work shows alongside the user's document categories.
+ * Report so indexable work shows alongside the user's document categories.
  */
-export function useFaxResolvedByDay() {
+export function useIndexableResolvedByDay() {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ["fax_resolved_by_day", user?.id],
+    queryKey: ["indexable_resolved_by_day", user?.id],
     enabled: !!user,
     staleTime: 60_000,
     queryFn: async (): Promise<Record<string, number>> => {
       // RLS already scopes to the current user; only the columns we need.
       const { data, error } = await supabase
-        .from("fax_tracker")
+        .from("indexable_tracker")
         .select("step1, step2, step3, updated_at")
         .limit(5000);
       if (error) throw error;
@@ -113,34 +103,34 @@ export function useFaxResolvedByDay() {
   });
 }
 
-export function useUpsertFax() {
+export function useUpsertIndexable() {
   const qc = useQueryClient();
   const { checkLimit } = useMutationRateLimit({ maxRequests: 30, windowMs: 60_000 });
   return useMutation({
-    mutationFn: async ({ id, input, accountId }: { id?: string; input: FaxInput; accountId?: string }) => {
+    mutationFn: async ({ id, input, accountId }: { id?: string; input: IndexableInput; accountId?: string }) => {
       if (!checkLimit()) throw new Error("Too many saves. Please wait a moment.");
-      const validated = FaxInsertSchema.parse(input);
+      const validated = IndexableInsertSchema.parse(input);
       const created_by = await getUserId();
       if (id) {
         // RLS restricts updates to the row owner. account_id is not changed on edit.
         const { error } = await supabase
-          .from("fax_tracker")
+          .from("indexable_tracker")
           .update(validated)
           .eq("id", id)
           .eq("created_by", created_by);
         if (error) throw error;
-        await logAuditEvent("fax_updated", { fax_id: id });
+        await logAuditEvent("indexable_updated", { indexable_id: id });
       } else {
         if (!accountId) throw new Error("No account selected.");
         const { error } = await supabase
-          .from("fax_tracker")
+          .from("indexable_tracker")
           .insert({ ...validated, created_by, account_id: accountId });
         if (error) throw error;
-        await logAuditEvent("fax_created", { patient_name: validated.patient_name, account_id: accountId });
+        await logAuditEvent("indexable_created", { patient_name: validated.patient_name, account_id: accountId });
       }
     },
     onSuccess: (_d, { id }) => {
-      qc.invalidateQueries({ queryKey: ["fax_tracker"] });
+      qc.invalidateQueries({ queryKey: ["indexable_tracker"] });
       toast.success(id ? "Patient updated" : "Patient added");
     },
     onError: (e: Error) => toast.error(e instanceof z.ZodError ? e.issues[0]?.message : e.message),
@@ -154,10 +144,10 @@ export type StepField = "step1" | "step2" | "step3";
 //  - step2/step3 only apply once the prior step has Failed
 // Returns the normalized {step1, step2, step3}.
 export function normalizeSteps(
-  row: Pick<FaxRow, "step1" | "step2" | "step3">,
+  row: Pick<IndexableRow, "step1" | "step2" | "step3">,
   field: StepField,
-  value: FaxStepStatus,
-): { step1: FaxStepStatus; step2: FaxStepStatus | null; step3: FaxStepStatus | null } {
+  value: IndexableStepStatus,
+): { step1: IndexableStepStatus; step2: IndexableStepStatus | null; step3: IndexableStepStatus | null } {
   let step1 = row.step1;
   let step2 = row.step2;
   let step3 = row.step3;
@@ -178,27 +168,27 @@ export function useUpdateStep() {
   const qc = useQueryClient();
   const { checkLimit } = useMutationRateLimit({ maxRequests: 40, windowMs: 60_000 });
   return useMutation({
-    mutationFn: async ({ row, field, value }: { row: FaxRow; field: StepField; value: FaxStepStatus }) => {
+    mutationFn: async ({ row, field, value }: { row: IndexableRow; field: StepField; value: IndexableStepStatus }) => {
       if (!checkLimit()) throw new Error("Too many updates. Please wait a moment.");
       const created_by = await getUserId();
       const patch = normalizeSteps(row, field, value);
       const { error } = await supabase
-        .from("fax_tracker")
+        .from("indexable_tracker")
         .update(patch)
         .eq("id", row.id)
         .eq("created_by", created_by);
       if (error) throw error;
-      await logAuditEvent("fax_updated", { fax_id: row.id, field, value });
+      await logAuditEvent("indexable_updated", { indexable_id: row.id, field, value });
     },
     // Optimistic: reflect the change instantly, roll back on error.
     onMutate: async ({ row, field, value }) => {
-      await qc.cancelQueries({ queryKey: ["fax_tracker"] });
-      const key = ["fax_tracker"];
-      const snapshots = qc.getQueriesData<FaxRow[]>({ queryKey: key });
+      await qc.cancelQueries({ queryKey: ["indexable_tracker"] });
+      const key = ["indexable_tracker"];
+      const snapshots = qc.getQueriesData<IndexableRow[]>({ queryKey: key });
       const patch = normalizeSteps(row, field, value);
       for (const [qKey, data] of snapshots) {
         if (!data) continue;
-        qc.setQueryData<FaxRow[]>(qKey, data.map((r) => (r.id === row.id ? { ...r, ...patch } : r)));
+        qc.setQueryData<IndexableRow[]>(qKey, data.map((r) => (r.id === row.id ? { ...r, ...patch } : r)));
       }
       return { snapshots };
     },
@@ -207,28 +197,28 @@ export function useUpdateStep() {
       toast.error(e.message);
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: ["fax_tracker"] });
+      qc.invalidateQueries({ queryKey: ["indexable_tracker"] });
     },
   });
 }
 
-export function useDeleteFax() {
+export function useDeleteIndexable() {
   const qc = useQueryClient();
   const { checkLimit } = useMutationRateLimit({ maxRequests: 15, windowMs: 60_000 });
   return useMutation({
     mutationFn: async (id: string) => {
       if (!checkLimit()) throw new Error("Too many deletes. Please wait a moment.");
       const created_by = await getUserId();
-      await logAuditEvent("fax_deleted", { fax_id: id });
+      await logAuditEvent("indexable_deleted", { indexable_id: id });
       const { error } = await supabase
-        .from("fax_tracker")
+        .from("indexable_tracker")
         .delete()
         .eq("id", id)
         .eq("created_by", created_by);
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["fax_tracker"] });
+      qc.invalidateQueries({ queryKey: ["indexable_tracker"] });
       toast.success("Patient deleted");
     },
     onError: (e: Error) => toast.error(e.message),
