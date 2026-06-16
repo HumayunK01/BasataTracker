@@ -152,11 +152,24 @@ function rowClasses(status: string): string {
 }
 
 // Whether a step is "in play" — i.e. it applies given the prior steps' state.
-// Step 1 always applies; step2 only after step1 Failed; step3 after both Failed.
-function stepIsActive(row: FaxRow, field: StepField): boolean {
+// Fax: a sequential workflow — step2 only after step1 Failed, step3 after both.
+// Indexable: every step is independent, so all three are always in play.
+function stepIsActive(row: FaxRow, field: StepField, mode: TrackerMode): boolean {
+  if (mode === "indexable") return true;
   if (field === "step1") return true;
   if (field === "step2") return row.step1 === "Failed";
   return row.step1 === "Failed" && row.step2 === "Failed";
+}
+
+// Indexable only: an untouched step (null / Pending) reads as "No need" once a
+// later step has been Successfully Sent — e.g. set step 3 to success and the
+// earlier steps show "No need" rather than demanding completion.
+function stepIsSkipped(row: FaxRow, field: StepField, mode: TrackerMode): boolean {
+  if (mode !== "indexable") return false;
+  const status = row[field];
+  if (status && status !== "Pending") return false;
+  const laterFields: StepField[] = field === "step1" ? ["step2", "step3"] : field === "step2" ? ["step3"] : [];
+  return laterFields.some((f) => row[f] === "Successfully Sent");
 }
 
 // The dropdown of status choices shared by the table cell and the mobile card.
@@ -215,18 +228,25 @@ function StepCell({
   editable,
   onPick,
   labels,
+  mode,
 }: {
   row: FaxRow;
   field: StepField;
   editable: boolean;
   onPick: (value: FaxStepStatus) => void;
   labels: [string, string, string];
+  mode: TrackerMode;
 }) {
   const status = row[field];
-  const active = stepIsActive(row, field);
+  const active = stepIsActive(row, field, mode);
 
   // Not applicable for this row's path (an earlier step resolved/blocked it).
   if (!active) return <td className="px-3 py-2 text-center text-muted-foreground/40">—</td>;
+
+  // Indexable: a later step succeeded, so this untouched step isn't needed.
+  if (stepIsSkipped(row, field, mode)) {
+    return <td className="px-3 py-2 text-center text-xs font-medium text-muted-foreground/60 italic">No need</td>;
+  }
 
   if (!editable) {
     return (
@@ -262,6 +282,7 @@ function FaxCard({
   onDelete,
   onPickStep,
   labels,
+  mode,
 }: {
   row: FaxRow;
   mine: boolean;
@@ -270,6 +291,7 @@ function FaxCard({
   onDelete: (row: FaxRow) => void;
   onPickStep: (field: StepField, value: FaxStepStatus) => void;
   labels: [string, string, string];
+  mode: TrackerMode;
 }) {
   const fields: StepField[] = ["step1", "step2", "step3"];
   return (
@@ -323,13 +345,16 @@ function FaxCard({
       <dl className="mt-3 space-y-1">
         {fields.map((field, i) => {
           const status = row[field];
-          const active = stepIsActive(row, field);
+          const active = stepIsActive(row, field, mode);
+          const skipped = stepIsSkipped(row, field, mode);
           return (
             <div key={field} className="flex items-center justify-between gap-3 text-sm min-h-8">
               <dt className="text-muted-foreground">{labels[i]}</dt>
               <dd className="text-right">
                 {!active ? (
                   <span className="font-semibold text-muted-foreground/40">—</span>
+                ) : skipped ? (
+                  <span className="text-xs font-medium text-muted-foreground/60 italic">No need</span>
                 ) : mine ? (
                   <StepPicker row={row} field={field} status={status} onPick={(v) => onPickStep(field, v)} labels={labels} />
                 ) : (
@@ -947,6 +972,7 @@ const FaxTrackerPage = () => {
                               editable={mine}
                               onPick={(value) => pickStep(row, field, value)}
                               labels={labels}
+                              mode={mode}
                             />
                           ))}
                           <td className={cn("px-3 py-2 text-center text-sm font-semibold", overallClasses(row.overall_status))}>
@@ -1043,6 +1069,7 @@ const FaxTrackerPage = () => {
                     onDelete={setDeleteTarget}
                     onPickStep={(field, value) => pickStep(row, field, value)}
                     labels={labels}
+                    mode={mode}
                   />
                 ))}
                 {totalPages > 1 && (
