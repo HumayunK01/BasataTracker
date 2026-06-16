@@ -5,6 +5,8 @@ const Charts = lazy(() => import("@/components/ar/Charts").then((m) => ({ defaul
 import { ContributionHeatmap } from "@/components/ar/ContributionHeatmap";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
+import { useFaxResolvedByDay, FAX_CATEGORY_KEY, FAX_CATEGORY_LABEL } from "@/hooks/useFaxTracker";
+import { useIndexableResolvedByDay, INDEXABLE_CATEGORY_KEY, INDEXABLE_CATEGORY_LABEL } from "@/hooks/useIndexableTracker";
 import { isoDate, totalForLog } from "@/types/log";
 import { Plus, BarChart2 } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
@@ -19,6 +21,8 @@ const chicagoWeekdayFmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/
 const Index = () => {
   const { data: logs = [], isLoading } = useDailyLogs();
   const { data: categories = [] } = useCategories();
+  const { data: faxByDay = {} } = useFaxResolvedByDay();
+  const { data: indexableByDay = {} } = useIndexableResolvedByDay();
   const { data: profile } = useProfile();
   const navigate = useNavigate();
 
@@ -40,8 +44,18 @@ const Index = () => {
       label: c.label,
       value: working.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0),
     }));
+    // Derived "Fax Resolved" category — total resolved patients across all days.
+    const faxTotal = Object.values(faxByDay).reduce((s, n) => s + n, 0);
+    if (faxTotal > 0) {
+      categoryTotals.push({ key: FAX_CATEGORY_KEY, label: FAX_CATEGORY_LABEL, value: faxTotal });
+    }
+    // Derived "Indexable Resolved" category — total resolved patients across all days.
+    const indexableTotal = Object.values(indexableByDay).reduce((s, n) => s + n, 0);
+    if (indexableTotal > 0) {
+      categoryTotals.push({ key: INDEXABLE_CATEGORY_KEY, label: INDEXABLE_CATEGORY_LABEL, value: indexableTotal });
+    }
     return { todayLog, todayTotal, categoryTotals, workingCount: working.length };
-  }, [logs, categories]);
+  }, [logs, categories, faxByDay, indexableByDay]);
 
   const isWeekendToday = useMemo(() => {
     const day = chicagoWeekdayFmt.format(now);

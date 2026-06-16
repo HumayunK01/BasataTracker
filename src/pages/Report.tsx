@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
+import { useFaxResolvedByDay, FAX_CATEGORY_KEY, FAX_CATEGORY_LABEL, FAX_CATEGORY_SHORT } from "@/hooks/useFaxTracker";
+import { useIndexableResolvedByDay, INDEXABLE_CATEGORY_KEY, INDEXABLE_CATEGORY_LABEL, INDEXABLE_CATEGORY_SHORT } from "@/hooks/useIndexableTracker";
 import { useProfile } from "@/hooks/useProfile";
 import { isoDate, formatTableDate, isWeekend, totalForLog, type DailyLog } from "@/types/log";
 import { PageHeader } from "@/components/ar/PageHeader";
@@ -108,6 +110,8 @@ function reportReducer(s: ReportFilter, a: ReportAction): ReportFilter {
 const ReportPage = () => {
   const { data: logs = [], isLoading } = useDailyLogs();
   const { data: categories = [] } = useCategories();
+  const { data: faxByDay = {} } = useFaxResolvedByDay();
+  const { data: indexableByDay = {} } = useIndexableResolvedByDay();
   const { data: profile } = useProfile();
   const userName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || undefined;
   const [now] = useState(() => new Date());
@@ -186,8 +190,36 @@ const ReportPage = () => {
       },
       []
     );
+    // Derived "Fax Resolved" — resolved patients whose day falls in the range.
+    const faxValue = Object.entries(faxByDay).reduce(
+      (s, [day, n]) => (day >= startDate && day <= endDate ? s + n : s),
+      0,
+    );
+    if (faxValue > 0) {
+      breakdown.push({
+        key: FAX_CATEGORY_KEY,
+        label: FAX_CATEGORY_LABEL,
+        short: FAX_CATEGORY_SHORT,
+        value: faxValue,
+        color: colorForKey(FAX_CATEGORY_KEY),
+      });
+    }
+    // Derived "Indexable Resolved" — resolved patients whose day falls in the range.
+    const indexableValue = Object.entries(indexableByDay).reduce(
+      (s, [day, n]) => (day >= startDate && day <= endDate ? s + n : s),
+      0,
+    );
+    if (indexableValue > 0) {
+      breakdown.push({
+        key: INDEXABLE_CATEGORY_KEY,
+        label: INDEXABLE_CATEGORY_LABEL,
+        short: INDEXABLE_CATEGORY_SHORT,
+        value: indexableValue,
+        color: colorForKey(INDEXABLE_CATEGORY_KEY),
+      });
+    }
     return breakdown;
-  }, [categories, workingLogs]);
+  }, [categories, workingLogs, faxByDay, indexableByDay, startDate, endDate]);
 
   const chartData = useMemo(() =>
     [...workingLogs]

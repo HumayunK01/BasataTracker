@@ -54,6 +54,8 @@ const App = () => (
                 <Route path="/report" element={<ReportPage />} />
                 <Route path="/counter" element={<CounterPage />} />
                 <Route path="/users" element={<UsersPage />} />
+                <Route path="/tracker" element={<FaxTrackerPage />} />
+                {/* Legacy path — the page now hosts both Fax and Indexable */}
                 <Route path="/fax-tracker" element={<FaxTrackerPage />} />
               </Route>
               <Route path="*" element={<NotFound />} />

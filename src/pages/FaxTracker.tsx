@@ -10,11 +10,18 @@ import {
   type FaxStepStatus,
   type StepField,
 } from "@/hooks/useFaxTracker";
+import {
+  useIndexableTracker,
+  useDeleteIndexable,
+  useUpdateStep as useUpdateIndexableStep,
+} from "@/hooks/useIndexableTracker";
 import { useFaxAccounts, useDeleteFaxAccount, type FaxAccount } from "@/hooks/useFaxAccounts";
 import { downloadFaxPDF } from "@/lib/fax-utils";
+import { downloadIndexablePDF } from "@/lib/indexable-utils";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { FaxEntryDialog } from "@/components/ar/fax/FaxEntryDialog";
+import { IndexableEntryDialog } from "@/components/ar/indexable/IndexableEntryDialog";
 import { NewAccountDialog } from "@/components/ar/fax/NewAccountDialog";
 import { RenameAccountDialog } from "@/components/ar/fax/RenameAccountDialog";
 import { Button } from "@/components/ui/button";
@@ -134,12 +141,14 @@ function StepPicker({
   field,
   status,
   onPick,
+  labels,
   triggerClassName,
 }: {
   row: FaxRow;
   field: StepField;
   status: FaxStepStatus | null;
   onPick: (value: FaxStepStatus) => void;
+  labels: [string, string, string];
   triggerClassName?: string;
 }) {
   return (
@@ -159,7 +168,7 @@ function StepPicker({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center" className="w-44 font-[system-ui]">
-        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">{STEP_LABELS[Number(field.slice(-1)) - 1]}</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">{labels[Number(field.slice(-1)) - 1]}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {STEP_STATUSES.map((s) => (
           <DropdownMenuItem
@@ -181,11 +190,13 @@ function StepCell({
   field,
   editable,
   onPick,
+  labels,
 }: {
   row: FaxRow;
   field: StepField;
   editable: boolean;
   onPick: (value: FaxStepStatus) => void;
+  labels: [string, string, string];
 }) {
   const status = row[field];
   const active = stepIsActive(row, field);
@@ -203,12 +214,20 @@ function StepCell({
 
   return (
     <td className="px-3 py-2 text-center">
-      <StepPicker row={row} field={field} status={status} onPick={onPick} />
+      <StepPicker row={row} field={field} status={status} onPick={onPick} labels={labels} />
     </td>
   );
 }
 
-const STEP_LABELS = ["Step 1 – Refax Same", "Step 2 – Refax New", "Step 3 – Reupload ROI"];
+// Step 3's label differs by category (the workflow's final step), so labels are
+// resolved from the active mode rather than a single static list.
+function stepLabels(mode: TrackerMode): [string, string, string] {
+  return [
+    "Step 1 – Refax Same",
+    "Step 2 – Refax New",
+    mode === "indexable" ? "Step 3 – Reupload Indexable" : "Step 3 – Reupload ROI",
+  ];
+}
 
 // Stacked card used on phones, where the 7-column table needs scrolling.
 function FaxCard({
@@ -218,6 +237,7 @@ function FaxCard({
   onEdit,
   onDelete,
   onPickStep,
+  labels,
 }: {
   row: FaxRow;
   mine: boolean;
@@ -225,6 +245,7 @@ function FaxCard({
   onEdit: (row: FaxRow) => void;
   onDelete: (row: FaxRow) => void;
   onPickStep: (field: StepField, value: FaxStepStatus) => void;
+  labels: [string, string, string];
 }) {
   const fields: StepField[] = ["step1", "step2", "step3"];
   return (
@@ -281,12 +302,12 @@ function FaxCard({
           const active = stepIsActive(row, field);
           return (
             <div key={field} className="flex items-center justify-between gap-3 text-sm min-h-8">
-              <dt className="text-muted-foreground">{STEP_LABELS[i]}</dt>
+              <dt className="text-muted-foreground">{labels[i]}</dt>
               <dd className="text-right">
                 {!active ? (
                   <span className="font-semibold text-muted-foreground/40">—</span>
                 ) : mine ? (
-                  <StepPicker row={row} field={field} status={status} onPick={(v) => onPickStep(field, v)} />
+                  <StepPicker row={row} field={field} status={status} onPick={(v) => onPickStep(field, v)} labels={labels} />
                 ) : (
                   <span className={cn("font-semibold", status ? stepClasses(status) : "text-muted-foreground/40")}>
                     {status ?? "—"}
@@ -341,12 +362,26 @@ function SortHeader({
 }
 
 const ACCOUNT_KEY = "fax-tracker-account";
+const MODE_KEY = "tracker-mode";
 const PAGE_SIZE = 25;
+
+// The page hosts two categories that share accounts but keep separate rows.
+type TrackerMode = "fax" | "indexable";
+const MODES: { id: TrackerMode; label: string }[] = [
+  { id: "fax", label: "Fax" },
+  { id: "indexable", label: "Indexable" },
+];
 
 const FaxTrackerPage = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile();
   const { data: accounts = [], isLoading: accountsLoading } = useFaxAccounts();
+
+  // Which category is active. Persisted so a refresh keeps the user's view.
+  const [mode, setMode] = useState<TrackerMode>(
+    () => (localStorage.getItem(MODE_KEY) as TrackerMode) || "fax",
+  );
+  useEffect(() => { localStorage.setItem(MODE_KEY, mode); }, [mode]);
 
   const deleteAccount = useDeleteFaxAccount();
   const [accountId, setAccountId] = useState<string | null>(() => localStorage.getItem(ACCOUNT_KEY));
@@ -368,11 +403,38 @@ const FaxTrackerPage = () => {
     setPage(1); // different account → start at the first page
   }, [accountId]);
 
+  // Switching category swaps the whole row set — reset the view and stop the
+  // entrance animation from replaying for the new mode's existing rows.
+  useEffect(() => {
+    setPage(1);
+    setSearch("");
+    setStatusFilter(new Set());
+    setEditing(null);
+    setDeleteTarget(null);
+    seenIds.current = null;
+  }, [mode]);
+
   const activeAccount = accounts.find((a) => a.id === accountId) ?? null;
 
-  const { data: rows = [], isLoading } = useFaxTracker(accountId ?? undefined);
+  // Both categories share accounts but keep separate rows. Call both hooks
+  // unconditionally (rules of hooks) and pick the active set by mode.
+  const faxQuery = useFaxTracker(mode === "fax" ? (accountId ?? undefined) : undefined);
+  const indexableQuery = useIndexableTracker(mode === "indexable" ? (accountId ?? undefined) : undefined);
+  const { data: rows = [], isLoading } = mode === "fax" ? faxQuery : indexableQuery;
+
   const deleteFax = useDeleteFax();
-  const updateStep = useUpdateStep();
+  const deleteIndexable = useDeleteIndexable();
+  const updateFaxStep = useUpdateStep();
+  const updateIndexableStep = useUpdateIndexableStep();
+  // IndexableRow is structurally identical to FaxRow, so the row data is
+  // interchangeable. The mutation hooks are nominally distinct, so dispatch by
+  // mode rather than unioning their input types.
+  const deleteRow = mode === "fax" ? deleteFax : deleteIndexable;
+  const pickStep = (row: FaxRow, field: StepField, value: FaxStepStatus) => {
+    if (mode === "fax") updateFaxStep.mutate({ row, field, value });
+    else updateIndexableStep.mutate({ row, field, value });
+  };
+  const labels = stepLabels(mode);
   const [exporting, setExporting] = useState(false);
 
   const [now] = useState(() => new Date());
@@ -494,7 +556,7 @@ const FaxTrackerPage = () => {
         search.trim() ? `Search: "${search.trim()}"` : null,
       ].filter(Boolean);
 
-      // Build a filename that reflects the account + active filter, e.g.
+      // Build a filename that reflects the mode + account + active filter, e.g.
       // fax-tracker-ayush-rathi-failed-2026-06-15.pdf
       const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
       const accountPart = activeAccount ? `${slug(activeAccount.name)}-` : "";
@@ -503,9 +565,11 @@ const FaxTrackerPage = () => {
         : "all";
       const searchPart = search.trim() ? `-${slug(search.trim())}` : "";
       const datePart = new Date().toISOString().slice(0, 10);
-      const filename = `fax-tracker-${accountPart}${statusPart}${searchPart}-${datePart}.pdf`;
+      const prefix = mode === "fax" ? "fax-tracker" : "indexable-tracker";
+      const filename = `${prefix}-${accountPart}${statusPart}${searchPart}-${datePart}.pdf`;
 
-      await downloadFaxPDF(filtered, filename, {
+      const download = mode === "fax" ? downloadFaxPDF : downloadIndexablePDF;
+      await download(filtered, filename, {
         userName,
         subtitle: subtitleBits.join("  ·  "),
       });
@@ -527,9 +591,36 @@ const FaxTrackerPage = () => {
     <>
       <PageHeader
         now={now}
-        subtitle="Fax Tracker"
+        subtitle="Tracker"
         actions={
           <div className="flex items-center gap-2">
+            {/* Category toggle — Fax vs Indexable share accounts, separate rows.
+                Two equal-width segments with a pill that slides under the active
+                one (translate by 100% of one segment). */}
+            <div className="relative inline-grid grid-cols-2 items-center rounded-md border border-border bg-muted/30 p-0.5">
+              {/* Sliding active-segment highlight. */}
+              <span
+                aria-hidden
+                className="absolute top-0.5 bottom-0.5 left-0.5 w-[calc(50%-2px)] rounded-[5px] bg-primary shadow-sm transition-transform duration-300 ease-out motion-reduce:transition-none"
+                style={{ transform: mode === "indexable" ? "translateX(100%)" : "translateX(0)" }}
+              />
+              {MODES.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setMode(m.id)}
+                  aria-pressed={mode === m.id}
+                  className={cn(
+                    "relative z-10 px-2.5 py-1.5 text-xs font-semibold rounded-[5px] transition-colors duration-300 text-center whitespace-nowrap",
+                    mode === m.id
+                      ? "text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
             <Button
               variant="outline"
               size="sm"
@@ -555,7 +646,10 @@ const FaxTrackerPage = () => {
       />
 
       <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
-        <div className="w-full space-y-4">
+        {/* Re-key on mode so the whole view fades in on a Fax/Indexable switch.
+            A single keyed wrapper (no keyed siblings) avoids React reconciling
+            the two modes' subtrees into one another. */}
+        <div key={mode} className="w-full space-y-4 animate-fade-in">
 
           {/* Summary stats */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
@@ -690,9 +784,9 @@ const FaxTrackerPage = () => {
                     <th className="px-3 py-2.5 text-left font-semibold">
                       <SortHeader label="Patient" sortKey="patient_name" sort={sort} onSort={toggleSort} align="left" />
                     </th>
-                    <th className="px-3 py-2.5 text-center font-semibold">Step 1 – Refax Same</th>
-                    <th className="px-3 py-2.5 text-center font-semibold">Step 2 – Refax New</th>
-                    <th className="px-3 py-2.5 text-center font-semibold">Step 3 – Reupload ROI</th>
+                    <th className="px-3 py-2.5 text-center font-semibold">{labels[0]}</th>
+                    <th className="px-3 py-2.5 text-center font-semibold">{labels[1]}</th>
+                    <th className="px-3 py-2.5 text-center font-semibold">{labels[2]}</th>
                     <th className="px-3 py-2.5 text-center font-semibold">
                       <SortHeader label="Overall Status" sortKey="overall_status" sort={sort} onSort={toggleSort} align="center" />
                     </th>
@@ -737,7 +831,8 @@ const FaxTrackerPage = () => {
                               row={row}
                               field={field}
                               editable={mine}
-                              onPick={(value) => updateStep.mutate({ row, field, value })}
+                              onPick={(value) => pickStep(row, field, value)}
+                              labels={labels}
                             />
                           ))}
                           <td className={cn("px-3 py-2 text-center text-sm font-semibold", overallClasses(row.overall_status))}>
@@ -819,7 +914,8 @@ const FaxTrackerPage = () => {
                     isNew={newIds.has(row.id)}
                     onEdit={openEdit}
                     onDelete={setDeleteTarget}
-                    onPickStep={(field, value) => updateStep.mutate({ row, field, value })}
+                    onPickStep={(field, value) => pickStep(row, field, value)}
+                    labels={labels}
                   />
                 ))}
                 {totalPages > 1 && (
@@ -840,7 +936,11 @@ const FaxTrackerPage = () => {
         </div>
       </main>
 
-      <FaxEntryDialog open={dialogOpen} onOpenChange={setDialogOpen} row={editing} accountId={accountId ?? undefined} />
+      {mode === "fax" ? (
+        <FaxEntryDialog open={dialogOpen} onOpenChange={setDialogOpen} row={editing} accountId={accountId ?? undefined} />
+      ) : (
+        <IndexableEntryDialog open={dialogOpen} onOpenChange={setDialogOpen} row={editing} accountId={accountId ?? undefined} />
+      )}
 
       <NewAccountDialog
         open={accountDialogOpen}
@@ -859,7 +959,7 @@ const FaxTrackerPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-lg font-semibold">Delete this patient?</AlertDialogTitle>
             <AlertDialogDescription className="mt-2 text-sm leading-relaxed">
-              This permanently removes <span className="font-medium text-foreground">{deleteTarget?.patient_name}</span> from the fax tracker. This can't be undone.
+              This permanently removes <span className="font-medium text-foreground">{deleteTarget?.patient_name}</span> from the {mode === "fax" ? "fax" : "indexable"} tracker. This can't be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-4">
@@ -867,7 +967,7 @@ const FaxTrackerPage = () => {
             <AlertDialogAction
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               onClick={() => {
-                if (deleteTarget) deleteFax.mutate(deleteTarget.id);
+                if (deleteTarget) deleteRow.mutate(deleteTarget.id);
                 setDeleteTarget(null);
               }}
             >
@@ -883,8 +983,7 @@ const FaxTrackerPage = () => {
             <AlertDialogTitle className="text-lg font-semibold">Delete account?</AlertDialogTitle>
             <AlertDialogDescription className="mt-2 text-sm leading-relaxed">
               This deletes the account <span className="font-medium text-foreground">{accountToDelete?.name}</span>
-              {" "}and <span className="font-medium text-destructive">all of its patients</span>
-              {accountToDelete?.id === accountId ? ` (${rows.length} on this account)` : ""}. This can't be undone.
+              {" "}and <span className="font-medium text-destructive">all of its patients in both Fax and Indexable</span>. This can't be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-4">
