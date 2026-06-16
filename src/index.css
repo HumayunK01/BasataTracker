@@ -278,6 +278,25 @@
     transform: scale(0.97);
   }
 
+  /* Calendar day selection: smooth color/transform on every day cell, plus a
+     subtle pop when a day becomes selected. */
+  .day-cell {
+    transition: background-color 0.16s var(--ease-out), color 0.16s var(--ease-out),
+      transform 0.16s var(--ease-out);
+  }
+  .day-cell:hover {
+    transform: scale(1.06);
+  }
+  .day-cell[aria-selected="true"] {
+    animation: dayPop 0.2s var(--ease-out);
+  }
+
+  @keyframes dayPop {
+    0% { transform: scale(0.7); }
+    55% { transform: scale(1.12); }
+    100% { transform: scale(1); }
+  }
+
   /* Skip rendering/painting for offscreen heavy blocks (charts, heatmap).
      `contain-intrinsic-size` reserves space so the scrollbar stays stable. */
   .cv-auto {
@@ -295,6 +314,11 @@
   }
   .press-scale:active {
     transform: none;
+  }
+  .day-cell:hover,
+  .day-cell[aria-selected="true"] {
+    transform: none;
+    animation: none;
   }
 
   @keyframes fadeOnly {
