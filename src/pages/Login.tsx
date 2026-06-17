@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff, Sun, Moon, Check, X } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
+import { AppFavicon } from "@/components/ar/AppFavicon";
 
 const PASSWORD_RULES = [
   { label: "Lowercase letter", test: (p: string) => /[a-z]/.test(p) },
@@ -116,7 +117,7 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="flex justify-center">
-          <img src="/favicon.png" alt="Basata.ai Tracker" className="size-14 object-contain" />
+          <AppFavicon className="size-14 object-contain" />
         </div>
 
         {confirmEmail ? (
