@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { AppLogo } from "@/components/ar/AppLogo";
+import { AppFavicon } from "@/components/ar/AppFavicon";
 import { cn } from "@/lib/utils";
 
 const groups = [
@@ -64,8 +65,7 @@ export function AppSidebar() {
 
       <SidebarHeader className="flex flex-row items-center justify-between px-4 py-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-3">
         <AppLogo className="h-12 object-contain group-data-[collapsible=icon]:hidden" />
-        <img
-          src="/favicon.png"
+        <AppFavicon
           alt="Basata.ai"
           className="size-7 object-contain hidden group-data-[collapsible=icon]:block mx-auto"
         />
