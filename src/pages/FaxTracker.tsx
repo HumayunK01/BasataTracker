@@ -777,7 +777,7 @@ const FaxTrackerPage = () => {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handleExport(true)}>
                   <div className="flex flex-col">
-                    <span>All accounts (other IDs too)</span>
+                    <span>All accounts</span>
                     <span className="text-xs text-muted-foreground">
                       Same filters across every account
                     </span>
