@@ -5,6 +5,7 @@ import {
   useFaxTracker,
   useDeleteFax,
   useUpdateStep,
+  fetchAllFaxRows,
   STEP_STATUSES,
   type FaxRow,
   type FaxStepStatus,
@@ -14,6 +15,7 @@ import {
   useIndexableTracker,
   useDeleteIndexable,
   useUpdateStep as useUpdateIndexableStep,
+  fetchAllIndexableRows,
 } from "@/hooks/useIndexableTracker";
 import { useFaxAccounts, useDeleteFaxAccount, type FaxAccount } from "@/hooks/useFaxAccounts";
 import { downloadFaxPDF } from "@/lib/fax-utils";
@@ -496,9 +498,11 @@ const FaxTrackerPage = () => {
   const [editing, setEditing] = useState<FaxRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FaxRow | null>(null);
 
-  const filtered = useMemo(() => {
+  // The same filter predicate the table uses — reused by the exporter so an
+  // "all accounts" export applies the identical status/date/search filters.
+  const matchesFilters = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const rowsFiltered = rows.filter((r) => {
+    return (r: FaxRow) => {
       if (statusFilter.size) {
         const group = statusGroup(r.overall_status);
         if (!group || !statusFilter.has(group)) return false;
@@ -509,7 +513,11 @@ const FaxTrackerPage = () => {
       }
       if (q && !r.patient_name.toLowerCase().includes(q) && !(r.notes ?? "").toLowerCase().includes(q)) return false;
       return true;
-    });
+    };
+  }, [search, statusFilter, dateFilter]);
+
+  const filtered = useMemo(() => {
+    const rowsFiltered = rows.filter(matchesFilters);
 
     // No explicit sort → newest first by the date shown in the table (updated_at),
     // so the most recent date is on top and the oldest at the bottom.
@@ -531,7 +539,7 @@ const FaxTrackerPage = () => {
       const bv = sort.key === "patient_name" ? b.patient_name : displayStatus(b.overall_status);
       return av.localeCompare(bv, undefined, { sensitivity: "base" }) * dir;
     });
-  }, [rows, search, statusFilter, dateFilter, sort]);
+  }, [rows, matchesFilters, sort]);
 
   // ── Pagination ──
   // A narrowing of the result set should bring you back to the first page.
@@ -640,13 +648,41 @@ const FaxTrackerPage = () => {
   const openEdit = (row: FaxRow) => { setEditing(row); setDialogOpen(true); };
 
   // Export whatever is currently on screen (filters + search applied).
-  const handleExport = async () => {
+  // When `allAccounts` is true, the same filters are applied across every
+  // account (all IDs) — e.g. "failed ROIs" for every account, not just the
+  // active one — and an Account column is added so rows stay distinguishable.
+  const handleExport = async (allAccounts = false) => {
     setExporting(true);
     try {
       const userName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || undefined;
       const activeFilters = statusFilter.size ? Array.from(statusFilter).join(", ") : null;
+
+      // Gather + filter the rows to export. Single-account uses the on-screen
+      // list; all-accounts fetches every account's rows and applies the same
+      // filter predicate, then sorts newest-first (the table's default).
+      let exportRows: FaxRow[] = filtered;
+      let accountName: ((row: FaxRow) => string) | undefined;
+      if (allAccounts) {
+        const all = mode === "fax" ? await fetchAllFaxRows() : await fetchAllIndexableRows();
+        exportRows = all
+          .filter(matchesFilters)
+          .sort((a, b) => {
+            const at = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+            const bt = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+            return bt - at;
+          });
+        if (exportRows.length === 0) {
+          toast.error("No matching rows across any account.");
+          return;
+        }
+        const nameById = new Map(accounts.map((a) => [a.id, a.name]));
+        accountName = (row) => nameById.get(row.account_id) ?? "—";
+      }
+
       const subtitleBits = [
-        activeAccount ? `Account: ${activeAccount.name}` : null,
+        allAccounts
+          ? `Accounts: All (${new Set(exportRows.map((r) => r.account_id)).size})`
+          : activeAccount ? `Account: ${activeAccount.name}` : null,
         activeFilters ? `Status: ${activeFilters}` : "All patients",
         search.trim() ? `Search: "${search.trim()}"` : null,
       ].filter(Boolean);
@@ -654,7 +690,7 @@ const FaxTrackerPage = () => {
       // Build a filename that reflects the mode + account + active filter, e.g.
       // fax-tracker-ayush-rathi-failed-2026-06-15.pdf
       const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-      const accountPart = activeAccount ? `${slug(activeAccount.name)}-` : "";
+      const accountPart = allAccounts ? "all-accounts-" : activeAccount ? `${slug(activeAccount.name)}-` : "";
       const statusPart = statusFilter.size
         ? STATUS_GROUPS.filter((g) => statusFilter.has(g)).map(slug).join("-")
         : "all";
@@ -664,10 +700,13 @@ const FaxTrackerPage = () => {
       const filename = `${prefix}-${accountPart}${statusPart}${searchPart}-${datePart}.pdf`;
 
       const download = mode === "fax" ? downloadFaxPDF : downloadIndexablePDF;
-      await download(filtered, filename, {
+      await download(exportRows, filename, {
         userName,
         subtitle: subtitleBits.join("  ·  "),
+        accountName,
       });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Export failed.");
     } finally {
       setExporting(false);
     }
@@ -712,17 +751,40 @@ const FaxTrackerPage = () => {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 shrink-0"
-              onClick={handleExport}
-              disabled={exporting || filtered.length === 0}
-              title={filtered.length === 0 ? "Nothing to export" : "Export the current view to PDF"}
-            >
-              <FileText className="size-4 mr-1" />
-              {exporting ? "Exporting…" : "Export PDF"}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 shrink-0"
+                  disabled={exporting || filtered.length === 0}
+                  title={filtered.length === 0 ? "Nothing to export" : "Export to PDF"}
+                >
+                  <FileText className="size-4 mr-1" />
+                  {exporting ? "Exporting…" : "Export PDF"}
+                  <ChevronDown className="size-4 ml-1.5 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64 font-[system-ui]">
+                <DropdownMenuItem onClick={() => handleExport(false)}>
+                  <div className="flex flex-col">
+                    <span>This account only</span>
+                    <span className="text-xs text-muted-foreground">
+                      {activeAccount?.name ?? "Current account"} · current view
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleExport(true)}>
+                  <div className="flex flex-col">
+                    <span>All accounts (other IDs too)</span>
+                    <span className="text-xs text-muted-foreground">
+                      Same filters across every account
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               size="sm"
               className="h-8 shrink-0 bg-primary hover:bg-primary/95 text-primary-foreground"

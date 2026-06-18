@@ -11,8 +11,18 @@ function stripHash(status: string): string {
 export async function downloadIndexablePDF(
   rows: IndexableRow[],
   filename = "indexable-tracker.pdf",
-  opts: { subtitle?: string; userName?: string } = {},
+  opts: {
+    subtitle?: string;
+    userName?: string;
+    /**
+     * When provided, the export includes an "Account" column resolving each
+     * row's account_id to a display name. Used for multi-account ("other IDs")
+     * exports so rows from different accounts stay distinguishable.
+     */
+    accountName?: (row: IndexableRow) => string;
+  } = {},
 ) {
+  const showAccount = typeof opts.accountName === "function";
   const [{ default: JsPDF }, { default: autoTable }] = await Promise.all([
     import("jspdf"),
     import("jspdf-autotable"),
@@ -79,31 +89,43 @@ export async function downloadIndexablePDF(
   );
   y += 16;
 
-  const body = rows.map((r) => [
-    r.patient_name,
-    r.step1 ?? "—",
-    r.step2 ?? "—",
-    r.step3 ?? "—",
-    stripHash(r.overall_status),
-    r.notes ?? "",
-  ]);
+  const body = rows.map((r) => {
+    const cells = [
+      r.patient_name,
+      r.step1 ?? "—",
+      r.step2 ?? "—",
+      r.step3 ?? "—",
+      stripHash(r.overall_status),
+      r.notes ?? "",
+    ];
+    return showAccount ? [opts.accountName!(r), ...cells] : cells;
+  });
+
+  const head = showAccount
+    ? ["Account", "Patient", "Step 1 – Refax Same", "Step 2 – Refax New", "Step 3 – Reupload Indexable", "Overall Status", "Notes"]
+    : ["Patient", "Step 1 – Refax Same", "Step 2 – Refax New", "Step 3 – Reupload Indexable", "Overall Status", "Notes"];
+
+  // Column indexes shift right by one when the Account column is present.
+  const off = showAccount ? 1 : 0;
+  const columnStyles: Record<number, Record<string, unknown>> = {
+    [off + 0]: { cellWidth: 110, fontStyle: "bold" },
+    [off + 1]: { halign: "center" },
+    [off + 2]: { halign: "center" },
+    [off + 3]: { halign: "center" },
+    [off + 4]: { halign: "center", cellWidth: 120 },
+    [off + 5]: { cellWidth: "auto" },
+  };
+  if (showAccount) columnStyles[0] = { cellWidth: 90, fontStyle: "bold" };
 
   autoTable(doc, {
     startY: y,
     margin: { left: margin, right: margin },
-    head: [["Patient", "Step 1 – Refax Same", "Step 2 – Refax New", "Step 3 – Reupload Indexable", "Overall Status", "Notes"]],
+    head: [head],
     body,
     theme: "grid",
     styles: { font: "helvetica", fontSize: 8, cellPadding: 4, textColor: 40, lineColor: [220, 220, 225], lineWidth: 0.5, overflow: "linebreak" },
     headStyles: { fillColor: [37, 42, 60], textColor: 255, fontStyle: "bold", halign: "center" },
-    columnStyles: {
-      0: { cellWidth: 110, fontStyle: "bold" },
-      1: { halign: "center" },
-      2: { halign: "center" },
-      3: { halign: "center" },
-      4: { halign: "center", cellWidth: 120 },
-      5: { cellWidth: "auto" },
-    },
+    columnStyles,
     didParseCell: (data) => {
       if (data.section !== "body") return;
       const row = rows[data.row.index];
@@ -116,9 +138,10 @@ export async function downloadIndexablePDF(
       } else if (row.overall_status.startsWith("Waiting")) {
         data.cell.styles.fillColor = [253, 248, 228];
       }
-      // Color the individual step/overall text.
+      // Color the individual step/overall text (shifted right by one when the
+      // Account column is present).
       const text = String(data.cell.raw ?? "");
-      if (data.column.index >= 1 && data.column.index <= 4) {
+      if (data.column.index >= off + 1 && data.column.index <= off + 4) {
         if (text === "Successfully Sent" || text.startsWith("Resolved")) data.cell.styles.textColor = [21, 128, 61];
         else if (text === "Failed" || text === "All Steps Failed") data.cell.styles.textColor = [185, 28, 28];
         else if (text === "Waiting" || text.startsWith("Waiting")) data.cell.styles.textColor = [161, 98, 7];

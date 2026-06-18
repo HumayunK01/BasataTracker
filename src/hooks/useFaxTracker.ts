@@ -84,6 +84,20 @@ export function useFaxTracker(accountId?: string) {
 }
 
 /**
+ * Fetch fax rows across ALL of the user's accounts (RLS scopes to the user).
+ * Used by the exporter when the user opts to include other IDs' results too.
+ */
+export async function fetchAllFaxRows(): Promise<FaxRow[]> {
+  const { data, error } = await supabase
+    .from("fax_tracker")
+    .select("*")
+    .order("created_at", { ascending: true })
+    .limit(5000);
+  if (error) throw error;
+  return data ?? [];
+}
+
+/**
  * Resolved-fax counts per day across ALL of the user's accounts, keyed by the
  * day the patient was last updated (its best available "resolved on" date).
  * Derived at read time — fully retroactive, no writes. Feeds the Dashboard and
