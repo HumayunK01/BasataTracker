@@ -74,6 +74,20 @@ export function useIndexableTracker(accountId?: string) {
 }
 
 /**
+ * Fetch indexable rows across ALL of the user's accounts (RLS scopes to the
+ * user). Used by the exporter when including other IDs' results too.
+ */
+export async function fetchAllIndexableRows(): Promise<IndexableRow[]> {
+  const { data, error } = await supabase
+    .from("indexable_tracker")
+    .select("*")
+    .order("created_at", { ascending: true })
+    .limit(5000);
+  if (error) throw error;
+  return data ?? [];
+}
+
+/**
  * Resolved-indexable counts per day across ALL of the user's accounts, keyed by
  * the day the patient was last updated (its best available "resolved on" date).
  * Derived at read time — fully retroactive, no writes. Feeds the Dashboard and
