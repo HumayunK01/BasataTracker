@@ -107,7 +107,7 @@ function HeatmapGrid({ weeks, monthTicks, maxTotal }: GridProps) {
           return (
             <div key={`month-${col}`} className="flex-1 min-w-0 overflow-hidden">
               {tick && (
-                <span className="text-[9px] sm:text-[10px] text-muted-foreground whitespace-nowrap select-none">
+                <span className="text-2xs sm:text-xs text-muted-foreground whitespace-nowrap select-none">
                   {tick.label}
                 </span>
               )}
@@ -196,7 +196,7 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
           <p className="text-xs text-muted-foreground mt-0.5">Days worked, off days, and doc volume at a glance</p>
         </div>
         {/* Legend */}
-        <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-muted-foreground select-none flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-3 text-xs text-muted-foreground select-none flex-wrap">
           <div className="flex items-center gap-1">
             <span className="size-2.5 sm:w-3 sm:h-3 rounded-sm bg-muted-foreground/30 border border-muted-foreground/20" />
             <span>Weekend</span>
@@ -225,7 +225,7 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
               return (
                 <div key={`month-m-${col}`} className="w-4 sm:w-5 shrink-0">
                   {tick && (
-                    <span className="text-[9px] sm:text-[10px] text-muted-foreground whitespace-nowrap select-none">
+<span className="text-2xs sm:text-xs text-muted-foreground whitespace-nowrap select-none">
                       {tick.label}
                     </span>
                   )}

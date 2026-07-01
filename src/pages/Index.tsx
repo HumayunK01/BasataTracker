@@ -101,7 +101,7 @@ const Index = () => {
 
             {/* ── Per-category breakdown ── */}
             <section className="space-y-2 sm:space-y-3">
-              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">By Category{"—"}All Time</h2>
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-heading">By Category{"—"}All Time</h2>
               <div className="grid gap-2 sm:gap-3 [grid-template-columns:repeat(auto-fill,minmax(124px,1fr))] sm:[grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">
                 {isLoading
                   ? Array.from({ length: 6 }).map((_, i) => (
@@ -114,7 +114,7 @@ const Index = () => {
                       const ranked = [...stats.categoryTotals].sort((a, b) => b.value - a.value);
                       return ranked.map((c) => (
                         <div key={c.key} className="bg-card border border-border rounded-md p-3 sm:p-4">
-                          <p className="text-xs text-muted-foreground uppercase tracking-wide truncate" title={c.label}>{c.label}</p>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide truncate font-heading" title={c.label}>{c.label}</p>
                           <p className="text-xl sm:text-2xl font-bold mt-1 tabular-nums" style={{ color: colorForKey(c.key) }}>
                             {c.value}
                           </p>
@@ -146,7 +146,7 @@ const Index = () => {
 
             {/* ── Charts ── */}
             <section id="trends" className="space-y-2 sm:space-y-3">
-              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Trends & Breakdown</h2>
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-heading">Trends & Breakdown</h2>
               {isLoading ? (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   {Array.from({ length: 4 }).map((_, i) => (

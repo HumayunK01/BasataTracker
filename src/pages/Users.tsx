@@ -82,17 +82,17 @@ export default function UsersPage() {
           {/* Table */}
           <div className="bg-card border border-border rounded-md overflow-hidden">
             <div className="px-4 sm:px-5 py-4 border-b border-border/40 bg-muted/[0.04]">
-              <h2 className="text-sm font-semibold">All Users</h2>
+              <h2 className="text-sm font-semibold font-heading">All Users</h2>
             </div>
             <div className="overflow-x-auto no-scrollbar">
               <table className="w-full text-sm min-w-[320px] [&_th]:border-r [&_th]:border-border [&_th:last-child]:border-r-0 [&_td]:border-r [&_td]:border-border/40 [&_td:last-child]:border-r-0">
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
-                    <th className="text-left px-4 py-3 font-bold text-xs uppercase tracking-wider text-foreground">Name</th>
-                    <th className="text-left px-4 py-3 font-bold text-xs uppercase tracking-wider text-foreground hidden sm:table-cell">Email</th>
-                    <th className="text-left px-4 py-3 font-bold text-xs uppercase tracking-wider text-foreground hidden sm:table-cell">Account ID</th>
-                    <th className="text-left px-4 py-3 font-bold text-xs uppercase tracking-wider text-foreground hidden md:table-cell">Joined</th>
-                    <th className="text-left px-4 py-3 font-bold text-xs uppercase tracking-wider text-foreground hidden lg:table-cell">Last sign in</th>
+                    <th className="text-left px-4 py-3 font-bold text-xs uppercase tracking-wider text-foreground font-heading">Name</th>
+                    <th className="text-left px-4 py-3 font-bold text-xs uppercase tracking-wider text-foreground hidden sm:table-cell font-heading">Email</th>
+                    <th className="text-left px-4 py-3 font-bold text-xs uppercase tracking-wider text-foreground hidden sm:table-cell font-heading">Account ID</th>
+                    <th className="text-left px-4 py-3 font-bold text-xs uppercase tracking-wider text-foreground hidden md:table-cell font-heading">Joined</th>
+                    <th className="text-left px-4 py-3 font-bold text-xs uppercase tracking-wider text-foreground hidden lg:table-cell font-heading">Last sign in</th>
                   </tr>
                 </thead>
                 <tbody>

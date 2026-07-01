@@ -13,11 +13,11 @@ export function AccountCard({ email, createdAt }: AccountCardProps) {
         <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
           <User className="size-4 text-primary" />
         </div>
-        <h2 className="text-sm font-semibold">Account</h2>
+        <h2 className="text-sm font-semibold font-heading">Account</h2>
       </div>
       <div className="space-y-3">
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">Email address</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide font-heading">Email address</p>
           <p className="text-sm font-semibold truncate text-foreground">
             {email || "Not logged in"}
           </p>
@@ -26,7 +26,7 @@ export function AccountCard({ email, createdAt }: AccountCardProps) {
         <Separator className="bg-border/40" />
 
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">Associate Member since</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide font-heading">Associate Member since</p>
           <p className="text-sm font-medium text-foreground/90" suppressHydrationWarning>
             {createdAt
               ? new Date(createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })

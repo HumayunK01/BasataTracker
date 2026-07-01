@@ -36,7 +36,7 @@ const T = {
     border: "1px solid hsl(var(--border))",
     borderRadius: "10px",
     padding: "10px 14px",
-    boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
+    boxShadow: "0 4px 24px hsl(var(--foreground) / 0.25)",
   },
   text: { fontSize: "13px", color: "hsl(var(--popover-foreground))" },
   axis: { stroke: "hsl(var(--muted-foreground))", fontSize: 12 } as const,

@@ -29,11 +29,11 @@ export function MobileTabBar() {
               onClick={() => navigate(tab.path)}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex-1 flex flex-col items-center justify-center gap-1 py-2 min-h-14 touch-manipulation transition-colors",
+                "flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-h-12 touch-manipulation transition-colors",
                 active ? "text-primary" : "text-muted-foreground",
               )}
             >
-              <tab.icon className={cn("size-5", active && "drop-shadow-sm")} strokeWidth={active ? 2.5 : 2} />
+              <tab.icon className={cn("size-4", active && "drop-shadow-sm")} strokeWidth={active ? 2.5 : 2} />
               <span className={cn("text-xs leading-none", active ? "font-semibold" : "font-medium")}>
                 {tab.title}
               </span>

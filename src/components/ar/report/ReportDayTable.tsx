@@ -42,7 +42,7 @@ export function ReportDayTable({
   return (
     <div className="bg-card border border-border rounded-md overflow-hidden">
       <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between bg-muted/[0.04]">
-        <h2 className="text-sm font-semibold">Day-by-Day Breakdown</h2>
+        <h2 className="text-sm font-semibold font-heading">Day-by-Day Breakdown</h2>
         <span className="text-xs text-muted-foreground sm:hidden font-medium bg-muted/40 border border-border/60 px-2 py-0.5 rounded">
           {"← swipe to scroll →"}
         </span>
@@ -51,13 +51,13 @@ export function ReportDayTable({
         <Table className="[&_th]:border-r [&_th]:border-border [&_th:last-child]:border-r-0 [&_td]:border-r [&_td]:border-border/40 [&_td:last-child]:border-r-0">
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
-              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center py-3">Date</TableHead>
+              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center py-3 font-heading">Date</TableHead>
               {categories.map((c) => (
-                <TableHead key={c.key} className="font-bold text-xs uppercase tracking-wider text-center text-foreground">
+                <TableHead key={c.key} className="font-bold text-xs uppercase tracking-wider text-center text-foreground font-heading">
                   {c.short}
                 </TableHead>
               ))}
-              <TableHead className="font-bold text-xs uppercase tracking-wider text-center text-foreground">Total</TableHead>
+              <TableHead className="font-bold text-xs uppercase tracking-wider text-center text-foreground font-heading">Total</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -77,7 +77,7 @@ export function ReportDayTable({
                         {isWeekendRow ? "Weekend" : "Off Day"}
                       </span>
                       {l.notes && (
-                        <span className="text-[11px] text-muted-foreground/80 italic font-medium truncate max-w-[200px] sm:max-w-xs">
+                        <span className="text-xs text-muted-foreground/80 italic font-medium truncate max-w-[200px] sm:max-w-xs">
                           &ldquo;{l.notes}&rdquo;
                         </span>
                       )}
@@ -163,7 +163,7 @@ export function ReportDayTable({
       )}
 
       {workingLogs.length > 0 && (
-        <div className="border-t border-border/40 px-5 py-3.5 flex flex-wrap gap-x-6 gap-y-2 text-[11px] text-muted-foreground/90 bg-muted/[0.06]">
+        <div className="border-t border-border/40 px-5 py-3.5 flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground/90 bg-muted/[0.06]">
           <span>
             Total Docs Processed: <span className="font-bold text-foreground">{totalDocs}</span>
           </span>

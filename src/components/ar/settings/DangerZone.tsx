@@ -43,7 +43,7 @@ export function DangerZone({ delState, delDispatch, onDeleteAccount }: DangerZon
             <UserX className="size-4 text-destructive" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-destructive">Danger Zone</h2>
+            <h2 className="text-sm font-semibold text-destructive font-heading">Danger Zone</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Irreversible system actions · Proceed with caution</p>
           </div>
         </div>

@@ -55,7 +55,7 @@ function Stepper({
         <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
         <span className="text-sm font-medium text-foreground truncate">{label}</span>
         <span
-          className="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
+          className="text-xs font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide font-heading"
           style={{ color, backgroundColor: withAlpha(color, 0.13) }}
         >
           {shortLabel}
@@ -142,7 +142,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0 gap-0 bg-sidebar font-[system-ui]">
+      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0 gap-0 bg-sidebar font-sans">
 
         {/* ── Header ── */}
         <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b border-border">
@@ -158,7 +158,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
             {!draft.is_off_day && total > 0 && (
               <div className="shrink-0 text-right bg-primary/10 border border-primary/20 rounded-md px-4 py-2">
                 <div className="text-3xl font-black tabular-nums text-primary leading-none">{total}</div>
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">total docs</div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wider mt-0.5 font-heading">total docs</div>
               </div>
             )}
           </div>
@@ -169,7 +169,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
 
           {/* Date */}
           <div className="px-5 space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Date</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-heading">Date</p>
             <div className="flex gap-2">
               <Popover open={calOpen} onOpenChange={setCalOpen}>
                 <PopoverTrigger asChild>
@@ -219,7 +219,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
               <div className="flex items-center gap-3">
                 <BedDouble className="size-4 text-muted-foreground shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold leading-none">{weekend ? "Weekend" : "Off day"}</p>
+                  <p className="text-sm font-semibold leading-none font-heading">{weekend ? "Weekend" : "Off day"}</p>
                   <p className="text-xs text-muted-foreground mt-1">{weekend ? "Saturday or Sunday" : "Leave, holiday, or sick day"}</p>
                 </div>
               </div>
@@ -230,7 +230,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
           {/* Document counts */}
           {!draft.is_off_day && (
             <div className="space-y-2">
-              <p className="px-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Document Counts</p>
+              <p className="px-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider font-heading">Document Counts</p>
               <div className="bg-card border-y border-border">
                 {categories.length === 0 ? (
                   <p className="px-5 py-8 text-sm text-center text-muted-foreground">No categories set up yet. Add them in Settings.</p>
@@ -261,7 +261,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
 
           {/* Notes */}
           <div className="px-5 space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-heading">
               Notes <span className="font-normal normal-case">(optional)</span>
             </p>
             <Textarea

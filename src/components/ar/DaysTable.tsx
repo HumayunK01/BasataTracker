@@ -117,7 +117,7 @@ function MobileCardList({ paginated, categories, search, copiedId, onEdit, onDel
                 <span className="text-sm text-muted-foreground tabular-nums flex-1">
                   {formatTableDate(l.log_date)}
                 </span>
-                <span className="text-xs text-muted-foreground/60 uppercase tracking-wide font-medium">
+                <span className="text-xs text-muted-foreground/60 uppercase tracking-wide font-medium font-heading">
                   {weekend ? "Weekend" : "Off day"}
                 </span>
                 <div className="flex items-center gap-0.5 ml-1">
@@ -191,14 +191,14 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
         <Table className="[&_th]:border-r [&_th]:border-border [&_th:last-child]:border-r-0 [&_td]:border-r [&_td]:border-border/40 [&_td:last-child]:border-r-0">
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
-              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center py-3">Date</TableHead>
+              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center py-3 font-heading">Date</TableHead>
               {categories.map((c) => (
-                <TableHead key={c.key} className="font-bold text-xs uppercase tracking-wider text-center text-foreground">
+                <TableHead key={c.key} className="font-bold text-xs uppercase tracking-wider text-center text-foreground font-heading">
                   {c.short}
                 </TableHead>
               ))}
-              <TableHead className="font-bold text-xs uppercase tracking-wider text-center text-foreground">Total</TableHead>
-              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center">Actions</TableHead>
+              <TableHead className="font-bold text-xs uppercase tracking-wider text-center text-foreground font-heading">Total</TableHead>
+              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center font-heading">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

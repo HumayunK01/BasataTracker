@@ -88,7 +88,7 @@ export function CategorySection({
               <Tag className="size-4 text-primary" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold">Categories</h2>
+              <h2 className="text-sm font-semibold font-heading">Categories</h2>
               <p className="text-xs text-muted-foreground mt-0.5 hidden xs:block">
                 Drag to rearrange keys · {categories.length} active categories
               </p>
