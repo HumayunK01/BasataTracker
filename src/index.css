@@ -190,9 +190,15 @@
 
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.18s ease-out, color 0.18s ease-out;
     /* Manrope: enable contextual alternates + tabular-friendly defaults */
     font-feature-settings: "cv11", "ss01";
     -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.3);
+    color: hsl(var(--foreground));
   }
 
   button, a, [role="button"] {

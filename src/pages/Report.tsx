@@ -293,7 +293,7 @@ const ReportPage = () => {
           </DropdownMenu>
         }
       />
-      <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
+      <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6 animate-fade-in">
         <div className="w-full space-y-4">
         {/* Date range controls */}
         <div className="bg-card border border-border rounded-md p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
