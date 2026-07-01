@@ -277,7 +277,7 @@ const ReportPage = () => {
                 <Download className="size-4 mr-1" /> Export <ChevronDown className="size-3 ml-1 opacity-60" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 font-[system-ui]">
+            <DropdownMenuContent align="end" className="w-48 font-sans">
               <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Export filtered range</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleExportCSV}>

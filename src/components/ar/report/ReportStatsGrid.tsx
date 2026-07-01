@@ -29,7 +29,7 @@ export function ReportStatsGrid({
       {/* Total Docs */}
       <div className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-start justify-between">
         <div className="space-y-1 min-w-0">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Documents</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide font-heading">Total Documents</p>
           <p className="text-xl sm:text-2xl font-bold tabular-nums text-primary mt-1.5 leading-none">{totalDocs}</p>
           <p className="text-xs text-muted-foreground mt-2 font-medium">{filteredCount} days tracked</p>
         </div>
@@ -48,7 +48,7 @@ export function ReportStatsGrid({
       {/* Working Days */}
       <div className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-start justify-between">
         <div className="space-y-1 min-w-0">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">Working Days</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide font-heading">Working Days</p>
           <p className="text-xl sm:text-2xl font-bold tabular-nums text-foreground/90 mt-1.5 leading-none">{workingCount}</p>
           <p className="text-xs text-muted-foreground mt-2 font-medium">
             {weekendDays} weekends · {offDays} off days
@@ -69,7 +69,7 @@ export function ReportStatsGrid({
       {/* Avg / Day */}
       <div className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-start justify-between">
         <div className="space-y-1 min-w-0">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">Average / Day</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide font-heading">Average / Day</p>
           <p className="text-xl sm:text-2xl font-bold tabular-nums text-info mt-1.5 leading-none">{avgPerDay}</p>
           <p className="text-xs text-muted-foreground mt-2 font-medium">docs per working day</p>
         </div>
@@ -88,7 +88,7 @@ export function ReportStatsGrid({
       {/* Best Day */}
       <div className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-start justify-between">
         <div className="space-y-1 min-w-0">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">Best Day</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide font-heading">Best Day</p>
           <p className="text-xl sm:text-2xl font-bold tabular-nums text-warning mt-1.5 leading-none">
             {bestDay ? totalForLog(bestDay) : "—"}
           </p>

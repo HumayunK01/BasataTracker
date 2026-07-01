@@ -60,7 +60,7 @@ export function ActivityRing({
         />
       </svg>
       {children && (
-        <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold">
+        <div className="absolute inset-0 flex items-center justify-center text-xs font-bold">
           {children}
         </div>
       )}

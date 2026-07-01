@@ -341,11 +341,11 @@ export default function CounterPage() {
               <div className="flex items-end justify-between gap-4 flex-wrap">
                 <div>
                   <div className="flex items-center gap-2">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-heading">
                       Total today
                     </p>
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                         saved
                           ? "bg-success/15 text-success border border-success/10"
                           : total > 0
@@ -380,7 +380,7 @@ export default function CounterPage() {
                         const pct = total > 0 ? (c / total) * 100 : 0;
                         return (
                           <div key={cat.key} className="flex items-center gap-2 animate-fade-in">
-                            <span className="text-[10px] font-mono font-bold w-10 shrink-0 text-right" style={{ color: clr }}>
+                            <span className="text-xs font-mono font-bold w-10 shrink-0 text-right" style={{ color: clr }}>
                               {cat.short}
                             </span>
                             <div className="flex-1 h-1.5 rounded-full bg-muted/40 border border-border/20 overflow-hidden">
@@ -389,7 +389,7 @@ export default function CounterPage() {
                                 style={{ width: `${pct}%`, backgroundColor: clr }}
                               />
                             </div>
-                            <span className="text-[10px] font-mono tabular-nums w-6 text-muted-foreground/80 text-right">
+                            <span className="text-xs font-mono tabular-nums w-6 text-muted-foreground/80 text-right">
                               {c}
                             </span>
                           </div>

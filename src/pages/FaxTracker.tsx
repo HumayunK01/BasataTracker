@@ -206,7 +206,7 @@ function StepPicker({
           <ChevronDown className="size-3 opacity-50" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" className="w-44 font-[system-ui]">
+      <DropdownMenuContent align="center" className="w-44 font-sans">
         <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">{labels[Number(field.slice(-1)) - 1]}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {STEP_STATUSES.map((s) => (
@@ -320,7 +320,7 @@ function FaxCard({
                 <MoreVertical className="size-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-36 font-[system-ui]">
+                                <DropdownMenuContent align="end" className="w-36 font-sans">
               <button
                 className="w-full flex items-center gap-2 px-2 py-2 text-sm hover:bg-accent rounded-sm"
                 onClick={() => onEdit(row)}
@@ -738,7 +738,7 @@ const FaxTrackerPage = () => {
                   <ChevronDown className="size-4 ml-1.5 opacity-60" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-32 font-[system-ui]">
+              <DropdownMenuContent align="start" className="w-32 font-sans">
                 {MODES.map((m) => (
                   <DropdownMenuItem
                     key={m.id}
@@ -765,7 +765,7 @@ const FaxTrackerPage = () => {
                   <ChevronDown className="size-4 ml-1.5 opacity-60" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64 font-[system-ui]">
+              <DropdownMenuContent align="end" className="w-64 font-sans">
                 <DropdownMenuItem onClick={() => handleExport(false)}>
                   <div className="flex flex-col">
                     <span>This account only</span>
@@ -844,7 +844,7 @@ const FaxTrackerPage = () => {
                   <ChevronDown className="size-3 ml-1 opacity-60 shrink-0" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56 font-[system-ui]">
+              <DropdownMenuContent align="start" className="w-56 font-sans">
                 <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Switch account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {accounts.map((a) => (
@@ -893,7 +893,7 @@ const FaxTrackerPage = () => {
                   Status{statusFilter.size ? ` (${statusFilter.size})` : ""}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 font-[system-ui]">
+              <DropdownMenuContent align="end" className="w-56 font-sans">
                 <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Filter by overall status</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {STATUS_GROUPS.map((s) => (
@@ -929,7 +929,7 @@ const FaxTrackerPage = () => {
                   Date{dateFilter.size ? ` (${dateFilter.size})` : ""}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="end" className="w-auto p-0 font-[system-ui]">
+              <PopoverContent align="end" className="w-auto p-0 font-sans">
                 <Calendar
                   mode="multiple"
                   selected={selectedDates}
@@ -1064,7 +1064,7 @@ const FaxTrackerPage = () => {
                                     <MoreVertical className="size-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-36 font-[system-ui]">
+            <DropdownMenuContent align="end" className="w-36 font-sans">
                                   <button
                                     className="w-full flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-accent rounded-sm"
                                     onClick={() => openEdit(row)}
@@ -1320,7 +1320,7 @@ function StatCard({
   const display = useAnimatedNumber(value);
   return (
     <div className="bg-card border border-border rounded-md p-3 sm:p-4">
-      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1 font-heading">{label}</p>
       {loading ? (
         <Skeleton width={48} height={32} borderRadius={4} />
       ) : (

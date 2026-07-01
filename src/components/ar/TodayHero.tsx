@@ -84,7 +84,7 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
 
   return (
     <section className="space-y-2 sm:space-y-3">
-      <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Today</h2>
+      <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-heading">Today</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
 
         {/* Today's docs vs daily goal */}
@@ -93,7 +93,7 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
             <span className="tabular-nums">{goalPct}%</span>
           </ActivityRing>
           <div className="min-w-0">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Docs Today</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide font-heading">Docs Today</p>
             <p className="text-xl sm:text-2xl font-bold tabular-nums">{animatedTotal}</p>
             <Popover
               open={goalOpen}
@@ -147,7 +147,7 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
             <Flame className="size-5 text-warning" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Streak</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide font-heading">Streak</p>
             <p className="text-xl sm:text-2xl font-bold tabular-nums">
               {stats.current}
               <span className="text-sm font-medium text-muted-foreground"> day{stats.current === 1 ? "" : "s"}</span>
@@ -162,7 +162,7 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
             <deltaDisplay.Icon className={cn("size-5", deltaDisplay.tone === "text-muted-foreground" ? "text-info" : deltaDisplay.tone)} />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">vs Your Average</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide font-heading">vs Your Average</p>
             <p className={cn("text-xl sm:text-2xl font-bold tabular-nums", deltaDisplay.tone)}>{deltaDisplay.text}</p>
             {stats.avg > 0 && (
               <p className="text-xs text-muted-foreground">avg {Math.round(stats.avg)} docs/day</p>

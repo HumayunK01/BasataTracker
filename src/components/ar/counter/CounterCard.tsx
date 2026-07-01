@@ -79,7 +79,7 @@ export function CounterCard({
         {/* Key shortcut indicator badge */}
         {hotkeyIndex !== undefined && (
           <kbd
-            className="hidden md:inline text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border border-border/40 bg-background/60 shadow-sm shrink-0 select-none cursor-help hover:border-foreground/20 transition-[border-color] duration-150 text-muted-foreground"
+            className="hidden md:inline text-2xs font-bold font-mono px-1.5 py-0.5 rounded border border-border/40 bg-background/60 shadow-sm shrink-0 select-none cursor-help hover:border-foreground/20 transition-[border-color] duration-150 text-muted-foreground"
             title={`Press ${hotkeyIndex} key to count`}
           >
             {hotkeyIndex}

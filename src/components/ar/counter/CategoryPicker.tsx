@@ -74,7 +74,7 @@ function CategoryPickerList({
                 className="w-full flex items-center gap-3 p-2.5 rounded-md border border-transparent hover:border-border/60 hover:bg-muted/50 active:bg-muted active:scale-[0.99] transition-[background-color,border-color,transform] duration-150 text-left touch-manipulation group"
               >
                 <span
-                  className="size-8 rounded-md flex items-center justify-center text-[10px] font-mono font-bold shrink-0 group-hover:scale-105 transition-transform"
+                  className="size-8 rounded-md flex items-center justify-center text-xs font-mono font-bold shrink-0 group-hover:scale-105 transition-transform"
                   style={{
                     color: clr,
                     backgroundColor: withAlpha(clr, 0.13),

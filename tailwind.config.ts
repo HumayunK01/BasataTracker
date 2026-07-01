@@ -28,7 +28,11 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["Manrope", "system-ui", "sans-serif"],
+        heading: ["Sora", "system-ui", "sans-serif"],
+      },
+      fontSize: {
+        "2xs": ["0.625rem", { lineHeight: "1rem" }],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -85,6 +89,28 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+        },
+        cat: {
+          0: "hsl(var(--cat-0))",
+          1: "hsl(var(--cat-1))",
+          2: "hsl(var(--cat-2))",
+          3: "hsl(var(--cat-3))",
+          4: "hsl(var(--cat-4))",
+          5: "hsl(var(--cat-5))",
+          6: "hsl(var(--cat-6))",
+          7: "hsl(var(--cat-7))",
+          8: "hsl(var(--cat-8))",
+          9: "hsl(var(--cat-9))",
+          10: "hsl(var(--cat-10))",
+          11: "hsl(var(--cat-11))",
+          12: "hsl(var(--cat-12))",
+          13: "hsl(var(--cat-13))",
+          14: "hsl(var(--cat-14))",
+          15: "hsl(var(--cat-15))",
+        },
+        skeleton: {
+          base: "hsl(var(--skeleton-base))",
+          highlight: "hsl(var(--skeleton-highlight))",
         },
       },
       borderRadius: {

@@ -33,7 +33,7 @@ export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryB
       <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-4">
         <div className="flex items-center gap-2">
           <Trophy className="size-4 text-primary shrink-0" />
-          <h2 className="text-sm font-semibold">Category Breakdown</h2>
+          <h2 className="text-sm font-semibold font-heading">Category Breakdown</h2>
         </div>
         <div className="space-y-3.5">
           {breakdown.length === 0 ? (
@@ -47,7 +47,7 @@ export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryB
                     <div className="flex items-center gap-2 truncate">
                       <span
                         className={cn(
-                          "size-5 rounded-full border flex items-center justify-center text-[10px] font-bold tabular-nums shrink-0",
+                          "size-5 rounded-full border flex items-center justify-center text-xs font-bold tabular-nums shrink-0",
                           medalStyles[rank] ?? "bg-muted/30 text-muted-foreground border-border/40",
                         )}
                       >
@@ -84,7 +84,7 @@ export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryB
       <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-4 flex flex-col">
         <div className="flex items-center gap-2">
           <TrendingUp className="size-4 text-info shrink-0" />
-          <h2 className="text-sm font-semibold">Daily Document Output</h2>
+          <h2 className="text-sm font-semibold font-heading">Daily Document Output</h2>
         </div>
         {/* flex-1 so the chart absorbs whatever height the breakdown card forces on this
             row. The chart itself is absolutely positioned so its rendered SVG never

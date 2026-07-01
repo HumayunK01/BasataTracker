@@ -60,13 +60,13 @@ export function ProfilePasswordCard({
           <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <BadgeCheck className="size-4 text-primary" />
           </div>
-          <h2 className="text-sm font-semibold">Profile</h2>
+          <h2 className="text-sm font-semibold font-heading">Profile</h2>
         </div>
 
         {!profileState.open ? (
           <div className="flex-1 flex flex-col gap-3">
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Associate Name</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide font-heading">Associate Name</p>
               <p className="text-sm font-semibold text-foreground/90">
                 {profile?.first_name || profile?.last_name
                   ? `${profile.first_name} ${profile.last_name}`.trim()
@@ -128,7 +128,7 @@ export function ProfilePasswordCard({
           <div className="size-8 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
             <KeyRound className="size-4 text-warning" />
           </div>
-          <h2 className="text-sm font-semibold">Password</h2>
+          <h2 className="text-sm font-semibold font-heading">Password</h2>
         </div>
 
         {!pwState.open ? (
