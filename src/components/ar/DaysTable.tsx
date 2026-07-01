@@ -408,6 +408,9 @@ export function DaysTable({ logs, onEdit }: Props) {
         </div>
 
         <MobileCardList {...sharedProps} />
+        {categories.length > 6 && (
+          <p className="hidden sm:block text-center text-2xs text-muted-foreground/40 -mt-2 select-none">← scroll horizontally →</p>
+        )}
         <DesktopTable {...sharedProps} />
 
         <Pagination
