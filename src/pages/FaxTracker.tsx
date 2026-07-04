@@ -1,17 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
-import { useFaxTracker, useDeleteFax, useUpdateStep as useFaxUpdateStep, fetchAllFaxRows, STEP_STATUSES, type FaxRow, type FaxStepStatus, type StepField } from "@/hooks/useFaxTracker";
+import { useFaxTracker, useDeleteFax, useUpdateStep as useFaxUpdateStep, fetchAllFaxRows } from "@/hooks/useFaxTracker";
 import { useIndexableTracker, useDeleteIndexable, useUpdateStep as useIndexableUpdateStep, fetchAllIndexableRows } from "@/hooks/useIndexableTracker";
 import { useFaxAccounts, useDeleteFaxAccount, type FaxAccount } from "@/hooks/useFaxAccounts";
 import { downloadFaxPDF } from "@/lib/fax-utils";
 import { downloadIndexablePDF } from "@/lib/indexable-utils";
-import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { FaxEntryDialog } from "@/components/ar/fax/FaxEntryDialog";
 import { IndexableEntryDialog } from "@/components/ar/indexable/IndexableEntryDialog";
 import { NewAccountDialog } from "@/components/ar/fax/NewAccountDialog";
 import { RenameAccountDialog } from "@/components/ar/fax/RenameAccountDialog";
+import { StepCell } from "@/components/ar/tracker/StepCell";
+import { FaxCard } from "@/components/ar/tracker/FaxCard";
+import { SortHeader } from "@/components/ar/tracker/SortHeader";
+import type { SortKey } from "@/components/ar/tracker/SortHeader";
+import { StatCard } from "@/components/ar/tracker/StatCard";
+import { Pagination } from "@/components/Pagination";
+import {
+  copyName, displayStatus, formatDateTime, dateKey, statusGroup, rowClasses, overallClasses,
+  stepLabels, pageNumbersArr, STATUS_GROUPS, type TrackerMode,
+} from "@/components/ar/tracker/tracker-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -35,340 +44,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Pencil, Trash2, Search, ListFilter, CalendarDays, FileWarning, MoreVertical, FileText, X, ArrowUp, ArrowDown, ArrowUpDown, Check, ChevronDown, ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ListFilter, CalendarDays, FileWarning, MoreVertical, FileText, X, Check, ChevronDown, Users } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-
-async function copyName(name: string) {
-  try {
-    await navigator.clipboard.writeText(name);
-    toast.success(`Copied "${name}"`);
-  } catch {
-    toast.error("Couldn't copy to clipboard");
-  }
-}
-
-function stepClasses(status: FaxStepStatus | null): string {
-  switch (status) {
-    case "Successfully Sent": return "text-emerald-700 dark:text-white";
-    case "Failed":            return "text-rose-700 dark:text-white";
-    case "Waiting":           return "text-amber-600 dark:text-white";
-    case "Pending":           return "text-muted-foreground dark:text-white";
-    default:                  return "text-muted-foreground/40";
-  }
-}
-
-function stepMenuClasses(status: FaxStepStatus | null): string {
-  switch (status) {
-    case "Successfully Sent": return "text-emerald-700 dark:text-emerald-300";
-    case "Failed":            return "text-rose-700 dark:text-rose-300";
-    case "Waiting":           return "text-amber-600 dark:text-amber-300";
-    case "Pending":           return "text-muted-foreground";
-    default:                  return "text-muted-foreground/40";
-  }
-}
-
-function overallClasses(status: string): string {
-  if (status.startsWith("Resolved"))    return "text-emerald-700 dark:text-white";
-  if (status === "All Steps Failed")    return "text-rose-700 dark:text-white";
-  if (status.startsWith("Waiting"))     return "text-amber-700 dark:text-white";
-  if (status.startsWith("Move to"))     return "text-amber-600 dark:text-white";
-  return "text-muted-foreground dark:text-white";
-}
-
-function displayStatus(status: string): string {
-  return status.replace(/\s*#\s*$/, "").trim();
-}
-
-function formatDateTime(value: string | null | undefined): { date: string; time: string } | null {
-  if (!value) return null;
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return null;
-  return {
-    date: d.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }),
-    time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
-  };
-}
-
-function dateKey(value: string | null | undefined): string | null {
-  if (!value) return null;
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return null;
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-const STATUS_GROUPS = ["Resolved", "Failed", "Waiting", "Incomplete"] as const;
-type StatusGroup = (typeof STATUS_GROUPS)[number];
-
-type SortKey = "patient_name" | "overall_status" | "updated_at";
-
-function statusGroup(status: string): StatusGroup | null {
-  if (status.startsWith("Resolved")) return "Resolved";
-  if (status === "All Steps Failed") return "Failed";
-  if (status.startsWith("Waiting")) return "Waiting";
-  if (status.startsWith("Move to") || status === "Pending") return "Incomplete";
-  return null;
-}
-
-function rowClasses(status: string): string {
-  switch (statusGroup(status)) {
-    case "Resolved":   return "bg-emerald-500/[0.16] hover:bg-emerald-500/25 dark:bg-emerald-500/[0.04] dark:hover:bg-emerald-500/[0.08]";
-    case "Failed":     return "bg-rose-500/[0.16] hover:bg-rose-500/25 dark:bg-rose-500/[0.04] dark:hover:bg-rose-500/[0.08]";
-    case "Waiting":    return "bg-amber-400/[0.16] hover:bg-amber-400/25 dark:bg-amber-400/[0.045] dark:hover:bg-amber-400/[0.09]";
-    case "Incomplete": return "bg-slate-400/[0.12] hover:bg-slate-400/20 dark:bg-slate-400/[0.04] dark:hover:bg-slate-400/[0.08]";
-    default:           return "hover:bg-muted/30";
-  }
-}
-
-type TrackerMode = "fax" | "indexable";
-
-function stepIsActive(row: FaxRow, field: StepField, mode: TrackerMode): boolean {
-  if (mode === "indexable") return true;
-  if (field === "step1") return true;
-  if (field === "step2") return row.step1 === "Failed";
-  return row.step1 === "Failed" && row.step2 === "Failed";
-}
-
-function stepIsSkipped(row: FaxRow, field: StepField, mode: TrackerMode): boolean {
-  if (mode !== "indexable") return false;
-  const status = row[field];
-  if (status && status !== "Pending") return false;
-  const laterFields: StepField[] = field === "step1" ? ["step2", "step3"] : field === "step2" ? ["step3"] : [];
-  return laterFields.some((f) => row[f] === "Successfully Sent");
-}
-
-function StepPicker({
-  row,
-  field,
-  status,
-  onPick,
-  labels,
-  triggerClassName,
-}: {
-  row: FaxRow;
-  field: StepField;
-  status: FaxStepStatus | null;
-  onPick: (value: FaxStepStatus) => void;
-  labels: [string, string, string];
-  triggerClassName?: string;
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          title="Click to change status"
-          className={cn(
-            "press-scale inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-sm font-semibold transition-colors hover:bg-foreground/10",
-            status ? stepClasses(status) : "text-muted-foreground/50",
-            triggerClassName,
-          )}
-        >
-          {status ?? "Set status"}
-          <ChevronDown className="size-3 opacity-50" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" className="w-44 font-sans">
-        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">{labels[Number(field.slice(-1)) - 1]}</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {STEP_STATUSES.map((s) => (
-          <DropdownMenuItem
-            key={s}
-            onClick={() => { if (s !== status) onPick(s); }}
-            className={cn("flex items-center justify-between gap-2", stepMenuClasses(s))}
-          >
-            <span className="font-medium">{s}</span>
-            {s === status && <Check className="size-3.5 opacity-80" />}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function StepCell({
-  row,
-  field,
-  editable,
-  onPick,
-  labels,
-  mode,
-}: {
-  row: FaxRow;
-  field: StepField;
-  editable: boolean;
-  onPick: (value: FaxStepStatus) => void;
-  labels: [string, string, string];
-  mode: TrackerMode;
-}) {
-  const status = row[field];
-  const active = stepIsActive(row, field, mode);
-
-  if (!active) return <td className="px-3 py-2 text-center text-muted-foreground/40">—</td>;
-
-  if (stepIsSkipped(row, field, mode)) {
-    return <td className="px-3 py-2 text-center text-xs font-medium text-muted-foreground/60 italic">No need</td>;
-  }
-
-  if (!editable) {
-    return (
-      <td className={cn("px-3 py-2 text-center text-sm font-semibold", status ? stepClasses(status) : "text-muted-foreground/40")}>
-        {status ?? "—"}
-      </td>
-    );
-  }
-
-  return (
-    <td className="px-3 py-2 text-center">
-      <StepPicker row={row} field={field} status={status} onPick={onPick} labels={labels} />
-    </td>
-  );
-}
-
-function stepLabels(mode: TrackerMode): [string, string, string] {
-  return [
-    "Step 1 – Refax Same",
-    "Step 2 – Refax New",
-    mode === "indexable" ? "Step 3 – Reupload Indexable" : "Step 3 – Reupload ROI",
-  ];
-}
-
-function FaxCard({
-  row,
-  mine,
-  isNew,
-  onEdit,
-  onDelete,
-  onPickStep,
-  labels,
-  mode,
-}: {
-  row: FaxRow;
-  mine: boolean;
-  isNew: boolean;
-  onEdit: (row: FaxRow) => void;
-  onDelete: (row: FaxRow) => void;
-  onPickStep: (field: StepField, value: FaxStepStatus) => void;
-  labels: [string, string, string];
-  mode: TrackerMode;
-}) {
-  const fields: StepField[] = ["step1", "step2", "step3"];
-  return (
-    <div
-      className={cn(
-        "rounded-lg border border-border p-3.5 transition-colors",
-        rowClasses(row.overall_status),
-        isNew && "animate-row-in",
-      )}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <button
-          type="button"
-          onClick={() => copyName(row.patient_name)}
-          title="Tap to copy name"
-          className="press-scale font-semibold text-base text-foreground rounded px-1 -mx-1 text-left active:bg-foreground/10 transition-colors"
-        >
-          {row.patient_name}
-        </button>
-        {mine ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-9 -mr-1.5 -mt-1 shrink-0">
-                <MoreVertical className="size-5" />
-              </Button>
-            </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-36 font-sans">
-              <button
-                className="w-full flex items-center gap-2 px-2 py-2 text-sm hover:bg-accent rounded-sm"
-                onClick={() => onEdit(row)}
-              >
-                <Pencil className="size-4" /> Edit
-              </button>
-              <button
-                className="w-full flex items-center gap-2 px-2 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-sm"
-                onClick={() => onDelete(row)}
-              >
-                <Trash2 className="size-4" /> Delete
-              </button>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : null}
-      </div>
-
-      <div className={cn("mt-1 text-sm font-semibold", overallClasses(row.overall_status))}>
-        {displayStatus(row.overall_status)}
-      </div>
-
-      <dl className="mt-3 space-y-1">
-        {fields.map((field, i) => {
-          const status = row[field];
-          const active = stepIsActive(row, field, mode);
-          const skipped = stepIsSkipped(row, field, mode);
-          return (
-            <div key={field} className="flex items-center justify-between gap-3 text-sm min-h-8">
-              <dt className="text-muted-foreground">{labels[i]}</dt>
-              <dd className="text-right">
-                {!active ? (
-                  <span className="font-semibold text-muted-foreground/40">—</span>
-                ) : skipped ? (
-                  <span className="text-xs font-medium text-muted-foreground/60 italic">No need</span>
-                ) : mine ? (
-                  <StepPicker row={row} field={field} status={status} onPick={(v) => onPickStep(field, v)} labels={labels} />
-                ) : (
-                  <span className={cn("font-semibold", status ? stepClasses(status) : "text-muted-foreground/40")}>
-                    {status ?? "—"}
-                  </span>
-                )}
-              </dd>
-            </div>
-          );
-        })}
-      </dl>
-
-      {row.notes && (
-        <p className="mt-3 pt-3 border-t border-border/60 text-sm text-muted-foreground leading-snug">
-          {row.notes}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function SortHeader({
-  label,
-  sortKey,
-  sort,
-  onSort,
-  align,
-}: {
-  label: string;
-  sortKey: SortKey;
-  sort: { key: SortKey; dir: "asc" | "desc" } | null;
-  onSort: (key: SortKey) => void;
-  align: "left" | "center";
-}) {
-  const active = sort?.key === sortKey;
-  const Icon = !active ? ArrowUpDown : sort.dir === "asc" ? ArrowUp : ArrowDown;
-  return (
-    <button
-      type="button"
-      onClick={() => onSort(sortKey)}
-      className={cn(
-        "press-scale inline-flex items-center gap-1 hover:text-foreground transition-colors uppercase tracking-wide",
-        align === "center" ? "mx-auto" : "",
-        active && "text-foreground",
-      )}
-      title={`Sort by ${label.toLowerCase()}`}
-    >
-      {label}
-      <Icon key={active ? sort.dir : "idle"} className={cn("size-3 animate-fade-in", active ? "opacity-100" : "opacity-40")} />
-    </button>
-  );
-}
+import type { FaxRow, FaxStepStatus, StepField } from "@/hooks/useFaxTracker";
 
 const ACCOUNT_KEY = "fax-tracker-account";
 const MODE_KEY = "tracker-mode";
@@ -378,16 +58,6 @@ const MODES: { id: TrackerMode; label: string }[] = [
   { id: "fax", label: "Fax" },
   { id: "indexable", label: "Indexable" },
 ];
-
-const pageNumbersArr = (totalPages: number, page: number): (number | "…")[] => {
-  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
-  const nums: (number | "…")[] = [1];
-  if (page > 3) nums.push("…");
-  for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) nums.push(i);
-  if (page < totalPages - 2) nums.push("…");
-  nums.push(totalPages);
-  return nums;
-};
 
 const FaxTrackerPage = () => {
   const { user } = useAuth();
@@ -429,7 +99,6 @@ const FaxTrackerPage = () => {
   const activeAccount = accounts.find((a) => a.id === accountId) ?? null;
   const isFax = mode === "fax";
 
-  // Both hooks are always called per Rules of Hooks; pick the active one.
   const faxQuery = useFaxTracker(isFax ? (accountId ?? undefined) : undefined);
   const indexableQuery = useIndexableTracker(isFax ? undefined : (accountId ?? undefined));
   const { data: rows = [], isLoading } = isFax ? faxQuery : indexableQuery;
@@ -438,7 +107,6 @@ const FaxTrackerPage = () => {
   const deleteIndexable = useDeleteIndexable();
   const updateFaxStep = useFaxUpdateStep();
   const updateIndexableStep = useIndexableUpdateStep();
-
   const deleteRow = isFax ? deleteFax : deleteIndexable;
 
   const pickStep = (row: FaxRow, field: StepField, value: FaxStepStatus) => {
@@ -525,7 +193,7 @@ const FaxTrackerPage = () => {
   }, [rows]);
 
   const groupCounts = useMemo(() => {
-    const counts: Record<StatusGroup, number> = { Resolved: 0, Failed: 0, Waiting: 0, Incomplete: 0 };
+    const counts: Record<string, number> = { Resolved: 0, Failed: 0, Waiting: 0, Incomplete: 0 };
     for (const r of rows) {
       const g = statusGroup(r.overall_status);
       if (g) counts[g]++;
@@ -981,7 +649,7 @@ const FaxTrackerPage = () => {
                                     <MoreVertical className="size-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-36 font-sans">
+                                <DropdownMenuContent align="end" className="w-36 font-sans">
                                   <button
                                     className="w-full flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-accent rounded-sm"
                                     onClick={() => openEdit(row)}
@@ -1140,103 +808,5 @@ const FaxTrackerPage = () => {
     </>
   );
 };
-
-function Pagination({
-  page,
-  totalPages,
-  pageNumbers,
-  total,
-  pageSize,
-  onPageChange,
-}: {
-  page: number;
-  totalPages: number;
-  pageNumbers: (number | "…")[];
-  total: number;
-  pageSize: number;
-  onPageChange: (p: number) => void;
-}) {
-  if (totalPages <= 1) return null;
-  return (
-    <div className="border-t border-border/40 px-4 sm:px-5 py-3 flex flex-wrap items-center justify-center sm:justify-between gap-2">
-      <span className="text-xs text-muted-foreground font-medium">
-        Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total} patients
-      </span>
-      <div className="flex items-center gap-1.5">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-9 sm:size-8 border border-border/40 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 active:scale-95 transition-[color,background-color,transform] duration-150"
-          onClick={() => onPageChange(Math.max(1, page - 1))}
-          disabled={page === 1}
-          aria-label="Previous page"
-        >
-          <ChevronLeft className="size-4" />
-        </Button>
-        {pageNumbers.map((p, i) =>
-          p === "…" ? (
-            <span key={`ellipsis-${pageNumbers[i + 1] ?? i}`} className="w-8 text-center text-xs text-muted-foreground/60 select-none">…</span>
-          ) : (
-            <Button
-              key={p}
-              variant={page === p ? "default" : "ghost"}
-              size="icon"
-              className={cn(
-                "size-9 sm:size-8 text-xs font-semibold rounded-md border active:scale-95 transition-[color,background-color,border-color,transform] duration-150",
-                page === p
-                  ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/10"
-                  : "border-border/40 text-muted-foreground hover:text-foreground hover:bg-muted/80",
-              )}
-              onClick={() => onPageChange(p as number)}
-            >
-              {p}
-            </Button>
-          ),
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-9 sm:size-8 border border-border/40 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 active:scale-95 transition-[color,background-color,transform] duration-150"
-          onClick={() => onPageChange(Math.min(totalPages, page + 1))}
-          disabled={page === totalPages}
-          aria-label="Next page"
-        >
-          <ChevronRight className="size-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  tone,
-  loading,
-}: {
-  label: string;
-  value: number;
-  tone: "emerald" | "rose" | "sky" | "slate" | "neutral";
-  loading: boolean;
-}) {
-  const toneClasses = {
-    emerald: "text-emerald-600 dark:text-emerald-400",
-    rose: "text-rose-600 dark:text-rose-400",
-    sky: "text-sky-600 dark:text-sky-400",
-    slate: "text-slate-500 dark:text-slate-300",
-    neutral: "text-foreground",
-  }[tone];
-  const display = useAnimatedNumber(value);
-  return (
-    <div className="bg-card border border-border rounded-md p-3 sm:p-4">
-      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1 font-heading">{label}</p>
-      {loading ? (
-        <Skeleton width={48} height={32} borderRadius={4} />
-      ) : (
-        <p className={cn("text-2xl sm:text-3xl font-bold tabular-nums", toneClasses)}>{display}</p>
-      )}
-    </div>
-  );
-}
 
 export default FaxTrackerPage;

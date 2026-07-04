@@ -7,6 +7,7 @@ export interface Profile {
   first_name: string;
   last_name: string;
   updated_at: string;
+  daily_goal: number | null;
 }
 
 export function useProfile() {
@@ -34,6 +35,21 @@ export function useUpdateProfile() {
       const { error } = await supabase
         .from("profiles")
         .upsert({ id: user!.id, ...updates, updated_at: new Date().toISOString() });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["profile", user?.id] }),
+  });
+}
+
+export function useUpdateDailyGoal() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (daily_goal: number) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ daily_goal, updated_at: new Date().toISOString() })
+        .eq("id", user!.id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["profile", user?.id] }),

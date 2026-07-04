@@ -1,5 +1,4 @@
 import { useMemo, useReducer } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { colorForKey, withAlpha } from "@/lib/cat-colors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,68 +20,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Pagination } from "@/components/Pagination";
 import { formatTableDate, isWeekend, type DailyLog } from "@/types/log";
 import { useDeleteLog } from "@/hooks/useDailyLogs";
 import { useCategories, type Category } from "@/hooks/useCategories";
-import { Trash2, Pencil, Search, ChevronLeft, ChevronRight, BedDouble, Copy, Check } from "lucide-react";
+import { Trash2, Pencil, Search, BedDouble, Copy, Check } from "lucide-react";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function getVal(l: DailyLog, key: string): number { return (l.counts ?? {})[key] ?? 0; }
 
-// ── Pagination ─────────────────────────────────────────────────────────────
-interface PaginationProps {
-  page: number;
-  totalPages: number;
-  pageNumbers: (number | "…")[];
-  itemsPerPage: number;
-  goTo: (p: number) => void;
-  onItemsPerPageChange: (n: number) => void;
-}
 
-function Pagination({ page, totalPages, pageNumbers, itemsPerPage, goTo, onItemsPerPageChange }: PaginationProps) {
-  if (totalPages <= 1) return null;
-  return (
-    <div className="shrink-0 py-2.5 flex items-center relative">
-      <div className="flex items-center gap-1 mx-auto">
-        <Button size="sm" className="hidden sm:inline-flex h-8 px-3 text-sm rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(1)} disabled={page === 1}>First</Button>
-        <Button size="icon" className="size-9 sm:size-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page - 1)} disabled={page === 1}>
-          <ChevronLeft className="size-4" />
-        </Button>
-        {pageNumbers.map((p, i) =>
-          p === "…" ? (
-            <span key={`e-${pageNumbers[i + 1] ?? i}`} className="w-8 text-center text-sm text-muted-foreground">…</span>
-          ) : (
-            <Button
-              key={p}
-              size="icon"
-              className={`size-9 sm:size-8 text-sm rounded-md border border-border ${page === p ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-sidebar text-foreground hover:bg-muted"}`}
-              onClick={() => goTo(p as number)}
-            >
-              {p}
-            </Button>
-          ),
-        )}
-        <Button size="icon" className="size-9 sm:size-8 rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(page + 1)} disabled={page === totalPages}>
-          <ChevronRight className="size-4" />
-        </Button>
-        <Button size="sm" className="hidden sm:inline-flex h-8 px-3 text-sm rounded-md bg-sidebar border border-border text-foreground hover:bg-muted" onClick={() => goTo(totalPages)} disabled={page === totalPages}>Last</Button>
-      </div>
-      <div className="absolute right-0 hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-        <span>Items per page</span>
-        <Select value={String(itemsPerPage)} onValueChange={(v) => onItemsPerPageChange(Number(v))}>
-          <SelectTrigger className="h-8 w-16 text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {[10, 20, 50, 100].map((n) => (
-              <SelectItem key={n} value={String(n)} className="text-xs">{n}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
-}
 
 // ── Mobile card list ───────────────────────────────────────────────────────
 interface MobileCardListProps {
@@ -417,8 +364,9 @@ export function DaysTable({ logs, onEdit }: Props) {
           page={page}
           totalPages={totalPages}
           pageNumbers={pageNumbers}
+          onPageChange={goTo}
+          showFirstLast
           itemsPerPage={itemsPerPage}
-          goTo={goTo}
           onItemsPerPageChange={(n) => tDispatch({ type: "set_per_page", n })}
         />
 
