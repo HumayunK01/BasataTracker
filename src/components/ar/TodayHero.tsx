@@ -1,16 +1,17 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Flame, TrendingUp, TrendingDown, Minus, Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ActivityRing } from "@/components/ar/ActivityRing";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
+import { useProfile, useUpdateDailyGoal } from "@/hooks/useProfile";
 import { computeStreaks } from "@/lib/log-utils";
 import { isoDate, totalForLog, type DailyLog } from "@/types/log";
 import { cn } from "@/lib/utils";
 
 const GOAL_KEY = "basata-daily-goal";
 
-function loadGoal(): number | null {
+function loadLocalGoal(): number | null {
   try {
     const raw = localStorage.getItem(GOAL_KEY);
     if (!raw) return null;
@@ -21,7 +22,7 @@ function loadGoal(): number | null {
   }
 }
 
-function saveGoal(n: number) {
+function saveLocalGoal(n: number) {
   try {
     localStorage.setItem(GOAL_KEY, String(n));
   } catch {
@@ -30,6 +31,9 @@ function saveGoal(n: number) {
 }
 
 export function TodayHero({ logs }: { logs: DailyLog[] }) {
+  const { data: profile } = useProfile();
+  const updateDailyGoal = useUpdateDailyGoal();
+
   const stats = useMemo(() => {
     const today = isoDate();
     const todayLog = logs.find((l) => l.log_date === today);
@@ -43,12 +47,21 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
     return { todayTotal, avg, ...computeStreaks(logs) };
   }, [logs]);
 
-  // Goal defaults to the user's average working day; editable + persisted locally
-  const [goal, setGoal] = useState<number>(
-    () => loadGoal() ?? (stats.avg > 0 ? Math.round(stats.avg) : 50),
-  );
+  // Priority: Supabase profile → localStorage → average → 50
+  const [goal, setGoal] = useState<number>(() => {
+    const local = loadLocalGoal();
+    if (local) return local;
+    return stats.avg > 0 ? Math.round(stats.avg) : 50;
+  });
   const [goalOpen, setGoalOpen] = useState(false);
   const [draft, setDraft] = useState("");
+
+  // Sync profile's daily_goal when it loads (overrides localStorage)
+  useEffect(() => {
+    if (profile?.daily_goal != null && profile.daily_goal > 0) {
+      setGoal(profile.daily_goal);
+    }
+  }, [profile?.daily_goal]);
 
   const clampGoal = (n: number) => Math.min(9999, Math.max(1, Math.round(n)));
 
@@ -62,7 +75,8 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
     if (Number.isFinite(n) && n > 0) {
       const clamped = clampGoal(n);
       setGoal(clamped);
-      saveGoal(clamped);
+      saveLocalGoal(clamped);
+      updateDailyGoal.mutate(clamped);
     }
     setGoalOpen(false);
   };
@@ -87,7 +101,6 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
       <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-heading">Today</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
 
-        {/* Today's docs vs daily goal */}
         <div className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
           <ActivityRing value={stats.todayTotal} target={goal} size={52} strokeWidth={5}>
             <span className="tabular-nums">{goalPct}%</span>
@@ -141,7 +154,6 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
           </div>
         </div>
 
-        {/* Logging streak */}
         <div className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
           <div className="size-9 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
             <Flame className="size-5 text-warning" />
@@ -156,7 +168,6 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
           </div>
         </div>
 
-        {/* Today vs working-day average */}
         <div className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
           <div className="size-9 rounded-lg bg-info/10 flex items-center justify-center shrink-0">
             <deltaDisplay.Icon className={cn("size-5", deltaDisplay.tone === "text-muted-foreground" ? "text-info" : deltaDisplay.tone)} />
