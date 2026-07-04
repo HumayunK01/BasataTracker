@@ -1,22 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
-import {
-  useFaxTracker,
-  useDeleteFax,
-  useUpdateStep,
-  fetchAllFaxRows,
-  STEP_STATUSES,
-  type FaxRow,
-  type FaxStepStatus,
-  type StepField,
-} from "@/hooks/useFaxTracker";
-import {
-  useIndexableTracker,
-  useDeleteIndexable,
-  useUpdateStep as useUpdateIndexableStep,
-  fetchAllIndexableRows,
-} from "@/hooks/useIndexableTracker";
+import { useFaxTracker, useDeleteFax, useUpdateStep as useFaxUpdateStep, fetchAllFaxRows, STEP_STATUSES, type FaxRow, type FaxStepStatus, type StepField } from "@/hooks/useFaxTracker";
+import { useIndexableTracker, useDeleteIndexable, useUpdateStep as useIndexableUpdateStep, fetchAllIndexableRows } from "@/hooks/useIndexableTracker";
 import { useFaxAccounts, useDeleteFaxAccount, type FaxAccount } from "@/hooks/useFaxAccounts";
 import { downloadFaxPDF } from "@/lib/fax-utils";
 import { downloadIndexablePDF } from "@/lib/indexable-utils";
@@ -63,10 +49,6 @@ async function copyName(name: string) {
   }
 }
 
-// ── Status → color classes ──────────────────────────────────────────────────
-// In rows/cards: colored text in light mode, plain white in dark mode (the row
-// tints make colored text hard to read). The dropdown menu choices, which sit on
-// a plain dark popover, use stepMenuClasses below to keep their colors.
 function stepClasses(status: FaxStepStatus | null): string {
   switch (status) {
     case "Successfully Sent": return "text-emerald-700 dark:text-white";
@@ -77,7 +59,6 @@ function stepClasses(status: FaxStepStatus | null): string {
   }
 }
 
-// Colored choices for the status dropdown menu (on a dark popover, not a tint).
 function stepMenuClasses(status: FaxStepStatus | null): string {
   switch (status) {
     case "Successfully Sent": return "text-emerald-700 dark:text-emerald-300";
@@ -96,14 +77,10 @@ function overallClasses(status: string): string {
   return "text-muted-foreground dark:text-white";
 }
 
-// The DB's auto-computed overall_status carries a trailing "#" (e.g.
-// "Resolved – Refax Same #"). Strip it for display only; the raw value is kept
-// for filtering/color logic so it still matches what the database stores.
 function displayStatus(status: string): string {
   return status.replace(/\s*#\s*$/, "").trim();
 }
 
-// Formats a timestamp into a stacked MM/DD/YYYY date with the time below it.
 function formatDateTime(value: string | null | undefined): { date: string; time: string } | null {
   if (!value) return null;
   const d = new Date(value);
@@ -114,7 +91,6 @@ function formatDateTime(value: string | null | undefined): { date: string; time:
   };
 }
 
-// Stable per-day key (local time) used to group/filter rows by date.
 function dateKey(value: string | null | undefined): string | null {
   if (!value) return null;
   const d = new Date(value);
@@ -125,7 +101,6 @@ function dateKey(value: string | null | undefined): string | null {
   return `${y}-${m}-${day}`;
 }
 
-// High-level filter groups. Each maps to one or more raw overall_status values.
 const STATUS_GROUPS = ["Resolved", "Failed", "Waiting", "Incomplete"] as const;
 type StatusGroup = (typeof STATUS_GROUPS)[number];
 
@@ -135,14 +110,10 @@ function statusGroup(status: string): StatusGroup | null {
   if (status.startsWith("Resolved")) return "Resolved";
   if (status === "All Steps Failed") return "Failed";
   if (status.startsWith("Waiting")) return "Waiting";
-  // A step failed but the next hasn't been attempted yet — work still pending.
   if (status.startsWith("Move to") || status === "Pending") return "Incomplete";
   return null;
 }
 
-// Whole-row tint: a soft wash in light mode, but in dark mode the heavy wash
-// reads as muddy olive/maroon, so we keep dark tints very faint and lean on the
-// already-colored status text to carry the meaning.
 function rowClasses(status: string): string {
   switch (statusGroup(status)) {
     case "Resolved":   return "bg-emerald-500/[0.16] hover:bg-emerald-500/25 dark:bg-emerald-500/[0.04] dark:hover:bg-emerald-500/[0.08]";
@@ -153,9 +124,8 @@ function rowClasses(status: string): string {
   }
 }
 
-// Whether a step is "in play" — i.e. it applies given the prior steps' state.
-// Fax: a sequential workflow — step2 only after step1 Failed, step3 after both.
-// Indexable: every step is independent, so all three are always in play.
+type TrackerMode = "fax" | "indexable";
+
 function stepIsActive(row: FaxRow, field: StepField, mode: TrackerMode): boolean {
   if (mode === "indexable") return true;
   if (field === "step1") return true;
@@ -163,9 +133,6 @@ function stepIsActive(row: FaxRow, field: StepField, mode: TrackerMode): boolean
   return row.step1 === "Failed" && row.step2 === "Failed";
 }
 
-// Indexable only: an untouched step (null / Pending) reads as "No need" once a
-// later step has been Successfully Sent — e.g. set step 3 to success and the
-// earlier steps show "No need" rather than demanding completion.
 function stepIsSkipped(row: FaxRow, field: StepField, mode: TrackerMode): boolean {
   if (mode !== "indexable") return false;
   const status = row[field];
@@ -174,7 +141,6 @@ function stepIsSkipped(row: FaxRow, field: StepField, mode: TrackerMode): boolea
   return laterFields.some((f) => row[f] === "Successfully Sent");
 }
 
-// The dropdown of status choices shared by the table cell and the mobile card.
 function StepPicker({
   row,
   field,
@@ -242,10 +208,8 @@ function StepCell({
   const status = row[field];
   const active = stepIsActive(row, field, mode);
 
-  // Not applicable for this row's path (an earlier step resolved/blocked it).
   if (!active) return <td className="px-3 py-2 text-center text-muted-foreground/40">—</td>;
 
-  // Indexable: a later step succeeded, so this untouched step isn't needed.
   if (stepIsSkipped(row, field, mode)) {
     return <td className="px-3 py-2 text-center text-xs font-medium text-muted-foreground/60 italic">No need</td>;
   }
@@ -265,8 +229,6 @@ function StepCell({
   );
 }
 
-// Step 3's label differs by category (the workflow's final step), so labels are
-// resolved from the active mode rather than a single static list.
 function stepLabels(mode: TrackerMode): [string, string, string] {
   return [
     "Step 1 – Refax Same",
@@ -275,7 +237,6 @@ function stepLabels(mode: TrackerMode): [string, string, string] {
   ];
 }
 
-// Stacked card used on phones, where the 7-column table needs scrolling.
 function FaxCard({
   row,
   mine,
@@ -338,12 +299,10 @@ function FaxCard({
         ) : null}
       </div>
 
-      {/* Overall status badge */}
       <div className={cn("mt-1 text-sm font-semibold", overallClasses(row.overall_status))}>
         {displayStatus(row.overall_status)}
       </div>
 
-      {/* Steps */}
       <dl className="mt-3 space-y-1">
         {fields.map((field, i) => {
           const status = row[field];
@@ -406,7 +365,6 @@ function SortHeader({
       title={`Sort by ${label.toLowerCase()}`}
     >
       {label}
-      {/* Icon swaps direction on sort change — a quick scale-in masks the swap. */}
       <Icon key={active ? sort.dir : "idle"} className={cn("size-3 animate-fade-in", active ? "opacity-100" : "opacity-40")} />
     </button>
   );
@@ -416,19 +374,26 @@ const ACCOUNT_KEY = "fax-tracker-account";
 const MODE_KEY = "tracker-mode";
 const PAGE_SIZE = 25;
 
-// The page hosts two categories that share accounts but keep separate rows.
-type TrackerMode = "fax" | "indexable";
 const MODES: { id: TrackerMode; label: string }[] = [
   { id: "fax", label: "Fax" },
   { id: "indexable", label: "Indexable" },
 ];
+
+const pageNumbersArr = (totalPages: number, page: number): (number | "…")[] => {
+  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+  const nums: (number | "…")[] = [1];
+  if (page > 3) nums.push("…");
+  for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) nums.push(i);
+  if (page < totalPages - 2) nums.push("…");
+  nums.push(totalPages);
+  return nums;
+};
 
 const FaxTrackerPage = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile();
   const { data: accounts = [], isLoading: accountsLoading } = useFaxAccounts();
 
-  // Which category is active. Persisted so a refresh keeps the user's view.
   const [mode, setMode] = useState<TrackerMode>(
     () => (localStorage.getItem(MODE_KEY) as TrackerMode) || "fax",
   );
@@ -440,8 +405,6 @@ const FaxTrackerPage = () => {
   const [accountToDelete, setAccountToDelete] = useState<FaxAccount | null>(null);
   const [accountToRename, setAccountToRename] = useState<FaxAccount | null>(null);
 
-  // Keep the selection valid: default to the first account, and drop a stale
-  // id (e.g. a deleted account) back to the first available one.
   useEffect(() => {
     if (accountsLoading || accounts.length === 0) return;
     if (!accountId || !accounts.some((a) => a.id === accountId)) {
@@ -451,11 +414,9 @@ const FaxTrackerPage = () => {
 
   useEffect(() => {
     if (accountId) localStorage.setItem(ACCOUNT_KEY, accountId);
-    setPage(1); // different account → start at the first page
+    setPage(1);
   }, [accountId]);
 
-  // Switching category swaps the whole row set — reset the view and stop the
-  // entrance animation from replaying for the new mode's existing rows.
   useEffect(() => {
     setPage(1);
     setSearch("");
@@ -466,25 +427,25 @@ const FaxTrackerPage = () => {
   }, [mode]);
 
   const activeAccount = accounts.find((a) => a.id === accountId) ?? null;
+  const isFax = mode === "fax";
 
-  // Both categories share accounts but keep separate rows. Call both hooks
-  // unconditionally (rules of hooks) and pick the active set by mode.
-  const faxQuery = useFaxTracker(mode === "fax" ? (accountId ?? undefined) : undefined);
-  const indexableQuery = useIndexableTracker(mode === "indexable" ? (accountId ?? undefined) : undefined);
-  const { data: rows = [], isLoading } = mode === "fax" ? faxQuery : indexableQuery;
+  // Both hooks are always called per Rules of Hooks; pick the active one.
+  const faxQuery = useFaxTracker(isFax ? (accountId ?? undefined) : undefined);
+  const indexableQuery = useIndexableTracker(isFax ? undefined : (accountId ?? undefined));
+  const { data: rows = [], isLoading } = isFax ? faxQuery : indexableQuery;
 
   const deleteFax = useDeleteFax();
   const deleteIndexable = useDeleteIndexable();
-  const updateFaxStep = useUpdateStep();
-  const updateIndexableStep = useUpdateIndexableStep();
-  // IndexableRow is structurally identical to FaxRow, so the row data is
-  // interchangeable. The mutation hooks are nominally distinct, so dispatch by
-  // mode rather than unioning their input types.
-  const deleteRow = mode === "fax" ? deleteFax : deleteIndexable;
+  const updateFaxStep = useFaxUpdateStep();
+  const updateIndexableStep = useIndexableUpdateStep();
+
+  const deleteRow = isFax ? deleteFax : deleteIndexable;
+
   const pickStep = (row: FaxRow, field: StepField, value: FaxStepStatus) => {
-    if (mode === "fax") updateFaxStep.mutate({ row, field, value });
+    if (isFax) updateFaxStep.mutate({ row, field, value });
     else updateIndexableStep.mutate({ row, field, value });
   };
+
   const labels = stepLabels(mode);
   const [exporting, setExporting] = useState(false);
 
@@ -498,8 +459,6 @@ const FaxTrackerPage = () => {
   const [editing, setEditing] = useState<FaxRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FaxRow | null>(null);
 
-  // The same filter predicate the table uses — reused by the exporter so an
-  // "all accounts" export applies the identical status/date/search filters.
   const matchesFilters = useMemo(() => {
     const q = search.trim().toLowerCase();
     return (r: FaxRow) => {
@@ -518,9 +477,6 @@ const FaxTrackerPage = () => {
 
   const filtered = useMemo(() => {
     const rowsFiltered = rows.filter(matchesFilters);
-
-    // No explicit sort → newest first by the date shown in the table (updated_at),
-    // so the most recent date is on top and the oldest at the bottom.
     if (!sort) {
       return [...rowsFiltered].sort((a, b) => {
         const at = a.updated_at ? new Date(a.updated_at).getTime() : 0;
@@ -541,11 +497,8 @@ const FaxTrackerPage = () => {
     });
   }, [rows, matchesFilters, sort]);
 
-  // ── Pagination ──
-  // A narrowing of the result set should bring you back to the first page.
   useEffect(() => { setPage(1); }, [search, statusFilter, dateFilter]);
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  // Clamp the page when the filtered set shrinks (filter/search/account change).
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
@@ -553,36 +506,24 @@ const FaxTrackerPage = () => {
     () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
     [filtered, page],
   );
-  const pageNumbers = useMemo<(number | "…")[]>(() => {
-    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
-    const nums: (number | "…")[] = [1];
-    if (page > 3) nums.push("…");
-    for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) nums.push(i);
-    if (page < totalPages - 2) nums.push("…");
-    nums.push(totalPages);
-    return nums;
-  }, [totalPages, page]);
+  const pageNumbers = useMemo(() => pageNumbersArr(totalPages, page), [totalPages, page]);
 
-  // Track which row IDs are new since the last render so we can animate just
-  // those in (not the whole table on every refetch). Skips the first load.
   const seenIds = useRef<Set<string> | null>(null);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
   useEffect(() => {
     const current = new Set(rows.map((r) => r.id));
     if (seenIds.current === null) {
-      seenIds.current = current; // first load: no entrance animation
+      seenIds.current = current;
       return;
     }
     const added = [...current].filter((id) => !seenIds.current!.has(id));
     seenIds.current = current;
     if (added.length === 0) return;
     setNewIds(new Set(added));
-    // Clear the flag once the animation has played so re-renders don't replay it.
     const t = setTimeout(() => setNewIds(new Set()), 400);
     return () => clearTimeout(t);
   }, [rows]);
 
-  // Counts per filter group (over all rows) — shown in the filter dropdown.
   const groupCounts = useMemo(() => {
     const counts: Record<StatusGroup, number> = { Resolved: 0, Failed: 0, Waiting: 0, Incomplete: 0 };
     for (const r of rows) {
@@ -592,8 +533,6 @@ const FaxTrackerPage = () => {
     return counts;
   }, [rows]);
 
-  // Distinct days that actually have rows (as yyyy-MM-dd keys, newest first) —
-  // drives which calendar days are selectable / marked in the date filter.
   const dataDayKeys = useMemo(() => {
     const keys = new Set<string>();
     for (const r of rows) {
@@ -603,7 +542,6 @@ const FaxTrackerPage = () => {
     return [...keys].sort((a, b) => b.localeCompare(a));
   }, [rows]);
   const dataKeySet = useMemo(() => new Set(dataDayKeys), [dataDayKeys]);
-  // Local-noon Date objects (avoids TZ edge cases) for the calendar.
   const datesWithData = useMemo(
     () => dataDayKeys.map((k) => new Date(`${k}T12:00:00`)),
     [dataDayKeys],
@@ -613,7 +551,6 @@ const FaxTrackerPage = () => {
     [dateFilter],
   );
 
-  // Summary counts (over all rows, matching the spreadsheet header).
   const stats = useMemo(
     () => ({
       resolved: groupCounts.Resolved,
@@ -628,7 +565,6 @@ const FaxTrackerPage = () => {
   const hasActiveFilters = search.trim() !== "" || statusFilter.size > 0 || dateFilter.size > 0;
   const clearAll = () => { setSearch(""); setStatusFilter(new Set()); setDateFilter(new Set()); };
 
-  // The calendar (mode="multiple") hands back the full set of selected days.
   const handleSelectDates = (days: Date[] | undefined) => {
     const keys = (days ?? [])
       .map((d) => dateKey(d.toISOString()))
@@ -640,30 +576,23 @@ const FaxTrackerPage = () => {
     setSort((prev) => {
       if (prev?.key !== key) return { key, dir: "asc" };
       if (prev.dir === "asc") return { key, dir: "desc" };
-      return null; // third click clears the sort
+      return null;
     });
   };
 
   const openAdd = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (row: FaxRow) => { setEditing(row); setDialogOpen(true); };
 
-  // Export whatever is currently on screen (filters + search applied).
-  // When `allAccounts` is true, the same filters are applied across every
-  // account (all IDs) — e.g. "failed ROIs" for every account, not just the
-  // active one — and an Account column is added so rows stay distinguishable.
   const handleExport = async (allAccounts = false) => {
     setExporting(true);
     try {
       const userName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || undefined;
       const activeFilters = statusFilter.size ? Array.from(statusFilter).join(", ") : null;
 
-      // Gather + filter the rows to export. Single-account uses the on-screen
-      // list; all-accounts fetches every account's rows and applies the same
-      // filter predicate, then sorts newest-first (the table's default).
       let exportRows: FaxRow[] = filtered;
       let accountName: ((row: FaxRow) => string) | undefined;
       if (allAccounts) {
-        const all = mode === "fax" ? await fetchAllFaxRows() : await fetchAllIndexableRows();
+        const all = isFax ? await fetchAllFaxRows() : await fetchAllIndexableRows();
         exportRows = all
           .filter(matchesFilters)
           .sort((a, b) => {
@@ -687,8 +616,6 @@ const FaxTrackerPage = () => {
         search.trim() ? `Search: "${search.trim()}"` : null,
       ].filter(Boolean);
 
-      // Build a filename that reflects the mode + account + active filter, e.g.
-      // fax-tracker-ayush-rathi-failed-2026-06-15.pdf
       const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
       const accountPart = allAccounts ? "all-accounts-" : activeAccount ? `${slug(activeAccount.name)}-` : "";
       const statusPart = statusFilter.size
@@ -696,10 +623,10 @@ const FaxTrackerPage = () => {
         : "all";
       const searchPart = search.trim() ? `-${slug(search.trim())}` : "";
       const datePart = new Date().toISOString().slice(0, 10);
-      const prefix = mode === "fax" ? "fax-tracker" : "indexable-tracker";
+      const prefix = isFax ? "fax-tracker" : "indexable-tracker";
       const filename = `${prefix}-${accountPart}${statusPart}${searchPart}-${datePart}.pdf`;
 
-      const download = mode === "fax" ? downloadFaxPDF : downloadIndexablePDF;
+      const download = isFax ? downloadFaxPDF : downloadIndexablePDF;
       await download(exportRows, filename, {
         userName,
         subtitle: subtitleBits.join("  ·  "),
@@ -721,6 +648,8 @@ const FaxTrackerPage = () => {
     });
   };
 
+  const EntryDialog = isFax ? FaxEntryDialog : IndexableEntryDialog;
+
   return (
     <>
       <PageHeader
@@ -728,9 +657,6 @@ const FaxTrackerPage = () => {
         subtitle="Tracker"
         actions={
           <div className="flex items-center gap-2">
-            {/* Category toggle — Fax vs Indexable share accounts, separate rows.
-                Two equal-width segments with a pill that slides under the active
-                one (translate by 100% of one segment). */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8 shrink-0 min-w-32 justify-between">
@@ -799,12 +725,8 @@ const FaxTrackerPage = () => {
       />
 
       <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
-        {/* Re-key on mode so the whole view fades in on a Fax/Indexable switch.
-            A single keyed wrapper (no keyed siblings) avoids React reconciling
-            the two modes' subtrees into one another. */}
         <div key={mode} className="w-full space-y-4 animate-fade-in">
 
-          {/* Summary stats */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
             <StatCard label="Resolved" value={stats.resolved} tone="emerald" loading={isLoading} />
             <StatCard label="All Steps Failed" value={stats.allFailed} tone="rose" loading={isLoading} />
@@ -813,7 +735,6 @@ const FaxTrackerPage = () => {
             <StatCard label="Total Patients" value={stats.total} tone="neutral" loading={isLoading} />
           </div>
 
-          {/* Controls */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <div className="relative flex-1 min-w-48">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -835,7 +756,6 @@ const FaxTrackerPage = () => {
               )}
             </div>
 
-            {/* Account (ID) selector — fax-tracker-specific, so it lives here, not the shared header */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="h-10 shrink-0 max-w-[12rem]" disabled={accountsLoading}>
@@ -940,8 +860,6 @@ const FaxTrackerPage = () => {
                     hasData: "font-semibold after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:size-1 after:rounded-full after:bg-primary after:transition-opacity data-[selected=true]:after:opacity-0",
                   }}
                   classNames={{
-                    // Each selected day reads as its own rounded pill (not a
-                    // connected bar) and animates in.
                     cell: "size-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
                     day: "day-cell inline-flex items-center justify-center size-9 rounded-full p-0 font-normal hover:bg-accent hover:text-accent-foreground aria-selected:opacity-100",
                     day_selected:
@@ -973,7 +891,6 @@ const FaxTrackerPage = () => {
             )}
           </div>
 
-          {/* Table — desktop / tablet */}
           <div className="hidden md:block bg-card border border-border rounded-md overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
@@ -1102,7 +1019,6 @@ const FaxTrackerPage = () => {
             )}
           </div>
 
-          {/* Cards — phones */}
           <div className="md:hidden space-y-3">
             {isLoading ? (
               Array.from({ length: 4 }).map((_, i) => (
@@ -1152,11 +1068,7 @@ const FaxTrackerPage = () => {
         </div>
       </main>
 
-      {mode === "fax" ? (
-        <FaxEntryDialog open={dialogOpen} onOpenChange={setDialogOpen} row={editing} accountId={accountId ?? undefined} />
-      ) : (
-        <IndexableEntryDialog open={dialogOpen} onOpenChange={setDialogOpen} row={editing} accountId={accountId ?? undefined} />
-      )}
+      <EntryDialog open={dialogOpen} onOpenChange={setDialogOpen} row={editing} accountId={accountId ?? undefined} />
 
       <NewAccountDialog
         open={accountDialogOpen}
@@ -1175,7 +1087,7 @@ const FaxTrackerPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-lg font-semibold">Delete this patient?</AlertDialogTitle>
             <AlertDialogDescription className="mt-2 text-sm leading-relaxed">
-              This permanently removes <span className="font-medium text-foreground">{deleteTarget?.patient_name}</span> from the {mode === "fax" ? "fax" : "indexable"} tracker. This can't be undone.
+              This permanently removes <span className="font-medium text-foreground">{deleteTarget?.patient_name}</span> from the {mode} tracker. This can't be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-4">
@@ -1210,7 +1122,6 @@ const FaxTrackerPage = () => {
                 const target = accountToDelete;
                 if (!target) return;
                 deleteAccount.mutate(target.id, {
-                  // If we deleted the active account, fall back to another one.
                   onSuccess: () => {
                     if (target.id === accountId) {
                       const next = accounts.find((a) => a.id !== target.id);
@@ -1315,8 +1226,6 @@ function StatCard({
     slate: "text-slate-500 dark:text-slate-300",
     neutral: "text-foreground",
   }[tone];
-  // Ease the count toward its new value so it ticks up/down on changes
-  // (state indication) instead of snapping.
   const display = useAnimatedNumber(value);
   return (
     <div className="bg-card border border-border rounded-md p-3 sm:p-4">
