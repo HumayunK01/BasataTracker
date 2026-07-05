@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getUserId } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutationRateLimit } from "@/hooks/useMutationRateLimit";
@@ -21,12 +21,6 @@ const CategorySchema = z.object({
 });
 
 export type Category = z.infer<typeof CategorySchema>;
-
-async function getUserId(): Promise<string> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  return user.id;
-}
 
 function formatZodError(e: unknown): string {
   if (e instanceof z.ZodError) return e.issues[0]?.message ?? "Validation error";

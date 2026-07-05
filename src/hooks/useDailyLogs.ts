@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getUserId } from "@/integrations/supabase/client";
 import type { DailyLog, DailyLogInsert } from "@/types/log";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,12 +15,6 @@ const DailyLogInsertSchema = z.object({
   is_off_day: z.boolean(),
   notes: z.string().max(500, "Notes must be 500 characters or fewer").nullable().optional(),
 });
-
-async function getUserId(): Promise<string> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  return user.id;
-}
 
 export function useDailyLogs() {
   const { user } = useAuth();

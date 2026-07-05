@@ -250,7 +250,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
       </div>
 
       {/* Row 2: Weekly totals + Day-of-week avg */}
-      <DeferRender minHeight={224} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <DeferRender className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ChartCard title="Weekly Totals" subtitle="Last 10 weeks" height="h-44 sm:h-48 md:h-52 xl:h-60">
           <BarChart data={weeklyTotals} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={T.grid} vertical={false} />
@@ -281,7 +281,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
       </DeferRender>
 
       {/* Row 3: Category area trend + Radar */}
-      <DeferRender minHeight={272} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <DeferRender className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <ChartCard
           title="Category Trends"
           subtitle="Last 30 working days"
@@ -330,7 +330,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
       </DeferRender>
 
       {/* Row 4: Full-width stacked bar breakdown */}
-      <DeferRender minHeight={320} id="breakdown" className="cv-auto bg-card border border-border rounded-md p-4 sm:p-5">
+      <DeferRender id="breakdown" className="bg-card border border-border rounded-md p-4 sm:p-5">
         <div className="mb-3 sm:mb-4">
           <h3 className="text-sm font-semibold">Document Breakdown</h3>
           <p className="text-xs text-muted-foreground mt-0.5">Last 14 working days by category</p>

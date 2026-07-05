@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getUserId } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutationRateLimit } from "@/hooks/useMutationRateLimit";
@@ -9,12 +9,6 @@ import type { Tables } from "@/integrations/supabase/types";
 export type FaxAccount = Tables<"fax_accounts">;
 
 const NameSchema = z.string().trim().min(1, "Account name is required").max(100, "Name too long");
-
-async function getUserId(): Promise<string> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  return user.id;
-}
 
 export function useFaxAccounts() {
   const { user } = useAuth();
