@@ -1,5 +1,8 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { motion, type Easing } from "motion/react";
 import { useNavigate } from "react-router-dom";
+
+const sectionEase: Easing = [0.23, 1, 0.32, 1];
 import { Button } from "@/components/ui/button";
 const Charts = lazy(() => import("@/components/ar/Charts").then((m) => ({ default: m.Charts })));
 import { ContributionHeatmap } from "@/components/ar/ContributionHeatmap";
@@ -102,7 +105,7 @@ const Index = () => {
             {/* ── Per-category breakdown ── */}
             <section className="space-y-2 sm:space-y-3">
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-heading">By Category{"—"}All Time</h2>
-              <div className="grid gap-2 sm:gap-3 [grid-template-columns:repeat(auto-fill,minmax(124px,1fr))] sm:[grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">
+              <div className="grid gap-2 sm:gap-3 stagger-children [grid-template-columns:repeat(auto-fill,minmax(124px,1fr))] sm:[grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">
                 {isLoading
                   ? Array.from({ length: 6 }).map((_, i) => (
                       <div key={i} className="bg-card border border-border rounded-md p-3 sm:p-4 space-y-2">
@@ -126,7 +129,12 @@ const Index = () => {
             </section>
 
             {/* ── Contribution heatmap ── */}
-            <section>
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.4, ease: sectionEase }}
+            >
               {isLoading ? (
                 <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -142,10 +150,17 @@ const Index = () => {
               ) : !isEmpty && (
                 <ContributionHeatmap logs={logs} />
               )}
-            </section>
+            </motion.section>
 
             {/* ── Charts ── */}
-            <section id="trends" className="space-y-2 sm:space-y-3">
+            <motion.section
+              id="trends"
+              className="space-y-2 sm:space-y-3"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.4, ease: sectionEase }}
+            >
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-heading">Trends & Breakdown</h2>
               {isLoading ? (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -175,7 +190,7 @@ const Index = () => {
                   <Charts logs={logs} categories={categories} />
                 </Suspense>
               )}
-            </section>
+            </motion.section>
 
         </div>
       </main>

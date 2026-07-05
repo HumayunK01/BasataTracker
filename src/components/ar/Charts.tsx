@@ -8,8 +8,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   RadarChart,
@@ -353,14 +351,14 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
                   // Bottom segment gets bottom rounding, all others flat
                   radius={i === 0 ? [0, 0, 3, 3] : [0, 0, 0, 0]}
                   isAnimationActive={false}
-                  shape={(props: Record<string, unknown>) => {
-                    const { x, y, width, height, fill } = props as {
+                  shape={(props: unknown) => {
+                    const { x, y, width, height, fill, index } = props as {
                       x: number; y: number; width: number; height: number; fill: string;
                       index: number;
                     };
                     if (!height || height <= 0) return <g />;
                     // Check if this is the topmost non-zero segment for this bar
-                    const rowData = stacked[props.index as number] ?? {};
+                    const rowData = stacked[index] ?? {};
                     const catLabels = categories.map((cat) => cat.label);
                     const myIdx = catLabels.indexOf(c.label);
                     const isTop = catLabels.slice(myIdx + 1).every((label) => !rowData[label]);

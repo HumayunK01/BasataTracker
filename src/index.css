@@ -293,6 +293,27 @@
     transform: scale(0.97);
   }
 
+  /* Stagger entrance for lists of children. Each child gets incremental delay. */
+  .stagger-children > * {
+    opacity: 0;
+    animation: staggerFadeIn 0.3s var(--ease-out) forwards;
+  }
+  .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-children > *:nth-child(2) { animation-delay: 40ms; }
+  .stagger-children > *:nth-child(3) { animation-delay: 80ms; }
+  .stagger-children > *:nth-child(4) { animation-delay: 120ms; }
+  .stagger-children > *:nth-child(5) { animation-delay: 160ms; }
+  .stagger-children > *:nth-child(6) { animation-delay: 200ms; }
+  .stagger-children > *:nth-child(7) { animation-delay: 240ms; }
+  .stagger-children > *:nth-child(8) { animation-delay: 280ms; }
+  .stagger-children > *:nth-child(9) { animation-delay: 320ms; }
+  .stagger-children > *:nth-child(10) { animation-delay: 360ms; }
+
+  @keyframes staggerFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   /* Calendar day selection: smooth color/transform on every day cell, plus a
      subtle pop when a day becomes selected. */
   .day-cell {
@@ -312,11 +333,34 @@
     100% { transform: scale(1); }
   }
 
+  /* Data-dense: tighter tables with hairlines */
+  .dense-table tbody tr {
+    transition: background-color 0.12s var(--ease-out);
+  }
+  .dense-table tbody tr:hover {
+    background: hsl(var(--accent) / 0.3);
+  }
+
   /* Skip rendering/painting for offscreen heavy blocks (charts, heatmap).
      `contain-intrinsic-size` reserves space so the scrollbar stays stable. */
   .cv-auto {
     content-visibility: auto;
     contain-intrinsic-size: auto 300px;
+  }
+
+  /* Origin-aware popovers — scale from trigger instead of center */
+  [data-radix-popper-content-wrapper] {
+    transform-origin: var(--radix-popper-transform-origin) !important;
+  }
+
+  /* Hover animations only on hover-capable devices */
+  @media (hover: hover) and (pointer: fine) {
+    .hover-lift {
+      transition: transform 0.14s var(--ease-out), box-shadow 0.14s var(--ease-out);
+    }
+    .hover-lift:hover {
+      transform: translateY(-1px);
+    }
   }
 }
 

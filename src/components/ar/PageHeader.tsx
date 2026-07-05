@@ -42,7 +42,7 @@ export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
         <div className="flex items-center gap-1 shrink-0">
           {actions}
           <span className="hidden md:inline text-sm font-medium text-foreground ml-3 mr-1 font-heading">
-            Pheonix Heart
+            Phoenix Heart
           </span>
           <Button
             variant="ghost"
