@@ -95,7 +95,6 @@ export function ProfilePasswordCard({
               <Input
                 placeholder="First name"
                 value={profileState.first_name}
-               
                 onChange={(e) => profileDispatch({ type: "set", patch: { first_name: e.target.value } })}
               />
             </div>
@@ -104,7 +103,6 @@ export function ProfilePasswordCard({
               <Input
                 placeholder="Last name"
                 value={profileState.last_name}
-               
                 onChange={(e) => profileDispatch({ type: "set", patch: { last_name: e.target.value } })}
                 onKeyDown={(e) => e.key === "Enter" && onUpdateProfile()}
               />
@@ -162,7 +160,6 @@ export function ProfilePasswordCard({
                 placeholder="••••••••"
                 minLength={6}
                 value={pwState.next}
-               
                 onChange={(e) => pwDispatch({ type: "set", patch: { next: e.target.value } })}
               />
             </div>
@@ -172,7 +169,6 @@ export function ProfilePasswordCard({
                 type="password"
                 placeholder="••••••••"
                 value={pwState.confirm}
-               
                 onChange={(e) => pwDispatch({ type: "set", patch: { confirm: e.target.value } })}
                 onKeyDown={(e) => e.key === "Enter" && onChangePassword()}
               />

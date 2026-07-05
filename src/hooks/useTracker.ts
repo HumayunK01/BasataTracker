@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutationRateLimit } from "@/hooks/useMutationRateLimit";
-import { logAuditEvent } from "@/hooks/useAuditLog";
+import { logAuditEvent, type AuditEvent } from "@/hooks/useAuditLog";
 import { isoDate } from "@/types/log";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -131,6 +131,7 @@ export function createUseResolvedByDay(queryKey: string, tableName: "fax_tracker
         const { data, error } = await supabase
           .from(tableName)
           .select("step1, step2, step3, updated_at")
+          .eq("created_by", user!.id)
           .limit(5000);
         if (error) throw error;
         const byDay: Record<string, number> = {};
@@ -161,14 +162,14 @@ export function createUseUpsert(tableName: "fax_tracker" | "indexable_tracker", 
             .eq("id", id)
             .eq("created_by", created_by);
           if (error) throw error;
-          await logAuditEvent(`${auditPrefix}updated`, { [`${auditPrefix}id`]: id });
+          await logAuditEvent(`${auditPrefix}updated` as AuditEvent, { [`${auditPrefix}id`]: id });
         } else {
           if (!accountId) throw new Error("No account selected.");
           const { error } = await supabase
             .from(tableName)
             .insert({ ...validated, created_by, account_id: accountId });
           if (error) throw error;
-          await logAuditEvent(`${auditPrefix}created`, { patient_name: validated.patient_name, account_id: accountId });
+          await logAuditEvent(`${auditPrefix}created` as AuditEvent, { patient_name: validated.patient_name, account_id: accountId });
         }
       },
       onSuccess: (_d, { id }) => {
@@ -195,7 +196,7 @@ export function createUseUpdateStep(tableName: "fax_tracker" | "indexable_tracke
           .eq("id", row.id)
           .eq("created_by", created_by);
         if (error) throw error;
-        await logAuditEvent(`${auditPrefix}updated`, { [`${auditPrefix}id`]: row.id, field, value });
+        await logAuditEvent(`${auditPrefix}updated` as AuditEvent, { [`${auditPrefix}id`]: row.id, field, value });
       },
       onMutate: async ({ row, field, value }) => {
         await qc.cancelQueries({ queryKey: [queryKey] });
@@ -227,7 +228,7 @@ export function createUseDelete(tableName: "fax_tracker" | "indexable_tracker", 
       mutationFn: async (id: string) => {
         if (!checkLimit()) throw new Error("Too many deletes. Please wait a moment.");
         const created_by = await getUserId();
-        await logAuditEvent(`${auditPrefix}deleted`, { [`${auditPrefix}id`]: id });
+        await logAuditEvent(`${auditPrefix}deleted` as AuditEvent, { [`${auditPrefix}id`]: id });
         const { error } = await supabase
           .from(tableName)
           .delete()

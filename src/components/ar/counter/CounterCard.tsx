@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import gsap from "gsap";
 import { colorForKey, withAlpha } from "@/lib/cat-colors";
 import type { Category } from "@/hooks/useCategories";
 import { Minus, Plus, X } from "lucide-react";
@@ -48,6 +49,7 @@ export function CounterCard({
   const clr = colorForKey(cat.key);
   const [bump, setBump] = useState(0);
   const fill = maxCount > 0 ? Math.min(100, (count / maxCount) * 100) : 0;
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const inc = useHoldRepeat(onIncrement);
   const dec = useHoldRepeat(onDecrement);
@@ -57,11 +59,27 @@ export function CounterCard({
     setBump((n) => n + 1);
   };
 
+  // GSAP pulse ring on count change
+  useEffect(() => {
+    if (count === 0 || !cardRef.current) return;
+    const ring = cardRef.current.querySelector(".pulse-ring");
+    if (!ring) return;
+    const tween = gsap.fromTo(
+      ring,
+      { scale: 1, opacity: 0.4 },
+      { scale: 2.5, opacity: 0, duration: 0.4, ease: "power2.out" },
+    );
+    return () => { tween.kill(); };
+  }, [count]);
+
   return (
     <div
+      ref={cardRef}
       className="group rounded-md border flex flex-col relative overflow-hidden focus-within:ring-2 focus-within:ring-primary/40"
       style={{ borderColor: withAlpha(clr, 0.25), backgroundColor: withAlpha(clr, 0.07) }}
     >
+      {/* GSAP pulse ring */}
+      <div className="pulse-ring absolute inset-0 pointer-events-none rounded-md" style={{ backgroundColor: clr }} />
       {/* Progress fill (share of the busiest category) */}
       <div
         className="absolute inset-x-0 bottom-0 transition-[height] duration-500 ease-out pointer-events-none"

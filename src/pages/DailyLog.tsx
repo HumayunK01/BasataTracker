@@ -66,13 +66,10 @@ const DailyLogPage = () => {
           <>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="size-10 sm:hidden" disabled={logs.length === 0}>
-                  <Download className="size-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="hidden sm:flex h-8" disabled={logs.length === 0}>
-                  <Download className="size-4 mr-1" /> Export <ChevronDown className="size-3 ml-1 opacity-60" />
+                <Button variant="outline" size="icon" className="size-10 sm:h-8 sm:w-auto sm:px-3" disabled={logs.length === 0}>
+                  <Download className="size-5 sm:size-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Export</span>
+                  <ChevronDown className="size-3 ml-1 opacity-60 hidden sm:inline" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">

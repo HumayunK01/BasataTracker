@@ -1,5 +1,5 @@
 import type { Dispatch, DragEvent } from "react";
-import { colorForKey, withAlpha } from "@/lib/cat-colors";
+import { colorForKey } from "@/lib/cat-colors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
