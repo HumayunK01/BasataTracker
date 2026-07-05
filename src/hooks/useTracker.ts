@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getUserId } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutationRateLimit } from "@/hooks/useMutationRateLimit";
@@ -75,12 +75,6 @@ export function normalizeStepsIndependent(
     step2: field === "step2" ? value : (row.step2 ?? "Pending"),
     step3: field === "step3" ? value : (row.step3 ?? "Pending"),
   };
-}
-
-async function getUserId(): Promise<string> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  return user.id;
 }
 
 // ── Hook factories ──────────────────────────────────────────────────────────

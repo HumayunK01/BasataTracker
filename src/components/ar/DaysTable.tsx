@@ -20,6 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { pageNumbersArr as sharedPageNumbers } from "@/components/ar/tracker/tracker-helpers";
 import { Pagination } from "@/components/Pagination";
 import { formatTableDate, isWeekend, type DailyLog } from "@/types/log";
 import { useDeleteLog } from "@/hooks/useDailyLogs";
@@ -319,15 +320,7 @@ export function DaysTable({ logs, onEdit }: Props) {
     }
   };
 
-  const pageNumbers = useMemo(() => {
-    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
-    const pages: (number | "…")[] = [1];
-    if (page > 3) pages.push("…");
-    for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) pages.push(i);
-    if (page < totalPages - 2) pages.push("…");
-    pages.push(totalPages);
-    return pages;
-  }, [totalPages, page]);
+  const pageNumbers = useMemo(() => sharedPageNumbers(totalPages, page), [totalPages, page]);
 
   const sharedProps = { paginated, categories, search, copiedId, onEdit, onDelete: (l: DailyLog) => tDispatch({ type: "set_delete", log: l }), onCopy: copyLog };
 

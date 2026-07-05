@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import gsap from "gsap";
 import { colorForKey, withAlpha } from "@/lib/cat-colors";
 import type { Category } from "@/hooks/useCategories";
 import { Minus, Plus, X } from "lucide-react";
@@ -59,17 +58,19 @@ export function CounterCard({
     setBump((n) => n + 1);
   };
 
-  // GSAP pulse ring on count change
+  // Pulse ring animation via CSS transitions (replaces GSAP)
   useEffect(() => {
-    if (count === 0 || !cardRef.current) return;
-    const ring = cardRef.current.querySelector(".pulse-ring");
+    if (count === 0) return;
+    const ring = cardRef.current?.querySelector(".pulse-ring") as HTMLElement | null;
     if (!ring) return;
-    const tween = gsap.fromTo(
-      ring,
-      { scale: 1, opacity: 0.4 },
-      { scale: 2.5, opacity: 0, duration: 0.4, ease: "power2.out" },
-    );
-    return () => { tween.kill(); };
+    ring.style.transform = "scale(1)";
+    ring.style.opacity = "0.4";
+    ring.style.transition = "none";
+    requestAnimationFrame(() => {
+      ring.style.transition = "transform 0.4s ease-out, opacity 0.4s ease-out";
+      ring.style.transform = "scale(2.5)";
+      ring.style.opacity = "0";
+    });
   }, [count]);
 
   return (

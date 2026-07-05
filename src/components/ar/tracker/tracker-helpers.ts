@@ -14,13 +14,12 @@ export function stepClasses(status: FaxStepStatus | null): string {
 }
 
 export function stepMenuClasses(status: FaxStepStatus | null): string {
-  switch (status) {
-    case "Successfully Sent": return "text-emerald-700 dark:text-emerald-300";
-    case "Failed":            return "text-rose-700 dark:text-rose-300";
-    case "Waiting":           return "text-amber-600 dark:text-amber-300";
-    case "Pending":           return "text-muted-foreground";
-    default:                  return "text-muted-foreground/40";
-  }
+  const darkReplacement: Record<string, string> = {
+    "Successfully Sent": "dark:text-emerald-300",
+    "Failed": "dark:text-rose-300",
+    "Waiting": "dark:text-amber-300",
+  };
+  return stepClasses(status).replace("dark:text-white", darkReplacement[status ?? ""] ?? "").trim();
 }
 
 export function overallClasses(status: string): string {

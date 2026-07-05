@@ -4,8 +4,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useFaxTracker, useDeleteFax, useUpdateStep as useFaxUpdateStep, fetchAllFaxRows } from "@/hooks/useFaxTracker";
 import { useIndexableTracker, useDeleteIndexable, useUpdateStep as useIndexableUpdateStep, fetchAllIndexableRows } from "@/hooks/useIndexableTracker";
 import { useFaxAccounts, useDeleteFaxAccount, type FaxAccount } from "@/hooks/useFaxAccounts";
-import { downloadFaxPDF } from "@/lib/fax-utils";
-import { downloadIndexablePDF } from "@/lib/indexable-utils";
+import { downloadTrackerPDF, FAX_PDF_CONFIG, INDEXABLE_PDF_CONFIG } from "@/lib/tracker-utils";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { FaxEntryDialog } from "@/components/ar/fax/FaxEntryDialog";
 import { IndexableEntryDialog } from "@/components/ar/indexable/IndexableEntryDialog";
@@ -294,8 +293,8 @@ const FaxTrackerPage = () => {
       const prefix = isFax ? "fax-tracker" : "indexable-tracker";
       const filename = `${prefix}-${accountPart}${statusPart}${searchPart}-${datePart}.pdf`;
 
-      const download = isFax ? downloadFaxPDF : downloadIndexablePDF;
-      await download(exportRows, filename, {
+      const config = isFax ? FAX_PDF_CONFIG : INDEXABLE_PDF_CONFIG;
+      await downloadTrackerPDF(exportRows, config, filename, {
         userName,
         subtitle: subtitleBits.join("  ·  "),
         accountName,

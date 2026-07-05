@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# ponytail plugin checkout
+.opencode/
+
 # Environment variables
 .env
 .env.local

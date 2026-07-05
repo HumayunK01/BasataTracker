@@ -1,9 +1,5 @@
 import type { TrackerRow } from "@/hooks/useTracker";
 
-function stripHash(status: string): string {
-  return status.replace(/\s*#\s*$/, "").trim();
-}
-
 export interface TrackerPDFConfig {
   title: string;
   step3Label: string;
@@ -100,7 +96,7 @@ export async function downloadTrackerPDF(
         r.step1 ?? "—",
         r.step2 ?? "—",
         r.step3 ?? "—",
-        stripHash(r.overall_status),
+        r.overall_status.replace(/\s*#\s*$/, "").trim(),
         r.notes ?? "",
       ]),
       theme: "grid",
