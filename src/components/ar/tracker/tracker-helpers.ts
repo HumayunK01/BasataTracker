@@ -14,12 +14,13 @@ export function stepClasses(status: FaxStepStatus | null): string {
 }
 
 export function stepMenuClasses(status: FaxStepStatus | null): string {
-  const darkReplacement: Record<string, string> = {
+  // ponytail: only differs from stepClasses on dark variants; avoids a second switch
+  const dark: Record<string, string> = {
     "Successfully Sent": "dark:text-emerald-300",
     "Failed": "dark:text-rose-300",
     "Waiting": "dark:text-amber-300",
   };
-  return stepClasses(status).replace("dark:text-white", darkReplacement[status ?? ""] ?? "").trim();
+  return stepClasses(status).replace("dark:text-white", dark[status ?? ""] ?? "").trim();
 }
 
 export function overallClasses(status: string): string {
