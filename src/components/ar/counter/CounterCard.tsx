@@ -58,19 +58,19 @@ export function CounterCard({
     setBump((n) => n + 1);
   };
 
-  // Pulse ring animation via CSS transitions (replaces GSAP)
+  // Pulse ring via CSS transitions (replaces former GSAP fromTo)
   useEffect(() => {
     if (count === 0) return;
     const ring = cardRef.current?.querySelector(".pulse-ring") as HTMLElement | null;
     if (!ring) return;
+    ring.style.transition = "none";
     ring.style.transform = "scale(1)";
     ring.style.opacity = "0.4";
-    ring.style.transition = "none";
-    requestAnimationFrame(() => {
-      ring.style.transition = "transform 0.4s ease-out, opacity 0.4s ease-out";
-      ring.style.transform = "scale(2.5)";
-      ring.style.opacity = "0";
-    });
+    // ponytail: forced reflow so the browser registers the reset before the transition starts
+    void ring.offsetHeight;
+    ring.style.transition = "transform 0.4s ease-out, opacity 0.4s ease-out";
+    ring.style.transform = "scale(2.5)";
+    ring.style.opacity = "0";
   }, [count]);
 
   return (
