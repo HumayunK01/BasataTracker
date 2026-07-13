@@ -4,7 +4,7 @@ import { CalendarDays, LayoutDashboard, FileBarChart, Hash, Send } from "lucide-
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { title: "Dashboard", icon: LayoutDashboard, path: "/" },
+  { title: "Console", icon: LayoutDashboard, path: "/" },
   { title: "Counter", icon: Hash, path: "/counter" },
   { title: "Daily Log", icon: CalendarDays, path: "/log" },
   { title: "Tracker", icon: Send, path: "/tracker" },

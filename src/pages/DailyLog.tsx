@@ -17,6 +17,7 @@ import { downloadCSV, downloadJSON, downloadPDF } from "@/lib/log-utils";
 import { isoDate, totalForLog, type DailyLog } from "@/types/log";
 import { CalendarDays, Download, FileJson, FileText, FileType, Plus, ChevronDown } from "lucide-react";
 import { PageHeader } from "@/components/ar/PageHeader";
+import { FigHeader } from "@/components/ar/industrial";
 import Skeleton from "react-loading-skeleton";
 
 const DailyLogPage = () => {
@@ -89,7 +90,7 @@ const DailyLogPage = () => {
             <Button size="sm" className="h-10 sm:h-8" onClick={openNew}>
               <Plus className="size-5 sm:size-4 sm:mr-1" />
               <span className="hidden sm:inline">Log day</span>
-              <kbd className="ml-2 hidden sm:inline-flex text-xs border border-primary-foreground/30 rounded px-1">N</kbd>
+              <kbd className="ml-2 hidden sm:inline-flex text-xs border border-primary-foreground/30 rounded-none px-1">N</kbd>
             </Button>
           </>
         }
@@ -127,7 +128,10 @@ const DailyLogPage = () => {
                 </div>
               </div>
             ) : (
-              <DaysTable logs={logs} onEdit={openEdit} />
+              <>
+                <FigHeader code="FIG.01" title="Daily Log" />
+                <DaysTable logs={logs} onEdit={openEdit} />
+              </>
             )}
           </main>
 

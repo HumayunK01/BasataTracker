@@ -8,13 +8,13 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AuthGuard } from "@/components/ar/AuthGuard";
 import { AppLayout } from "@/components/ar/AppLayout";
 import { ThemeProvider } from "@/components/ar/ThemeProvider";
-import Index from "./pages/Index.tsx";
 import DailyLogPage from "./pages/DailyLog.tsx";
 import SettingsPage from "./pages/Settings.tsx";
 import ReportPage from "./pages/Report.tsx";
 import CounterPage from "./pages/Counter.tsx";
 import UsersPage from "./pages/Users.tsx";
 import FaxTrackerPage from "./pages/FaxTracker.tsx";
+import ConsolePage from "./pages/Console.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient({
@@ -48,7 +48,7 @@ const App = () => (
           <AuthGuard>
             <Routes>
               <Route element={<AppLayout><Outlet /></AppLayout>}>
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<ConsolePage />} />
                 <Route path="/log" element={<DailyLogPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/report" element={<ReportPage />} />

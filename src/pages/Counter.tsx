@@ -14,6 +14,7 @@ import { useCategories, type Category } from "@/hooks/useCategories";
 import { useUpsertLog, useDailyLogs } from "@/hooks/useDailyLogs";
 import { isoDate, totalForLog } from "@/types/log";
 import { PageHeader } from "@/components/ar/PageHeader";
+import { FigHeader } from "@/components/ar/industrial";
 import { RotateCcw, Save, CheckCircle2, Hash, Plus, Tag, ChevronRight } from "lucide-react";
 import { colorForKey } from "@/lib/cat-colors";
 import { supabase } from "@/integrations/supabase/client";
@@ -337,7 +338,10 @@ export default function CounterPage() {
       <main className="flex-1 overflow-y-auto">
         <div className="w-full px-3 sm:px-6 py-4 sm:py-6 flex flex-col gap-4">
           {/* Hero total today */}
-          <div className="relative overflow-hidden bg-card border border-border rounded-md p-4 sm:p-5">
+          <section className="relative bg-card border border-border p-4 sm:p-5">
+            <span className="pointer-events-none absolute top-0 left-0 size-2 border-t border-l border-primary/40" />
+            <span className="pointer-events-none absolute bottom-0 right-0 size-2 border-b border-r border-primary/40" />
+            <p className="font-mono text-2xs uppercase tracking-[0.2em] text-muted-foreground mb-3">FIG.01 · SESSION TOTAL</p>
               <div className="flex items-end justify-between gap-4 flex-wrap">
                 <div>
                   <div className="flex items-center gap-2">
@@ -398,11 +402,13 @@ export default function CounterPage() {
                   </div>
                 )}
               </div>
-            </div>
+            </section>
 
           {/* Counter cards grid */}
           {activeCategories.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 animate-fade-in">
+            <>
+              <FigHeader code="FIG.02" title="Active Counters" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 animate-fade-in">
               {activeCategories.map((cat, idx) => (
                 <CounterCard
                   key={cat.key}
@@ -414,8 +420,9 @@ export default function CounterPage() {
                   onRemove={() => removeCategory(cat.key)}
                   hotkeyIndex={idx < 9 ? idx + 1 : undefined} // Only first 9 cards get shortcuts 1-9
                 />
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
 
           {/* Add to counter + create new */}
