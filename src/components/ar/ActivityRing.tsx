@@ -44,7 +44,7 @@ export function ActivityRing({
           fill="transparent"
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          className="text-muted/30 dark:text-muted/15"
+          className="text-muted/25"
         />
         {/* Progress Circle */}
         <circle
@@ -57,6 +57,7 @@ export function ActivityRing({
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
+          className="motion-reduce:transition-none transition-[stroke-dashoffset] duration-700 ease-out"
         />
       </svg>
       {children && (

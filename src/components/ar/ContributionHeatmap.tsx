@@ -74,6 +74,16 @@ function buildGrid(logs: DailyLog[], year: number): { weeks: (Cell | null)[][]; 
   return { weeks: dataWeeks, monthTicks };
 }
 
+function cellLabel(cell: Cell): string {
+  const d = new Date(`${cell.iso}T12:00:00`).toLocaleDateString("en-US", {
+    weekday: "short", month: "short", day: "numeric",
+  });
+  if (cell.isFuture) return `${d}: upcoming`;
+  if (cell.isOffDay) return `${d}: off day`;
+  if (cell.isWeekend) return `${d}: weekend`;
+  return `${d}: ${cell.total} doc${cell.total === 1 ? "" : "s"}`;
+}
+
 function getIntensity(total: number, max: number): 0 | 1 | 2 | 3 | 4 {
   if (total === 0) return 0;
   const pct = total / Math.max(max, 1);
@@ -142,8 +152,11 @@ function HeatmapGrid({ weeks, monthTicks, maxTotal }: GridProps) {
               return (
                 <div
                   key={cell.iso}
+                  role="img"
+                  aria-label={cellLabel(cell)}
+                  title={cellLabel(cell)}
                   className={[
-                    "w-full aspect-square rounded-[2px] sm:rounded-sm cursor-default",
+                    "w-full aspect-square rounded-[2px] sm:rounded-sm cursor-default transition-transform duration-100 ease-out hover:scale-125 hover:relative hover:z-10 motion-reduce:hover:scale-100",
                     bgClass,
                     cell.isToday ? "ring-1 ring-foreground/40 ring-offset-1 ring-offset-card" : "",
                   ].join(" ")}
@@ -160,6 +173,7 @@ function HeatmapGrid({ weeks, monthTicks, maxTotal }: GridProps) {
 export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: Props) {
   const [currentYear] = useState(() => new Date().getFullYear());
 
+  // Build the full-year grid once; the mobile view slices from the same data.
   const [weeks365, monthTicks365, maxTotal] = useMemo(() => {
     const { weeks, monthTicks } = buildGrid(logs, currentYear);
     const allCells = weeks.flat().filter(Boolean) as Cell[];
@@ -167,18 +181,17 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
     return [weeks, monthTicks, maxTotal] as const;
   }, [logs, currentYear]);
 
-  // Compact view (below lg): last 26 weeks ending today
+  // Compact view (below lg): last 26 weeks ending today — sliced from weeks365
   const [weeksMobile, monthTicksMobile] = useMemo(() => {
-    const { weeks, monthTicks } = buildGrid(logs, currentYear);
     const todayIso = isoDate();
-    const todayCol = weeks.findIndex((week) => week.some((c) => c && c.iso === todayIso));
-    const end = todayCol >= 0 ? todayCol : weeks.length - 1;
+    const todayCol = weeks365.findIndex((week) => week.some((c) => c && c.iso === todayIso));
+    const end = todayCol >= 0 ? todayCol : weeks365.length - 1;
     const start = Math.max(0, end - 25); // 26 weeks
     return [
-      weeks.slice(start, end + 1),
-      monthTicks.reduce<{ label: string; col: number }[]>((acc, t) => { if (t.col >= start && t.col <= end) acc.push({ ...t, col: t.col - start }); return acc; }, []),
+      weeks365.slice(start, end + 1),
+      monthTicks365.reduce<{ label: string; col: number }[]>((acc, t) => { if (t.col >= start && t.col <= end) acc.push({ ...t, col: t.col - start }); return acc; }, []),
     ] as const;
-  }, [logs, currentYear]);
+  }, [weeks365, monthTicks365]);
 
   // Keep the most recent weeks in view when the compact grid overflows
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -252,6 +265,9 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
                 return (
                   <div
                     key={cell.iso}
+                    role="img"
+                    aria-label={cellLabel(cell)}
+                    title={cellLabel(cell)}
                     className={[
                       "size-4 sm:size-5 shrink-0 rounded-[3px]",
                       bgClass,

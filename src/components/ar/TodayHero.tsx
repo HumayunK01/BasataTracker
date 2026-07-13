@@ -92,6 +92,12 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
     setGoalOpen(false);
   };
 
+  const todayLabel = new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+
   const animatedTotal = useAnimatedNumber(stats.todayTotal);
   const goalPct = Math.min(100, Math.round((stats.todayTotal / goal) * 100));
 
@@ -108,7 +114,7 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
             : { Icon: TrendingDown, text: `${Math.round(delta)}%`, tone: "text-destructive" };
 
   const cards = [
-    <div key="goal" className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
+    <div key="goal" className="hover-lift h-full bg-card border border-border rounded-md p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
       <ActivityRing value={stats.todayTotal} target={goal} size={52} strokeWidth={5}>
         <span className="tabular-nums">{goalPct}%</span>
       </ActivityRing>
@@ -160,7 +166,7 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
         </Popover>
       </div>
     </div>,
-    <div key="streak" className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
+    <div key="streak" className="hover-lift h-full bg-card border border-border rounded-md p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
       <div className="size-9 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
         <Flame className="size-5 text-warning" />
       </div>
@@ -173,7 +179,7 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
         <p className="text-xs text-muted-foreground">Best: {stats.best} day{stats.best === 1 ? "" : "s"}</p>
       </div>
     </div>,
-    <div key="avg" className="bg-card border border-border rounded-md p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
+    <div key="avg" className="hover-lift h-full bg-card border border-border rounded-md p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
       <div className="size-9 rounded-lg bg-info/10 flex items-center justify-center shrink-0">
         <deltaDisplay.Icon className={cn("size-5", deltaDisplay.tone === "text-muted-foreground" ? "text-info" : deltaDisplay.tone)} />
       </div>
@@ -189,7 +195,10 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
 
   return (
     <section className="space-y-2 sm:space-y-3">
-      <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-heading">Today</h2>
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-heading">Today</h2>
+        <span className="text-xs text-muted-foreground truncate">{todayLabel}</span>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
         {cards.map((card, i) => (
           <motion.div

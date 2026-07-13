@@ -16,8 +16,22 @@ import Skeleton from "react-loading-skeleton";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { TodayHero } from "@/components/ar/TodayHero";
 import { useProfile } from "@/hooks/useProfile";
+import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 
 import { colorForKey } from "@/lib/cat-colors";
+
+function CategoryStatCard({ label, value, color }: { label: string; value: number; color: string }) {
+  const animated = useAnimatedNumber(value);
+  return (
+    <div className="hover-lift bg-card border border-border rounded-md p-3 sm:p-4 relative overflow-hidden">
+      <span className="absolute inset-y-0 left-0 w-1" style={{ backgroundColor: color }} />
+      <p className="text-xs text-muted-foreground uppercase tracking-wide truncate font-heading pl-1.5" title={label}>{label}</p>
+      <p className="text-xl sm:text-2xl font-bold mt-1 tabular-nums pl-1.5" style={{ color }}>
+        {animated}
+      </p>
+    </div>
+  );
+}
 
 const chicagoWeekdayFmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", weekday: "short" });
 
@@ -116,12 +130,7 @@ const Index = () => {
                   : (() => {
                       const ranked = [...stats.categoryTotals].sort((a, b) => b.value - a.value);
                       return ranked.map((c) => (
-                        <div key={c.key} className="bg-card border border-border rounded-md p-3 sm:p-4">
-                          <p className="text-xs text-muted-foreground uppercase tracking-wide truncate font-heading" title={c.label}>{c.label}</p>
-                          <p className="text-xl sm:text-2xl font-bold mt-1 tabular-nums" style={{ color: colorForKey(c.key) }}>
-                            {c.value}
-                          </p>
-                        </div>
+                        <CategoryStatCard key={c.key} label={c.label} value={c.value} color={colorForKey(c.key)} />
                       ));
                     })()
                 }

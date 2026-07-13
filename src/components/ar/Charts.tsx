@@ -1,4 +1,5 @@
 import { memo, useMemo } from "react";
+import { useReducedMotion } from "motion/react";
 
 // react-doctor-disable-next-line react-doctor/prefer-dynamic-import -- Charts is already lazy-loaded by its caller (Index.tsx); top-level recharts import here is intentional
 import {
@@ -31,10 +32,10 @@ interface Props {
 const T = {
   container: {
     backgroundColor: "hsl(var(--popover))",
-    border: "1px solid hsl(var(--border))",
+    border: "1px solid hsl(var(--popover-border))",
     borderRadius: "10px",
     padding: "10px 14px",
-    boxShadow: "0 4px 24px hsl(var(--foreground) / 0.25)",
+    boxShadow: "var(--shadow-popover)",
   },
   text: { fontSize: "13px", color: "hsl(var(--popover-foreground))" },
   axis: { stroke: "hsl(var(--muted-foreground))", fontSize: 12 } as const,
@@ -52,7 +53,7 @@ function ChartCard({ title, subtitle, height = "h-48 sm:h-56", children, classNa
   footer?: React.ReactNode;
 }) {
   return (
-    <div className={`cv-auto bg-card border border-border rounded-md p-4 sm:p-5 ${className}`}>
+    <div className={`hover-lift cv-auto bg-card border border-border rounded-md p-4 sm:p-5 ${className}`}>
       <div className="mb-3 sm:mb-4">
         <h3 className="text-sm font-semibold">{title}</h3>
         {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
@@ -86,6 +87,11 @@ function CategoryLegend({ categories }: { categories: Category[] }) {
 }
 
 export const Charts = memo(function Charts({ logs, categories }: Props) {
+  const reduced = useReducedMotion();
+  const animProps = reduced
+    ? { isAnimationActive: false }
+    : { isAnimationActive: true, animationDuration: 700, animationEasing: "ease-out" as const };
+
   const workingLogs = useMemo(() => logs.filter((l) => !l.is_off_day), [logs]);
   const sorted = useMemo(
     () => [...workingLogs].sort((a, b) => a.log_date.localeCompare(b.log_date)),
@@ -221,17 +227,17 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
               fill="url(#grad-daily)"
               dot={{ fill: "hsl(var(--background))", stroke: "hsl(var(--primary))", strokeWidth: 2, r: 3 }}
               activeDot={{ fill: "hsl(var(--primary))", stroke: "hsl(var(--background))", strokeWidth: 2, r: 5 }}
-              isAnimationActive={false}
+              {...animProps}
             />
           </AreaChart>
         </ChartCard>
 
-        <div className="bg-card border border-border rounded-md p-4 sm:p-5">
+        <div className="hover-lift bg-card border border-border rounded-md p-4 sm:p-5">
           <h3 className="text-sm font-semibold mb-3">Work mix{"—"}all time</h3>
           <div className="h-40 sm:h-44 xl:h-56">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={categoryTotals} dataKey="value" nameKey="name" innerRadius="40%" outerRadius="65%" paddingAngle={2} isAnimationActive={false}>
+                <Pie data={categoryTotals} dataKey="value" nameKey="name" innerRadius="40%" outerRadius="65%" paddingAngle={2} {...animProps}>
                   {categoryTotals.map((d) => <Cell key={d.key} fill={colorForKey(d.key)} />)}
                 </Pie>
                 <Tooltip contentStyle={T.container} labelStyle={T.text} itemStyle={T.text} />
@@ -257,7 +263,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
             <XAxis dataKey="week" {...T.axis} tickLine={false} axisLine={false} dy={8} />
             <YAxis {...T.axis} allowDecimals={false} width={32} tickLine={false} axisLine={false} />
             <Tooltip contentStyle={T.container} labelStyle={{ ...T.text, fontWeight: 600 }} itemStyle={T.text} cursor={{ fill: "hsl(var(--accent))", radius: 4 }} />
-            <Bar dataKey="total" name="Documents" radius={[6, 6, 0, 0]} maxBarSize={36} isAnimationActive={false}>
+            <Bar dataKey="total" name="Documents" radius={[6, 6, 0, 0]} maxBarSize={36} {...animProps}>
               {weeklyTotals.map((entry, i) => (
                 <Cell key={`week-${entry.week}`} fill={i === weeklyTotals.length - 1 ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.4)"} />
               ))}
@@ -271,7 +277,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
             <XAxis dataKey="day" {...T.axis} tickLine={false} axisLine={false} dy={8} />
             <YAxis {...T.axis} allowDecimals={false} width={32} tickLine={false} axisLine={false} />
             <Tooltip contentStyle={T.container} labelStyle={{ ...T.text, fontWeight: 600 }} itemStyle={T.text} cursor={{ fill: "hsl(var(--accent))" }} />
-            <Bar dataKey="avg" name="Avg docs" radius={[6, 6, 0, 0]} maxBarSize={44} isAnimationActive={false}>
+            <Bar dataKey="avg" name="Avg docs" radius={[6, 6, 0, 0]} maxBarSize={44} {...animProps}>
               {dowAvg.map((entry) => (
                 <Cell key={`dow-${entry.day}`} fill={entry.avg === Math.max(...dowAvg.map((d) => d.avg)) ? "hsl(var(--warning))" : "hsl(var(--info) / 0.55)"} />
               ))}
@@ -313,7 +319,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
                 strokeWidth={2}
                 dot={false}
                 activeDot={{ r: 4, strokeWidth: 0 }}
-                isAnimationActive={false}
+                {...animProps}
               />
             ))}
           </AreaChart>
@@ -323,14 +329,14 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
           <RadarChart data={radarData} outerRadius="65%">
             <PolarGrid stroke={T.grid} />
             <PolarAngleAxis dataKey="category" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
-            <Radar name="Avg docs" dataKey="avg" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} strokeWidth={2} />
+            <Radar name="Avg docs" dataKey="avg" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} strokeWidth={2} {...animProps} />
             <Tooltip contentStyle={T.container} labelStyle={T.text} itemStyle={T.text} />
           </RadarChart>
         </ChartCard>
       </div>
 
       {/* Row 4: Full-width stacked bar breakdown */}
-      <div id="breakdown" className="cv-auto bg-card border border-border rounded-md p-4 sm:p-5">
+      <div id="breakdown" className="hover-lift cv-auto bg-card border border-border rounded-md p-4 sm:p-5">
         <div className="mb-3 sm:mb-4">
           <h3 className="text-sm font-semibold">Document Breakdown</h3>
           <p className="text-xs text-muted-foreground mt-0.5">Last 14 working days by category</p>
@@ -350,7 +356,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
                   fill={colorForKey(c.key)}
                   // Bottom segment gets bottom rounding, all others flat
                   radius={i === 0 ? [0, 0, 3, 3] : [0, 0, 0, 0]}
-                  isAnimationActive={false}
+                  {...animProps}
                   shape={(props: unknown) => {
                     const { x, y, width, height, fill, index } = props as {
                       x: number; y: number; width: number; height: number; fill: string;

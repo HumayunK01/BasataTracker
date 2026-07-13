@@ -1,9 +1,10 @@
 import { useNavigate } from "react-router-dom";
+import { AnimatePresence, motion, useReducedMotion, type Easing } from "motion/react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Sun, Moon, Settings, LogOut } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
-import { useAuth } from "@/hooks/useAuth";
+import { AppFavicon } from "@/components/ar/AppFavicon";
 import { formatHeaderDate } from "@/types/log";
 
 interface PageHeaderProps {
@@ -13,14 +14,16 @@ interface PageHeaderProps {
   now?: Date;
 }
 
+const ease: Easing = [0.23, 1, 0.32, 1];
+
 export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
   const { theme, toggle } = useTheme();
-  const { signOut } = useAuth();
   const navigate = useNavigate();
+  const reduce = useReducedMotion();
   const date = now ?? new Date();
 
   return (
-    <header className="sticky top-0 z-10 border-b border-border bg-card shrink-0">
+    <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-md supports-[backdrop-filter]:bg-card/70 shrink-0">
       <div className="px-3 sm:px-4 py-2 flex items-center justify-between gap-2">
 
         {/* Left: hamburger + date/title */}
@@ -31,47 +34,58 @@ export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
               {formatHeaderDate(date)}
             </p>
             {(title || subtitle) && (
-              <div className="text-base md:text-sm font-medium truncate leading-tight mt-0.5 font-heading">
-                {title ?? subtitle}
-              </div>
+              title ? (
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={title}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={reduce ? { duration: 0 } : { duration: 0.15, ease }}
+                    className="text-base md:text-sm font-medium truncate leading-tight mt-0.5 font-heading"
+                  >
+                    {title}
+                  </motion.div>
+                </AnimatePresence>
+              ) : (
+                <div className="text-base md:text-sm font-medium truncate leading-tight mt-0.5 font-heading">
+                  {subtitle}
+                </div>
+              )
             )}
           </div>
         </div>
 
-        {/* Right: actions + settings + sign out + theme toggle (hidden on mobile, shown on desktop) */}
+        {/* Right: page actions + theme toggle */}
         <div className="flex items-center gap-1 shrink-0">
           {actions}
-          <span className="hidden md:inline text-sm font-medium text-foreground ml-3 mr-1 font-heading">
-            Phoenix Heart
-          </span>
+          <div className="hidden md:flex items-center gap-1.5 ml-3 mr-1 pl-3 border-l border-border">
+            <AppFavicon alt="Phoenix Heart" className="size-5 object-contain" />
+            <span className="text-sm font-semibold text-foreground font-heading">
+              Phoenix Heart
+            </span>
+          </div>
           <Button
             variant="ghost"
             size="icon"
-            className="hidden md:flex size-9 text-foreground hover:text-foreground/80"
-            onClick={() => navigate("/settings")}
-            title="Settings"
-          >
-            <Settings className="size-7" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="flex size-10 md:size-9 text-foreground hover:text-foreground/80"
+            className="size-10 md:size-9 text-foreground hover:text-foreground/80 hover:bg-accent press-scale"
             onClick={toggle}
             title={theme === "dark" ? "Light mode" : "Dark mode"}
           >
-            {theme === "dark"
-              ? <Sun className="size-7" />
-              : <Moon className="size-7" />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden md:flex size-9 text-foreground hover:text-destructive"
-            onClick={signOut}
-            title="Sign out"
-          >
-            <LogOut className="size-7" />
+            <span className="relative flex items-center justify-center size-6">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={theme}
+                  initial={{ rotate: -90, opacity: 0, scale: 0.6 }}
+                  animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                  exit={{ rotate: 90, opacity: 0, scale: 0.6 }}
+                  transition={reduce ? { duration: 0 } : { duration: 0.2, ease }}
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  {theme === "dark" ? <Sun className="size-6" /> : <Moon className="size-6" />}
+                </motion.span>
+              </AnimatePresence>
+            </span>
           </Button>
         </div>
       </div>
