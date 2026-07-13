@@ -5,6 +5,8 @@ interface Config {
   windowMs: number;
 }
 
+// ponytail: per-component-instance UX guard only — resets on unmount, not a shared limiter.
+// Server-side RLS/Supabase is the authoritative rate limit.
 export function useMutationRateLimit({ maxRequests, windowMs }: Config) {
   const timestamps = useRef<number[]>([]);
 
