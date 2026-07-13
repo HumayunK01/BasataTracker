@@ -12,7 +12,6 @@ A fast, focused productivity tracker for AR associates to log and analyze their 
 | **Daily Log** | Full history with search, pagination, inline edit/delete, and CSV/JSON export |
 | **Counter** | Tap-to-count interface for tracking docs live; auto-saves to today's log and syncs across devices |
 | **Date Range Report** | Filter by preset or custom range with summary stats and category breakdown |
-| **Daily Activity** | Team-wide view of who logged today (powered by a Supabase Edge Function) |
 | **Users** | Directory of all registered users with profile and sign-in details |
 | **Settings** | Manage custom categories (add, edit, reorder, delete), update profile, change password, delete account |
 | **Help & Cheat Sheet** | In-app guidance and a Phoenix Heart reference page |
@@ -85,11 +84,10 @@ the new-user profile trigger.
 
 ### 4. Deploy the Edge Functions
 
-The Daily Activity and Users pages call server-side functions:
+The Users page calls a server-side function:
 
 ```bash
 supabase functions deploy list-users
-supabase functions deploy smart-worker
 supabase secrets set SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
 ```
 
@@ -126,7 +124,7 @@ src/
 
 supabase/
 ├── migrations/        # Source of truth for the database schema
-└── functions/         # Deno Edge Functions (list-users, smart-worker)
+└── functions/         # Deno Edge Functions (list-users)
 ```
 
 ---
