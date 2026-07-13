@@ -83,6 +83,13 @@
     --skeleton-base: 215 25% 23%;
     --skeleton-highlight: 213 25% 32%;
 
+    /* Floating surfaces (tooltip/popover/menu). Dark: pure deep black shadow,
+       subtle dark border. No light/inset highlight — it read as a white glow. */
+    --popover-border: 215 25% 24%;
+    --shadow-popover:
+      0 10px 30px -8px rgb(0 0 0 / 0.7),
+      0 4px 10px -4px rgb(0 0 0 / 0.5);
+
     --sidebar-background: 215 28% 17%; /* #1F2937 gray-800 */
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 204 60% 73%;    /* #95C4E1 */
@@ -152,6 +159,12 @@
 
     --skeleton-base: 220 14% 91%;     /* gray-200 */
     --skeleton-highlight: 220 14% 97%;
+
+    /* Light: soft neutral drop shadow, no inset highlight */
+    --popover-border: 220 13% 88%;
+    --shadow-popover:
+      0 10px 28px -10px rgb(0 0 0 / 0.18),
+      0 3px 8px -4px rgb(0 0 0 / 0.10);
 
     --sidebar-background: 0 0% 100%;  /* #FFFFFF */
     --sidebar-foreground: 0 0% 0%;
@@ -264,6 +277,13 @@
 }
 
 @layer components {
+  /* Elevated floating surface — tooltips, popovers, menus, selects.
+     Theme-aware shadow reads correctly on dark (soft depth, no white glow). */
+  .popover-surface {
+    border-color: hsl(var(--popover-border));
+    box-shadow: var(--shadow-popover);
+  }
+
   .status-pill {
     @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
   }

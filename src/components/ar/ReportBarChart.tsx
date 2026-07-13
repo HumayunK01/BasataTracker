@@ -8,7 +8,7 @@ const T = {
   axis: { tick: { fontSize: 11, fill: "hsl(var(--muted-foreground))" } },
   // Tooltip is HTML, not SVG — text color must use `color`, not `fill`
   text: { fontSize: 12, color: "hsl(var(--popover-foreground))" },
-  container: { background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 },
+  container: { background: "hsl(var(--popover))", border: "1px solid hsl(var(--popover-border))", borderRadius: 8, fontSize: 12, boxShadow: "var(--shadow-popover)" },
 };
 
 export default function ReportBarChart({ data }: { data: ChartEntry[] }) {

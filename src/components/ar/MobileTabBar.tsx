@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import { motion, useReducedMotion, type Easing } from "motion/react";
 import { CalendarDays, LayoutDashboard, FileBarChart, Hash, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -10,9 +11,12 @@ const tabs = [
   { title: "Report", icon: FileBarChart, path: "/report" },
 ];
 
+const ease: Easing = [0.23, 1, 0.32, 1];
+
 export function MobileTabBar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const reduce = useReducedMotion();
 
   return (
     <nav
@@ -29,11 +33,18 @@ export function MobileTabBar() {
               onClick={() => navigate(tab.path)}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-h-12 touch-manipulation transition-colors",
+                "relative flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-h-12 touch-manipulation transition-colors press-scale",
                 active ? "text-primary" : "text-muted-foreground",
               )}
             >
-              <tab.icon className={cn("size-4", active && "drop-shadow-sm")} strokeWidth={active ? 2.5 : 2} />
+              {active && (
+                <motion.span
+                  layoutId="tab-active"
+                  className="absolute inset-x-5 -bottom-px h-0.5 rounded-full bg-primary"
+                  transition={reduce ? { duration: 0 } : { duration: 0.25, ease }}
+                />
+              )}
+              <tab.icon className={cn("size-4 transition-transform", active && "scale-110")} strokeWidth={active ? 2.5 : 2} />
               <span className={cn("text-xs leading-none", active ? "font-semibold" : "font-medium")}>
                 {tab.title}
               </span>

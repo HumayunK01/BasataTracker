@@ -1,7 +1,10 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import { motion, useReducedMotion, type Easing } from "motion/react";
 import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, ChevronDown, Settings, Sun, Moon, LogOut, Users, BookOpen, Tags, ExternalLink, Send } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
+import { useProfile } from "@/hooks/useProfile";
+import { useUnresolvedCounts } from "@/hooks/useTrackerCounts";
 import {
   Sidebar,
   SidebarContent,
@@ -9,12 +12,18 @@ import {
   SidebarHeader,
   SidebarRail,
   SidebarSeparator,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarMenuBadge,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { AppLogo } from "@/components/ar/AppLogo";
 import { AppFavicon } from "@/components/ar/AppFavicon";
 import { cn } from "@/lib/utils";
+
+const ease: Easing = [0.23, 1, 0.32, 1];
 
 const groups = [
   {
@@ -54,15 +63,26 @@ export function AppSidebar() {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { theme, toggle } = useTheme();
+  const { data: profile } = useProfile();
+  const { data: counts } = useUnresolvedCounts();
+  const reduce = useReducedMotion();
 
   const go = (path: string) => {
     navigate(path);
     if (isMobile) setOpenMobile(false);
   };
 
+  const email = user?.email ?? "";
+  const initials = (() => {
+    const f = profile?.first_name?.[0] ?? "";
+    const l = profile?.last_name?.[0] ?? "";
+    return ((f + l) || email[0] || "?").toUpperCase();
+  })();
+
+  const trackerBadge = (counts?.total ?? 0) > 0 ? counts!.total : null;
+
   return (
     <Sidebar collapsible="icon">
-
       <SidebarHeader className="flex flex-row items-center justify-between px-4 py-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-3">
         <AppLogo className="h-12 object-contain group-data-[collapsible=icon]:hidden" />
         <AppFavicon
@@ -82,115 +102,111 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="py-2">
-        {isMobile && user?.email && (
-          <div className="px-4 py-2 border-b border-border mb-1">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5 font-heading">Signed in as</p>
-            <p className="text-base font-medium truncate">{user.email}</p>
-          </div>
-        )}
-
         {groups.map((group) => (
           <div key={group.label} className="mb-1 group-data-[collapsible=icon]:mb-0">
-            {/* Group label */}
             <div className="flex items-center gap-1 px-3 py-1.5 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:h-0 group-data-[collapsible=icon]:py-0 group-data-[collapsible=icon]:overflow-hidden">
-              <ChevronDown className="size-3.5 text-foreground shrink-0" />
-              <span className="text-sm md:text-xs font-bold text-foreground uppercase tracking-wide font-heading">{group.label}</span>
+              <ChevronDown className="size-4 text-foreground shrink-0" />
+              <span className="text-sm font-bold text-foreground uppercase tracking-wide font-heading">{group.label}</span>
             </div>
 
-            {/* Nav items */}
-            <ul className="space-y-0.5 px-2 group-data-[collapsible=icon]:px-1">
+            <SidebarMenu className="px-2 group-data-[collapsible=icon]:px-1 space-y-0.5">
               {group.items.map((item) => {
                 const active = location.pathname === item.path;
+                const badge = item.path === "/tracker" ? trackerBadge : null;
                 return (
-                  <li key={item.path}>
-                    <button
+                  <SidebarMenuItem key={item.path} className="relative">
+                    {active && (
+                      <motion.div
+                        layoutId="sidebar-active"
+                        className="absolute inset-0 rounded-md bg-sidebar-accent"
+                        transition={reduce ? { duration: 0 } : { duration: 0.25, ease }}
+                      />
+                    )}
+                    <SidebarMenuButton
+                      isActive={active}
+                      tooltip={item.title}
                       onClick={() => go(item.path)}
-                      title={item.title}
                       className={cn(
-                        "w-full flex items-center gap-2 px-2.5 py-2.5 md:py-1.5 rounded-md text-base transition-colors",
-                        "group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-2 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:mx-auto",
-                        active
-                          ? "bg-sidebar-accent font-medium"
-                          : "text-foreground hover:bg-sidebar-accent/60",
+                        "relative z-10 press-scale h-9 text-sm font-heading [&>svg]:size-4",
+                        "group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:[&>svg]:size-5",
+                        "data-[active=true]:bg-transparent data-[active=true]:text-sidebar-primary",
                       )}
-                      style={active ? { color: "hsl(var(--sidebar-primary))" } : undefined}
                     >
-                      <item.icon className="size-4 shrink-0" />
-                      <span className="group-data-[collapsible=icon]:hidden truncate font-heading">{item.title}</span>
-                    </button>
-                  </li>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </SidebarMenuButton>
+                    {badge !== null && <SidebarMenuBadge>{badge}</SidebarMenuBadge>}
+                  </SidebarMenuItem>
                 );
               })}
-            </ul>
+            </SidebarMenu>
           </div>
         ))}
 
         <div className="mb-1 group-data-[collapsible=icon]:mb-0">
           <div className="flex items-center gap-1 px-3 py-1.5 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:h-0 group-data-[collapsible=icon]:py-0 group-data-[collapsible=icon]:overflow-hidden">
-            <ChevronDown className="size-3.5 text-foreground shrink-0" />
-            <span className="text-sm md:text-xs font-bold text-foreground uppercase tracking-wide font-heading">Resources</span>
+            <ChevronDown className="size-4 text-foreground shrink-0" />
+            <span className="text-sm font-bold text-foreground uppercase tracking-wide font-heading">Resources</span>
           </div>
 
-          <ul className="space-y-0.5 px-2 group-data-[collapsible=icon]:px-1">
+          <SidebarMenu className="px-2 group-data-[collapsible=icon]:px-1 space-y-0.5">
             {externalLinks.map((link) => (
-              <li key={link.href}>
-                <a
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={link.title}
-                  className={cn(
-                    "w-full flex items-center gap-2 px-2.5 py-2.5 md:py-1.5 rounded-md text-base transition-colors",
-                    "group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-2 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:mx-auto",
-                    "text-foreground hover:bg-sidebar-accent/60",
-                  )}
+              <SidebarMenuItem key={link.href}>
+                <SidebarMenuButton
+                  asChild
+                  tooltip={link.title}
+                  className="press-scale h-9 text-sm [&>svg]:size-4 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:[&>svg]:size-5"
                 >
-                  <link.icon className="size-4 shrink-0" />
-                  <span className="group-data-[collapsible=icon]:hidden truncate font-heading flex-1">{link.title}</span>
-                  <ExternalLink className="size-3.5 shrink-0 text-muted-foreground group-data-[collapsible=icon]:hidden" />
-                </a>
-              </li>
+                  <a href={link.href} target="_blank" rel="noopener noreferrer">
+                    <link.icon />
+                    <span className="flex-1 truncate font-heading">{link.title}</span>
+                    <ExternalLink className="size-4 shrink-0 text-muted-foreground group-data-[collapsible=icon]:hidden" />
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             ))}
-          </ul>
+          </SidebarMenu>
         </div>
       </SidebarContent>
 
       <SidebarFooter>
         <SidebarSeparator />
-        {isMobile && (
-          <ul className="space-y-0.5 px-2 py-1">
-            <li>
-              <button
-                onClick={() => { navigate("/settings"); setOpenMobile(false); }}
-                className="w-full flex items-center gap-2 px-2.5 py-2.5 rounded-md text-base transition-colors text-foreground hover:bg-sidebar-accent/60"
-              >
-                <Settings className="size-4 shrink-0" />
-                <span className="font-heading">Settings</span>
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={toggle}
-                className="w-full flex items-center gap-2 px-2.5 py-2.5 rounded-md text-base transition-colors text-foreground hover:bg-sidebar-accent/60"
-              >
-                {theme === "dark"
-                  ? <Sun className="size-4 shrink-0" />
-                  : <Moon className="size-4 shrink-0" />}
-                <span className="font-heading">{theme === "dark" ? "Light mode" : "Dark mode"}</span>
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={signOut}
-                className="w-full flex items-center gap-2 px-2.5 py-2.5 rounded-md text-base transition-colors text-destructive hover:bg-destructive/10"
-              >
-                <LogOut className="size-4 shrink-0" />
-                <span className="font-heading">Sign out</span>
-              </button>
-            </li>
-          </ul>
-        )}
-        <div className="text-center group-data-[collapsible=icon]:hidden pb-1">
+        <div className="flex items-center gap-2 px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+          <div className="grid size-8 place-items-center rounded-full bg-primary/15 text-primary text-xs font-semibold shrink-0">
+            {initials}
+          </div>
+          <p className="text-sm truncate font-medium group-data-[collapsible=icon]:hidden">{email}</p>
+        </div>
+        <div className="flex items-center gap-1 px-2 pb-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:px-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="flex-1 size-9 text-foreground hover:text-foreground/80 press-scale border border-sidebar-border group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
+            onClick={() => { navigate("/settings"); setOpenMobile(false); }}
+            title="Settings"
+          >
+            <Settings className="size-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="flex-1 size-9 text-foreground hover:text-foreground/80 press-scale border border-sidebar-border group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
+            onClick={toggle}
+            title={theme === "dark" ? "Light mode" : "Dark mode"}
+          >
+            {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="flex-1 size-9 text-foreground hover:text-destructive press-scale border border-sidebar-border group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
+            onClick={signOut}
+            title="Sign out"
+          >
+            <LogOut className="size-5" />
+          </Button>
+        </div>
+        <div className="text-center pb-1 group-data-[collapsible=icon]:hidden">
           <p className="text-xs text-muted-foreground/50">Version 1.2.0</p>
         </div>
       </SidebarFooter>
