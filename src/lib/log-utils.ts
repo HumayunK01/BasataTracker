@@ -3,6 +3,14 @@ import { type DailyLog, totalForLog, isoDate, isWeekend } from "@/types/log";
 
 const DAY_MS = 86_400_000;
 
+// ponytail: business is Chicago-based; one source of truth instead of 3 inline copies.
+const APP_TZ = "America/Chicago";
+
+// Interpret the date at UTC noon, then render in APP_TZ — correct weekday for any viewer tz.
+function weekday(iso: string): string {
+  return new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-US", { timeZone: APP_TZ, weekday: "long" });
+}
+
 /**
  * Logging streaks in working days. A day with docs logged extends the streak;
  * weekends, off-days, and a not-yet-logged today are neutral (skipped, not
@@ -58,10 +66,7 @@ export function toCSV(logs: DailyLog[], categories: Category[]): string {
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const rows = logs.map((l) => {
-    const dayName = new Date(`${l.log_date}T12:00:00`).toLocaleDateString("en-US", {
-      timeZone: "America/Chicago",
-      weekday: "long",
-    });
+    const dayName = weekday(l.log_date);
     return [
       l.log_date,
       dayName,
@@ -93,10 +98,7 @@ export function toJSON(logs: DailyLog[], categories: Category[]): string {
     categories: categories.map((c) => ({ key: c.key, label: c.label, short: c.short })),
     logs: logs.map((l) => ({
       date: l.log_date,
-      day: new Date(`${l.log_date}T12:00:00`).toLocaleDateString("en-US", {
-        timeZone: "America/Chicago",
-        weekday: "long",
-      }),
+      day: weekday(l.log_date),
       counts: Object.fromEntries(
         categories.map((c) => [c.key, (l.counts ?? {})[c.key] ?? 0])
       ),
@@ -214,8 +216,7 @@ export async function downloadPDF(
   y += 16;
 
   // ── Table ──
-  const dayName = (iso: string) =>
-    new Date(`${iso}T12:00:00`).toLocaleDateString("en-US", { timeZone: "America/Chicago", weekday: "long" });
+  const dayName = (iso: string) => weekday(iso);
 
   const body = sorted.map((l) => {
     if (l.is_off_day) {

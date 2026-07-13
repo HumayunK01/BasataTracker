@@ -73,9 +73,9 @@ export function useDeleteLog() {
     mutationFn: async (id: string) => {
       if (!checkLimit()) throw new Error("Too many deletes. Please wait a moment.");
       const user_id = await getUserId();
-      await logAuditEvent("log_deleted", { log_id: id });
       const { error } = await supabase.from("daily_logs").delete().eq("id", id).eq("user_id", user_id);
       if (error) throw error;
+      await logAuditEvent("log_deleted", { log_id: id });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["daily_logs"] });

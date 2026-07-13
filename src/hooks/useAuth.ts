@@ -14,6 +14,7 @@ const WARN_BEFORE_MS = 15 * 60 * 1000; // warn 15 minutes before the cap trips
 
 // Several components mount useAuth; these guard against duplicate
 // signOut calls + toasts when the cap trips or the warning fires.
+// ponytail: intentional module-level singletons for cross-instance dedup — don't move into state.
 let forcedLogoutInFlight = false;
 let capWarningShown = false;
 
