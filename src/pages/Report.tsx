@@ -16,6 +16,7 @@ import { useIndexableResolvedByDay, INDEXABLE_CATEGORY_KEY, INDEXABLE_CATEGORY_L
 import { useProfile } from "@/hooks/useProfile";
 import { isoDate, formatTableDate, isWeekend, totalForLog } from "@/types/log";
 import { PageHeader } from "@/components/ar/PageHeader";
+import { FigHeader } from "@/components/ar/industrial";
 import { downloadCSV, downloadJSON, downloadPDF, formatUSDate } from "@/lib/log-utils";
 import { Download, FileJson, FileText, FileType, ChevronDown, CalendarRange } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
@@ -303,7 +304,7 @@ const ReportPage = () => {
               {indicator && (
                 <span
                   aria-hidden
-                  className="absolute top-1 bottom-1 rounded-md bg-primary shadow-sm transition-[left,width] duration-300 ease-out motion-reduce:transition-none"
+                  className="absolute top-1 bottom-1 rounded-none bg-primary shadow-none transition-[left,width] duration-300 ease-out motion-reduce:transition-none"
                   style={{ left: indicator.left, width: indicator.width }}
                 />
               )}
@@ -316,8 +317,8 @@ const ReportPage = () => {
                     onClick={() => applyPreset(p.id)}
                     aria-pressed={active}
                     className={[
-                      "relative z-10 snap-start shrink-0 rounded-md px-3 py-2.5 sm:py-1.5 text-sm sm:text-xs font-medium whitespace-nowrap",
-                      "transition-[color,background-color,transform] duration-300 active:scale-[0.97]",
+                      "relative z-10 snap-start shrink-0 rounded-none px-3 py-2.5 sm:py-1.5 text-sm sm:text-xs font-medium whitespace-nowrap",
+                      "transition-[color,background-color,opacity] duration-300 active:opacity-70",
                       active
                         ? "text-primary-foreground"
                         : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
@@ -330,7 +331,7 @@ const ReportPage = () => {
               {activePreset === "" && (
                 <span
                   ref={registerSegment("custom")}
-                  className="relative z-10 snap-start shrink-0 rounded-md px-3 py-2.5 sm:py-1.5 text-sm sm:text-xs font-medium whitespace-nowrap text-primary-foreground select-none animate-fade-in"
+                  className="relative z-10 snap-start shrink-0 rounded-none px-3 py-2.5 sm:py-1.5 text-sm sm:text-xs font-medium whitespace-nowrap text-primary-foreground select-none animate-fade-in"
                 >
                   Custom
                 </span>
@@ -340,7 +341,7 @@ const ReportPage = () => {
           <div className="grid grid-cols-1 xs:grid-cols-2 lg:flex gap-2 sm:gap-3 max-w-full grow lg:grow-0">
               <div
                 className={[
-                  "flex items-center h-10 rounded-md border bg-background/50 overflow-hidden cursor-pointer transition-colors",
+                  "flex items-center h-10 rounded-none border bg-background/50 overflow-hidden cursor-pointer transition-colors",
                   rangeDays === 0
                     ? "border-destructive/70 focus-within:border-destructive"
                     : "border-input hover:border-primary/40 focus-within:border-primary",
@@ -364,7 +365,7 @@ const ReportPage = () => {
               </div>
               <div
                 className={[
-                  "flex items-center h-10 rounded-md border bg-background/50 overflow-hidden cursor-pointer transition-colors",
+                  "flex items-center h-10 rounded-none border bg-background/50 overflow-hidden cursor-pointer transition-colors",
                   rangeDays === 0
                     ? "border-destructive/70 focus-within:border-destructive"
                     : "border-input hover:border-primary/40 focus-within:border-primary",
@@ -412,6 +413,7 @@ const ReportPage = () => {
           </div>
         ) : (
           <>
+            <FigHeader code="FIG.01" title="Summary" />
             <ReportStatsGrid
               totalDocs={totalDocs}
               filteredCount={filtered.length}
@@ -421,7 +423,9 @@ const ReportPage = () => {
               avgPerDay={avgPerDay}
               bestDay={bestDay}
             />
+            <FigHeader code="FIG.02" title="Category Breakdown" />
             <CategoryBreakdown breakdown={categoryBreakdown} totalDocs={totalDocs} chartData={chartData} />
+            <FigHeader code="FIG.03" title="Day Records" />
             <ReportDayTable
               filtered={filtered}
               categories={categories}

@@ -1,6 +1,7 @@
 import { useReducer } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/ar/PageHeader";
+import { FigHeader } from "@/components/ar/industrial";
 import { supabase } from "@/integrations/supabase/client";
 import { logAuditEvent } from "@/hooks/useAuditLog";
 import {
@@ -225,6 +226,7 @@ export default function SettingsPage() {
 
       <main className="flex-1 overflow-y-auto">
         <div className="w-full px-3 sm:px-6 py-4 sm:py-6 space-y-4">
+          <FigHeader code="FIG.01" title="Account" />
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             <AccountCard email={user?.email} createdAt={user?.created_at} />
             <ProfilePasswordCard
@@ -239,6 +241,7 @@ export default function SettingsPage() {
             <AboutCard categoriesCount={categories.length} logsCount={logs.length} />
           </div>
 
+          <FigHeader code="FIG.02" title="Categories" />
           <CategorySection
             categories={categories}
             isLoading={isLoading}
@@ -258,6 +261,7 @@ export default function SettingsPage() {
             onDrop={handleDrop}
           />
 
+          <FigHeader code="FIG.03" title="Danger Zone" />
           <DangerZone delState={delState} delDispatch={delDispatch} onDeleteAccount={handleDeleteAccount} />
         </div>
       </main>

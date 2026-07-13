@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, useReducedMotion, type Easing } from "motion/react";
-import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, ChevronDown, Settings, Sun, Moon, LogOut, Users, BookOpen, Tags, ExternalLink, Send } from "lucide-react";
+import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, Settings, Sun, Moon, LogOut, Users, BookOpen, Tags, ExternalLink, Send } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/hooks/useProfile";
@@ -26,22 +26,22 @@ import { cn } from "@/lib/utils";
 const ease: Easing = [0.23, 1, 0.32, 1];
 
 const groups = [
-  {
-    label: "Dashboards",
-    items: [
-      { title: "Dashboard", icon: LayoutDashboard, path: "/" },
-      { title: "Report", icon: FileBarChart, path: "/report" },
-      { title: "Users", icon: Users, path: "/users" },
-    ],
-  },
-  {
-    label: "Documents",
-    items: [
-      { title: "Counter", icon: Hash, path: "/counter" },
-      { title: "Daily Log", icon: CalendarDays, path: "/log" },
-      { title: "Tracker", icon: Send, path: "/tracker" },
-    ],
-  },
+      {
+        label: "Dashboards",
+        items: [
+          { title: "Console", icon: LayoutDashboard, path: "/" },
+          { title: "Report", icon: FileBarChart, path: "/report" },
+          { title: "Users", icon: Users, path: "/users" },
+        ],
+      },
+      {
+        label: "Documents",
+        items: [
+          { title: "Counter", icon: Hash, path: "/counter" },
+          { title: "Daily Log", icon: CalendarDays, path: "/log" },
+          { title: "Tracker", icon: Send, path: "/tracker" },
+        ],
+      },
 ];
 
 const externalLinks = [
@@ -93,7 +93,7 @@ export function AppSidebar() {
           <Button
             variant="ghost"
             size="icon"
-            className="size-10 text-muted-foreground shrink-0"
+            className="size-10 text-muted-foreground shrink-0 rounded-none"
             onClick={() => setOpenMobile(false)}
           >
             <X className="size-5" />
@@ -103,10 +103,10 @@ export function AppSidebar() {
 
       <SidebarContent className="py-2">
         {groups.map((group) => (
-          <div key={group.label} className="mb-1 group-data-[collapsible=icon]:mb-0">
-            <div className="flex items-center gap-1 px-3 py-1.5 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:h-0 group-data-[collapsible=icon]:py-0 group-data-[collapsible=icon]:overflow-hidden">
-              <ChevronDown className="size-4 text-foreground shrink-0" />
-              <span className="text-sm font-bold text-foreground uppercase tracking-wide font-heading">{group.label}</span>
+          <div key={group.label} className="mb-2 group-data-[collapsible=icon]:mb-0">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:h-0 group-data-[collapsible=icon]:py-0 group-data-[collapsible=icon]:overflow-hidden">
+              <span className="size-1.5 bg-primary shrink-0" />
+              <span className="font-mono text-2xs font-medium text-muted-foreground uppercase tracking-[0.2em]">{group.label}</span>
             </div>
 
             <SidebarMenu className="px-2 group-data-[collapsible=icon]:px-1 space-y-0.5">
@@ -118,7 +118,7 @@ export function AppSidebar() {
                     {active && (
                       <motion.div
                         layoutId="sidebar-active"
-                        className="absolute inset-0 rounded-md bg-sidebar-accent"
+                        className="absolute left-0 top-1 bottom-1 w-0.5 bg-primary"
                         transition={reduce ? { duration: 0 } : { duration: 0.25, ease }}
                       />
                     )}
@@ -127,15 +127,17 @@ export function AppSidebar() {
                       tooltip={item.title}
                       onClick={() => go(item.path)}
                       className={cn(
-                        "relative z-10 press-scale h-9 text-sm font-heading [&>svg]:size-4",
+                        "relative z-10 rounded-none border border-transparent h-9 text-xs font-mono uppercase tracking-wide [&>svg]:size-4",
+                        "data-[active=true]:!border-primary/40 data-[active=true]:!bg-primary/10 data-[active=true]:!text-primary",
                         "group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:[&>svg]:size-5",
-                        "data-[active=true]:bg-transparent data-[active=true]:text-sidebar-primary",
                       )}
                     >
                       <item.icon />
                       <span>{item.title}</span>
                     </SidebarMenuButton>
-                    {badge !== null && <SidebarMenuBadge>{badge}</SidebarMenuBadge>}
+                    {badge !== null && (
+                      <SidebarMenuBadge className="rounded-none bg-primary text-primary-foreground font-mono">{badge}</SidebarMenuBadge>
+                    )}
                   </SidebarMenuItem>
                 );
               })}
@@ -143,10 +145,10 @@ export function AppSidebar() {
           </div>
         ))}
 
-        <div className="mb-1 group-data-[collapsible=icon]:mb-0">
-          <div className="flex items-center gap-1 px-3 py-1.5 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:h-0 group-data-[collapsible=icon]:py-0 group-data-[collapsible=icon]:overflow-hidden">
-            <ChevronDown className="size-4 text-foreground shrink-0" />
-            <span className="text-sm font-bold text-foreground uppercase tracking-wide font-heading">Resources</span>
+        <div className="mb-2 group-data-[collapsible=icon]:mb-0">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:h-0 group-data-[collapsible=icon]:py-0 group-data-[collapsible=icon]:overflow-hidden">
+            <span className="size-1.5 bg-primary shrink-0" />
+            <span className="font-mono text-2xs font-medium text-muted-foreground uppercase tracking-[0.2em]">Resources</span>
           </div>
 
           <SidebarMenu className="px-2 group-data-[collapsible=icon]:px-1 space-y-0.5">
@@ -155,11 +157,11 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   asChild
                   tooltip={link.title}
-                  className="press-scale h-9 text-sm [&>svg]:size-4 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:[&>svg]:size-5"
+                  className="relative z-10 rounded-none border border-transparent h-9 text-xs font-mono uppercase tracking-wide [&>svg]:size-4 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:[&>svg]:size-5"
                 >
                   <a href={link.href} target="_blank" rel="noopener noreferrer">
                     <link.icon />
-                    <span className="flex-1 truncate font-heading">{link.title}</span>
+                    <span className="flex-1 truncate">{link.title}</span>
                     <ExternalLink className="size-4 shrink-0 text-muted-foreground group-data-[collapsible=icon]:hidden" />
                   </a>
                 </SidebarMenuButton>
@@ -172,16 +174,16 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarSeparator />
         <div className="flex items-center gap-2 px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <div className="grid size-8 place-items-center rounded-full bg-primary/15 text-primary text-xs font-semibold shrink-0">
+          <div className="grid size-8 place-items-center rounded-none bg-primary/15 text-primary text-xs font-mono font-semibold shrink-0">
             {initials}
           </div>
-          <p className="text-sm truncate font-medium group-data-[collapsible=icon]:hidden">{email}</p>
+          <p className="text-xs font-mono truncate text-muted-foreground group-data-[collapsible=icon]:hidden">{email}</p>
         </div>
         <div className="flex items-center gap-1 px-2 pb-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:px-0">
           <Button
             variant="ghost"
             size="icon"
-            className="flex-1 size-9 text-foreground hover:text-foreground/80 press-scale border border-sidebar-border group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
+            className="flex-1 size-9 text-foreground hover:text-foreground/80 rounded-none border border-sidebar-border group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
             onClick={() => { navigate("/settings"); setOpenMobile(false); }}
             title="Settings"
           >
@@ -190,7 +192,7 @@ export function AppSidebar() {
           <Button
             variant="ghost"
             size="icon"
-            className="flex-1 size-9 text-foreground hover:text-foreground/80 press-scale border border-sidebar-border group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
+            className="flex-1 size-9 text-foreground hover:text-foreground/80 rounded-none border border-sidebar-border group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
             onClick={toggle}
             title={theme === "dark" ? "Light mode" : "Dark mode"}
           >
@@ -199,7 +201,7 @@ export function AppSidebar() {
           <Button
             variant="ghost"
             size="icon"
-            className="flex-1 size-9 text-foreground hover:text-destructive press-scale border border-sidebar-border group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
+            className="flex-1 size-9 text-foreground hover:text-destructive rounded-none border border-sidebar-border group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
             onClick={signOut}
             title="Sign out"
           >
@@ -207,7 +209,7 @@ export function AppSidebar() {
           </Button>
         </div>
         <div className="text-center pb-1 group-data-[collapsible=icon]:hidden">
-          <p className="text-xs text-muted-foreground/50">Version 1.2.0</p>
+          <p className="font-mono text-2xs text-muted-foreground/50 tracking-[0.2em]">v1.2.0</p>
         </div>
       </SidebarFooter>
 

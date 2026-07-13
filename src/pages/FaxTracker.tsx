@@ -6,6 +6,7 @@ import { useIndexableTracker, useDeleteIndexable, useUpdateStep as useIndexableU
 import { useFaxAccounts, useDeleteFaxAccount, type FaxAccount } from "@/hooks/useFaxAccounts";
 import { downloadTrackerPDF, FAX_PDF_CONFIG, INDEXABLE_PDF_CONFIG } from "@/lib/tracker-utils";
 import { PageHeader } from "@/components/ar/PageHeader";
+import { FigHeader } from "@/components/ar/industrial";
 import { FaxEntryDialog } from "@/components/ar/fax/FaxEntryDialog";
 import { IndexableEntryDialog } from "@/components/ar/indexable/IndexableEntryDialog";
 import { NewAccountDialog } from "@/components/ar/fax/NewAccountDialog";
@@ -394,6 +395,7 @@ const FaxTrackerPage = () => {
       <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
         <div key={mode} className="w-full space-y-4 animate-fade-in">
 
+          <FigHeader code="FIG.01" title="Status" />
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
             <StatCard label="Resolved" value={stats.resolved} tone="emerald" loading={isLoading} />
             <StatCard label="All Steps Failed" value={stats.allFailed} tone="rose" loading={isLoading} />
@@ -528,7 +530,7 @@ const FaxTrackerPage = () => {
                   }}
                   classNames={{
                     cell: "size-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
-                    day: "day-cell inline-flex items-center justify-center size-9 rounded-full p-0 font-normal hover:bg-accent hover:text-accent-foreground aria-selected:opacity-100",
+                    day: "day-cell inline-flex items-center justify-center size-9 rounded-none p-0 font-normal hover:bg-accent hover:text-accent-foreground aria-selected:opacity-100",
                     day_selected:
                       "bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
                     day_today: "ring-1 ring-inset ring-primary/40",
@@ -558,7 +560,8 @@ const FaxTrackerPage = () => {
             )}
           </div>
 
-          <div className="hidden md:block bg-card border border-border rounded-md overflow-hidden">
+          <FigHeader code="FIG.02" title="Patients" />
+          <div className="hidden md:block bg-card border border-border rounded-none overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
@@ -689,7 +692,7 @@ const FaxTrackerPage = () => {
           <div className="md:hidden space-y-3">
             {isLoading ? (
               Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="rounded-lg border border-border p-3.5">
+                <div key={i} className="rounded-none border border-border p-3.5">
                   <Skeleton height={20} width="55%" borderRadius={4} />
                   <Skeleton height={14} width="40%" borderRadius={4} className="!mt-2" />
                   <Skeleton height={64} borderRadius={6} className="!mt-3" />
@@ -718,7 +721,7 @@ const FaxTrackerPage = () => {
                   />
                 ))}
                 {totalPages > 1 && (
-                  <div className="rounded-lg border border-border">
+                  <div className="rounded-none border border-border">
                     <Pagination
                       page={page}
                       totalPages={totalPages}

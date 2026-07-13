@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/ar/PageHeader";
+import { FigHeader } from "@/components/ar/industrial";
 import { Input } from "@/components/ui/input";
 import Skeleton from "react-loading-skeleton";
 import { Search, Users } from "lucide-react";
@@ -80,9 +81,11 @@ export default function UsersPage() {
           )}
 
           {/* Table */}
-          <div className="bg-card border border-border rounded-md overflow-hidden">
-            <div className="px-4 sm:px-5 py-4 border-b border-border/40 bg-muted/[0.04]">
-              <h2 className="text-sm font-semibold font-heading">All Users</h2>
+          <section className="relative bg-card border border-border overflow-hidden">
+            <span className="pointer-events-none absolute top-0 left-0 size-2 border-t border-l border-primary/40" />
+            <span className="pointer-events-none absolute bottom-0 right-0 size-2 border-b border-r border-primary/40" />
+            <div className="px-4 sm:px-5 py-3 border-b border-border/40 bg-muted/[0.04]">
+              <FigHeader code="FIG.01" title="All Users" />
             </div>
             <div className="overflow-x-auto no-scrollbar">
               <table className="w-full text-sm min-w-[320px] [&_th]:border-r [&_th]:border-border [&_th:last-child]:border-r-0 [&_td]:border-r [&_td]:border-border/40 [&_td:last-child]:border-r-0">
@@ -132,7 +135,7 @@ export default function UsersPage() {
                             {user.email}
                           </td>
                           <td className="px-4 py-3 hidden sm:table-cell">
-                            <span className="font-mono text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                            <span className="font-mono text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-none">
                               {user.id.slice(0, 8)}…
                             </span>
                           </td>
@@ -151,7 +154,7 @@ export default function UsersPage() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </section>
         </div>
       </main>
     </>

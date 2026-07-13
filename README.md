@@ -8,7 +8,7 @@ A fast, focused productivity tracker for AR associates to log and analyze their 
 
 | Feature | Description |
 |---|---|
-| **Dashboard** | Per-category totals, trend charts, weekly breakdowns, day-of-week averages, and a contribution heatmap |
+| **Console** | Industrial workflow console — per-category totals, trend charts, weekly breakdowns, day-of-week averages, and a contribution heatmap |
 | **Daily Log** | Full history with search, pagination, inline edit/delete, and CSV/JSON export |
 | **Counter** | Tap-to-count interface for tracking docs live; auto-saves to today's log and syncs across devices |
 | **Date Range Report** | Filter by preset or custom range with summary stats and category breakdown |

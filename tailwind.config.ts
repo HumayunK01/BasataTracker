@@ -28,8 +28,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Manrope", "system-ui", "sans-serif"],
-        heading: ["Sora", "system-ui", "sans-serif"],
+        sans: ["IBM Plex Sans", "system-ui", "sans-serif"],
+        heading: ["Archivo", "system-ui", "sans-serif"],
+        mono: ["IBM Plex Mono", "ui-monospace", "monospace"],
       },
       fontSize: {
         "2xs": ["0.625rem", { lineHeight: "1rem" }],
