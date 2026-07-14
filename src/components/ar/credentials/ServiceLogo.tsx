@@ -1,8 +1,8 @@
 import { useState } from "react";
 
-// ponytail: favicon is fetched from DuckDuckGo's public service, which means the
-// resolved domain is sent to them. Fine for a personal vault; if that ever matters,
-// swap to a self-hosted favicon proxy or a bundled icon set.
+// ponytail: favicon is fetched via the same-origin /api/favicon proxy (which
+// itself calls DuckDuckGo server-side), so the production CSP/COEP don't block it.
+// The resolved domain is still sent to DuckDuckGo from the server.
 function resolveDomain(service: string, website: string | null | undefined): string | null {
   const raw = (website ?? "").trim();
   if (raw) {
@@ -23,6 +23,13 @@ export function ServiceLogo({ service, website, className }: { service: string; 
   const domain = resolveDomain(service, website);
   const letter = service.trim().charAt(0).toUpperCase() || "?";
 
+  const proxy = `/api/favicon?domain=${encodeURIComponent(domain ?? "")}`;
+  const direct = `https://icons.duckduckgo.com/ip3/${domain}.ico`;
+  // Try the same-origin proxy first (works in prod under CSP). If it's missing
+  // (local vite has no serverless fn) or fails, fall back to the direct URL
+  // (works in local dev, blocked in prod) before giving up on the letter tile.
+  const [src, setSrc] = useState(proxy);
+
   if (!domain || failed) {
     return (
       <span
@@ -36,12 +43,12 @@ export function ServiceLogo({ service, website, className }: { service: string; 
 
   return (
     <img
-      src={`https://icons.duckduckgo.com/ip3/${domain}.ico`}
+      src={src}
       alt=""
       width={24}
       height={24}
       loading="lazy"
-      onError={() => setFailed(true)}
+      onError={() => (src !== direct ? setSrc(direct) : setFailed(true))}
       className={`object-contain rounded-none shrink-0 ${className ?? "size-6"}`}
     />
   );
