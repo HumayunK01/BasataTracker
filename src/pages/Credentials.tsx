@@ -6,6 +6,8 @@ import {
   useDeleteCredential,
   useDeleteFolder,
   useMoveCredential,
+  useBulkDeleteCredentials,
+  useBulkMoveCredentials,
   type Credential,
   type CredentialFolder,
 } from "@/hooks/useCredentials";
@@ -15,6 +17,7 @@ import { CredentialDialog } from "@/components/ar/credentials/CredentialDialog";
 import { NewFolderDialog } from "@/components/ar/credentials/NewFolderDialog";
 import { RenameFolderDialog } from "@/components/ar/credentials/RenameFolderDialog";
 import { ServiceLogo } from "@/components/ar/credentials/ServiceLogo";
+import { SelectCheckbox } from "@/components/ar/credentials/SelectCheckbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,7 +40,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
-import { Check, ChevronRight, Copy, Eye, EyeOff, FileText, Folder, FolderInput, FolderPlus, KeyRound, Layers, MoreVertical, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { Check, ChevronRight, Copy, Eye, EyeOff, FileDown, FileText, Folder, FolderInput, FolderPlus, KeyRound, Layers, MoreVertical, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -66,6 +69,84 @@ function downloadCredentialCSV(rows: Credential[], name: string) {
   a.download = `${name || "credentials"}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// Mirrors the tracker PDF chrome (src/lib/tracker-utils.ts): logo, title,
+// export timestamp, summary line, grid table, page-number footer.
+async function downloadCredentialPDF(rows: Credential[], name: string, title: string) {
+  const [{ default: JsPdf }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ]);
+  const doc = new JsPdf({ orientation: "landscape", unit: "pt", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 40;
+
+  try {
+    const img = new Image();
+    img.src = "/lightlogo.png";
+    await img.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    canvas.getContext("2d")!.drawImage(img, 0, 0);
+    const logoH = 28;
+    const logoW = (img.naturalWidth / img.naturalHeight) * logoH;
+    doc.addImage(canvas.toDataURL("image/png"), "PNG", pageWidth - margin - logoW, 24, logoW, logoH);
+  } catch {
+    // logo unavailable — skip it
+  }
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.setTextColor(30);
+  doc.text(title, margin, 44);
+
+  let y = 60;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(110);
+  doc.text(
+    `Exported ${new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}`,
+    pageWidth - margin,
+    y,
+    { align: "right" },
+  );
+  y += 20;
+
+  doc.setFontSize(10);
+  doc.setTextColor(60);
+  doc.text(`${rows.length} credentials`, margin, y);
+  y += 16;
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: margin, right: margin },
+    head: [["Service", "Login ID", "Password", "Notes"]],
+    body: rows.map((r) => [r.service, r.login_id, r.password, r.notes ?? ""]),
+    theme: "grid",
+    styles: { font: "helvetica", fontSize: 8, cellPadding: 4, textColor: 40, lineColor: [220, 220, 225], lineWidth: 0.5, overflow: "linebreak" },
+    headStyles: { fillColor: [37, 42, 60], textColor: 255, fontStyle: "bold", halign: "left" },
+    columnStyles: {
+      0: { cellWidth: 140, fontStyle: "bold" },
+      1: { cellWidth: 170 },
+      2: { cellWidth: 200 },
+      3: { cellWidth: "auto" },
+    },
+    didDrawPage: () => {
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text(
+        `Page ${doc.getCurrentPageInfo().pageNumber}`,
+        pageWidth - margin,
+        pageHeight - 20,
+        { align: "right" },
+      );
+    },
+  });
+
+  doc.save(`${name || "credentials"}.pdf`);
 }
 
 const CredentialsPage = () => {
@@ -97,12 +178,15 @@ const CredentialsPage = () => {
   const deleteCredential = useDeleteCredential();
   const deleteFolder = useDeleteFolder();
   const moveCredential = useMoveCredential();
+  const bulkDelete = useBulkDeleteCredentials();
+  const bulkMove = useBulkMoveCredentials();
 
   const [now] = useState(() => new Date());
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Credential | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Credential | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState<Set<string>>(new Set());
   const revealTimers = useRef<Record<string, number>>({});
@@ -168,6 +252,44 @@ const CredentialsPage = () => {
     }
   };
 
+  // Multi-row copy: one HTML table with a header row, so a selection pastes as
+  // a real spreadsheet instead of per-row key/value blocks.
+  const copyCredentialsTable = (rows: Credential[]) => {
+    const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const headers = ["Service", "ID", "Password", "Notes"];
+    const tdStyle = "border:1px solid #444;padding:4px 12px;text-align:left;";
+    const thStyle = `${tdStyle}font-weight:600;background:#1e2130;color:#e2e8f0;`;
+    const html =
+      `<table style="border-collapse:collapse;font-family:sans-serif;font-size:13px;">` +
+      `<tr>${headers.map((h) => `<td style="${thStyle}">${esc(h)}</td>`).join("")}</tr>` +
+      rows
+        .map(
+          (r) =>
+            `<tr>${[r.service, r.login_id, r.password, r.notes ?? ""]
+              .map((v) => `<td style="${tdStyle}">${esc(v)}</td>`)
+              .join("")}</tr>`,
+        )
+        .join("") +
+      `</table>`;
+    const plain = [headers.join("\t"), ...rows.map((r) => [r.service, r.login_id, r.password, r.notes ?? ""].join("\t"))].join("\n");
+
+    const done = () => flashCopied("bulk:copy");
+    const fail = () => toast.error("Couldn't copy to clipboard");
+    if (navigator.clipboard && "ClipboardItem" in window) {
+      navigator.clipboard
+        .write([
+          new ClipboardItem({
+            "text/html": new Blob([html], { type: "text/html" }),
+            "text/plain": new Blob([plain], { type: "text/plain" }),
+          }),
+        ])
+        .then(done)
+        .catch(fail);
+    } else {
+      navigator.clipboard.writeText(plain).then(done).catch(fail);
+    }
+  };
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return credentials;
@@ -178,6 +300,28 @@ const CredentialsPage = () => {
         (c.notes ?? "").toLowerCase().includes(q),
     );
   }, [credentials, search]);
+
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  // Selection is scoped to the current view; switch views and it resets.
+  useEffect(() => { setSelected(new Set()); }, [showAll, folderId]);
+
+  const toggleSelect = (id: string) =>
+    setSelected((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  const allVisibleSelected = filtered.length > 0 && filtered.every((c) => selected.has(c.id));
+  const toggleSelectAll = () =>
+    setSelected((prev) => {
+      const n = new Set(prev);
+      if (allVisibleSelected) filtered.forEach((c) => n.delete(c.id));
+      else filtered.forEach((c) => n.add(c.id));
+      return n;
+    });
+  const selectedRows = credentials.filter((c) => selected.has(c.id));
+  const clearSelection = () => setSelected(new Set());
 
   // Reveal a password; auto-hide it again after 5s. Toggling off clears the timer.
   const toggleReveal = (id: string) =>
@@ -222,6 +366,16 @@ const CredentialsPage = () => {
               title={credentials.length === 0 ? "Nothing to export" : "Export as CSV"}
             >
               <FileText className="size-4 mr-1" /> Export CSV
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 shrink-0"
+              onClick={() => downloadCredentialPDF(credentials, showAll ? "all-credentials" : activeFolder?.name ?? "vault", showAll ? "Credential Vault" : (activeFolder?.name ?? "Credential Vault"))}
+              disabled={credentials.length === 0}
+              title={credentials.length === 0 ? "Nothing to export" : "Export as PDF"}
+            >
+              <FileDown className="size-4 mr-1" /> Export PDF
             </Button>
             <Button
               size="sm"
@@ -318,11 +472,75 @@ const CredentialsPage = () => {
             </div>
           </div>
 
+          {selected.size > 0 && (
+            <div className="flex flex-wrap items-center gap-2 border border-primary/30 bg-primary/5 rounded-none px-3 py-2">
+              <span className="text-sm font-medium text-primary">{selectedRows.length} selected</span>
+              <div className="flex items-center gap-2 ml-auto flex-wrap">
+                <Button variant="outline" size="sm" className="h-9" onClick={() => copyCredentialsTable(selectedRows)}>
+                  <Copy className="size-4 mr-1.5" /> Copy table
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9"
+                  onClick={() => downloadCredentialCSV(selectedRows, `selected-${selectedRows.length}-credentials`)}
+                >
+                  <FileText className="size-4 mr-1.5" /> Export CSV
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9"
+                  onClick={() => downloadCredentialPDF(selectedRows, `selected-${selectedRows.length}-credentials`, `Credential Vault — ${selectedRows.length} Selected`)}
+                >
+                  <FileDown className="size-4 mr-1.5" /> Export PDF
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9">
+                      <FolderInput className="size-4 mr-1.5" /> Move to
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44 font-sans">
+                    {folders.length === 0 ? (
+                      <span className="block px-2 py-1.5 text-xs text-muted-foreground">No folders</span>
+                    ) : (
+                      folders.map((f) => (
+                        <DropdownMenuItem
+                          key={f.id}
+                          className="text-sm"
+                          onClick={() => bulkMove.mutate({ ids: [...selected], folderId: f.id }, { onSuccess: clearSelection })}
+                        >
+                          {f.name}
+                        </DropdownMenuItem>
+                      ))
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button variant="destructive" size="sm" className="h-9" onClick={() => setBulkDeleteOpen(true)}>
+                  <Trash2 className="size-4 mr-1.5" /> Delete
+                </Button>
+                <Button variant="ghost" size="sm" className="h-9" onClick={clearSelection}>
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
+
           <div className="hidden md:block bg-card border border-border rounded-none overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
+                    <th className="w-10 px-3 py-2.5">
+                      <SelectCheckbox
+                        ariaLabel="Select all"
+                        checked={allVisibleSelected}
+                        onChange={toggleSelectAll}
+                        disabled={filtered.length === 0}
+                        className="align-middle"
+                      />
+                    </th>
                     <th className="px-3 py-2.5 text-left font-semibold">Service</th>
                     <th className="px-3 py-2.5 text-left font-semibold">Login ID</th>
                     <th className="px-3 py-2.5 text-left font-semibold">Password</th>
@@ -334,12 +552,12 @@ const CredentialsPage = () => {
                   {isLoading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <tr key={i} className="border-t border-border">
-                        <td colSpan={5} className="px-3 py-2.5"><div className="h-6 bg-muted/40 animate-pulse rounded" /></td>
+                        <td colSpan={6} className="px-3 py-2.5"><div className="h-6 bg-muted/40 animate-pulse rounded" /></td>
                       </tr>
                     ))
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-3 animate-fade-in">
+                      <td colSpan={6} className="px-3 animate-fade-in">
                         <EmptyState
                           className="py-12"
                           icon={KeyRound}
@@ -352,7 +570,14 @@ const CredentialsPage = () => {
                     filtered.map((c) => {
                       const show = revealed.has(c.id);
                       return (
-                        <tr key={c.id} className="border-t border-border transition-colors hover:bg-muted/30">
+                        <tr key={c.id} className={cn("border-t border-border transition-colors hover:bg-muted/30", selected.has(c.id) && "bg-primary/5")}>
+                          <td className="px-3 py-2 w-10">
+                            <SelectCheckbox
+                              ariaLabel={`Select ${c.service}`}
+                              checked={selected.has(c.id)}
+                              onChange={() => toggleSelect(c.id)}
+                            />
+                          </td>
                           <td className="px-3 py-2 font-medium max-w-[16rem]">
                             <div className="flex items-center gap-2 min-w-0">
                               <ServiceLogo service={c.service} website={c.website} className="size-5" />
@@ -478,9 +703,15 @@ const CredentialsPage = () => {
               filtered.map((c) => {
                 const show = revealed.has(c.id);
                 return (
-                  <div key={c.id} className="rounded-none border border-border p-3.5 space-y-2.5">
+                  <div key={c.id} className={cn("rounded-none border p-3.5 space-y-2.5", selected.has(c.id) ? "border-primary/40 bg-primary/5" : "border-border")}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
+                        <SelectCheckbox
+                          ariaLabel={`Select ${c.service}`}
+                          checked={selected.has(c.id)}
+                          onChange={() => toggleSelect(c.id)}
+                          className="mt-0.5"
+                        />
                         <ServiceLogo service={c.service} website={c.website} className="size-5" />
                         <p className="font-medium truncate">{c.service}</p>
                       </div>
@@ -611,6 +842,29 @@ const CredentialsPage = () => {
               }}
             >
               Delete folder
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={(o) => !o && setBulkDeleteOpen(false)}>
+        <AlertDialogContent className="sm:max-w-md border-destructive/20 bg-background/95 backdrop-blur-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-lg font-semibold">Delete {selectedRows.length} credentials?</AlertDialogTitle>
+            <AlertDialogDescription className="mt-2 text-sm leading-relaxed">
+              This permanently removes the selected credentials from the vault. This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4">
+            <AlertDialogCancel className="border-border/60">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              onClick={() => {
+                bulkDelete.mutate([...selected], { onSuccess: clearSelection });
+                setBulkDeleteOpen(false);
+              }}
+            >
+              Delete {selectedRows.length}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

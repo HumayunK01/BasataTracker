@@ -226,3 +226,49 @@ export function useMoveCredential() {
     onError: (e: Error) => toast.error(e.message),
   });
 }
+
+export function useBulkDeleteCredentials() {
+  const qc = useQueryClient();
+  const { checkLimit } = useMutationRateLimit({ maxRequests: 10, windowMs: 60_000 });
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (ids.length === 0) return;
+      if (!checkLimit()) throw new Error("Too many requests. Please wait a moment.");
+      const created_by = await getUserId();
+      const { error } = await supabase
+        .from("credentials")
+        .delete()
+        .in("id", ids)
+        .eq("created_by", created_by);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["credentials"] });
+      toast.success("Credentials deleted");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
+export function useBulkMoveCredentials() {
+  const qc = useQueryClient();
+  const { checkLimit } = useMutationRateLimit({ maxRequests: 10, windowMs: 60_000 });
+  return useMutation({
+    mutationFn: async ({ ids, folderId }: { ids: string[]; folderId: string }) => {
+      if (ids.length === 0) return;
+      if (!checkLimit()) throw new Error("Too many requests. Please wait a moment.");
+      const created_by = await getUserId();
+      const { error } = await supabase
+        .from("credentials")
+        .update({ folder_id: folderId })
+        .in("id", ids)
+        .eq("created_by", created_by);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["credentials"] });
+      toast.success("Credentials moved");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
