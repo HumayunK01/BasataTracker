@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { AppLogo } from "@/components/ar/AppLogo";
 import { AppFavicon } from "@/components/ar/AppFavicon";
 import { cn } from "@/lib/utils";
+import { prefetchRoute } from "@/lib/routePreload";
 
 const ease: Easing = [0.23, 1, 0.32, 1];
 
@@ -126,6 +127,8 @@ export function AppSidebar() {
                       isActive={active}
                       tooltip={item.title}
                       onClick={() => go(item.path)}
+                      onMouseEnter={() => prefetchRoute(item.path)}
+                      onFocus={() => prefetchRoute(item.path)}
                       className={cn(
                         "relative z-10 rounded-none border border-transparent h-9 text-xs font-mono uppercase tracking-wide [&>svg]:size-4",
                         "data-[active=true]:!border-primary/40 data-[active=true]:!bg-primary/10 data-[active=true]:!text-primary",
