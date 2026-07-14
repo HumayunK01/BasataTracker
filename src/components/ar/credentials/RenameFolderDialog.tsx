@@ -10,16 +10,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useRenameFolder, type CredentialFolder } from "@/hooks/useCredentials";
-import { Info, Loader2, Pencil } from "lucide-react";
+import { Info, Loader2, Pencil, Trash2 } from "lucide-react";
 
 interface RenameFolderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** The folder being renamed. */
   folder: CredentialFolder | null;
+  /** Called when the user chooses to delete this folder (opens the page's confirm). */
+  onRequestDelete?: (folder: CredentialFolder) => void;
 }
 
-export function RenameFolderDialog({ open, onOpenChange, folder }: RenameFolderDialogProps) {
+export function RenameFolderDialog({ open, onOpenChange, folder, onRequestDelete }: RenameFolderDialogProps) {
   const renameFolder = useRenameFolder();
   const [name, setName] = useState("");
   const [error, setError] = useState("");
@@ -72,14 +74,25 @@ export function RenameFolderDialog({ open, onOpenChange, folder }: RenameFolderD
             </div>
           )}
         </div>
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" className="border-border/60" onClick={() => onOpenChange(false)}>
-            Cancel
+        <DialogFooter className="gap-2 sm:gap-0 sm:justify-between">
+          <Button
+            type="button"
+            variant="ghost"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => folder && onRequestDelete?.(folder)}
+          >
+            <Trash2 className="size-3.5 mr-1.5" />
+            Delete
           </Button>
-          <Button onClick={save} disabled={renameFolder.isPending} className="bg-primary hover:bg-primary/95 text-primary-foreground shadow-sm shadow-primary/20">
-            {renameFolder.isPending && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
-            Save
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" className="border-border/60" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={save} disabled={renameFolder.isPending} className="bg-primary hover:bg-primary/95 text-primary-foreground shadow-sm shadow-primary/20">
+              {renameFolder.isPending && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
+              Save
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
