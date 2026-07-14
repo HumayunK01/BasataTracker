@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, useReducedMotion, type Easing } from "motion/react";
-import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, Settings, Sun, Moon, LogOut, Users, BookOpen, Tags, ExternalLink, Send } from "lucide-react";
+import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, Settings, Sun, Moon, LogOut, BookOpen, Tags, ExternalLink, Send } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/hooks/useProfile";
@@ -19,6 +19,17 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { AppLogo } from "@/components/ar/AppLogo";
 import { AppFavicon } from "@/components/ar/AppFavicon";
 import { cn } from "@/lib/utils";
@@ -32,7 +43,6 @@ const groups = [
         items: [
           { title: "Console", icon: LayoutDashboard, path: "/" },
           { title: "Report", icon: FileBarChart, path: "/report" },
-          { title: "Users", icon: Users, path: "/users" },
         ],
       },
       {
@@ -74,6 +84,7 @@ export function AppSidebar() {
   };
 
   const email = user?.email ?? "";
+  const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || email;
   const initials = (() => {
     const f = profile?.first_name?.[0] ?? "";
     const l = profile?.last_name?.[0] ?? "";
@@ -180,7 +191,7 @@ export function AppSidebar() {
           <div className="grid size-8 place-items-center rounded-none bg-primary/15 text-primary text-xs font-mono font-semibold shrink-0">
             {initials}
           </div>
-          <p className="text-xs font-mono truncate text-muted-foreground group-data-[collapsible=icon]:hidden">{email}</p>
+          <p className="text-xs font-mono truncate text-muted-foreground group-data-[collapsible=icon]:hidden">{name}</p>
         </div>
         <div className="flex items-center gap-1 px-2 pb-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:px-0">
           <Button
@@ -201,15 +212,35 @@ export function AppSidebar() {
           >
             {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="flex-1 size-9 text-foreground hover:text-destructive rounded-none border border-sidebar-border group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
-            onClick={signOut}
-            title="Sign out"
-          >
-            <LogOut className="size-5" />
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="flex-1 size-9 text-foreground hover:text-destructive rounded-none border border-sidebar-border group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
+                title="Sign out"
+              >
+                <LogOut className="size-5" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Sign out?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You'll need to sign in again to access your tracker.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={() => { signOut(); setOpenMobile(false); }}
+                >
+                  Sign out
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
         <div className="text-center pb-1 group-data-[collapsible=icon]:hidden">
           <p className="font-mono text-2xs text-muted-foreground/50 tracking-[0.2em]">v1.2.0</p>

@@ -1,7 +1,4 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
-import { Sun, Moon } from "lucide-react";
-import { useTheme } from "@/hooks/useTheme";
 import { AppFavicon } from "@/components/ar/AppFavicon";
 import { formatHeaderDate } from "@/types/log";
 
@@ -13,11 +10,10 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
-  const { theme, toggle } = useTheme();
   const date = now ?? new Date();
 
   return (
-    <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90 shrink-0">
+    <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90 glass shrink-0">
       <div className="px-3 sm:px-4 py-2 flex items-center justify-between gap-2">
         {/* Left: hamburger + technical date/title */}
         <div className="flex items-center gap-2 min-w-0 -ml-2">
@@ -41,15 +37,6 @@ export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
             <AppFavicon alt="Phoenix Heart" className="size-5 object-contain" />
             <span className="font-mono text-2xs uppercase tracking-[0.2em] text-muted-foreground">PHOENIX HEART</span>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-10 md:size-9 text-foreground hover:text-foreground/80 hover:bg-accent rounded-none"
-            onClick={toggle}
-            title={theme === "dark" ? "Light mode" : "Dark mode"}
-          >
-            {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
-          </Button>
         </div>
       </div>
     </header>

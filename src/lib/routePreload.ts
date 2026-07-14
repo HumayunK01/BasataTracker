@@ -7,7 +7,6 @@ const importers = {
   "/settings": () => import("@/pages/Settings.tsx"),
   "/report": () => import("@/pages/Report.tsx"),
   "/counter": () => import("@/pages/Counter.tsx"),
-  "/users": () => import("@/pages/Users.tsx"),
   "/tracker": () => import("@/pages/FaxTracker.tsx"),
   "/fax-tracker": () => import("@/pages/FaxTracker.tsx"),
   "*": () => import("@/pages/NotFound.tsx"),
@@ -18,7 +17,6 @@ export const DailyLogPage = lazy(importers["/log"]);
 export const SettingsPage = lazy(importers["/settings"]);
 export const ReportPage = lazy(importers["/report"]);
 export const CounterPage = lazy(importers["/counter"]);
-export const UsersPage = lazy(importers["/users"]);
 export const FaxTrackerPage = lazy(importers["/tracker"]);
 export const NotFound = lazy(importers["*"]);
 

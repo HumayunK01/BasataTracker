@@ -212,7 +212,7 @@ export default function LoginPage() {
             >
               <span
                 key={showPassword ? "visible" : "hidden"}
-                className="block animate-in fade-in zoom-in-50 spin-in-45 duration-200 motion-reduce:animate-none"
+                className="block animate-in fade-in zoom-in-90 spin-in-45 duration-200 motion-reduce:animate-none"
               >
                 {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </span>
