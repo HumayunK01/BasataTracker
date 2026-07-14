@@ -5,6 +5,7 @@ import { Plus, BarChart2 } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { Button } from "@/components/ui/button";
 import { TodayHero } from "@/components/ar/TodayHero";
+import { PageHeader } from "@/components/ar/PageHeader";
 import { ContributionHeatmap } from "@/components/ar/ContributionHeatmap";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
@@ -47,22 +48,11 @@ const Console = () => {
 
   return (
     <div className="flex flex-col min-h-full">
-      {/* ── Instrument top bar ── */}
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur px-3 sm:px-6 py-2">
-        <div className="flex items-baseline gap-2">
-          <span className="font-heading text-sm font-extrabold uppercase tracking-[0.18em] text-foreground">BASATA</span>
-          <span className="font-mono text-2xs text-muted-foreground tracking-[0.2em]">// AR WORKFLOW CONSOLE</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="hidden sm:inline font-mono text-2xs text-muted-foreground/70">
-            OP:{displayName || "—"}
-          </span>
-          <span className="flex items-center gap-1.5 font-mono text-2xs text-primary">
-            <span className="size-1.5 rounded-full bg-primary animate-pulse" /> LIVE
-          </span>
-          <Clock />
-        </div>
-      </div>
+      <PageHeader
+        title="Console"
+        subtitle={displayName ? `OP: ${displayName}` : undefined}
+        actions={<Clock />}
+      />
 
       <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6 relative z-[1]">
         <div className="w-full space-y-6 sm:space-y-8">

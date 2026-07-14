@@ -274,6 +274,22 @@
     }
   }
 
+  /* Reduced transparency — frosted/translucent chrome becomes solid so text
+     stays legible for users who can't parse blur-over-content (Apple §14). */
+  @media (prefers-reduced-transparency: reduce) {
+    .glass,
+    .popover-surface {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    .glass {
+      background-color: hsl(var(--background)) !important;
+    }
+    .popover-surface {
+      background-color: hsl(var(--popover)) !important;
+    }
+  }
+
   /* Subtle scrollbars — desktop only */
   @media (min-width: 640px) {
     ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -364,9 +380,6 @@
     transition: background-color 0.16s var(--ease-out), color 0.16s var(--ease-out),
       transform 0.16s var(--ease-out);
   }
-  .day-cell:hover {
-    transform: scale(1.06);
-  }
   .day-cell[aria-selected="true"] {
     animation: dayPop 0.2s var(--ease-out);
   }
@@ -405,6 +418,10 @@
     }
     .hover-lift:hover {
       border-color: hsl(var(--primary) / 0.5);
+    }
+    /* Day cells scale only on real hover; touch taps must not stick a transform */
+    .day-cell:hover {
+      transform: scale(1.06);
     }
   }
 }

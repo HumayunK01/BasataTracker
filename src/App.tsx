@@ -15,7 +15,6 @@ import {
   SettingsPage,
   ReportPage,
   CounterPage,
-  UsersPage,
   FaxTrackerPage,
   NotFound,
 } from "@/lib/routePreload";
@@ -63,7 +62,6 @@ const App = () => (
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/report" element={<ReportPage />} />
                   <Route path="/counter" element={<CounterPage />} />
-                  <Route path="/users" element={<UsersPage />} />
                   <Route path="/tracker" element={<FaxTrackerPage />} />
                   {/* Legacy path — the page now hosts both Fax and Indexable */}
                   <Route path="/fax-tracker" element={<FaxTrackerPage />} />

@@ -82,16 +82,7 @@ This creates `daily_logs`, `categories`, `audit_logs`, and `profiles`, all
 with Row Level Security policies, plus the `delete_own_account()` function and
 the new-user profile trigger.
 
-### 4. Deploy the Edge Functions
-
-The Users page calls a server-side function:
-
-```bash
-supabase functions deploy list-users
-supabase secrets set SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
-```
-
-### 5. Run locally
+### 4. Run locally
 
 ```bash
 npm run dev
@@ -123,8 +114,7 @@ src/
 └── test/              # Vitest suites (incl. security verification)
 
 supabase/
-├── migrations/        # Source of truth for the database schema
-└── functions/         # Deno Edge Functions (list-users)
+└── migrations/        # Source of truth for the database schema
 ```
 
 ---
