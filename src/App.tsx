@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import { SkeletonTheme } from "react-loading-skeleton";
@@ -8,14 +9,16 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AuthGuard } from "@/components/ar/AuthGuard";
 import { AppLayout } from "@/components/ar/AppLayout";
 import { ThemeProvider } from "@/components/ar/ThemeProvider";
-import DailyLogPage from "./pages/DailyLog.tsx";
-import SettingsPage from "./pages/Settings.tsx";
-import ReportPage from "./pages/Report.tsx";
-import CounterPage from "./pages/Counter.tsx";
-import UsersPage from "./pages/Users.tsx";
-import FaxTrackerPage from "./pages/FaxTracker.tsx";
-import ConsolePage from "./pages/Console.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import {
+  ConsolePage,
+  DailyLogPage,
+  SettingsPage,
+  ReportPage,
+  CounterPage,
+  UsersPage,
+  FaxTrackerPage,
+  NotFound,
+} from "@/lib/routePreload";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,20 +49,28 @@ const App = () => (
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <SidebarProvider>
           <AuthGuard>
-            <Routes>
-              <Route element={<AppLayout><Outlet /></AppLayout>}>
-                <Route path="/" element={<ConsolePage />} />
-                <Route path="/log" element={<DailyLogPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/report" element={<ReportPage />} />
-                <Route path="/counter" element={<CounterPage />} />
-                <Route path="/users" element={<UsersPage />} />
-                <Route path="/tracker" element={<FaxTrackerPage />} />
-                {/* Legacy path — the page now hosts both Fax and Indexable */}
-                <Route path="/fax-tracker" element={<FaxTrackerPage />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <Suspense
+              fallback={
+                <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground font-mono uppercase tracking-[0.2em]">
+                  Loading…
+                </div>
+              }
+            >
+              <Routes>
+                <Route element={<AppLayout><Outlet /></AppLayout>}>
+                  <Route path="/" element={<ConsolePage />} />
+                  <Route path="/log" element={<DailyLogPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/report" element={<ReportPage />} />
+                  <Route path="/counter" element={<CounterPage />} />
+                  <Route path="/users" element={<UsersPage />} />
+                  <Route path="/tracker" element={<FaxTrackerPage />} />
+                  {/* Legacy path — the page now hosts both Fax and Indexable */}
+                  <Route path="/fax-tracker" element={<FaxTrackerPage />} />
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </AuthGuard>
         </SidebarProvider>
       </BrowserRouter>

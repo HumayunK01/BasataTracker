@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion, useReducedMotion, type Easing } from "motion/react";
 import { CalendarDays, LayoutDashboard, FileBarChart, Hash, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { prefetchRoute } from "@/lib/routePreload";
 
 const tabs = [
   { title: "Console", icon: LayoutDashboard, path: "/" },
@@ -31,6 +32,7 @@ export function MobileTabBar() {
               key={tab.path}
               type="button"
               onClick={() => navigate(tab.path)}
+              onPointerDown={() => prefetchRoute(tab.path)}
               aria-current={active ? "page" : undefined}
               className={cn(
                 "relative flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-h-12 touch-manipulation transition-colors press-scale",
