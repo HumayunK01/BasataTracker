@@ -38,6 +38,69 @@ export type Database = {
         }
         Relationships: []
       }
+      credential_folders: {
+        Row: {
+          id: string
+          name: string
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      credentials: {
+        Row: {
+          id: string
+          folder_id: string
+          service: string
+          login_id: string
+          password: string
+          notes: string | null
+          website: string | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          folder_id: string
+          service: string
+          login_id: string
+          password: string
+          notes?: string | null
+          website?: string | null
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          folder_id?: string
+          service?: string
+          login_id?: string
+          password?: string
+          notes?: string | null
+          website?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           id: string
