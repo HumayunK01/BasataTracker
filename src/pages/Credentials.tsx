@@ -222,8 +222,38 @@ const CredentialsPage = () => {
     }, 1200);
   };
 
-  // Mirrors the Daily Log per-day copy: writes an HTML <table> to the clipboard
-  // (plus a plain TSV fallback) so it pastes as a real table, not raw text.
+  // Writes an HTML table to the clipboard (plus a plain-TSV fallback) so it
+  // pastes as a real table/spreadsheet, not raw text.
+  // ponytail: shared by single-credential and bulk copies below.
+  const copyTable = (html: string, plain: string, onDone: () => void) => {
+    const fail = () => toast.error("Couldn't copy to clipboard");
+    if (navigator.clipboard && "ClipboardItem" in window) {
+      navigator.clipboard
+        .write([
+          new ClipboardItem({
+            "text/html": new Blob([html], { type: "text/html" }),
+            "text/plain": new Blob([plain], { type: "text/plain" }),
+          }),
+        ])
+        .then(onDone)
+        .catch(fail);
+    } else {
+      navigator.clipboard.writeText(plain).then(onDone).catch(fail);
+    }
+  };
+
+  const escHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const TD_STYLE = "border:1px solid #444;padding:4px 12px;text-align:left;";
+  const TH_STYLE = `${TD_STYLE}font-weight:600;background:#1e2130;color:#e2e8f0;`;
+  const htmlTable = (headerCells: string[], bodyRows: string[][]) =>
+    `<table style="border-collapse:collapse;font-family:sans-serif;font-size:13px;">` +
+    `<tr>${headerCells.map((h) => `<td style="${TH_STYLE}">${escHtml(h)}</td>`).join("")}</tr>` +
+    bodyRows
+      .map((row) => `<tr>${row.map((v) => `<td style="${TD_STYLE}">${escHtml(v)}</td>`).join("")}</tr>`)
+      .join("") +
+    `</table>`;
+
+  // Mirrors the Daily Log per-day copy: one key/value table per credential.
   const copyCredential = (c: Credential) => {
     const rows: [string, string][] = [
       ["Service", c.service],
@@ -231,69 +261,27 @@ const CredentialsPage = () => {
       ["Password", c.password],
     ];
     if (c.notes) rows.push(["Notes", c.notes]);
-
-    const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const tdStyle = "border:1px solid #444;padding:4px 12px;text-align:left;";
-    const thStyle = `${tdStyle}font-weight:600;background:#1e2130;color:#e2e8f0;`;
-    const html = `<table style="border-collapse:collapse;font-family:sans-serif;font-size:13px;">${rows
-      .map(([k, v]) => `<tr><td style="${thStyle}">${esc(k)}</td><td style="${tdStyle}">${esc(v)}</td></tr>`)
-      .join("")}</table>`;
+    const html = htmlTable(
+      rows.map(([k]) => k),
+      [rows.map(([, v]) => v)],
+    );
     const plain = rows.map(([k, v]) => `${k}\t${v}`).join("\n");
-
-    const done = () => flashCopied(`${c.id}:copy`);
-    const fail = () => toast.error("Couldn't copy to clipboard");
-
-    if (navigator.clipboard && "ClipboardItem" in window) {
-      navigator.clipboard
-        .write([
-          new ClipboardItem({
-            "text/html": new Blob([html], { type: "text/html" }),
-            "text/plain": new Blob([plain], { type: "text/plain" }),
-          }),
-        ])
-        .then(done)
-        .catch(fail);
-    } else {
-      navigator.clipboard.writeText(plain).then(done).catch(fail);
-    }
+    copyTable(html, plain, () => flashCopied(`${c.id}:copy`));
   };
 
   // Multi-row copy: one HTML table with a header row, so a selection pastes as
   // a real spreadsheet instead of per-row key/value blocks.
   const copyCredentialsTable = (rows: Credential[]) => {
-    const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const headers = ["Service", "ID", "Password", "Notes"];
-    const tdStyle = "border:1px solid #444;padding:4px 12px;text-align:left;";
-    const thStyle = `${tdStyle}font-weight:600;background:#1e2130;color:#e2e8f0;`;
-    const html =
-      `<table style="border-collapse:collapse;font-family:sans-serif;font-size:13px;">` +
-      `<tr>${headers.map((h) => `<td style="${thStyle}">${esc(h)}</td>`).join("")}</tr>` +
-      rows
-        .map(
-          (r) =>
-            `<tr>${[r.service, r.login_id, r.password, r.notes ?? ""]
-              .map((v) => `<td style="${tdStyle}">${esc(v)}</td>`)
-              .join("")}</tr>`,
-        )
-        .join("") +
-      `</table>`;
-    const plain = [headers.join("\t"), ...rows.map((r) => [r.service, r.login_id, r.password, r.notes ?? ""].join("\t"))].join("\n");
-
-    const done = () => flashCopied("bulk:copy");
-    const fail = () => toast.error("Couldn't copy to clipboard");
-    if (navigator.clipboard && "ClipboardItem" in window) {
-      navigator.clipboard
-        .write([
-          new ClipboardItem({
-            "text/html": new Blob([html], { type: "text/html" }),
-            "text/plain": new Blob([plain], { type: "text/plain" }),
-          }),
-        ])
-        .then(done)
-        .catch(fail);
-    } else {
-      navigator.clipboard.writeText(plain).then(done).catch(fail);
-    }
+    const html = htmlTable(
+      headers,
+      rows.map((r) => [r.service, r.login_id, r.password, r.notes ?? ""]),
+    );
+    const plain = [
+      headers.join("\t"),
+      ...rows.map((r) => [r.service, r.login_id, r.password, r.notes ?? ""].join("\t")),
+    ].join("\n");
+    copyTable(html, plain, () => flashCopied("bulk:copy"));
   };
 
   const filtered = useMemo(() => {
@@ -434,7 +422,7 @@ const CredentialsPage = () => {
                     <Folder className={cn("size-4 shrink-0", active ? "text-primary" : "text-muted-foreground")} />
                     <span className="truncate">{f.name}</span>
                   </span>
-                  <span className="relative z-10 flex items-center shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                  <span className="relative z-10 flex items-center shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 max-md:opacity-100 transition-opacity">
                     <button
                       type="button"
                       title={`Rename ${f.name}`}
@@ -647,7 +635,7 @@ const CredentialsPage = () => {
                                 title="Copy"
                                 className={cn(
                                   "shrink-0 ml-auto press-scale transition-colors",
-                                  copied.has(`${c.id}:copy`) ? "text-emerald-500" : "text-muted-foreground hover:text-foreground",
+                                  copied.has(`${c.id}:copy`) ? "text-success" : "text-muted-foreground hover:text-foreground",
                                 )}
                               >
                                 {copied.has(`${c.id}:copy`)
@@ -662,7 +650,7 @@ const CredentialsPage = () => {
                           <td className="px-3 py-2 text-center">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="size-8">
+                                <Button variant="ghost" size="icon" className="size-8" aria-label={`Actions for ${c.label}`}>
                                   <MoreVertical className="size-4" />
                                 </Button>
                               </DropdownMenuTrigger>

@@ -23,7 +23,7 @@ export function AnimatedPage({ children }: { children: React.ReactNode }) {
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   return (
-    <div className="flex h-screen w-full bg-background text-foreground overflow-hidden relative">
+    <div className="flex h-dvh w-full bg-background text-foreground overflow-hidden relative">
       <AppSidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <AnimatePresence mode="wait">

@@ -101,7 +101,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-background px-4 py-8">
+    <div className="flex min-h-dvh w-full items-center justify-center bg-background px-4 py-8">
 
       {/* Card */}
       <div className={`w-full bg-card border border-border rounded-md shadow-sm p-5 sm:p-6 space-y-4 relative ${mode === "signup" ? "max-w-md" : "max-w-sm"}`}>
@@ -110,6 +110,7 @@ export default function LoginPage() {
         <button
           onClick={toggle}
           title={theme === "dark" ? "Light mode" : "Dark mode"}
+          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           className="absolute top-2 right-2 size-10 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
         >
           {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
@@ -164,6 +165,7 @@ export default function LoginPage() {
               <Input
                 type="text"
                 placeholder="First name"
+                aria-label="First name"
                 value={firstName}
                 onChange={(e) => dispatch({ type: "set_first", v: e.target.value })}
                 required
@@ -173,6 +175,7 @@ export default function LoginPage() {
               <Input
                 type="text"
                 placeholder="Last name"
+                aria-label="Last name"
                 value={lastName}
                 onChange={(e) => dispatch({ type: "set_last", v: e.target.value })}
                 required
@@ -185,6 +188,7 @@ export default function LoginPage() {
           <Input
             type="email"
             placeholder="Email"
+            aria-label="Email"
             value={email}
             onChange={(e) => dispatch({ type: "set_email", v: e.target.value })}
             required
@@ -196,6 +200,7 @@ export default function LoginPage() {
             <Input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
+              aria-label="Password"
               value={password}
               onChange={(e) => dispatch({ type: "set_password", v: e.target.value })}
               required
@@ -208,6 +213,7 @@ export default function LoginPage() {
               onClick={() => dispatch({ type: "toggle_pw" })}
               tabIndex={-1}
               title={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? "Hide password" : "Show password"}
               className="absolute right-1 top-1/2 -translate-y-1/2 size-9 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-[color,transform] duration-150 active:scale-90"
             >
               <span

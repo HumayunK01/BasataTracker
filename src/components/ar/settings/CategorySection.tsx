@@ -20,7 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, GripVertical, Tag, Loader2, Info, HelpCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, GripVertical, Tag, Loader2, Info, HelpCircle, ChevronUp, ChevronDown } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { EmptyState } from "@/components/ar/industrial";
 import type { Category } from "@/hooks/useCategories";
@@ -64,6 +64,7 @@ interface CategorySectionProps {
   onDragStart: (key: string) => void;
   onDragOver: (e: DragEvent, key: string) => void;
   onDrop: (key: string) => void;
+  onMove: (key: string, dir: -1 | 1) => void;
 }
 
 export function CategorySection({
@@ -79,6 +80,7 @@ export function CategorySection({
   onDragStart,
   onDragOver,
   onDrop,
+  onMove,
 }: CategorySectionProps) {
   return (
     <>
@@ -123,7 +125,7 @@ export function CategorySection({
             />
           ) : (
           <div className="p-4 sm:p-5 grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(220px,1fr))]">
-            {categories.map((c) => {
+            {categories.map((c, index) => {
               const clr = colorForKey(c.key);
               return (
                 <div
@@ -160,7 +162,33 @@ export function CategorySection({
                     <p className="text-sm font-semibold truncate" title={c.label}>{c.label}</p>
                     <p className="text-xs font-mono text-muted-foreground truncate">{c.short}</p>
                   </div>
-                  <div className="flex items-center shrink-0">
+                   <div className="flex items-center shrink-0">
+                    {cat.dragging !== c.key && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-9 sm:size-7 text-muted-foreground hover:text-foreground hover:bg-muted/80 disabled:opacity-30"
+                          title={`Move ${c.label} up`}
+                          aria-label={`Move ${c.label} up`}
+                          disabled={index === 0}
+                          onClick={() => onMove(c.key, -1)}
+                        >
+                          <ChevronUp className="size-4 sm:size-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-9 sm:size-7 text-muted-foreground hover:text-foreground hover:bg-muted/80 disabled:opacity-30"
+                          title={`Move ${c.label} down`}
+                          aria-label={`Move ${c.label} down`}
+                          disabled={index === categories.length - 1}
+                          onClick={() => onMove(c.key, 1)}
+                        >
+                          <ChevronDown className="size-4 sm:size-3.5" />
+                        </Button>
+                      </>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"

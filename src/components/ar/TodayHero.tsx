@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion, type Easing } from "motion/react";
+import { motion, useReducedMotion, type Easing } from "motion/react";
 import { Flame, TrendingUp, TrendingDown, Minus, Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -32,14 +32,6 @@ function saveLocalGoal(n: number) {
 }
 
 const cardEase: Easing = [0.23, 1, 0.32, 1];
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 12 },
-  visible: (i: number) => ({
-    opacity: 1, y: 0,
-    transition: { delay: i * 0.07, duration: 0.3, ease: cardEase },
-  }),
-};
 
 export function TodayHero({ logs }: { logs: DailyLog[] }) {
   const { data: profile } = useProfile();
@@ -102,6 +94,19 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
   const goalPct = Math.min(100, Math.round((stats.todayTotal / goal) * 100));
 
   const delta = stats.avg > 0 ? ((stats.todayTotal - stats.avg) / stats.avg) * 100 : null;
+  const reduceMotion = useReducedMotion();
+
+  const cardVariants = reduceMotion
+    ? { hidden: { opacity: 1 }, visible: () => ({ opacity: 1 }) }
+    : {
+        hidden: { opacity: 0, y: 12 },
+        visible: (i: number) => ({
+          opacity: 1,
+          y: 0,
+          transition: { delay: i * 0.07, duration: 0.3, ease: cardEase },
+        }),
+      };
+
   const deltaDisplay =
     delta === null
       ? { Icon: Minus, text: "No history yet", tone: "text-muted-foreground" }

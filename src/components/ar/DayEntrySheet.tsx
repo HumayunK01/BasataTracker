@@ -67,6 +67,7 @@ function Stepper({
           type="button"
           onClick={dec}
           disabled={value === 0}
+          aria-label={`Decrease ${label}`}
           className="size-10 sm:size-8 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-25 disabled:cursor-not-allowed touch-manipulation"
         >
           <Minus className="size-4 sm:size-3.5" />
@@ -75,6 +76,7 @@ function Stepper({
           type="number"
           min={0}
           inputMode="numeric"
+          aria-label={label}
           value={value}
           onChange={(e) => onChange(Math.max(0, Number(e.target.value) || 0))}
           onFocus={(e) => e.target.select()}
@@ -88,6 +90,7 @@ function Stepper({
         <button
           type="button"
           onClick={inc}
+          aria-label={`Increase ${label}`}
           className="size-10 sm:size-8 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors touch-manipulation"
         >
           <Plus className="size-4 sm:size-3.5" />
@@ -135,8 +138,12 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
   const weekend = isWeekend(draft.log_date);
 
   const save = async () => {
-    await upsert.mutateAsync({ ...draft, notes: draft.notes?.trim() || null });
-    onOpenChange(false);
+    try {
+      await upsert.mutateAsync({ ...draft, notes: draft.notes?.trim() || null });
+      onOpenChange(false);
+    } catch {
+      // The mutation hook surfaces the error toast; keep the sheet open to retry.
+    }
   };
 
   return (

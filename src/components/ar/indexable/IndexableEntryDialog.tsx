@@ -1,33 +1,5 @@
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Info, Loader2, User } from "lucide-react";
-import {
-  STEP_STATUSES,
-  useUpsertIndexable,
-  type IndexableRow,
-  type IndexableStepStatus,
-} from "@/hooks/useIndexableTracker";
-
-// Radix Select can't bind a real null, so steps 2/3 use this sentinel for
-// "not attempted yet" and we translate it back to null on save.
-const NONE = "__none__";
+import { StepEntryDialog } from "@/components/ar/tracker/StepEntryDialog";
+import { useUpsertIndexable, type IndexableRow } from "@/hooks/useIndexableTracker";
 
 interface IndexableEntryDialogProps {
   open: boolean;
@@ -40,170 +12,15 @@ interface IndexableEntryDialogProps {
 
 export function IndexableEntryDialog({ open, onOpenChange, row, accountId }: IndexableEntryDialogProps) {
   const upsert = useUpsertIndexable();
-  const [patientName, setPatientName] = useState("");
-  const [step1, setStep1] = useState<IndexableStepStatus>("Pending");
-  const [step2, setStep2] = useState<string>(NONE);
-  const [step3, setStep3] = useState<string>(NONE);
-  const [notes, setNotes] = useState("");
-  const [error, setError] = useState("");
-
-  // Hydrate fields whenever the dialog opens (new row vs editing existing).
-  useEffect(() => {
-    if (!open) return;
-    setPatientName(row?.patient_name ?? "");
-    setStep1(row?.step1 ?? "Pending");
-    setStep2(row?.step2 ?? NONE);
-    setStep3(row?.step3 ?? NONE);
-    setNotes(row?.notes ?? "");
-    setError("");
-  }, [open, row]);
-
-  // Once an earlier step succeeds, the case is resolved there — later steps
-  // don't apply, so disable (and clear) them.
-  const step2Disabled = step1 === "Successfully Sent";
-  const step3Disabled = step1 === "Successfully Sent" || step2 === "Successfully Sent";
-
-  const save = () => {
-    const name = patientName.trim();
-    if (!name) { setError("Patient name is required."); return; }
-    // Disabled steps are treated as "not attempted" regardless of any stale value.
-    const s2 = step2Disabled ? null : (step2 === NONE ? null : (step2 as IndexableStepStatus));
-    const s3 = step3Disabled ? null : (step3 === NONE ? null : (step3 as IndexableStepStatus));
-    upsert.mutate(
-      {
-        id: row?.id,
-        accountId,
-        input: {
-          patient_name: name,
-          step1,
-          step2: s2,
-          step3: s3,
-          notes: notes.trim() || null,
-        },
-      },
-      { onSuccess: () => onOpenChange(false) },
-    );
-  };
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-lg">
-        <DialogHeader>
-          <DialogTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-            <User className="size-4 text-primary" />
-            {row ? "Edit Patient" : "Add Patient"}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4 py-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="indexable-name" className="text-xs font-semibold text-muted-foreground">Patient Name</Label>
-            <Input
-              id="indexable-name"
-              placeholder="e.g. John Doe"
-              value={patientName}
-              className="font-medium"
-              onChange={(e) => { setPatientName(e.target.value); setError(""); }}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-3">
-            <StepSelect
-              label="Step 1: Refax Same"
-              value={step1}
-              onChange={(v) => setStep1(v as IndexableStepStatus)}
-              allowNone={false}
-            />
-            <StepSelect
-              label="Step 2: Refax New"
-              value={step2Disabled ? NONE : step2}
-              onChange={setStep2}
-              allowNone
-              disabled={step2Disabled}
-              hint="Not needed. Step 1 was sent successfully."
-            />
-            <StepSelect
-              label="Step 3: Reupload Indexable"
-              value={step3Disabled ? NONE : step3}
-              onChange={setStep3}
-              allowNone
-              disabled={step3Disabled}
-              hint="Not needed. An earlier step was sent successfully."
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="indexable-notes" className="text-xs font-semibold text-muted-foreground">Notes</Label>
-            <Textarea
-              id="indexable-notes"
-              placeholder="Optional notes (e.g. fax number, follow-up)"
-              value={notes}
-              maxLength={1000}
-              rows={3}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </div>
-
-          <p className="text-xs text-muted-foreground">
-            Overall status is calculated automatically from the three steps.
-          </p>
-
-          {error && (
-            <div className="flex items-center gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-2.5 py-1.5 animate-fade-in font-medium">
-              <Info className="size-3.5 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-        </div>
-
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" className="border-border/60" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={save}
-            disabled={upsert.isPending}
-            className="bg-primary hover:bg-primary/95 text-primary-foreground shadow-sm shadow-primary/20"
-          >
-            {upsert.isPending && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
-            {row ? "Save" : "Add"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function StepSelect({
-  label,
-  value,
-  onChange,
-  allowNone,
-  disabled,
-  hint,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  allowNone: boolean;
-  disabled?: boolean;
-  hint?: string;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label className="text-xs font-semibold text-muted-foreground">{label}</Label>
-      <Select value={value} onValueChange={onChange} disabled={disabled}>
-        <SelectTrigger>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {allowNone && <SelectItem value={NONE}>Not attempted</SelectItem>}
-          {STEP_STATUSES.map((s) => (
-            <SelectItem key={s} value={s}>{s}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {disabled && hint && <p className="text-xs text-muted-foreground/70 italic">{hint}</p>}
-    </div>
+    <StepEntryDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      row={row}
+      accountId={accountId}
+      upsert={upsert}
+      step3Label="Step 3: Reupload Indexable"
+      idPrefix="indexable"
+    />
   );
 }
