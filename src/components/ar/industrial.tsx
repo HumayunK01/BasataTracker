@@ -34,6 +34,34 @@ export function Panel({ tag, className, children, ticks = true }: { tag: string;
   );
 }
 
+/* Consistent in-panel empty state for instrument sections. */
+export function EmptyState({
+  icon: Icon,
+  title,
+  hint,
+  action,
+  className,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  hint?: string;
+  action?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex flex-col items-center justify-center text-center gap-3 py-10 sm:py-12", className)}>
+      <div className="size-12 rounded-none border border-border grid place-items-center text-primary/70">
+        <Icon className="size-6" />
+      </div>
+      <div className="space-y-1">
+        <p className="font-heading text-sm font-bold uppercase tracking-[0.15em] text-foreground">{title}</p>
+        {hint && <p className="text-xs text-muted-foreground max-w-xs">{hint}</p>}
+      </div>
+      {action}
+    </div>
+  );
+}
+
 /* Live mono clock (Chicago). */
 export function Clock() {
   const [now, setNow] = useState(() => new Date());

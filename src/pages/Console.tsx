@@ -1,7 +1,7 @@
 import { lazy, Suspense, useMemo } from "react";
-import { motion, type Easing } from "motion/react";
+import { motion, type Easing, useReducedMotion } from "motion/react";
 import { useNavigate } from "react-router-dom";
-import { Plus, BarChart2 } from "lucide-react";
+import { Plus, BarChart2, CalendarDays, LineChart } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { Button } from "@/components/ui/button";
 import { TodayHero } from "@/components/ar/TodayHero";
@@ -14,7 +14,7 @@ import { useFaxResolvedByDay, FAX_CATEGORY_KEY, FAX_CATEGORY_LABEL } from "@/hoo
 import { useIndexableResolvedByDay, INDEXABLE_CATEGORY_KEY, INDEXABLE_CATEGORY_LABEL } from "@/hooks/useIndexableTracker";
 import { isoDate, totalForLog } from "@/types/log";
 import { colorForKey } from "@/lib/cat-colors";
-import { FigHeader, Panel, CategoryStatCard, Clock } from "@/components/ar/industrial";
+import { FigHeader, Panel, CategoryStatCard, Clock, EmptyState } from "@/components/ar/industrial";
 
 const Charts = lazy(() => import("@/components/ar/Charts").then((m) => ({ default: m.Charts })));
 
@@ -27,6 +27,7 @@ const Console = () => {
   const { data: indexableByDay = {} } = useIndexableResolvedByDay();
   const { data: profile } = useProfile();
   const navigate = useNavigate();
+  const reduce = useReducedMotion();
 
   const displayName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ").trim();
 
@@ -67,45 +68,72 @@ const Console = () => {
                 </div>
               ))}
             </div>
-          ) : !isEmpty && <TodayHero logs={logs} />}
+          ) : isEmpty ? (
+            <Panel tag="READOUT">
+              <EmptyState
+                icon={BarChart2}
+                title="No Activity Logged"
+                hint="Log your first day to bring this console online."
+                action={
+                  <Button size="sm" onClick={() => navigate("/log")}>
+                    <Plus className="size-4 mr-1.5" /> Log first day
+                  </Button>
+                }
+              />
+            </Panel>
+          ) : (
+            <TodayHero logs={logs} />
+          )}
 
           {/* ── Category breakdown ── */}
           <section>
             <FigHeader code="FIG.01" title="Cumulative by Category" />
-            <div className="grid gap-2 sm:gap-3 [grid-template-columns:repeat(auto-fill,minmax(124px,1fr))] sm:[grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">
-              {isLoading
-                ? Array.from({ length: 6 }).map((_, i) => (
+            <Panel tag="CAT">
+              <div className="grid gap-2 sm:gap-3 [grid-template-columns:repeat(auto-fill,minmax(124px,1fr))] sm:[grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">
+                {isLoading
+                  ? Array.from({ length: 6 }).map((_, i) => (
                     <div key={i} className="bg-card border border-border p-3 space-y-2">
                       <Skeleton width={56} height={12} /><Skeleton width={40} height={24} />
                     </div>
                   ))
-                : [...stats.categoryTotals].sort((a, b) => b.value - a.value).map((c, i) => (
+                  : [...stats.categoryTotals].sort((a, b) => b.value - a.value).map((c, i) => (
                     <CategoryStatCard key={c.key} code={`CAT-${String(i + 1).padStart(2, "0")}`} label={c.label} value={c.value} color={colorForKey(c.key)} />
                   ))}
-            </div>
+              </div>
+            </Panel>
           </section>
 
           {/* ── Heatmap ── */}
           <motion.section
-            initial={{ opacity: 0, y: 16 }}
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.35, ease: sectionEase }}
+            transition={reduce ? { duration: 0 } : { duration: 0.35, ease: sectionEase }}
           >
             <FigHeader code="FIG.02" title="Activity Density" />
             {isLoading ? (
               <Panel tag="HEATMAP">
                 <Skeleton height={144} />
               </Panel>
-            ) : !isEmpty && <Panel tag="HEATMAP"><ContributionHeatmap logs={logs} /></Panel>}
+            ) : isEmpty ? (
+              <Panel tag="HEATMAP">
+                <EmptyState
+                  icon={CalendarDays}
+                  title="No Activity Yet"
+                  hint="The density grid populates as you log days."
+                />
+              </Panel>
+            ) : (
+              <Panel tag="HEATMAP"><ContributionHeatmap logs={logs} /></Panel>
+            )}
           </motion.section>
 
           {/* ── Charts ── */}
           <motion.section
-            initial={{ opacity: 0, y: 16 }}
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.35, ease: sectionEase }}
+            transition={reduce ? { duration: 0 } : { duration: 0.35, ease: sectionEase }}
           >
             <FigHeader code="FIG.03" title="Trends & Breakdown" />
             {isLoading ? (
@@ -117,13 +145,12 @@ const Console = () => {
                 ))}
               </div>
             ) : isEmpty ? (
-              <Panel tag="EMPTY" className="flex flex-col items-center justify-center py-16 gap-4 text-muted-foreground">
-                <BarChart2 className="size-12 opacity-20" />
-                <div className="text-center space-y-1">
-                  <p className="text-sm font-medium text-foreground">NO DATA ON RECORD</p>
-                  <p className="text-xs font-mono">Log a day to populate the readout.</p>
-                </div>
-                <Button size="sm" onClick={() => navigate("/log")}><Plus className="size-4 mr-1" /> Log first day</Button>
+              <Panel tag="CHART">
+                <EmptyState
+                  icon={LineChart}
+                  title="No Trends Yet"
+                  hint="Charts appear once you have logged days."
+                />
               </Panel>
             ) : (
               <Suspense fallback={null}><Charts logs={logs} categories={categories} /></Suspense>
