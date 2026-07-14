@@ -346,7 +346,7 @@ const ReportPage = () => {
                     ? "border-destructive/70 focus-within:border-destructive"
                     : "border-input hover:border-primary/40 focus-within:border-primary",
                 ].join(" ")}
-                title={rangeDays === 0 ? "Invalid range — end date is before start date" : undefined}
+                title={rangeDays === 0 ? "Invalid range: end date is before start date" : undefined}
                 onClick={(e) => {
                   const input = e.currentTarget.querySelector("input");
                   try { input?.showPicker(); } catch { input?.focus(); }
@@ -370,7 +370,7 @@ const ReportPage = () => {
                     ? "border-destructive/70 focus-within:border-destructive"
                     : "border-input hover:border-primary/40 focus-within:border-primary",
                 ].join(" ")}
-                title={rangeDays === 0 ? "Invalid range — end date is before start date" : undefined}
+                title={rangeDays === 0 ? "Invalid range: end date is before start date" : undefined}
                 onClick={(e) => {
                   const input = e.currentTarget.querySelector("input");
                   try { input?.showPicker(); } catch { input?.focus(); }
