@@ -390,6 +390,17 @@
     100% { opacity: 1; transform: scale(1); }
   }
 
+  /* Counter number pop — retriggered by remounting the element (key change). */
+  .counter-pop {
+    animation: counter-pop 180ms var(--ease-out);
+  }
+
+  @keyframes counter-pop {
+    0% { transform: scale(1.18); }
+    60% { transform: scale(0.97); }
+    100% { transform: scale(1); }
+  }
+
   /* Data-dense: tighter tables with hairlines */
   .dense-table tbody tr {
     transition: background-color 0.12s var(--ease-out);
@@ -435,6 +446,9 @@
   }
   .press-scale:active {
     transform: none;
+  }
+  .counter-pop {
+    animation: none;
   }
   .day-cell:hover,
   .day-cell[aria-selected="true"] {

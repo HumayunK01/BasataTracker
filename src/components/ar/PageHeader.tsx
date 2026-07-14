@@ -23,9 +23,9 @@ export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
               {formatHeaderDate(date)}
             </p>
             {(title || subtitle) && (
-              <div className="font-mono text-sm font-semibold uppercase tracking-[0.12em] text-foreground truncate leading-tight mt-0.5">
+              <h1 className="font-mono text-sm font-semibold uppercase tracking-[0.12em] text-foreground truncate leading-tight mt-0.5">
                 {title ?? subtitle}
-              </div>
+              </h1>
             )}
           </div>
         </div>

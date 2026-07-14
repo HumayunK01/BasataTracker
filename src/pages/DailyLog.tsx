@@ -67,7 +67,7 @@ const DailyLogPage = () => {
           <>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="size-10 sm:h-8 sm:w-auto sm:px-3" disabled={logs.length === 0}>
+                <Button variant="outline" size="icon" className="size-10 sm:h-8 sm:w-auto sm:px-3" disabled={logs.length === 0} aria-label="Export logs">
                   <Download className="size-5 sm:size-4 sm:mr-1" />
                   <span className="hidden sm:inline">Export</span>
                   <ChevronDown className="size-3 ml-1 opacity-60 hidden sm:inline" />
@@ -99,17 +99,17 @@ const DailyLogPage = () => {
             {isLoading ? (
               <div className="flex-1 flex flex-col gap-3 pt-2">
                 <div className="flex gap-3">
-                  <Skeleton width={192} height={32} borderRadius={6} />
-                  <Skeleton width={224} height={32} borderRadius={6} />
+                  <Skeleton width={192} height={32} borderRadius={0} />
+                  <Skeleton width={224} height={32} borderRadius={0} />
                 </div>
                 <div className="bg-card border border-border rounded-md overflow-hidden">
                   {Array.from({ length: 8 }).map((_, i) => (
                     <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-border/50 last:border-0">
-                      <Skeleton width={96} height={16} borderRadius={4} />
-                      <Skeleton width={32} height={16} borderRadius={4} />
-                      <Skeleton width={32} height={16} borderRadius={4} />
-                      <Skeleton width={32} height={16} borderRadius={4} />
-                      <Skeleton width={32} height={16} borderRadius={4} />
+                      <Skeleton width={96} height={16} borderRadius={0} />
+                      <Skeleton width={32} height={16} borderRadius={0} />
+                      <Skeleton width={32} height={16} borderRadius={0} />
+                      <Skeleton width={32} height={16} borderRadius={0} />
+                      <Skeleton width={32} height={16} borderRadius={0} />
                     </div>
                   ))}
                 </div>

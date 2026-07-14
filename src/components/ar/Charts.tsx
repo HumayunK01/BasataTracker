@@ -33,7 +33,7 @@ const T = {
   container: {
     backgroundColor: "hsl(var(--popover))",
     border: "1px solid hsl(var(--popover-border))",
-    borderRadius: "10px",
+    borderRadius: "0",
     padding: "10px 14px",
     boxShadow: "var(--shadow-popover)",
   },
@@ -43,6 +43,11 @@ const T = {
 };
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+// ponytail: local-date key (not toISOString) so week bucketing is correct in +UTC zones
+function localDateKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 function ChartCard({ title, subtitle, height = "h-48 sm:h-56", children, className = "", footer }: {
   title: string;
@@ -137,14 +142,15 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
       const day = d.getDay();
       const monday = new Date(d);
       monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
-      const key = monday.toISOString().slice(0, 10);
+      const key = localDateKey(monday);
       map.set(key, (map.get(key) ?? 0) + totalForLog(l));
     });
     return [...map.entries()]
       .sort(([a], [b]) => a.localeCompare(b))
       .slice(-10)
       .map(([iso, total]) => {
-        const d = new Date(`${iso}T12:00:00`);
+        const [y, m, day] = iso.split("-").map(Number);
+        const d = new Date(y, m - 1, day);
         return {
           week: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
           total,

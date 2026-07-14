@@ -105,6 +105,7 @@ export function AppSidebar() {
             size="icon"
             className="size-10 text-muted-foreground shrink-0 rounded-none"
             onClick={() => setOpenMobile(false)}
+            aria-label="Close menu"
           >
             <X className="size-5" />
           </Button>
@@ -194,6 +195,7 @@ export function AppSidebar() {
             className="flex-1 size-9 text-foreground hover:text-foreground/80 rounded-none border border-sidebar-border group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
             onClick={() => { navigate("/settings"); setOpenMobile(false); }}
             title="Settings"
+            aria-label="Settings"
           >
             <Settings className="size-5" />
           </Button>
@@ -203,6 +205,7 @@ export function AppSidebar() {
             className="flex-1 size-9 text-foreground hover:text-foreground/80 rounded-none border border-sidebar-border group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
             onClick={toggle}
             title={theme === "dark" ? "Light mode" : "Dark mode"}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           >
             {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
           </Button>
@@ -213,6 +216,7 @@ export function AppSidebar() {
                 size="icon"
                 className="flex-1 size-9 text-foreground hover:text-destructive rounded-none border border-sidebar-border group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
                 title="Sign out"
+                aria-label="Sign out"
               >
                 <LogOut className="size-5" />
               </Button>

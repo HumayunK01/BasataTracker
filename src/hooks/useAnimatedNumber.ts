@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useReducedMotion } from "motion/react";
 
 /** Eases a displayed number toward `value` so totals animate instead of jumping. */
 export function useAnimatedNumber(value: number, duration = 400) {
@@ -6,8 +7,10 @@ export function useAnimatedNumber(value: number, duration = 400) {
   const fromRef = useRef(value);
   const startRef = useRef(0);
   const rafRef = useRef(0);
+  const reduce = useReducedMotion();
 
   useEffect(() => {
+    if (reduce) { setDisplay(value); return; }
     fromRef.current = display;
     startRef.current = 0;
     const from = fromRef.current;
@@ -24,7 +27,7 @@ export function useAnimatedNumber(value: number, duration = 400) {
     rafRef.current = requestAnimationFrame(step);
     return () => cancelAnimationFrame(rafRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, duration]);
+  }, [value, duration, reduce]);
 
   return display;
 }

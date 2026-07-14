@@ -169,6 +169,18 @@ export default function SettingsPage() {
     catDispatch({ type: "drag_end" });
   }
 
+  function handleMove(key: string, dir: -1 | 1) {
+    const from = categories.findIndex((c) => c.key === key);
+    const to = from + dir;
+    if (from < 0 || to < 0 || to >= categories.length) return;
+    const next = [...categories];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    reorderCategories.mutate(next, {
+      onSuccess: () => { toast.success("Category order updated."); }
+    });
+  }
+
   const handleChangePassword = async () => {
     if (!pwState.next) { pwDispatch({ type: "done", error: "New password is required." }); return; }
     if (pwState.next.length < 6) { pwDispatch({ type: "done", error: "Password must be at least 6 characters." }); return; }
@@ -259,6 +271,7 @@ export default function SettingsPage() {
               if (cat.dragOver !== key) catDispatch({ type: "drag_over", key });
             }}
             onDrop={handleDrop}
+            onMove={handleMove}
           />
 
           <FigHeader code="FIG.03" title="Danger Zone" />

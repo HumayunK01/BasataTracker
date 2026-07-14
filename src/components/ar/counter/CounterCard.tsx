@@ -135,7 +135,7 @@ export function CounterCard({
       >
         <span
           key={bump}
-          className="text-5xl sm:text-6xl font-black font-mono tabular-nums leading-none [animation:counter-pop_180ms_ease-out] select-none"
+          className="counter-pop text-5xl sm:text-6xl font-black font-mono tabular-nums leading-none select-none"
           style={{ color: count > 0 ? clr : "hsl(var(--muted-foreground) / 0.3)" }}
         >
           {count}

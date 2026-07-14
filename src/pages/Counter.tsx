@@ -290,9 +290,6 @@ export default function CounterPage() {
 
   return (
     <>
-      <style>{`
-        @keyframes counter-pop{0%{transform:scale(1.18)}60%{transform:scale(0.97)}100%{transform:scale(1)}}
-      `}</style>
       <PageHeader
         now={now}
         subtitle="Counter"

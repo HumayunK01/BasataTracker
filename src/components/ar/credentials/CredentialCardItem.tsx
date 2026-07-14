@@ -166,7 +166,7 @@ function Field({ label, value, mono, reveal, copied, onCopy, onReveal }: FieldPr
         aria-label={`Copy ${label}`}
         className={cn(
           "shrink-0 press-scale transition-colors cursor-pointer",
-          copied ? "text-emerald-500" : "text-muted-foreground hover:text-foreground",
+          copied ? "text-success" : "text-muted-foreground hover:text-foreground",
         )}
       >
         {copied ? <Check className="size-4 animate-fade-in" /> : <Copy className="size-4" />}

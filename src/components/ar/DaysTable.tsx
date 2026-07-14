@@ -344,6 +344,7 @@ export function DaysTable({ logs, onEdit }: Props) {
             <Input
               className="pl-9 h-10 text-sm w-full bg-card border-border"
               placeholder="Search by date…"
+              aria-label="Search days by date"
               value={search}
               onChange={(e) => tDispatch({ type: "set_search", q: e.target.value })}
             />

@@ -269,7 +269,7 @@ const ReportPage = () => {
         actions={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="size-10 sm:hidden shrink-0" disabled={filtered.length === 0}>
+              <Button variant="outline" size="icon" className="size-10 sm:hidden shrink-0" disabled={filtered.length === 0} aria-label="Export report">
                 <Download className="size-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -395,15 +395,15 @@ const ReportPage = () => {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="bg-card border border-border rounded-md p-3 sm:p-4 space-y-2">
-                  <Skeleton width={80} height={12} borderRadius={4} />
-                  <Skeleton width={64} height={32} borderRadius={4} />
-                  <Skeleton width={96} height={12} borderRadius={4} />
+                  <Skeleton width={80} height={12} borderRadius={0} />
+                  <Skeleton width={64} height={32} borderRadius={0} />
+                  <Skeleton width={96} height={12} borderRadius={0} />
                 </div>
               ))}
             </div>
             <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-3">
-              <Skeleton width={144} height={16} borderRadius={4} />
-              <Skeleton height={176} borderRadius={6} />
+              <Skeleton width={144} height={16} borderRadius={0} />
+              <Skeleton height={176} borderRadius={0} />
             </div>
           </>
           ) : filtered.length === 0 ? (
