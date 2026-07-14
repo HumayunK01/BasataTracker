@@ -15,8 +15,7 @@ import { useUpsertLog, useDailyLogs } from "@/hooks/useDailyLogs";
 import { isoDate, totalForLog } from "@/types/log";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { FigHeader } from "@/components/ar/industrial";
-import { RotateCcw, Save, CheckCircle2, Hash, Plus, Tag, ChevronRight } from "lucide-react";
-import { colorForKey } from "@/lib/cat-colors";
+import { RotateCcw, Save, CheckCircle2, Hash, Plus, Tag, ChevronRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
@@ -283,7 +282,9 @@ export default function CounterPage() {
       await flush(counts, keys);
       cDispatch({ type: "set_saved", v: true });
     } catch {
-      // error handled by hook
+      toast.error("Couldn't save counts", {
+        description: "Check your connection and try again.",
+      });
     }
   };
 
@@ -300,6 +301,7 @@ export default function CounterPage() {
             <Button
               variant="outline"
               size="sm"
+              aria-label="Reset counter"
               className="h-10 md:h-8 px-3 mr-2 border-border/60 hover:bg-muted/80 transition-colors duration-200"
               onClick={() => setResetOpen(true)}
               disabled={total === 0 && activeCategories.length === 0}
@@ -309,6 +311,7 @@ export default function CounterPage() {
             </Button>
             <Button
               size="sm"
+              aria-label="Save counts"
               className={`h-10 md:h-8 px-3 shadow-sm transition-colors duration-200 ${
                 saved
                   ? "bg-success hover:bg-success/90 text-success-foreground shadow-success/10"
@@ -323,7 +326,10 @@ export default function CounterPage() {
                   <span className="hidden xs:inline ml-1 font-semibold">Saved</span>
                 </>
               ) : upsert.isPending ? (
-                <span className="font-semibold">Saving…</span>
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  <span className="hidden xs:inline ml-1 font-semibold">Saving…</span>
+                </>
               ) : (
                 <>
                   <Save className="size-4" />
@@ -337,72 +343,36 @@ export default function CounterPage() {
 
       <main className="flex-1 overflow-y-auto">
         <div className="w-full px-3 sm:px-6 py-4 sm:py-6 flex flex-col gap-4">
-          {/* Hero total today */}
-          <section className="relative bg-card border border-border p-4 sm:p-5">
+          {/* Hero — session total instrument */}
+          <section className="relative bg-card border border-border p-5 sm:p-6 overflow-hidden">
             <span className="pointer-events-none absolute top-0 left-0 size-2 border-t border-l border-primary/40" />
             <span className="pointer-events-none absolute bottom-0 right-0 size-2 border-b border-r border-primary/40" />
-            <p className="font-mono text-2xs uppercase tracking-[0.2em] text-muted-foreground mb-3">FIG.01 · SESSION TOTAL</p>
-              <div className="flex items-end justify-between gap-4 flex-wrap">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-heading">
-                      Total today
-                    </p>
-                    <span
-                      className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                        saved
-                          ? "bg-success/15 text-success border border-success/10"
-                          : total > 0
-                          ? "bg-warning/15 text-warning border border-warning/10"
-                          : "bg-muted text-muted-foreground border border-border/40"
-                      }`}
-                    >
-                      {saved ? "Saved" : total > 0 ? "Unsaved" : "Empty"}
-                    </span>
-                  </div>
-                  <p className="text-6xl sm:text-7xl font-black tabular-nums text-primary leading-none mt-1.5">
-                    {animatedTotal}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-2 font-medium">
-                    {saved
-                      ? "All counts synchronized to database"
-                      : todayLog
-                      ? `Last saved value: ${todayTotal} documents`
-                      : "No documents saved yet today"}
-                  </p>
-                </div>
 
-                {activeCategories.length > 0 && (
-                  <div className="flex-1 min-w-[180px] max-w-xs space-y-1.5">
-                    {activeCategories
-                      .filter((c) => getCount(c.key) > 0)
-                      .sort((a, b) => getCount(b.key) - getCount(a.key))
-                      .slice(0, 5)
-                      .map((cat) => {
-                        const clr = colorForKey(cat.key);
-                        const c = getCount(cat.key);
-                        const pct = total > 0 ? (c / total) * 100 : 0;
-                        return (
-                          <div key={cat.key} className="flex items-center gap-2 animate-fade-in">
-                            <span className="text-xs font-mono font-bold w-10 shrink-0 text-right" style={{ color: clr }}>
-                              {cat.short}
-                            </span>
-                            <div className="flex-1 h-1.5 rounded-full bg-muted/40 border border-border/20 overflow-hidden">
-                              <div
-                                className="h-full rounded-full transition-[width] duration-500 ease-out"
-                                style={{ width: `${pct}%`, backgroundColor: clr }}
-                              />
-                            </div>
-                            <span className="text-xs font-mono tabular-nums w-6 text-muted-foreground/80 text-right">
-                              {c}
-                            </span>
-                          </div>
-                        );
-                      })}
-                  </div>
-                )}
-              </div>
-            </section>
+            <p className="font-mono text-2xs uppercase tracking-[0.2em] text-muted-foreground">FIG.01 · SESSION TOTAL</p>
+            <div className="mt-3 flex items-center gap-3 flex-wrap">
+              <p className="text-7xl sm:text-8xl font-black tabular-nums text-primary leading-none">
+                {animatedTotal}
+              </p>
+              <span
+                className={`text-2xs font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-none border ${
+                  saved
+                    ? "bg-success/15 text-success border-success/30"
+                    : total > 0
+                    ? "bg-warning/15 text-warning border-warning/30"
+                    : "bg-muted text-muted-foreground border-border/40"
+                }`}
+              >
+                {saved ? "Synced" : total > 0 ? "Unsaved" : "Empty"}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-3 font-medium">
+              {saved
+                ? "All counts synchronized to database"
+                : todayLog
+                ? `Last saved value: ${todayTotal} documents`
+                : "No documents saved yet today"}
+            </p>
+          </section>
 
           {/* Counter cards grid */}
           {activeCategories.length > 0 && (
@@ -425,13 +395,14 @@ export default function CounterPage() {
             </>
           )}
 
-          {/* Add to counter + create new */}
+          {/* Manage categories */}
+          <FigHeader code="FIG.03" title="Manage Categories" />
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               type="button"
               onClick={() => setPickerOpen(true)}
               disabled={catsLoading || availableToAdd.length === 0}
-              className="flex-1 flex items-center gap-3 rounded-md border border-border bg-card px-4 py-3 text-left hover:bg-muted/40 hover:border-foreground/20 active:scale-[0.99] transition-[background-color,border-color,transform] duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:border-border touch-manipulation cursor-pointer"
+              className="flex-1 flex items-center gap-3 rounded-md border border-border bg-card px-4 py-3 text-left hover:bg-muted/40 hover:border-foreground/20 active:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40 transition-[background-color,border-color,opacity] duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:border-border touch-manipulation cursor-pointer"
             >
               <span className="size-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <Plus className="size-5 text-primary" />
@@ -460,7 +431,7 @@ export default function CounterPage() {
               type="button"
               onClick={() => setNewCatOpen(true)}
               disabled={catsLoading}
-              className="sm:w-64 flex items-center gap-3 rounded-md border border-primary/30 bg-card px-4 py-3 text-left hover:bg-primary/5 hover:border-primary/60 active:scale-[0.99] transition-[background-color,border-color,transform] duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:border-primary/30 touch-manipulation cursor-pointer"
+              className="sm:w-64 flex items-center gap-3 rounded-md border border-primary/30 bg-card px-4 py-3 text-left hover:bg-primary/5 hover:border-primary/60 active:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40 transition-[background-color,border-color,opacity] duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:border-primary/30 touch-manipulation cursor-pointer"
             >
               <span className="size-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <Tag className="size-5 text-primary" />
@@ -474,9 +445,12 @@ export default function CounterPage() {
 
           {/* Empty state */}
           {activeCategories.length === 0 && !catsLoading && categories.length > 0 && (
-            <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground animate-fade-in">
-              <Hash className="size-10 opacity-20 animate-pulse" />
-              <p className="text-sm font-medium">Select an active category above to begin document tracking.</p>
+            <div className="flex flex-col items-center justify-center gap-3 py-14 px-6 text-center border border-dashed border-border bg-card/40 animate-fade-in">
+              <Hash className="size-9 text-muted-foreground/40" />
+              <p className="text-sm font-medium text-foreground/80">No active counters yet</p>
+              <p className="text-xs text-muted-foreground max-w-xs">
+                Add a category from the tray below to start tracking documents for today.
+              </p>
             </div>
           )}
         </div>
