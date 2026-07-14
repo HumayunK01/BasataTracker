@@ -103,7 +103,7 @@ export function CategoryPicker({ open, onOpenChange, categories, onPick }: Categ
     onOpenChange(false);
   };
 
-  const subtitle = `${categories.length} ${categories.length === 1 ? "category" : "categories"} available — pick one to start counting`;
+  const subtitle = `${categories.length} ${categories.length === 1 ? "category" : "categories"} available. Pick one to start counting.`;
 
   if (isMobile) {
     return (

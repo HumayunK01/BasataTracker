@@ -205,8 +205,8 @@ export const ContributionHeatmap = memo(function ContributionHeatmap({ logs }: P
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold">Activity{"—"}{currentYear}</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Days worked, off days, and doc volume at a glance</p>
+          <h2 className="text-sm font-semibold">Activity {currentYear}</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Days worked, off days, and doc volume</p>
         </div>
         {/* Legend */}
         <div className="flex items-center gap-2 sm:gap-3 text-xs text-muted-foreground select-none flex-wrap">

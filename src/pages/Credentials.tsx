@@ -491,7 +491,7 @@ const CredentialsPage = () => {
                   variant="outline"
                   size="sm"
                   className="h-9"
-                  onClick={() => downloadCredentialPDF(selectedRows, `selected-${selectedRows.length}-credentials`, `Credential Vault — ${selectedRows.length} Selected`)}
+                  onClick={() => downloadCredentialPDF(selectedRows, `selected-${selectedRows.length}-credentials`, `Credential Vault: ${selectedRows.length} selected`)}
                 >
                   <FileDown className="size-4 mr-1.5" /> Export PDF
                 </Button>
@@ -588,7 +588,7 @@ const CredentialsPage = () => {
                             <button
                               type="button"
                               onClick={() => copyField(`${c.id}:login`, c.login_id, "Login ID")}
-                              title={`${c.login_id} — click to copy`}
+                              title={`${c.login_id}: click to copy`}
                               className="press-scale text-left hover:underline underline-offset-2 truncate block max-w-full"
                             >
                               {c.login_id}

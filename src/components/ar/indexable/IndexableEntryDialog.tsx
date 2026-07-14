@@ -109,26 +109,26 @@ export function IndexableEntryDialog({ open, onOpenChange, row, accountId }: Ind
 
           <div className="grid grid-cols-1 gap-3">
             <StepSelect
-              label="Step 1 — Refax Same"
+              label="Step 1: Refax Same"
               value={step1}
               onChange={(v) => setStep1(v as IndexableStepStatus)}
               allowNone={false}
             />
             <StepSelect
-              label="Step 2 — Refax New"
+              label="Step 2: Refax New"
               value={step2Disabled ? NONE : step2}
               onChange={setStep2}
               allowNone
               disabled={step2Disabled}
-              hint="Not needed — Step 1 was successfully sent."
+              hint="Not needed. Step 1 was sent successfully."
             />
             <StepSelect
-              label="Step 3 — Reupload Indexable"
+              label="Step 3: Reupload Indexable"
               value={step3Disabled ? NONE : step3}
               onChange={setStep3}
               allowNone
               disabled={step3Disabled}
-              hint="Not needed — an earlier step was successfully sent."
+              hint="Not needed. An earlier step was sent successfully."
             />
           </div>
 
@@ -197,7 +197,7 @@ function StepSelect({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {allowNone && <SelectItem value={NONE}>— Not attempted —</SelectItem>}
+          {allowNone && <SelectItem value={NONE}>Not attempted</SelectItem>}
           {STEP_STATUSES.map((s) => (
             <SelectItem key={s} value={s}>{s}</SelectItem>
           ))}
