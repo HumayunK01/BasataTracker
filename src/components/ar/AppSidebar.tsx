@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, useReducedMotion, type Easing } from "motion/react";
-import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, Settings, Sun, Moon, LogOut, BookOpen, Tags, ExternalLink, Send } from "lucide-react";
+import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, Settings, Sun, Moon, LogOut, BookOpen, Tags, ExternalLink, Send, KeyRound } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/hooks/useProfile";
@@ -50,6 +50,7 @@ const groups = [
           { title: "Counter", icon: Hash, path: "/counter" },
           { title: "Daily Log", icon: CalendarDays, path: "/log" },
           { title: "Tracker", icon: Send, path: "/tracker" },
+          { title: "Vault", icon: KeyRound, path: "/vault" },
         ],
       },
 ];

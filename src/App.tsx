@@ -16,6 +16,7 @@ import {
   ReportPage,
   CounterPage,
   FaxTrackerPage,
+  VaultPage,
   NotFound,
 } from "@/lib/routePreload";
 
@@ -65,6 +66,7 @@ const App = () => (
                   <Route path="/tracker" element={<FaxTrackerPage />} />
                   {/* Legacy path — the page now hosts both Fax and Indexable */}
                   <Route path="/fax-tracker" element={<FaxTrackerPage />} />
+                  <Route path="/vault" element={<VaultPage />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
