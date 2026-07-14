@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, GripVertical, Tag, Loader2, Info, HelpCircle } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
+import { EmptyState } from "@/components/ar/industrial";
 import type { Category } from "@/hooks/useCategories";
 
 export interface CategoryFormState {
@@ -114,12 +115,13 @@ export function CategorySection({
               </div>
             ))}
           </div>
-        ) : categories.length === 0 ? (
-          <div className="py-16 flex flex-col items-center gap-3 text-muted-foreground">
-            <Tag className="size-10 opacity-20" />
-            <p className="text-sm">No categories yet. Click Add category to create your first one.</p>
-          </div>
-        ) : (
+          ) : categories.length === 0 ? (
+            <EmptyState
+              icon={Tag}
+              title="No Categories Yet"
+              hint="Click Add category to create your first one."
+            />
+          ) : (
           <div className="p-4 sm:p-5 grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(220px,1fr))]">
             {categories.map((c) => {
               const clr = colorForKey(c.key);

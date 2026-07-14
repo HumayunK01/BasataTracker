@@ -25,7 +25,8 @@ import { Pagination } from "@/components/Pagination";
 import { formatTableDate, isWeekend, type DailyLog } from "@/types/log";
 import { useDeleteLog } from "@/hooks/useDailyLogs";
 import { useCategories, type Category } from "@/hooks/useCategories";
-import { Trash2, Pencil, Search, BedDouble, Copy, Check } from "lucide-react";
+import { Trash2, Pencil, Search, BedDouble, Copy, Check, CalendarDays } from "lucide-react";
+import { EmptyState } from "@/components/ar/industrial";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function getVal(l: DailyLog, key: string): number { return (l.counts ?? {})[key] ?? 0; }
@@ -48,9 +49,12 @@ function MobileCardList({ paginated, categories, search, copiedId, onEdit, onDel
     <div className="flex flex-col flex-1 min-h-0 sm:hidden bg-card border border-border rounded-md overflow-hidden">
       <div className="flex-1 overflow-y-auto no-scrollbar divide-y divide-border/50 min-h-0">
         {paginated.length === 0 && (
-          <p className="text-center text-muted-foreground py-16 text-sm">
-            {search ? "No entries match your search." : "No days logged yet."}
-          </p>
+          <EmptyState
+            className="py-12"
+            icon={CalendarDays}
+            title={search ? "No Matches" : "No Days Yet"}
+            hint={search ? "Nothing matches your search." : "Log a day to start your history."}
+          />
         )}
         {paginated.map((l) => {
           const isOff = l.is_off_day;
@@ -152,8 +156,13 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
           <TableBody>
             {paginated.length === 0 && (
               <TableRow>
-                <TableCell colSpan={categories.length + 3} className="text-center text-muted-foreground py-16 text-sm">
-                  {search ? "No entries match your search." : "No days logged yet."}
+                <TableCell colSpan={categories.length + 3} className="text-center">
+                  <EmptyState
+                    className="py-12"
+                    icon={CalendarDays}
+                    title={search ? "No Matches" : "No Days Yet"}
+                    hint={search ? "Nothing matches your search." : "Log a day to start your history."}
+                  />
                 </TableCell>
               </TableRow>
             )}

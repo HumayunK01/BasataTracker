@@ -93,9 +93,9 @@ export function stepIsSkipped(row: { step1: FaxStepStatus; step2: FaxStepStatus 
 
 export function stepLabels(mode: TrackerMode): [string, string, string] {
   return [
-    "Step 1 – Refax Same",
-    "Step 2 – Refax New",
-    mode === "indexable" ? "Step 3 – Reupload Indexable" : "Step 3 – Reupload ROI",
+    "Step 1",
+    "Step 2",
+    "Step 3",
   ];
 }
 

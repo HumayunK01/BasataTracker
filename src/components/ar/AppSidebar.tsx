@@ -4,7 +4,6 @@ import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, Settings, Sun, Mo
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/hooks/useProfile";
-import { useUnresolvedCounts } from "@/hooks/useTrackerCounts";
 import {
   Sidebar,
   SidebarContent,
@@ -75,7 +74,6 @@ export function AppSidebar() {
   const { user, signOut } = useAuth();
   const { theme, toggle } = useTheme();
   const { data: profile } = useProfile();
-  const { data: counts } = useUnresolvedCounts();
   const reduce = useReducedMotion();
 
   const go = (path: string) => {
@@ -91,7 +89,6 @@ export function AppSidebar() {
     return ((f + l) || email[0] || "?").toUpperCase();
   })();
 
-  const trackerBadge = (counts?.total ?? 0) > 0 ? counts!.total : null;
 
   return (
     <Sidebar collapsible="icon">
@@ -124,7 +121,6 @@ export function AppSidebar() {
             <SidebarMenu className="px-2 group-data-[collapsible=icon]:px-1 space-y-0.5">
               {group.items.map((item) => {
                 const active = location.pathname === item.path;
-                const badge = item.path === "/tracker" ? trackerBadge : null;
                 return (
                   <SidebarMenuItem key={item.path} className="relative">
                     {active && (
@@ -149,9 +145,6 @@ export function AppSidebar() {
                       <item.icon />
                       <span>{item.title}</span>
                     </SidebarMenuButton>
-                    {badge !== null && (
-                      <SidebarMenuBadge className="rounded-none bg-primary text-primary-foreground font-mono">{badge}</SidebarMenuBadge>
-                    )}
                   </SidebarMenuItem>
                 );
               })}
@@ -243,7 +236,7 @@ export function AppSidebar() {
           </AlertDialog>
         </div>
         <div className="text-center pb-1 group-data-[collapsible=icon]:hidden">
-          <p className="font-mono text-2xs text-muted-foreground/50 tracking-[0.2em]">v1.2.0</p>
+          <p className="font-mono text-2xs text-muted-foreground/50 tracking-[0.2em]">v1.2.1</p>
         </div>
       </SidebarFooter>
 

@@ -17,7 +17,7 @@ import { downloadCSV, downloadJSON, downloadPDF } from "@/lib/log-utils";
 import { isoDate, totalForLog, type DailyLog } from "@/types/log";
 import { CalendarDays, Download, FileJson, FileText, FileType, Plus, ChevronDown } from "lucide-react";
 import { PageHeader } from "@/components/ar/PageHeader";
-import { FigHeader } from "@/components/ar/industrial";
+import { FigHeader, EmptyState } from "@/components/ar/industrial";
 import Skeleton from "react-loading-skeleton";
 
 const DailyLogPage = () => {
@@ -116,16 +116,16 @@ const DailyLogPage = () => {
               </div>
             ) : logs.length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4 text-muted-foreground">
-                  <CalendarDays className="size-12 opacity-20" />
-                  <div className="text-center space-y-1">
-                    <p className="text-sm font-medium text-foreground">No logs yet</p>
-                    <p className="text-xs">Start by logging your first day of work.</p>
-                  </div>
-                  <Button size="sm" onClick={openNew}>
-                    <Plus className="size-4 mr-1" /> Log your first day
-                  </Button>
-                </div>
+                <EmptyState
+                  icon={CalendarDays}
+                  title="No Logs Yet"
+                  hint="Start by logging your first day of work."
+                  action={
+                    <Button size="sm" onClick={openNew}>
+                      <Plus className="size-4 mr-1" /> Log your first day
+                    </Button>
+                  }
+                />
               </div>
             ) : (
               <>

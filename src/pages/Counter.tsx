@@ -14,7 +14,7 @@ import { useCategories, type Category } from "@/hooks/useCategories";
 import { useUpsertLog, useDailyLogs } from "@/hooks/useDailyLogs";
 import { isoDate, totalForLog } from "@/types/log";
 import { PageHeader } from "@/components/ar/PageHeader";
-import { FigHeader } from "@/components/ar/industrial";
+import { FigHeader, EmptyState } from "@/components/ar/industrial";
 import { RotateCcw, Save, CheckCircle2, Hash, Plus, Tag, ChevronRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -445,13 +445,11 @@ export default function CounterPage() {
 
           {/* Empty state */}
           {activeCategories.length === 0 && !catsLoading && categories.length > 0 && (
-            <div className="flex flex-col items-center justify-center gap-3 py-14 px-6 text-center border border-dashed border-border bg-card/40 animate-fade-in">
-              <Hash className="size-9 text-muted-foreground/40" />
-              <p className="text-sm font-medium text-foreground/80">No active counters yet</p>
-              <p className="text-xs text-muted-foreground max-w-xs">
-                Add a category from the tray below to start tracking documents for today.
-              </p>
-            </div>
+            <EmptyState
+              icon={Hash}
+              title="No Active Counters"
+              hint="Add a category from the tray below to start tracking documents for today."
+            />
           )}
         </div>
       </main>

@@ -6,7 +6,7 @@ import { useIndexableTracker, useDeleteIndexable, useUpdateStep as useIndexableU
 import { useFaxAccounts, useDeleteFaxAccount, type FaxAccount } from "@/hooks/useFaxAccounts";
 import { downloadTrackerPDF, FAX_PDF_CONFIG, INDEXABLE_PDF_CONFIG } from "@/lib/tracker-utils";
 import { PageHeader } from "@/components/ar/PageHeader";
-import { FigHeader } from "@/components/ar/industrial";
+import { FigHeader, EmptyState } from "@/components/ar/industrial";
 import { FaxEntryDialog } from "@/components/ar/fax/FaxEntryDialog";
 import { IndexableEntryDialog } from "@/components/ar/indexable/IndexableEntryDialog";
 import { NewAccountDialog } from "@/components/ar/fax/NewAccountDialog";
@@ -52,6 +52,7 @@ import type { FaxRow, FaxStepStatus, StepField } from "@/hooks/useFaxTracker";
 
 const ACCOUNT_KEY = "fax-tracker-account";
 const MODE_KEY = "tracker-mode";
+const STATUS_FILTER_KEY = "tracker-status-filter";
 const PAGE_SIZE = 25;
 
 const MODES: { id: TrackerMode; label: string }[] = [
@@ -90,7 +91,6 @@ const FaxTrackerPage = () => {
   useEffect(() => {
     setPage(1);
     setSearch("");
-    setStatusFilter(new Set());
     setEditing(null);
     setDeleteTarget(null);
     seenIds.current = null;
@@ -119,7 +119,19 @@ const FaxTrackerPage = () => {
 
   const [now] = useState(() => new Date());
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<Set<string>>(
+    () => {
+      try {
+        const raw = localStorage.getItem(STATUS_FILTER_KEY);
+        return raw ? new Set(JSON.parse(raw) as string[]) : new Set();
+      } catch {
+        return new Set();
+      }
+    },
+  );
+  useEffect(() => {
+    try { localStorage.setItem(STATUS_FILTER_KEY, JSON.stringify([...statusFilter])); } catch { /* ignore */ }
+  }, [statusFilter]);
   const [dateFilter, setDateFilter] = useState<Set<string>>(new Set());
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" } | null>(null);
   const [page, setPage] = useState(1);
@@ -576,9 +588,6 @@ const FaxTrackerPage = () => {
                       <SortHeader label="Overall Status" sortKey="overall_status" sort={sort} onSort={toggleSort} align="center" />
                     </th>
                     <th className="px-3 py-2.5 text-left font-semibold">Notes</th>
-                    <th className="px-3 py-2.5 text-left font-semibold">
-                      <SortHeader label="Date & Time" sortKey="updated_at" sort={sort} onSort={toggleSort} align="left" />
-                    </th>
                     <th className="px-3 py-2.5 text-center font-semibold w-12" aria-label="Actions" />
                   </tr>
                 </thead>
@@ -586,16 +595,18 @@ const FaxTrackerPage = () => {
                   {isLoading ? (
                     Array.from({ length: 6 }).map((_, i) => (
                       <tr key={i} className="border-t border-border">
-                        <td colSpan={8} className="px-3 py-2.5"><Skeleton height={28} borderRadius={4} /></td>
+                        <td colSpan={7} className="px-3 py-2.5"><Skeleton height={28} borderRadius={4} /></td>
                       </tr>
                     ))
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-3 py-16 text-center text-muted-foreground animate-fade-in">
-                        <FileWarning className="size-10 opacity-20 mx-auto mb-3" />
-                        <p className="text-sm">
-                          {rows.length === 0 ? "No patients tracked yet. Add your first one." : "No patients match your filters."}
-                        </p>
+                      <td colSpan={7} className="px-3 animate-fade-in">
+                        <EmptyState
+                          className="py-12"
+                          icon={FileWarning}
+                          title="No Patients"
+                          hint={rows.length === 0 ? "Add your first one to start tracking." : "No patients match your current filters."}
+                        />
                       </td>
                     </tr>
                   ) : (
@@ -603,12 +614,12 @@ const FaxTrackerPage = () => {
                       const mine = row.created_by === user?.id;
                       return (
                         <tr key={row.id} className={cn("border-t border-border transition-colors", rowClasses(row.overall_status), newIds.has(row.id) && "animate-row-in")}>
-                          <td className="px-3 py-2 whitespace-nowrap">
+                          <td className="px-3 py-2 max-w-[16rem]">
                             <button
                               type="button"
                               onClick={() => copyName(row.patient_name)}
-                              title="Click to copy name"
-                              className="press-scale font-medium text-foreground rounded px-1 -mx-1 text-left hover:bg-foreground/10 hover:underline underline-offset-2 transition-colors cursor-pointer"
+                              title={row.patient_name}
+                              className="press-scale font-medium text-foreground rounded px-1 -mx-1 text-left hover:bg-foreground/10 hover:underline underline-offset-2 transition-colors cursor-pointer block max-w-full truncate"
                             >
                               {row.patient_name}
                             </button>
@@ -627,21 +638,8 @@ const FaxTrackerPage = () => {
                           <td className={cn("px-3 py-2 text-center text-sm font-semibold", overallClasses(row.overall_status))}>
                             {displayStatus(row.overall_status)}
                           </td>
-                          <td className="px-3 py-2 text-muted-foreground max-w-xs truncate" title={row.notes ?? ""}>
+                          <td className="px-3 py-2 text-muted-foreground max-w-[16rem] truncate" title={row.notes ?? ""}>
                             {row.notes || <span className="text-muted-foreground/40">—</span>}
-                          </td>
-                          <td className="px-3 py-2 whitespace-nowrap">
-                            {(() => {
-                              const dd = formatDateTime(row.updated_at);
-                              return dd ? (
-                                <div className="leading-tight">
-                                  <div className="text-foreground">{dd.date}</div>
-                                  <div className="text-xs text-muted-foreground">{dd.time}</div>
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground/40">—</span>
-                              );
-                            })()}
                           </td>
                           <td className="px-3 py-2 text-center">
                             {mine ? (
@@ -699,12 +697,11 @@ const FaxTrackerPage = () => {
                 </div>
               ))
             ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground animate-fade-in">
-                <FileWarning className="size-10 opacity-20 mb-3" />
-                <p className="text-sm">
-                  {rows.length === 0 ? "No patients tracked yet. Add your first one." : "No patients match your filters."}
-                </p>
-              </div>
+              <EmptyState
+                icon={FileWarning}
+                title="No Patients"
+                hint={rows.length === 0 ? "Add your first one to start tracking." : "No patients match your current filters."}
+              />
             ) : (
               <>
                 {paginated.map((row) => (

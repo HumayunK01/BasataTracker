@@ -16,7 +16,7 @@ import { useIndexableResolvedByDay, INDEXABLE_CATEGORY_KEY, INDEXABLE_CATEGORY_L
 import { useProfile } from "@/hooks/useProfile";
 import { isoDate, formatTableDate, isWeekend, totalForLog } from "@/types/log";
 import { PageHeader } from "@/components/ar/PageHeader";
-import { FigHeader } from "@/components/ar/industrial";
+import { FigHeader, EmptyState } from "@/components/ar/industrial";
 import { downloadCSV, downloadJSON, downloadPDF, formatUSDate } from "@/lib/log-utils";
 import { Download, FileJson, FileText, FileType, ChevronDown, CalendarRange } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
@@ -304,8 +304,8 @@ const ReportPage = () => {
               {indicator && (
                 <span
                   aria-hidden
-                  className="absolute top-1 bottom-1 rounded-none bg-primary shadow-none transition-[left,width] duration-300 ease-out motion-reduce:transition-none"
-                  style={{ left: indicator.left, width: indicator.width }}
+                  className="absolute left-0 top-1 bottom-1 rounded-none bg-primary shadow-none transition-transform duration-300 ease-out motion-reduce:transition-none"
+                  style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }}
                 />
               )}
               {PRESETS.map((p) => {
@@ -406,12 +406,13 @@ const ReportPage = () => {
               <Skeleton height={176} borderRadius={6} />
             </div>
           </>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
-            <CalendarRange className="size-10 opacity-20" />
-            <p className="text-sm">No logs found for this date range.</p>
-          </div>
-        ) : (
+          ) : filtered.length === 0 ? (
+            <EmptyState
+              icon={CalendarRange}
+              title="No Logs Found"
+              hint="No days were logged in the selected date range."
+            />
+          ) : (
           <>
             <FigHeader code="FIG.01" title="Summary" />
             <ReportStatsGrid

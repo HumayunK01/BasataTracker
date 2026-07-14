@@ -104,7 +104,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen w-full items-center justify-center bg-background px-4 py-8">
 
       {/* Card */}
-      <div className={`w-full bg-card border border-border rounded-md shadow-sm p-5 sm:p-6 space-y-4 relative transition-[max-width] duration-300 ease-out ${mode === "signup" ? "max-w-md" : "max-w-sm"}`}>
+      <div className={`w-full bg-card border border-border rounded-md shadow-sm p-5 sm:p-6 space-y-4 relative ${mode === "signup" ? "max-w-md" : "max-w-sm"}`}>
 
         {/* Theme toggle */}
         <button
