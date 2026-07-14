@@ -31,15 +31,13 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
-import { Check, ChevronDown, ChevronRight, Copy, Eye, EyeOff, FileText, Folder, FolderInput, FolderPlus, KeyRound, Layers, MoreVertical, Pencil, Plus, Search, Trash2, Users, X } from "lucide-react";
+import { Check, ChevronRight, Copy, Eye, EyeOff, FileText, Folder, FolderInput, FolderPlus, KeyRound, Layers, MoreVertical, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -257,20 +255,36 @@ const CredentialsPage = () => {
             {folders.map((f) => {
               const active = !showAll && f.id === folderId;
               return (
-                <button
+                <div
                   key={f.id}
-                  type="button"
-                  onClick={() => { setFolderId(f.id); setShowAll(false); }}
                   className={cn(
-                    "flex items-center gap-2 h-10 px-3 border rounded-none text-sm font-medium transition-colors max-w-[14rem]",
+                    "group relative flex items-center gap-1 h-10 pl-3 pr-1 max-w-[16rem] border rounded-none text-sm font-medium transition-colors",
                     active
                       ? "border-primary/40 bg-primary/10 text-primary"
                       : "border-border bg-card text-foreground hover:bg-muted/40",
                   )}
                 >
-                  <Folder className={cn("size-4 shrink-0", active ? "text-primary" : "text-muted-foreground")} />
-                  <span className="truncate">{f.name}</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => { setFolderId(f.id); setShowAll(false); }}
+                    className="absolute inset-0"
+                    aria-label={f.name}
+                  />
+                  <span className="relative flex items-center gap-2 min-w-0 flex-1 pointer-events-none">
+                    <Folder className={cn("size-4 shrink-0", active ? "text-primary" : "text-muted-foreground")} />
+                    <span className="truncate">{f.name}</span>
+                  </span>
+                  <span className="relative z-10 flex items-center shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      title={`Rename ${f.name}`}
+                      onClick={() => setFolderToRename(f)}
+                      className="press-scale p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-foreground/10 transition-colors"
+                    >
+                      <Pencil className="size-3.5" />
+                    </button>
+                  </span>
+                </div>
               );
             })}
             <button
@@ -302,56 +316,6 @@ const CredentialsPage = () => {
                 </button>
               )}
             </div>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-10 shrink-0 max-w-[12rem]" disabled={foldersLoading}>
-                  <Users className="size-4 mr-1.5 shrink-0" />
-                  <span className="truncate">{activeFolder?.name ?? (foldersLoading ? "Loading…" : "No folder")}</span>
-                  <ChevronDown className="size-3 ml-1 opacity-60 shrink-0" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56 font-sans">
-                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Switch folder</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {folders.map((f) => (
-                  <DropdownMenuItem
-                    key={f.id}
-                    onClick={() => { setFolderId(f.id); setShowAll(false); }}
-                    className="flex items-center justify-between gap-2 pr-1"
-                  >
-                    <span className="flex items-center gap-2 min-w-0">
-                      {f.id === folderId
-                        ? <Check className="size-3.5 opacity-80 shrink-0" />
-                        : <span className="size-3.5 shrink-0" />}
-                      <span className="truncate">{f.name}</span>
-                    </span>
-                    <span className="flex items-center shrink-0">
-                      <button
-                        type="button"
-                        title={`Rename ${f.name}`}
-                        onClick={(e) => { e.stopPropagation(); setFolderToRename(f); }}
-                        className="press-scale p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-foreground/10 transition-colors"
-                      >
-                        <Pencil className="size-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        title={`Delete ${f.name}`}
-                        onClick={(e) => { e.stopPropagation(); setFolderToDelete(f); }}
-                        className="press-scale p-1 rounded text-muted-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
-                    </span>
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setFolderDialogOpen(true)} className="text-primary">
-                  <FolderPlus className="size-3.5 mr-1.5" /> New folder
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
 
           <div className="hidden md:block bg-card border border-border rounded-none overflow-hidden">
@@ -589,7 +553,12 @@ const CredentialsPage = () => {
 
       <NewFolderDialog open={folderDialogOpen} onOpenChange={setFolderDialogOpen} onCreated={(f) => setFolderId(f.id)} />
 
-      <RenameFolderDialog open={!!folderToRename} onOpenChange={(o) => !o && setFolderToRename(null)} folder={folderToRename} />
+      <RenameFolderDialog
+        open={!!folderToRename}
+        onOpenChange={(o) => !o && setFolderToRename(null)}
+        folder={folderToRename}
+        onRequestDelete={(f) => { setFolderToRename(null); setFolderToDelete(f); }}
+      />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent className="sm:max-w-md border-destructive/20 bg-background/95 backdrop-blur-lg">
