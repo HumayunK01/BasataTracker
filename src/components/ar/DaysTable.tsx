@@ -65,18 +65,18 @@ function MobileCardList({ paginated, categories, search, copiedId, onEdit, onDel
           if (isOff) {
             return (
               <div key={l.id} className="flex items-center gap-3 px-4 py-2.5 bg-muted/20">
-                <BedDouble className="size-3.5 text-muted-foreground/50 shrink-0" />
-                <span className="text-sm text-muted-foreground tabular-nums flex-1">
+                <BedDouble className="size-3.5 text-foreground shrink-0" />
+                <span className="text-sm text-foreground tabular-nums flex-1">
                   {formatTableDate(l.log_date)}
                 </span>
-                <span className="text-xs text-muted-foreground/60 uppercase tracking-wide font-medium font-heading">
+                <span className="text-xs text-foreground uppercase tracking-wide font-medium font-heading">
                   {weekend ? "Weekend" : "Off day"}
                 </span>
                 <div className="flex items-center gap-0.5 ml-1">
-                  <Button variant="ghost" size="icon" className="size-9 text-muted-foreground/40 hover:text-foreground" onClick={() => onEdit(l)}>
+                  <Button variant="ghost" size="icon" className="size-9 text-foreground hover:text-foreground" onClick={() => onEdit(l)}>
                     <Pencil className="size-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="size-9 text-muted-foreground/40 hover:text-destructive" onClick={() => onDelete(l)}>
+                  <Button variant="ghost" size="icon" className="size-9 text-foreground hover:text-destructive" onClick={() => onDelete(l)}>
                     <Trash2 className="size-4" />
                   </Button>
                 </div>
@@ -90,13 +90,13 @@ function MobileCardList({ paginated, categories, search, copiedId, onEdit, onDel
                 <span className="text-sm font-bold tabular-nums flex-1">{formatTableDate(l.log_date)}</span>
                 <span className="text-2xl font-black tabular-nums text-primary leading-none">{total}</span>
                 <div className="flex items-center gap-0.5 ml-1">
-                  <Button variant="ghost" size="icon" className="size-9 text-muted-foreground/50 hover:text-foreground" onClick={() => onCopy(l)}>
+                  <Button variant="ghost" size="icon" className="size-9 text-foreground hover:text-foreground" onClick={() => onCopy(l)}>
                     {copiedId === l.id ? <Check className="size-4" /> : <Copy className="size-4" />}
                   </Button>
-                  <Button variant="ghost" size="icon" className="size-9 text-muted-foreground/50 hover:text-foreground" onClick={() => onEdit(l)}>
+                  <Button variant="ghost" size="icon" className="size-9 text-foreground hover:text-foreground" onClick={() => onEdit(l)}>
                     <Pencil className="size-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="size-9 text-muted-foreground/50 hover:text-destructive" onClick={() => onDelete(l)}>
+                  <Button variant="ghost" size="icon" className="size-9 text-foreground hover:text-destructive" onClick={() => onDelete(l)}>
                     <Trash2 className="size-4" />
                   </Button>
                 </div>
@@ -170,13 +170,13 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
               const total = categories.reduce((s, c) => s + getVal(l, c.key), 0);
               return l.is_off_day ? (
                 <TableRow key={l.id} className="border-b border-border/40 last:border-0 bg-muted/10">
-                  <TableCell className="tabular-nums text-sm font-medium py-3 text-muted-foreground text-center">
+                  <TableCell className="tabular-nums text-sm font-medium py-3 text-foreground text-center">
                     {formatTableDate(l.log_date)}
                   </TableCell>
                   <TableCell colSpan={categories.length + 1} className="py-3">
                     <div className="flex items-center gap-1.5">
-                      <BedDouble className="size-3.5 text-muted-foreground" />
-                      <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">
+                      <BedDouble className="size-3.5 text-foreground" />
+                      <span className="text-xs font-medium text-foreground tracking-wide uppercase">
                         {isWeekend(l.log_date) ? "Weekend" : "Off Day"}
                       </span>
                     </div>
@@ -207,7 +207,7 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
                         {v > 0 ? (
                           <span className="font-medium text-foreground">{v}</span>
                         ) : (
-                          <span className="text-muted-foreground/30" aria-hidden="true">{"—"}</span>
+                          <span className="text-muted-foreground" aria-hidden="true">{"—"}</span>
                         )}
                       </TableCell>
                     );
@@ -340,7 +340,7 @@ export function DaysTable({ logs, onEdit }: Props) {
         {/* Search + summary */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 shrink-0">
           <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground pointer-events-none" />
             <Input
               className="pl-9 h-10 text-sm w-full bg-card border-border"
               placeholder="Search by date…"
@@ -349,7 +349,7 @@ export function DaysTable({ logs, onEdit }: Props) {
               onChange={(e) => tDispatch({ type: "set_search", q: e.target.value })}
             />
           </div>
-          <div className="sm:ml-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          <div className="sm:ml-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-foreground">
             <span><span className="font-semibold text-foreground">{workingLogs.length}</span> working days</span>
             <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && isWeekend(l.log_date)).length}</span> weekends</span>
             <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && !isWeekend(l.log_date)).length}</span> off days</span>
@@ -359,7 +359,7 @@ export function DaysTable({ logs, onEdit }: Props) {
 
         <MobileCardList {...sharedProps} />
         {categories.length > 6 && (
-          <p className="hidden sm:block text-center text-2xs text-muted-foreground/40 -mt-2 select-none">← scroll horizontally →</p>
+          <p className="hidden sm:block text-center text-2xs text-foreground -mt-2 select-none">← scroll horizontally →</p>
         )}
         <DesktopTable {...sharedProps} />
 

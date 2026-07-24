@@ -39,6 +39,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuPortal,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Check, Copy, Eye, EyeOff, FileDown, FileText, Folder, FolderInput, FolderPlus, KeyRound, Layers, LayoutGrid, List, MoreVertical, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -266,7 +267,10 @@ const CredentialsPage = () => {
       [rows.map(([, v]) => v)],
     );
     const plain = rows.map(([k, v]) => `${k}\t${v}`).join("\n");
-    copyTable(html, plain, () => flashCopied(`${c.id}:copy`));
+    copyTable(html, plain, () => {
+      toast.success("Copied all fields");
+      flashCopied(`${c.id}:copy`);
+    });
   };
 
   // Multi-row copy: one HTML table with a header row, so a selection pastes as
@@ -351,35 +355,27 @@ const CredentialsPage = () => {
         subtitle="Vault"
         actions={
           <>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 shrink-0"
-              onClick={() => downloadCredentialCSV(credentials, showAll ? "all-credentials" : activeFolder?.name ?? "vault")}
-              disabled={credentials.length === 0}
-              title={credentials.length === 0 ? "Nothing to export" : "Export as CSV"}
-            >
-              <FileText className="size-4 mr-1" /> Export CSV
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 shrink-0"
-              onClick={() => downloadCredentialPDF(credentials, showAll ? "all-credentials" : activeFolder?.name ?? "vault", showAll ? "Credential Vault" : (activeFolder?.name ?? "Credential Vault"))}
-              disabled={credentials.length === 0}
-              title={credentials.length === 0 ? "Nothing to export" : "Export as PDF"}
-            >
-              <FileDown className="size-4 mr-1" /> Export PDF
-            </Button>
-            <Button
-              size="sm"
-              className="h-8 shrink-0 bg-primary hover:bg-primary/95 text-primary-foreground"
-              onClick={openAdd}
-              disabled={!folderId || showAll}
-              title={showAll ? "Pick a folder first" : !folderId ? "Create a folder first" : undefined}
-            >
-              <Plus className="size-4 mr-1" /> Add Credential
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 shrink-0"
+                  disabled={credentials.length === 0}
+                  title={credentials.length === 0 ? "Nothing to export" : undefined}
+                >
+                  <FileDown className="size-4 mr-1" /> Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36 font-sans p-1">
+                <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={() => downloadCredentialCSV(credentials, showAll ? "all-credentials" : activeFolder?.name ?? "vault")}>
+                  <FileText className="size-3.5" /> CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={() => downloadCredentialPDF(credentials, showAll ? "all-credentials" : activeFolder?.name ?? "vault", showAll ? "Credential Vault" : (activeFolder?.name ?? "Credential Vault"))}>
+                  <FileDown className="size-3.5" /> PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         }
       />
@@ -391,13 +387,13 @@ const CredentialsPage = () => {
               type="button"
               onClick={() => setShowAll(true)}
               className={cn(
-                "flex items-center gap-2 h-10 px-3 border rounded-none text-sm font-medium transition-colors shrink-0",
+                "flex items-center gap-2 h-10 px-3 border rounded-md text-sm font-medium transition-colors shrink-0",
                 showAll
                   ? "border-primary/40 bg-primary/10 text-primary"
                   : "border-border bg-card text-foreground hover:bg-muted/40",
               )}
             >
-              <Layers className={cn("size-4 shrink-0", showAll ? "text-primary" : "text-muted-foreground")} />
+              <Layers className={cn("size-4 shrink-0", showAll ? "text-primary" : "text-foreground")} />
               <span>All</span>
             </button>
             {folders.map((f) => {
@@ -406,7 +402,7 @@ const CredentialsPage = () => {
                 <div
                   key={f.id}
                   className={cn(
-                    "group relative flex items-center gap-1 h-10 pl-3 pr-1 max-w-[16rem] border rounded-none text-sm font-medium transition-colors",
+                    "group relative flex items-center gap-1 h-10 pl-3 pr-1 max-w-[16rem] border rounded-md text-sm font-medium transition-colors",
                     active
                       ? "border-primary/40 bg-primary/10 text-primary"
                       : "border-border bg-card text-foreground hover:bg-muted/40",
@@ -419,7 +415,7 @@ const CredentialsPage = () => {
                     aria-label={f.name}
                   />
                   <span className="relative flex items-center gap-2 min-w-0 flex-1 pointer-events-none">
-                    <Folder className={cn("size-4 shrink-0", active ? "text-primary" : "text-muted-foreground")} />
+                    <Folder className={cn("size-4 shrink-0", active ? "text-primary" : "text-foreground")} />
                     <span className="truncate">{f.name}</span>
                   </span>
                   <span className="relative z-10 flex items-center shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 max-md:opacity-100 transition-opacity">
@@ -427,7 +423,7 @@ const CredentialsPage = () => {
                       type="button"
                       title={`Rename ${f.name}`}
                       onClick={() => setFolderToRename(f)}
-                      className="press-scale p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-foreground/10 transition-colors"
+                      className="press-scale p-1 rounded text-foreground hover:text-foreground hover:bg-foreground/10 transition-colors"
                     >
                       <Pencil className="size-3.5" />
                     </button>
@@ -438,7 +434,7 @@ const CredentialsPage = () => {
             <button
               type="button"
               onClick={() => setFolderDialogOpen(true)}
-              className="flex items-center gap-1.5 h-10 px-3 border border-dashed border-border rounded-none text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors shrink-0"
+              className="flex items-center gap-1.5 h-10 px-3 border border-dashed border-border rounded-md text-sm font-medium text-foreground hover:text-foreground hover:border-primary/40 transition-colors shrink-0"
             >
               <FolderPlus className="size-4" /> New folder
             </button>
@@ -446,7 +442,7 @@ const CredentialsPage = () => {
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <div className="relative flex-1 min-w-48">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground" />
               <Input
                 placeholder="Search service, login, or notes…"
                 value={search}
@@ -458,14 +454,14 @@ const CredentialsPage = () => {
                   type="button"
                   onClick={() => setSearch("")}
                   title="Clear search"
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-foreground hover:text-foreground"
                 >
                   <X className="size-4" />
                 </button>
               )}
             </div>
 
-            <div className="flex items-center gap-1 h-10 px-1 border border-border rounded-none bg-card shrink-0" role="group" aria-label="View format">
+            <div className="flex items-center gap-1 h-10 px-1 border border-border rounded-md bg-card shrink-0" role="group" aria-label="View format">
               <button
                 type="button"
                 onClick={() => setViewMode("list")}
@@ -473,7 +469,7 @@ const CredentialsPage = () => {
                 aria-pressed={viewMode === "list"}
                 className={cn(
                   "flex items-center gap-1.5 h-8 px-2.5 text-sm font-medium transition-colors",
-                  viewMode === "list" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
+                  viewMode === "list" ? "bg-primary/10 text-primary" : "text-foreground hover:text-foreground",
                 )}
               >
                 <List className="size-4" /> <span className="hidden sm:inline">List</span>
@@ -485,16 +481,23 @@ const CredentialsPage = () => {
                 aria-pressed={viewMode === "cards"}
                 className={cn(
                   "flex items-center gap-1.5 h-8 px-2.5 text-sm font-medium transition-colors",
-                  viewMode === "cards" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
+                  viewMode === "cards" ? "bg-primary/10 text-primary" : "text-foreground hover:text-foreground",
                 )}
               >
                 <LayoutGrid className="size-4" /> <span className="hidden sm:inline">Cards</span>
               </button>
             </div>
+            <Button
+              size="sm"
+              className="h-10 shrink-0 bg-primary hover:bg-primary/95 text-primary-foreground"
+              onClick={openAdd}
+            >
+              <Plus className="size-4 mr-1" /> Add Credential
+            </Button>
           </div>
 
           {selected.size > 0 && (
-            <div className="flex flex-wrap items-center gap-2 border border-primary/30 bg-primary/5 rounded-none px-3 py-2">
+            <div className="flex flex-wrap items-center gap-2 border border-primary/30 bg-primary/5 rounded-md px-3 py-2">
               <span className="text-sm font-medium text-primary">{selectedRows.length} selected</span>
               <div className="flex items-center gap-2 ml-auto flex-wrap">
                 <Button variant="outline" size="sm" className="h-9" onClick={() => copyCredentialsTable(selectedRows)}>
@@ -524,7 +527,7 @@ const CredentialsPage = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-44 font-sans">
                     {folders.length === 0 ? (
-                      <span className="block px-2 py-1.5 text-xs text-muted-foreground">No folders</span>
+                      <span className="block px-2 py-1.5 text-xs text-foreground">No folders</span>
                     ) : (
                       folders.map((f) => (
                         <DropdownMenuItem
@@ -549,11 +552,11 @@ const CredentialsPage = () => {
           )}
 
           {viewMode === "list" && (
-          <div className="hidden md:block bg-card border border-border rounded-none overflow-hidden">
+          <div className="hidden md:block bg-card border border-border rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
-                  <tr className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
+                  <tr className="bg-muted/50 text-xs uppercase tracking-wide text-foreground">
                     <th className="w-10 px-3 py-2.5">
                       <SelectCheckbox
                         ariaLabel="Select all"
@@ -607,14 +610,29 @@ const CredentialsPage = () => {
                             </div>
                           </td>
                           <td className="px-3 py-2 max-w-[16rem]">
-                            <button
-                              type="button"
-                              onClick={() => copyField(`${c.id}:login`, c.login_id, "Login ID")}
-                              title={`${c.login_id}: click to copy`}
-                              className="press-scale text-left hover:underline underline-offset-2 truncate block max-w-full"
-                            >
-                              {c.login_id}
-                            </button>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => copyField(`${c.id}:login`, c.login_id, "Login ID")}
+                                title={`${c.login_id}: click to copy`}
+                                className="press-scale text-left hover:underline underline-offset-2 truncate flex-1 min-w-0"
+                              >
+                                {c.login_id}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => copyField(`${c.id}:login`, c.login_id, "Login ID")}
+                                title="Copy login ID"
+                                className={cn(
+                                  "shrink-0 press-scale transition-colors",
+                                  copied.has(`${c.id}:login`) ? "text-success" : "text-foreground hover:text-foreground",
+                                )}
+                              >
+                                {copied.has(`${c.id}:login`)
+                                  ? <Check className="size-3.5 animate-fade-in" />
+                                  : <Copy className="size-3.5" />}
+                              </button>
+                            </div>
                           </td>
                           <td className="px-3 py-2 max-w-[16rem]">
                             <div className="flex items-center gap-1.5">
@@ -625,55 +643,66 @@ const CredentialsPage = () => {
                                 type="button"
                                 onClick={() => toggleReveal(c.id)}
                                 title={show ? "Hide" : "Show"}
-                                className="text-muted-foreground hover:text-foreground shrink-0"
+                                className="text-foreground hover:text-foreground shrink-0"
                               >
                                 {show ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
                               </button>
                               <button
                                 type="button"
-                                onClick={() => copyCredential(c)}
-                                title="Copy"
+                                onClick={() => copyField(`${c.id}:pwd`, c.password, "Password")}
+                                title="Copy password"
                                 className={cn(
-                                  "shrink-0 ml-auto press-scale transition-colors",
-                                  copied.has(`${c.id}:copy`) ? "text-success" : "text-muted-foreground hover:text-foreground",
+                                  "shrink-0 press-scale transition-colors",
+                                  copied.has(`${c.id}:pwd`) ? "text-success" : "text-foreground hover:text-foreground",
+                                )}
+                              >
+                                {copied.has(`${c.id}:pwd`)
+                                  ? <Check className="size-3.5 animate-fade-in" />
+                                  : <Copy className="size-3.5" />}
+                              </button>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2 text-foreground max-w-[16rem] truncate" title={c.notes ?? ""}>
+                            {c.notes || <span className="text-muted-foreground">—</span>}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <div className="flex items-center justify-center gap-0.5">
+                              <button
+                                type="button"
+                                onClick={() => copyCredential(c)}
+                                title="Copy all"
+                                className={cn(
+                                  "press-scale transition-colors p-1.5 rounded",
+                                  copied.has(`${c.id}:copy`) ? "text-success" : "text-foreground hover:text-foreground hover:bg-muted/40",
                                 )}
                               >
                                 {copied.has(`${c.id}:copy`)
                                   ? <Check className="size-3.5 animate-fade-in" />
                                   : <Copy className="size-3.5" />}
                               </button>
-                            </div>
-                          </td>
-                          <td className="px-3 py-2 text-muted-foreground max-w-[16rem] truncate" title={c.notes ?? ""}>
-                            {c.notes || <span className="text-muted-foreground/40">—</span>}
-                          </td>
-                          <td className="px-3 py-2 text-center">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="size-8" aria-label={`Actions for ${c.label}`}>
-                                  <MoreVertical className="size-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-36 font-sans">
-                                <button
-                                  className="w-full flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-accent rounded-sm"
-                                  onClick={() => copyCredential(c)}
-                                >
-                                  <Copy className="size-3.5" /> Copy
-                                </button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="size-8" aria-label={`Actions for ${c.label}`}>
+                                    <MoreVertical className="size-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40 font-sans p-1">
+                                <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={() => copyCredential(c)}>
+                                  <Copy className="size-3.5" /> Copy all
+                                </DropdownMenuItem>
                                 <DropdownMenuSub>
-                                  <DropdownMenuSubTrigger className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm cursor-default outline-none focus:bg-accent data-[state=open]:bg-accent">
+                                  <DropdownMenuSubTrigger className="text-sm gap-2 cursor-pointer">
                                     <FolderInput className="size-3.5" /> Move to
                                   </DropdownMenuSubTrigger>
                                   <DropdownMenuPortal>
                                     <DropdownMenuSubContent className="w-40 font-sans p-1">
                                       {otherFolders.length === 0 ? (
-                                        <span className="block px-2 py-1.5 text-xs text-muted-foreground">No other folders</span>
+                                        <span className="block px-2 py-1.5 text-xs text-foreground">No other folders</span>
                                       ) : (
                                         otherFolders.map((f) => (
                                           <DropdownMenuItem
                                             key={f.id}
-                                            className="text-sm"
+                                            className="text-sm gap-2 cursor-pointer"
                                             onClick={() => moveCredential.mutate({ id: c.id, folderId: f.id })}
                                           >
                                             {f.name}
@@ -683,20 +712,16 @@ const CredentialsPage = () => {
                                     </DropdownMenuSubContent>
                                   </DropdownMenuPortal>
                                 </DropdownMenuSub>
-                                <button
-                                  className="w-full flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-accent rounded-sm"
-                                  onClick={() => openEdit(c)}
-                                >
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={() => openEdit(c)}>
                                   <Pencil className="size-3.5" /> Edit
-                                </button>
-                                <button
-                                  className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 rounded-sm"
-                                  onClick={() => setDeleteTarget(c)}
-                                >
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-sm gap-2 text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10" onClick={() => setDeleteTarget(c)}>
                                   <Trash2 className="size-3.5" /> Delete
-                                </button>
+                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -713,7 +738,7 @@ const CredentialsPage = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
                 {isLoading ? (
                   Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="rounded-none border border-border p-3.5 space-y-2.5">
+                    <div key={i} className="rounded-lg border border-border p-3.5 space-y-2.5">
                       <div className="h-5 bg-muted/40 animate-pulse rounded w-1/2" />
                       <div className="h-4 bg-muted/40 animate-pulse rounded w-2/3" />
                     </div>
@@ -732,12 +757,15 @@ const CredentialsPage = () => {
                       credential={c}
                       selected={selected.has(c.id)}
                       revealed={revealed.has(c.id)}
-                      copied={copied.has(`${c.id}:copy`)}
+                      copiedLogin={copied.has(`${c.id}:login`)}
+                      copiedPassword={copied.has(`${c.id}:pwd`)}
+                      copiedFull={copied.has(`${c.id}:copy`)}
                       otherFolders={otherFolders}
                       onToggleSelect={() => toggleSelect(c.id)}
                       onToggleReveal={() => toggleReveal(c.id)}
                       onCopyLogin={() => copyField(`${c.id}:login`, c.login_id, "Login ID")}
-                      onCopyCredential={() => copyCredential(c)}
+                      onCopyPassword={() => copyField(`${c.id}:pwd`, c.password, "Password")}
+                      onCopyFull={() => copyCredential(c)}
                       onMove={(folderId) => moveCredential.mutate({ id: c.id, folderId })}
                       onEdit={() => openEdit(c)}
                       onDelete={() => setDeleteTarget(c)}
@@ -751,7 +779,7 @@ const CredentialsPage = () => {
           <div className="md:hidden space-y-3">
             {isLoading ? (
               Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="rounded-none border border-border p-3.5">
+                <div key={i} className="rounded-lg border border-border p-3.5">
                   <div className="h-5 bg-muted/40 animate-pulse rounded w-1/2" />
                   <div className="h-4 bg-muted/40 animate-pulse rounded w-2/3 mt-2" />
                 </div>
@@ -769,12 +797,15 @@ const CredentialsPage = () => {
                   credential={c}
                   selected={selected.has(c.id)}
                   revealed={revealed.has(c.id)}
-                  copied={copied.has(`${c.id}:copy`)}
+                  copiedLogin={copied.has(`${c.id}:login`)}
+                  copiedPassword={copied.has(`${c.id}:pwd`)}
+                  copiedFull={copied.has(`${c.id}:copy`)}
                   otherFolders={otherFolders}
                   onToggleSelect={() => toggleSelect(c.id)}
                   onToggleReveal={() => toggleReveal(c.id)}
                   onCopyLogin={() => copyField(`${c.id}:login`, c.login_id, "Login ID")}
-                  onCopyCredential={() => copyCredential(c)}
+                  onCopyPassword={() => copyField(`${c.id}:pwd`, c.password, "Password")}
+                  onCopyFull={() => copyCredential(c)}
                   onMove={(folderId) => moveCredential.mutate({ id: c.id, folderId })}
                   onEdit={() => openEdit(c)}
                   onDelete={() => setDeleteTarget(c)}
@@ -785,7 +816,7 @@ const CredentialsPage = () => {
         </div>
       </main>
 
-      <CredentialDialog open={dialogOpen} onOpenChange={setDialogOpen} row={editing} folderId={folderId ?? undefined} />
+      <CredentialDialog open={dialogOpen} onOpenChange={setDialogOpen} row={editing} folderId={showAll ? undefined : folderId ?? undefined} folders={folders} />
 
       <NewFolderDialog open={folderDialogOpen} onOpenChange={setFolderDialogOpen} onCreated={(f) => setFolderId(f.id)} />
 

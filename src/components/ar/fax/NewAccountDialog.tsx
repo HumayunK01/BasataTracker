@@ -51,7 +51,7 @@ export function NewAccountDialog({ open, onOpenChange, onCreated }: NewAccountDi
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label htmlFor="fax-account-name" className="text-xs font-semibold text-muted-foreground">Account Name</Label>
+            <Label htmlFor="fax-account-name" className="text-xs font-semibold text-foreground">Account Name</Label>
             <Input
               id="fax-account-name"
               placeholder="e.g. Ayush Rathi"
@@ -61,7 +61,7 @@ export function NewAccountDialog({ open, onOpenChange, onCreated }: NewAccountDi
               onChange={(e) => { setName(e.target.value); setError(""); }}
               onKeyDown={(e) => e.key === "Enter" && save()}
             />
-            <p className="text-xs text-muted-foreground">Each account keeps its own separate list of patients.</p>
+            <p className="text-xs text-foreground">Each account keeps its own separate list of patients.</p>
           </div>
 
           {error && (

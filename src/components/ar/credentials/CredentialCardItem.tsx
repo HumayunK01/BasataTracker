@@ -1,4 +1,4 @@
-import { Check, Copy, Eye, EyeOff, FolderInput, MoreVertical, Pencil, Trash2, ChevronRight } from "lucide-react";
+import { Check, Copy, Eye, EyeOff, FolderInput, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { ServiceLogo } from "./ServiceLogo";
 import { SelectCheckbox } from "./SelectCheckbox";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuPortal,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { Credential, CredentialFolder } from "@/hooks/useCredentials";
@@ -19,12 +20,15 @@ interface CredentialCardItemProps {
   credential: Credential;
   selected: boolean;
   revealed: boolean;
-  copied: boolean;
+  copiedLogin: boolean;
+  copiedPassword: boolean;
+  copiedFull: boolean;
   otherFolders: CredentialFolder[];
   onToggleSelect: () => void;
   onToggleReveal: () => void;
   onCopyLogin: () => void;
-  onCopyCredential: () => void;
+  onCopyPassword: () => void;
+  onCopyFull: () => void;
   onMove: (folderId: string) => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -34,12 +38,15 @@ export function CredentialCardItem({
   credential: c,
   selected,
   revealed,
-  copied,
+  copiedLogin,
+  copiedPassword,
+  copiedFull,
   otherFolders,
   onToggleSelect,
   onToggleReveal,
   onCopyLogin,
-  onCopyCredential,
+  onCopyPassword,
+  onCopyFull,
   onMove,
   onEdit,
   onDelete,
@@ -49,7 +56,7 @@ export function CredentialCardItem({
   return (
     <div
       className={cn(
-        "group rounded-none border bg-card overflow-hidden transition-colors",
+        "group rounded-lg border bg-card overflow-hidden transition-colors",
         selected ? "border-primary/40 bg-primary/5" : "border-border hover:border-primary/30",
       )}
     >
@@ -63,7 +70,7 @@ export function CredentialCardItem({
         <ServiceLogo service={c.service} website={c.website} className="size-9 shrink-0 mt-0.5" />
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-foreground truncate leading-tight">{c.service}</p>
-          {website && <p className="text-xs text-muted-foreground truncate mt-0.5">{website}</p>}
+          {website && <p className="text-xs text-foreground truncate mt-0.5">{website}</p>}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -71,24 +78,23 @@ export function CredentialCardItem({
               <MoreVertical className="size-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-36 font-sans">
-            <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-accent rounded-sm" onClick={onCopyCredential}>
-              <Copy className="size-3.5" /> Copy
-            </button>
+          <DropdownMenuContent align="end" className="w-40 font-sans p-1">
+            <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={onCopyFull}>
+              <Copy className="size-3.5" /> Copy all
+            </DropdownMenuItem>
             <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm cursor-default outline-none focus:bg-accent data-[state=open]:bg-accent">
+              <DropdownMenuSubTrigger className="text-sm gap-2 cursor-pointer">
                 <FolderInput className="size-3.5" /> Move to
-                <ChevronRight className="size-3.5 ml-auto" />
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuSubContent className="w-40 font-sans p-1">
                   {otherFolders.length === 0 ? (
-                    <span className="block px-2 py-1.5 text-xs text-muted-foreground">No other folders</span>
+                    <span className="block px-2 py-1.5 text-xs text-foreground">No other folders</span>
                   ) : (
                     otherFolders.map((f) => (
                       <DropdownMenuItem
                         key={f.id}
-                        className="text-sm"
+                        className="text-sm cursor-pointer"
                         onClick={() => onMove(f.id)}
                       >
                         {f.name}
@@ -98,18 +104,19 @@ export function CredentialCardItem({
                 </DropdownMenuSubContent>
               </DropdownMenuPortal>
             </DropdownMenuSub>
-            <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-accent rounded-sm" onClick={onEdit}>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={onEdit}>
               <Pencil className="size-3.5" /> Edit
-            </button>
-            <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 rounded-sm" onClick={onDelete}>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-sm gap-2 text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10" onClick={onDelete}>
               <Trash2 className="size-3.5" /> Delete
-            </button>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
       <div className="px-3.5 pb-3.5 -mt-1 space-y-2">
-        <Field label="Login" value={c.login_id} copied={copied} onCopy={onCopyLogin} />
+        <Field label="Login" value={c.login_id} copied={copiedLogin} onCopy={onCopyLogin} />
 
         <Field
           label="Password"
@@ -117,12 +124,12 @@ export function CredentialCardItem({
           mono
           reveal={revealed}
           onReveal={onToggleReveal}
-          copied={copied}
-          onCopy={onCopyCredential}
+          copied={copiedPassword}
+          onCopy={onCopyPassword}
         />
 
         {c.notes && (
-          <p className="text-xs text-muted-foreground leading-relaxed border-t border-border pt-2 mt-1 break-words">
+          <p className="text-xs text-foreground leading-relaxed border-t border-border pt-2 mt-1 break-words">
             {c.notes}
           </p>
         )}
@@ -145,7 +152,7 @@ function Field({ label, value, mono, reveal, copied, onCopy, onReveal }: FieldPr
   return (
     <div className="flex items-center gap-2">
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-foreground">{label}</p>
         <p className={cn("text-sm text-foreground/90 truncate", mono && "font-mono")} title={value}>{value}</p>
       </div>
       {reveal !== undefined && (
@@ -154,7 +161,7 @@ function Field({ label, value, mono, reveal, copied, onCopy, onReveal }: FieldPr
           onClick={onReveal}
           title={reveal ? "Hide password" : "Show password"}
           aria-label={reveal ? "Hide password" : "Show password"}
-          className="shrink-0 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          className="shrink-0 text-foreground hover:text-foreground transition-colors cursor-pointer"
         >
           {reveal ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
         </button>
@@ -166,7 +173,7 @@ function Field({ label, value, mono, reveal, copied, onCopy, onReveal }: FieldPr
         aria-label={`Copy ${label}`}
         className={cn(
           "shrink-0 press-scale transition-colors cursor-pointer",
-          copied ? "text-success" : "text-muted-foreground hover:text-foreground",
+          copied ? "text-success" : "text-foreground hover:text-foreground",
         )}
       >
         {copied ? <Check className="size-4 animate-fade-in" /> : <Copy className="size-4" />}

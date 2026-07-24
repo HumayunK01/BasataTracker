@@ -28,9 +28,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["IBM Plex Sans", "system-ui", "sans-serif"],
-        heading: ["Archivo", "system-ui", "sans-serif"],
-        mono: ["IBM Plex Mono", "ui-monospace", "monospace"],
+        sans: ["Inter", "system-ui", "sans-serif"],
+        heading: ["Inter", "system-ui", "sans-serif"],
+        mono: ["Inter", "ui-monospace", "monospace"],
       },
       fontSize: {
         "2xs": ["0.625rem", { lineHeight: "1rem" }],

@@ -51,7 +51,7 @@ const App = () => (
           <AuthGuard>
             <Suspense
               fallback={
-                <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground font-mono uppercase tracking-[0.2em]">
+                <div className="flex-1 flex items-center justify-center text-sm text-foreground font-mono uppercase tracking-[0.2em]">
                   Loading…
                 </div>
               }

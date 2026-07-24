@@ -11,6 +11,14 @@ import {
 } from "@/components/ui/dialog";
 import { useUpsertCredential, type Credential } from "@/hooks/useCredentials";
 import { Eye, EyeOff, Info, KeyRound, Loader2 } from "lucide-react";
+import type { CredentialFolder } from "@/hooks/useCredentials";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CredentialDialogProps {
   open: boolean;
@@ -18,6 +26,7 @@ interface CredentialDialogProps {
   /** The credential being edited, or null when adding. */
   row: Credential | null;
   folderId: string | undefined;
+  folders: CredentialFolder[];
 }
 
 interface FormState {
@@ -30,11 +39,12 @@ interface FormState {
 
 const EMPTY: FormState = { service: "", login_id: "", password: "", notes: "", website: "" };
 
-export function CredentialDialog({ open, onOpenChange, row, folderId }: CredentialDialogProps) {
+export function CredentialDialog({ open, onOpenChange, row, folderId: initialFolderId, folders }: CredentialDialogProps) {
   const upsert = useUpsertCredential();
   const [form, setForm] = useState<FormState>(EMPTY);
   const [reveal, setReveal] = useState(false);
   const [error, setError] = useState("");
+  const [selectedFolderId, setSelectedFolderId] = useState(initialFolderId ?? "");
 
   useEffect(() => {
     if (open) {
@@ -43,10 +53,13 @@ export function CredentialDialog({ open, onOpenChange, row, folderId }: Credenti
           ? { service: row.service, login_id: row.login_id, password: row.password, notes: row.notes ?? "", website: row.website ?? "" }
           : EMPTY,
       );
+      setSelectedFolderId(initialFolderId ?? "");
       setReveal(false);
       setError("");
     }
-  }, [open, row]);
+  }, [open, row, initialFolderId]);
+
+  const targetFolderId = initialFolderId ?? selectedFolderId;
 
   const set = (key: keyof FormState) => (value: string) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -54,11 +67,11 @@ export function CredentialDialog({ open, onOpenChange, row, folderId }: Credenti
   };
 
   const save = () => {
-    if (!folderId) { setError("Select a folder first."); return; }
+    if (!targetFolderId) { setError("Select a folder first."); return; }
     upsert.mutate(
       {
         row,
-        folderId,
+        folderId: targetFolderId,
           values: {
             service: form.service,
             login_id: form.login_id,
@@ -84,8 +97,23 @@ export function CredentialDialog({ open, onOpenChange, row, folderId }: Credenti
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
+          {!initialFolderId && (
+            <div className="space-y-1.5">
+              <Label htmlFor="cred-folder" className="text-xs font-semibold text-foreground">Folder</Label>
+              <Select value={selectedFolderId} onValueChange={setSelectedFolderId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a folder…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {folders.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-1.5">
-            <Label htmlFor="cred-service" className="text-xs font-semibold text-muted-foreground">Service / Site</Label>
+            <Label htmlFor="cred-service" className="text-xs font-semibold text-foreground">Service / Site</Label>
             <Input
               id="cred-service"
               placeholder="e.g. Gmail, Client Portal A"
@@ -98,7 +126,7 @@ export function CredentialDialog({ open, onOpenChange, row, folderId }: Credenti
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="cred-website" className="text-xs font-semibold text-muted-foreground">Website <span className="font-normal text-muted-foreground/70">(optional, for the logo)</span></Label>
+            <Label htmlFor="cred-website" className="text-xs font-semibold text-foreground">Website <span className="font-normal text-foreground">(optional, for the logo)</span></Label>
             <Input
               id="cred-website"
               placeholder="e.g. github.com"
@@ -107,11 +135,10 @@ export function CredentialDialog({ open, onOpenChange, row, folderId }: Credenti
               onChange={(e) => set("website")(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && save()}
             />
-            <p className="text-xs text-muted-foreground">Leave blank and we'll guess from the service name. Used only to fetch the site's favicon.</p>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="cred-login" className="text-xs font-semibold text-muted-foreground">Login ID / Username</Label>
+            <Label htmlFor="cred-login" className="text-xs font-semibold text-foreground">Login ID / Username</Label>
             <Input
               id="cred-login"
               placeholder="e.g. you@company.com"
@@ -123,7 +150,7 @@ export function CredentialDialog({ open, onOpenChange, row, folderId }: Credenti
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="cred-password" className="text-xs font-semibold text-muted-foreground">Password</Label>
+            <Label htmlFor="cred-password" className="text-xs font-semibold text-foreground">Password</Label>
             <div className="relative">
               <Input
                 id="cred-password"
@@ -138,7 +165,7 @@ export function CredentialDialog({ open, onOpenChange, row, folderId }: Credenti
                 type="button"
                 onClick={() => setReveal((r) => !r)}
                 title={reveal ? "Hide password" : "Show password"}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground hover:text-foreground"
               >
                 {reveal ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
@@ -146,13 +173,13 @@ export function CredentialDialog({ open, onOpenChange, row, folderId }: Credenti
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="cred-notes" className="text-xs font-semibold text-muted-foreground">Notes</Label>
+            <Label htmlFor="cred-notes" className="text-xs font-semibold text-foreground">Notes</Label>
             <textarea
               id="cred-notes"
               placeholder="e.g. which account this is for"
               value={form.notes}
               rows={3}
-              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm placeholder:text-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none"
               onChange={(e) => set("notes")(e.target.value)}
             />
           </div>

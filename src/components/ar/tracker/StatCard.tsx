@@ -17,13 +17,13 @@ export function StatCard({
     emerald: "text-success",
     rose: "text-destructive",
     sky: "text-info",
-    slate: "text-muted-foreground",
+    slate: "text-foreground",
     neutral: "text-foreground",
   }[tone];
   const display = useAnimatedNumber(value);
   return (
     <div className="bg-card border border-border rounded-md p-3 sm:p-4">
-      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1 font-heading">{label}</p>
+      <p className="text-xs text-foreground uppercase tracking-wider mb-1 font-heading">{label}</p>
       {loading ? (
         <Skeleton width={48} height={32} borderRadius={0} />
       ) : (

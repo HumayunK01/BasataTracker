@@ -339,30 +339,30 @@ export default function CounterPage() {
       />
 
       <main className="flex-1 overflow-y-auto">
-        <div className="w-full px-3 sm:px-6 py-4 sm:py-6 flex flex-col gap-4">
+        <div className="w-full px-4 sm:px-6 py-5 sm:py-6 flex flex-col gap-4">
           {/* Hero — session total instrument */}
           <section className="relative bg-card border border-border p-5 sm:p-6 overflow-hidden">
             <span className="pointer-events-none absolute top-0 left-0 size-2 border-t border-l border-primary/40" />
             <span className="pointer-events-none absolute bottom-0 right-0 size-2 border-b border-r border-primary/40" />
 
-            <p className="font-mono text-2xs uppercase tracking-[0.2em] text-muted-foreground">FIG.01 · SESSION TOTAL</p>
+            <p className="font-mono text-2xs uppercase tracking-[0.2em] text-foreground">Session Total</p>
             <div className="mt-3 flex items-center gap-3 flex-wrap">
               <p className="text-7xl sm:text-8xl font-black tabular-nums text-primary leading-none">
                 {animatedTotal}
               </p>
               <span
-                className={`text-2xs font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-none border ${
+                className={`text-2xs font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-md border ${
                   saved
                     ? "bg-success/15 text-success border-success/30"
                     : total > 0
                     ? "bg-warning/15 text-warning border-warning/30"
-                    : "bg-muted text-muted-foreground border-border/40"
+                    : "bg-muted text-foreground border-border/40"
                 }`}
               >
                 {saved ? "Synced" : total > 0 ? "Unsaved" : "Empty"}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground mt-3 font-medium">
+            <p className="text-xs text-foreground mt-3 font-medium">
               {saved
                 ? "All counts synchronized to database"
                 : todayLog
@@ -374,7 +374,7 @@ export default function CounterPage() {
           {/* Counter cards grid */}
           {activeCategories.length > 0 && (
             <>
-              <FigHeader code="FIG.02" title="Active Counters" />
+              <FigHeader title="Active Counters" />
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 animate-fade-in">
               {activeCategories.map((cat, idx) => (
                 <CounterCard
@@ -393,7 +393,7 @@ export default function CounterPage() {
           )}
 
           {/* Manage categories */}
-          <FigHeader code="FIG.03" title="Manage Categories" />
+          <FigHeader title="Manage Categories" />
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               type="button"
@@ -414,14 +414,14 @@ export default function CounterPage() {
                     ? "All active categories added"
                     : "Add category to counter"}
                 </span>
-                <span className="block text-xs text-muted-foreground mt-0.5 truncate">
+                <span className="block text-xs text-foreground mt-0.5 truncate">
                   {availableToAdd.length > 0
                     ? `Pick from ${availableToAdd.length} available categor${availableToAdd.length === 1 ? "y" : "ies"}`
                     : "Create a new category to keep counting"}
                 </span>
               </span>
               {availableToAdd.length > 0 && !catsLoading && (
-                <ChevronRight className="size-4 text-muted-foreground shrink-0" />
+                <ChevronRight className="size-4 text-foreground shrink-0" />
               )}
             </button>
             <button
@@ -435,7 +435,7 @@ export default function CounterPage() {
               </span>
               <span className="flex-1 min-w-0">
                 <span className="block text-sm font-semibold text-primary">New category</span>
-                <span className="block text-xs text-muted-foreground mt-0.5 truncate">Create your own from scratch</span>
+                <span className="block text-xs text-foreground mt-0.5 truncate">Create your own from scratch</span>
               </span>
             </button>
           </div>

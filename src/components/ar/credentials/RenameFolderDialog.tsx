@@ -55,7 +55,7 @@ export function RenameFolderDialog({ open, onOpenChange, folder, onRequestDelete
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label htmlFor="cred-rename-name" className="text-xs font-semibold text-muted-foreground">Folder Name</Label>
+            <Label htmlFor="cred-rename-name" className="text-xs font-semibold text-foreground">Folder Name</Label>
             <Input
               id="cred-rename-name"
               placeholder="Folder name"

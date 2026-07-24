@@ -43,7 +43,7 @@ export function ReportDayTable({
     <div className="bg-card border border-border rounded-md overflow-hidden">
       <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between bg-muted/[0.04]">
         <h2 className="text-sm font-semibold font-heading">Day-by-Day Breakdown</h2>
-        <span className="text-xs text-muted-foreground sm:hidden font-medium bg-muted/40 border border-border/60 px-2 py-0.5 rounded">
+        <span className="text-xs text-foreground sm:hidden font-medium bg-muted/40 border border-border/60 px-2 py-0.5 rounded">
           {"← swipe to scroll →"}
         </span>
       </div>
@@ -67,17 +67,17 @@ export function ReportDayTable({
 
               return l.is_off_day ? (
                 <TableRow key={l.id} className="border-b border-border/40 last:border-0 bg-muted/10">
-                  <TableCell className="tabular-nums text-sm font-medium py-3 text-muted-foreground text-center">
+                  <TableCell className="tabular-nums text-sm font-medium py-3 text-foreground text-center">
                     {formatTableDate(l.log_date)}
                   </TableCell>
                   <TableCell colSpan={categories.length + 1} className="py-3">
                     <div className="flex items-center gap-1.5">
-                      <BedDouble className="size-3.5 text-muted-foreground" />
-                      <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">
+                      <BedDouble className="size-3.5 text-foreground" />
+                      <span className="text-xs font-medium text-foreground tracking-wide uppercase">
                         {isWeekendRow ? "Weekend" : "Off Day"}
                       </span>
                       {l.notes && (
-                        <span className="text-xs text-muted-foreground/80 italic font-medium truncate max-w-[200px] sm:max-w-xs">
+                        <span className="text-xs text-foreground italic font-medium truncate max-w-[200px] sm:max-w-xs">
                           &ldquo;{l.notes}&rdquo;
                         </span>
                       )}
@@ -96,7 +96,7 @@ export function ReportDayTable({
                         {v > 0 ? (
                           <span className="font-medium text-foreground">{v}</span>
                         ) : (
-                          <span className="text-muted-foreground/30" aria-hidden="true">{"—"}</span>
+                          <span className="text-muted-foreground" aria-hidden="true">{"—"}</span>
                         )}
                       </TableCell>
                     );
@@ -113,7 +113,7 @@ export function ReportDayTable({
 
       {totalTablePages > 1 && (
         <div className="border-t border-border/40 px-4 sm:px-5 py-3 flex flex-wrap items-center justify-center sm:justify-between gap-2 bg-muted/[0.02]">
-          <span className="text-xs text-muted-foreground font-medium">
+          <span className="text-xs text-foreground font-medium">
             Displaying {(tablePage - 1) * TABLE_PAGE_SIZE + 1}–{Math.min(tablePage * TABLE_PAGE_SIZE, filtered.length)} of{" "}
             {filtered.length} log rows
           </span>
@@ -121,7 +121,7 @@ export function ReportDayTable({
             <Button
               variant="ghost"
               size="icon"
-              className="size-9 sm:size-8 hover:bg-muted/80 text-muted-foreground hover:text-foreground border border-border/40 rounded-md active:scale-95 transition-[color,background-color,transform] duration-150"
+              className="size-9 sm:size-8 hover:bg-muted/80 text-foreground hover:text-foreground border border-border/40 rounded-md active:scale-95 transition-[color,background-color,transform] duration-150"
               onClick={() => onPageChange(Math.max(1, tablePage - 1))}
               disabled={tablePage === 1}
             >
@@ -129,7 +129,7 @@ export function ReportDayTable({
             </Button>
             {tablePageNumbers.map((p, i) =>
               p === "…" ? (
-                <span key={`ellipsis-${tablePageNumbers[i + 1] ?? i}`} className="w-8 text-center text-xs text-muted-foreground/60 select-none">
+                <span key={`ellipsis-${tablePageNumbers[i + 1] ?? i}`} className="w-8 text-center text-xs text-foreground select-none">
                   …
                 </span>
               ) : (
@@ -141,7 +141,7 @@ export function ReportDayTable({
                     "size-9 sm:size-8 text-xs font-semibold rounded-md active:scale-95 transition-[color,background-color,border-color,transform] duration-150 border",
                     tablePage === p 
                       ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/10" 
-                      : "border-border/40 text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                      : "border-border/40 text-foreground hover:text-foreground hover:bg-muted/80"
                   ].join(" ")}
                   onClick={() => onPageChange(p as number)}
                 >
@@ -152,7 +152,7 @@ export function ReportDayTable({
             <Button
               variant="ghost"
               size="icon"
-              className="size-9 sm:size-8 hover:bg-muted/80 text-muted-foreground hover:text-foreground border border-border/40 rounded-md active:scale-95 transition-[color,background-color,transform] duration-150"
+              className="size-9 sm:size-8 hover:bg-muted/80 text-foreground hover:text-foreground border border-border/40 rounded-md active:scale-95 transition-[color,background-color,transform] duration-150"
               onClick={() => onPageChange(Math.min(totalTablePages, tablePage + 1))}
               disabled={tablePage === totalTablePages}
             >
@@ -163,7 +163,7 @@ export function ReportDayTable({
       )}
 
       {workingLogs.length > 0 && (
-        <div className="border-t border-border/40 px-5 py-3.5 flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground/90 bg-muted/[0.06]">
+        <div className="border-t border-border/40 px-5 py-3.5 flex flex-wrap gap-x-6 gap-y-2 text-xs text-foreground bg-muted/[0.06]">
           <span>
             Total Docs Processed: <span className="font-bold text-foreground">{totalDocs}</span>
           </span>

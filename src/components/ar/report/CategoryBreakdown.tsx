@@ -37,7 +37,7 @@ export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryB
         </div>
         <div className="space-y-3.5">
           {breakdown.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-8 text-center">No categories recorded in this range.</p>
+            <p className="text-xs text-foreground py-8 text-center">No categories recorded in this range.</p>
           ) : (
             [...breakdown].sort((a, b) => b.value - a.value).map((c, rank) => {
               const pct = totalDocs > 0 ? Math.round((c.value / totalDocs) * 100) : 0;
@@ -48,19 +48,19 @@ export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryB
                       <span
                         className={cn(
                           "size-5 rounded-full border flex items-center justify-center text-xs font-bold tabular-nums shrink-0",
-                          medalStyles[rank] ?? "bg-muted/30 text-muted-foreground border-border/40",
+                          medalStyles[rank] ?? "bg-muted/30 text-foreground border-border/40",
                         )}
                       >
                         {rank + 1}
                       </span>
                       <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
-                      <span className="text-muted-foreground group-hover:text-foreground font-medium transition-colors truncate">{c.label}</span>
+                      <span className="text-foreground group-hover:text-foreground font-medium transition-colors truncate">{c.label}</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <span className="font-bold tabular-nums" style={{ color: c.color }}>
                         {c.value}
                       </span>
-                      <span className="text-muted-foreground/60 w-8 text-right font-mono">{pct}%</span>
+                      <span className="text-foreground w-8 text-right font-mono">{pct}%</span>
                     </div>
                   </div>
                   <div className="h-2 bg-muted/30 border border-border/40 rounded-full overflow-hidden">
@@ -91,7 +91,7 @@ export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryB
             contributes to layout height — otherwise the card can grow but never shrink. */}
         <div className="flex-1 min-h-44 sm:min-h-48 md:min-h-52 xl:min-h-60 relative">
           <Suspense fallback={
-            <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground animate-pulse">
+            <div className="absolute inset-0 flex items-center justify-center text-xs text-foreground animate-pulse">
               Generating active output trend...
             </div>
           }>

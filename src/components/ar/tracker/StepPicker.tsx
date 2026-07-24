@@ -30,7 +30,7 @@ export function StepPicker({
           title="Click to change status"
           className={cn(
             "press-scale inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-sm font-semibold transition-colors hover:bg-foreground/10",
-            status ? stepClasses(status) : "text-muted-foreground/50",
+            status ? stepClasses(status) : "text-foreground",
             triggerClassName,
           )}
         >
@@ -39,7 +39,7 @@ export function StepPicker({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center" className="w-44 font-sans">
-        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">{label}</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-xs text-foreground font-normal">{label}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {STEP_STATUSES.map((s) => (
           <DropdownMenuItem

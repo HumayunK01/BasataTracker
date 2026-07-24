@@ -51,7 +51,7 @@ export function NewFolderDialog({ open, onOpenChange, onCreated }: NewFolderDial
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label htmlFor="cred-folder-name" className="text-xs font-semibold text-muted-foreground">Folder Name</Label>
+            <Label htmlFor="cred-folder-name" className="text-xs font-semibold text-foreground">Folder Name</Label>
             <Input
               id="cred-folder-name"
               placeholder="e.g. Client A, Personal"
@@ -61,7 +61,7 @@ export function NewFolderDialog({ open, onOpenChange, onCreated }: NewFolderDial
               onChange={(e) => { setName(e.target.value); setError(""); }}
               onKeyDown={(e) => e.key === "Enter" && save()}
             />
-            <p className="text-xs text-muted-foreground">Each folder keeps its own separate list of credentials.</p>
+            <p className="text-xs text-foreground">Each folder keeps its own separate list of credentials.</p>
           </div>
 
           {error && (

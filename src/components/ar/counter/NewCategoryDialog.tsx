@@ -75,13 +75,13 @@ export function NewCategoryDialog({ open, onOpenChange, onCreated }: NewCategory
         <div className="space-y-4 py-2">
           <div className="flex gap-2 bg-info/10 border border-info/20 rounded-md p-2.5 text-xs leading-normal">
             <HelpCircle className="size-4 text-info shrink-0 mt-0.5" />
-            <span className="text-muted-foreground">
+            <span className="text-foreground">
               The new category is saved to your account and added to this counter right away.
             </span>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="counter-cat-label" className="text-xs font-semibold text-muted-foreground">Category Label</Label>
+            <Label htmlFor="counter-cat-label" className="text-xs font-semibold text-foreground">Category Label</Label>
             <Input
               id="counter-cat-label"
               placeholder="e.g. Worked on NG"
@@ -92,7 +92,7 @@ export function NewCategoryDialog({ open, onOpenChange, onCreated }: NewCategory
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="counter-cat-short" className="text-xs font-semibold text-muted-foreground">Abbreviation / Short Name</Label>
+            <Label htmlFor="counter-cat-short" className="text-xs font-semibold text-foreground">Abbreviation / Short Name</Label>
             <Input
               id="counter-cat-short"
               placeholder="e.g. NG"
@@ -102,7 +102,7 @@ export function NewCategoryDialog({ open, onOpenChange, onCreated }: NewCategory
               onChange={(e) => { setShort(e.target.value); setError(""); }}
               onKeyDown={(e) => e.key === "Enter" && save()}
             />
-            <p className="text-xs text-muted-foreground">Displayed on counters and mobile screens (Max 10 chars)</p>
+            <p className="text-xs text-foreground">Displayed on counters and mobile screens (Max 10 chars)</p>
           </div>
 
           {error && (

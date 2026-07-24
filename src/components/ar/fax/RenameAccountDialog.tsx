@@ -53,7 +53,7 @@ export function RenameAccountDialog({ open, onOpenChange, account }: RenameAccou
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label htmlFor="fax-rename-name" className="text-xs font-semibold text-muted-foreground">Account Name</Label>
+            <Label htmlFor="fax-rename-name" className="text-xs font-semibold text-foreground">Account Name</Label>
             <Input
               id="fax-rename-name"
               placeholder="e.g. Ayush Rathi"

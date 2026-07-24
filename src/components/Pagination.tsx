@@ -40,7 +40,7 @@ export function Pagination({
         : "shrink-0 py-2.5 relative justify-center",
     )}>
       {total != null && pageSize != null && (
-        <span className="text-xs text-muted-foreground font-medium">
+        <span className="text-xs text-foreground font-medium">
           Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total} patients
         </span>
       )}
@@ -61,7 +61,7 @@ export function Pagination({
           className={cn(
             "size-9 sm:size-8 rounded-md border border-border/40",
             total != null
-              ? "text-muted-foreground hover:text-foreground hover:bg-muted/80 active:scale-95"
+              ? "text-foreground hover:text-foreground hover:bg-muted/80 active:scale-95"
               : "bg-sidebar text-foreground hover:bg-muted",
           )}
           onClick={prev}
@@ -72,7 +72,7 @@ export function Pagination({
         </Button>
         {pageNumbers.map((p, i) =>
           p === "…" ? (
-            <span key={`ellipsis-${pageNumbers[i + 1] ?? i}`} className="w-8 text-center text-xs text-muted-foreground/60 select-none">
+            <span key={`ellipsis-${pageNumbers[i + 1] ?? i}`} className="w-8 text-center text-xs text-foreground select-none">
               …
             </span>
           ) : (
@@ -85,7 +85,7 @@ export function Pagination({
                 page === p
                   ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/10"
                   : total != null
-                    ? "border-border/40 text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                    ? "border-border/40 text-foreground hover:text-foreground hover:bg-muted/80"
                     : "bg-sidebar text-foreground hover:bg-muted border-border",
               )}
               onClick={() => onPageChange(p as number)}
@@ -99,7 +99,7 @@ export function Pagination({
           className={cn(
             "size-9 sm:size-8 rounded-md border border-border/40",
             total != null
-              ? "text-muted-foreground hover:text-foreground hover:bg-muted/80 active:scale-95"
+              ? "text-foreground hover:text-foreground hover:bg-muted/80 active:scale-95"
               : "bg-sidebar text-foreground hover:bg-muted",
           )}
           onClick={next}
@@ -121,7 +121,7 @@ export function Pagination({
       </div>
 
       {onItemsPerPageChange != null && itemsPerPage != null && (
-        <div className="sm:absolute sm:right-0 hidden md:flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="sm:absolute sm:right-0 hidden md:flex items-center gap-2 text-sm text-foreground">
           <span>Items per page</span>
           <Select value={String(itemsPerPage)} onValueChange={(v) => onItemsPerPageChange(Number(v))}>
             <SelectTrigger className="h-8 w-16 text-sm">

@@ -43,7 +43,7 @@ function CategoryPickerList({
   return (
     <div className="space-y-3">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground pointer-events-none" />
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -59,7 +59,7 @@ function CategoryPickerList({
       </div>
       <div className="max-h-[50vh] overflow-y-auto -mx-1 px-1 space-y-1 no-scrollbar">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-10 text-muted-foreground">
+          <div className="flex flex-col items-center gap-2 py-10 text-foreground">
             <Search className="size-8 opacity-20" />
             <p className="text-sm">No categories match &ldquo;{q}&rdquo;.</p>
           </div>
@@ -84,7 +84,7 @@ function CategoryPickerList({
                   {cat.short.slice(0, 3)}
                 </span>
                 <span className="text-sm flex-1 font-medium truncate">{cat.label}</span>
-                <span className="size-6 rounded-full flex items-center justify-center text-muted-foreground bg-muted/40 group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0">
+                <span className="size-6 rounded-full flex items-center justify-center text-foreground bg-muted/40 group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0">
                   <Plus className="size-3.5" />
                 </span>
               </button>
@@ -111,7 +111,7 @@ export function CategoryPicker({ open, onOpenChange, categories, onPick }: Categ
         <DrawerContent className="bg-background/95 backdrop-blur-lg border-t border-border/60">
           <DrawerHeader className="text-left pb-2">
             <DrawerTitle className="text-base font-semibold">Add category</DrawerTitle>
-            <DrawerDescription className="text-xs text-muted-foreground">{subtitle}</DrawerDescription>
+            <DrawerDescription className="text-xs text-foreground">{subtitle}</DrawerDescription>
           </DrawerHeader>
           <div className="px-4 pb-6">
             <CategoryPickerList categories={categories} onPick={handlePick} />
@@ -126,7 +126,7 @@ export function CategoryPicker({ open, onOpenChange, categories, onPick }: Categ
       <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-lg border border-border/60">
         <DialogHeader>
           <DialogTitle className="text-base font-semibold">Add category</DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground">{subtitle}</DialogDescription>
+          <DialogDescription className="text-xs text-foreground">{subtitle}</DialogDescription>
         </DialogHeader>
         <CategoryPickerList categories={categories} onPick={handlePick} autoFocusSearch />
       </DialogContent>

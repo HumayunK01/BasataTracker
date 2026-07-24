@@ -76,11 +76,11 @@ export function CounterCard({
   return (
     <div
       ref={cardRef}
-      className="group rounded-none border flex flex-col relative overflow-hidden focus-within:ring-2 focus-within:ring-primary/40"
+      className="group rounded-lg border flex flex-col relative overflow-hidden focus-within:ring-2 focus-within:ring-primary/30 active:opacity-90 transition-opacity duration-100"
       style={{ borderColor: withAlpha(clr, 0.25), backgroundColor: withAlpha(clr, 0.07) }}
     >
       {/* GSAP pulse ring */}
-      <div className="pulse-ring absolute inset-0 pointer-events-none rounded-none" style={{ backgroundColor: clr }} />
+      <div className="pulse-ring absolute inset-0 pointer-events-none rounded-lg" style={{ backgroundColor: clr }} />
       {/* Progress fill (share of the busiest category) */}
       <div
         className="absolute inset-x-0 bottom-0 transition-[height] duration-500 ease-out pointer-events-none"
@@ -98,7 +98,7 @@ export function CounterCard({
         {/* Key shortcut indicator badge */}
         {hotkeyIndex !== undefined && (
           <kbd
-            className="hidden md:inline text-2xs font-bold font-mono px-1.5 py-0.5 rounded-none border border-border/40 bg-background/60 shrink-0 select-none cursor-help hover:border-foreground/20 transition-[border-color] duration-150 text-muted-foreground"
+            className="hidden md:inline text-2xs font-bold font-mono px-1.5 py-0.5 rounded-md border border-border/40 bg-background/60 shrink-0 select-none cursor-help hover:border-foreground/20 transition-[border-color] duration-150 text-foreground"
             title={`Press ${hotkeyIndex} key to count`}
           >
             {hotkeyIndex}
@@ -109,7 +109,7 @@ export function CounterCard({
       <button
         type="button"
         onClick={onRemove}
-          className="absolute top-1.5 right-1.5 size-9 md:size-6 md:top-2.5 md:right-2.5 rounded-none flex items-center justify-center text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 transition-colors touch-manipulation z-10 opacity-60 group-hover:opacity-100"
+          className="absolute top-1.5 right-1.5 size-9 md:size-6 md:top-2.5 md:right-2.5 rounded-md flex items-center justify-center text-foreground hover:text-destructive hover:bg-destructive/10 transition-colors touch-manipulation z-10 opacity-60 group-hover:opacity-100"
         title={`Remove ${cat.label}`}
         aria-label={`Remove ${cat.label}`}
       >
@@ -151,7 +151,7 @@ export function CounterCard({
           onPointerLeave={dec.stop}
           onPointerCancel={dec.stop}
           disabled={count === 0}
-          className="flex-1 flex items-center justify-center h-11 rounded-none border transition-opacity duration-100 active:opacity-70 disabled:opacity-35 disabled:cursor-not-allowed touch-manipulation border-border/40"
+          className="flex-1 flex items-center justify-center h-11 rounded-md border transition-opacity duration-100 active:opacity-70 disabled:opacity-35 disabled:cursor-not-allowed touch-manipulation border-border/40"
           style={{ backgroundColor: withAlpha(clr, 0.15) }}
           aria-label={`Decrease ${cat.label}`}
         >
@@ -163,7 +163,7 @@ export function CounterCard({
           onPointerUp={inc.stop}
           onPointerLeave={inc.stop}
           onPointerCancel={inc.stop}
-          className="flex-1 flex items-center justify-center h-11 rounded-none border transition-opacity duration-100 active:opacity-70 touch-manipulation border-border/40"
+          className="flex-1 flex items-center justify-center h-11 rounded-md border transition-opacity duration-100 active:opacity-70 touch-manipulation border-border/40"
           style={{ backgroundColor: withAlpha(clr, 0.15) }}
           aria-label={`Increase ${cat.label}`}
         >

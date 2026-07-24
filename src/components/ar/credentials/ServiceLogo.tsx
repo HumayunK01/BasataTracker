@@ -33,7 +33,7 @@ export function ServiceLogo({ service, website, className }: { service: string; 
   if (!domain || failed) {
     return (
       <span
-        className={`grid place-items-center rounded-none bg-primary/15 text-primary text-xs font-semibold shrink-0 ${className ?? "size-6"}`}
+        className={`grid place-items-center rounded-md bg-primary/15 text-primary text-xs font-semibold shrink-0 ${className ?? "size-6"}`}
         aria-hidden
       >
         {letter}
@@ -49,7 +49,7 @@ export function ServiceLogo({ service, website, className }: { service: string; 
       height={24}
       loading="lazy"
       onError={() => (src !== direct ? setSrc(direct) : setFailed(true))}
-      className={`object-contain rounded-none shrink-0 ${className ?? "size-6"}`}
+      className={`object-contain rounded-md shrink-0 ${className ?? "size-6"}`}
     />
   );
 }

@@ -74,7 +74,7 @@ const DailyLogPage = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Export all logs</DropdownMenuLabel>
+                <DropdownMenuLabel className="text-xs text-foreground font-normal">Export all logs</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => downloadCSV(logs, categories, "daily-log.csv")}>
                   <FileText className="size-4 mr-2" /> CSV (.csv)
@@ -90,12 +90,12 @@ const DailyLogPage = () => {
             <Button size="sm" className="h-10 sm:h-8" onClick={openNew}>
               <Plus className="size-5 sm:size-4 sm:mr-1" />
               <span className="hidden sm:inline">Log day</span>
-              <kbd className="ml-2 hidden sm:inline-flex text-xs border border-primary-foreground/30 rounded-none px-1">N</kbd>
+              <kbd className="ml-2 hidden sm:inline-flex text-xs border border-primary-foreground/30 rounded px-1">N</kbd>
             </Button>
           </>
         }
       />
-      <main className="flex-1 overflow-hidden flex flex-col px-3 sm:px-6 py-4 sm:py-6 animate-fade-in">
+      <main className="flex-1 overflow-hidden flex flex-col px-4 sm:px-6 py-5 sm:py-6 animate-fade-in">
             {isLoading ? (
               <div className="flex-1 flex flex-col gap-3 pt-2">
                 <div className="flex gap-3">
@@ -129,7 +129,7 @@ const DailyLogPage = () => {
               </div>
             ) : (
               <>
-                <FigHeader code="FIG.01" title="Daily Log" />
+                <FigHeader title="Daily Log" />
                 <DaysTable logs={logs} onEdit={openEdit} />
               </>
             )}

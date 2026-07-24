@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, Sun, Moon, Check, X } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Loader2, Eye, EyeOff, Sun, Moon, Check, X, ChevronLeft } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
-import { AppFavicon } from "@/components/ar/AppFavicon";
+import { AppLogo } from "@/components/ar/AppLogo";
 
 const PASSWORD_RULES = [
   { label: "Lowercase letter", test: (p: string) => /[a-z]/.test(p) },
@@ -101,176 +102,220 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center bg-background px-4 py-8">
+    <div className="relative flex min-h-dvh w-full items-center justify-center bg-background px-5 py-8 overflow-hidden">
 
-      {/* Card */}
-      <div className={`w-full bg-card border border-border rounded-md shadow-sm p-5 sm:p-6 space-y-4 relative ${mode === "signup" ? "max-w-md" : "max-w-sm"}`}>
+      {/* Ambient grid glow */}
+      <div className="pointer-events-none fixed inset-0 z-0" aria-hidden>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.06)_0%,transparent_70%)]" />
+      </div>
 
-        {/* Theme toggle */}
-        <button
-          onClick={toggle}
-          title={theme === "dark" ? "Light mode" : "Dark mode"}
-          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          className="absolute top-2 right-2 size-10 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-        >
-          {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
-        </button>
+      {/* Theme toggle — top right */}
+      <motion.button
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+        onClick={toggle}
+        title={theme === "dark" ? "Light mode" : "Dark mode"}
+        aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        className="fixed top-4 right-4 z-20 size-10 rounded-lg flex items-center justify-center text-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+      >
+        {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
+      </motion.button>
 
-        {/* Logo */}
-        <div className="flex justify-center">
-          <AppFavicon className="size-14 object-contain" />
-        </div>
-
+      <AnimatePresence mode="wait">
         {confirmEmail ? (
-          /* ── Account created — confirm email ── */
-          <div className="space-y-4 animate-fade-in">
-            <div className="space-y-1.5 text-center">
-              <h1 className="text-2xl font-semibold text-foreground">Account created!</h1>
-              <p className="text-sm text-muted-foreground">
-                We sent a confirmation link to{" "}
-                <span className="font-medium text-foreground break-all">{confirmEmail}</span>.
-                Please check your inbox to activate your account.
+          <motion.div
+            key="confirm"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+            className="relative z-10 w-full max-w-sm"
+          >
+            <div className="bg-card border border-border/80 rounded-xl p-6 space-y-5">
+              <div className="space-y-3 text-center">
+          <div className="flex justify-center">
+            <AppLogo className="h-10 object-contain" />
+          </div>
+                <div className="space-y-1.5">
+                  <h1 className="text-xl font-bold tracking-tight text-foreground">Account created!</h1>
+                  <p className="text-sm text-foreground leading-relaxed">
+                    We sent a confirmation link to{" "}
+                    <span className="font-medium text-foreground break-all">{confirmEmail}</span>.
+                    Please check your inbox to activate your account.
+                  </p>
+                </div>
+              </div>
+              <Button
+                className="w-full h-12 text-sm font-semibold tracking-wide"
+                onClick={() => dispatch({ type: "back_to_login" })}
+              >
+                Back to sign in
+              </Button>
+              <p className="text-center text-xs text-foreground">
+                Didn&apos;t get it? Check your spam folder.
               </p>
             </div>
-            <Button
-              className="w-full h-11 text-base font-semibold"
-              onClick={() => dispatch({ type: "back_to_login" })}
-            >
-              Back to sign in
-            </Button>
-            <p className="text-center text-xs text-muted-foreground">
-              Didn&apos;t get it? Check your spam folder.
-            </p>
-          </div>
+          </motion.div>
         ) : (
-        <>
-        {/* Title */}
-        <div className="space-y-1 text-center">
-          <h1 className="text-2xl font-semibold text-foreground">
-            {mode === "login" ? "Welcome back" : "Create your account"}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {mode === "login"
-              ? "Sign in to continue to Basata Tracker"
-              : "Start tracking your daily document work"}
-          </p>
-        </div>
+          <motion.div
+            key={mode}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+            className="relative z-10 w-full max-w-sm"
+          >
+            <div className="bg-card border border-border/80 rounded-xl p-6 sm:p-7 space-y-6">
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-3">
-
-          {/* Name fields — signup only */}
-          {mode === "signup" && (
-            <div className="flex flex-col xs:flex-row gap-2">
-              <Input
-                type="text"
-                placeholder="First name"
-                aria-label="First name"
-                value={firstName}
-                onChange={(e) => dispatch({ type: "set_first", v: e.target.value })}
-                required
-                autoComplete="given-name"
-                className="h-11"
-              />
-              <Input
-                type="text"
-                placeholder="Last name"
-                aria-label="Last name"
-                value={lastName}
-                onChange={(e) => dispatch({ type: "set_last", v: e.target.value })}
-                required
-                autoComplete="family-name"
-                className="h-11"
-              />
-            </div>
-          )}
-
-          <Input
-            type="email"
-            placeholder="Email"
-            aria-label="Email"
-            value={email}
-            onChange={(e) => dispatch({ type: "set_email", v: e.target.value })}
-            required
-            autoComplete="email"
-            className="h-11"
-          />
-
-          <div className="relative">
-            <Input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              aria-label="Password"
-              value={password}
-              onChange={(e) => dispatch({ type: "set_password", v: e.target.value })}
-              required
-              minLength={6}
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-              className="h-11 pr-12"
-            />
-            <button
-              type="button"
-              onClick={() => dispatch({ type: "toggle_pw" })}
-              tabIndex={-1}
-              title={showPassword ? "Hide password" : "Show password"}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-1 top-1/2 -translate-y-1/2 size-9 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-[color,transform] duration-150 active:scale-90"
-            >
-              <span
-                key={showPassword ? "visible" : "hidden"}
-                className="block animate-in fade-in zoom-in-90 spin-in-45 duration-200 motion-reduce:animate-none"
+              {/* Logo + Title */}
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05, duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                className="space-y-4"
               >
-                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </span>
-            </button>
-          </div>
+                <div className="flex justify-center">
+                  <AppLogo className="h-9 object-contain" />
+                </div>
+                <div className="space-y-1 text-center">
+                  <h1 className="text-xl font-bold tracking-tight text-foreground">
+                    {mode === "login" ? "Welcome back" : "Create your account"}
+                  </h1>
+                  <p className="text-sm text-foreground">
+                    {mode === "login"
+                      ? "Sign in to continue to Basata Tracker"
+                      : "Start tracking your daily document work"}
+                  </p>
+                </div>
+              </motion.div>
 
-          {/* Password rules for signup */}
-          {mode === "signup" && (
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 pt-1">
-              {PASSWORD_RULES.map(({ label, test }) => {
-                const passed = password.length > 0 && test(password);
-                const untouched = password.length === 0;
-                return (
-                  <div key={label} className={[
-                    "flex items-center gap-1.5 text-xs transition-colors",
-                    untouched ? "text-muted-foreground" : passed ? "text-success" : "text-destructive",
-                  ].join(" ")}>
-                    {untouched || passed
-                      ? <Check className="size-3 shrink-0" />
-                      : <X className="size-3 shrink-0" />}
-                    {label}
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-3.5">
+
+                {/* Name fields — signup only */}
+                {mode === "signup" && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex flex-col xs:flex-row gap-2.5 overflow-hidden"
+                  >
+                    <Input
+                      type="text"
+                      placeholder="First name"
+                      aria-label="First name"
+                      value={firstName}
+                      onChange={(e) => dispatch({ type: "set_first", v: e.target.value })}
+                      required
+                      autoComplete="given-name"
+                      className="h-12 text-sm"
+                    />
+                    <Input
+                      type="text"
+                      placeholder="Last name"
+                      aria-label="Last name"
+                      value={lastName}
+                      onChange={(e) => dispatch({ type: "set_last", v: e.target.value })}
+                      required
+                      autoComplete="family-name"
+                      className="h-12 text-sm"
+                    />
+                  </motion.div>
+                )}
+
+                <div className="space-y-2.5">
+                  <Input
+                    type="email"
+                    placeholder="Email"
+                    aria-label="Email"
+                    value={email}
+                    onChange={(e) => dispatch({ type: "set_email", v: e.target.value })}
+                    required
+                    autoComplete="email"
+                    className="h-12 text-sm"
+                  />
+
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password"
+                      aria-label="Password"
+                      value={password}
+                      onChange={(e) => dispatch({ type: "set_password", v: e.target.value })}
+                      required
+                      minLength={6}
+                      autoComplete={mode === "login" ? "current-password" : "new-password"}
+                      className="h-12 text-sm pr-12"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => dispatch({ type: "toggle_pw" })}
+                      tabIndex={-1}
+                      title={showPassword ? "Hide password" : "Show password"}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 size-9 flex items-center justify-center rounded-md text-foreground hover:text-foreground transition-colors active:scale-90"
+                    >
+                      {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </button>
                   </div>
-                );
-              })}
+                </div>
+
+                {/* Password rules for signup */}
+                {mode === "signup" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="grid grid-cols-2 gap-x-4 gap-y-1.5"
+                  >
+                    {PASSWORD_RULES.map(({ label, test }) => {
+                      const passed = password.length > 0 && test(password);
+                      const untouched = password.length === 0;
+                      return (
+                        <div key={label} className={`flex items-center gap-1.5 text-xs transition-colors ${
+                          untouched ? "text-foreground" : passed ? "text-success" : "text-destructive"
+                        }`}>
+                          {untouched || passed
+                            ? <Check className="size-3 shrink-0" />
+                            : <X className="size-3 shrink-0" />}
+                          {label}
+                        </div>
+                      );
+                    })}
+                  </motion.div>
+                )}
+
+                <Button type="submit" className="w-full h-12 text-sm font-semibold tracking-wide" disabled={loading}>
+                  {loading && <Loader2 className="size-4 mr-2 animate-spin" />}
+                  {mode === "login" ? "Login" : "Create Account"}
+                </Button>
+              </form>
+
+              {/* Mode switcher */}
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.1 }}
+                className="text-center text-sm text-foreground"
+              >
+                {mode === "login" ? (
+                  <>Don't have an account?{" "}
+                    <button type="button" onClick={() => dispatch({ type: "set_mode", mode: "signup" })} className="text-primary hover:underline font-medium">
+                      Sign up
+                    </button>
+                  </>
+                ) : (
+                  <button type="button" onClick={() => dispatch({ type: "set_mode", mode: "login" })} className="inline-flex items-center gap-1 text-primary hover:underline font-medium">
+                    <ChevronLeft className="size-3.5" />
+                    Sign in
+                  </button>
+                )}
+              </motion.p>
+
             </div>
-          )}
-
-          <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={loading}>
-            {loading && <Loader2 className="size-4 mr-2 animate-spin" />}
-            {mode === "login" ? "Login" : "Create Account"}
-          </Button>
-        </form>
-
-        {/* Mode switcher */}
-        <p className="text-center text-sm text-muted-foreground">
-          {mode === "login" ? (
-            <>Don't have an account?{" "}
-              <button type="button" onClick={() => dispatch({ type: "set_mode", mode: "signup" })} className="text-primary hover:underline font-medium">
-                Sign up
-              </button>
-            </>
-          ) : (
-            <>Already have an account?{" "}
-              <button type="button" onClick={() => dispatch({ type: "set_mode", mode: "login" })} className="text-primary hover:underline font-medium">
-                Sign in
-              </button>
-            </>
-          )}
-        </p>
-        </>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
     </div>
   );
 }

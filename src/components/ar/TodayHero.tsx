@@ -109,23 +109,23 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
 
   const deltaDisplay =
     delta === null
-      ? { Icon: Minus, text: "No history yet", tone: "text-muted-foreground" }
+      ? { Icon: Minus, text: "No history yet", tone: "text-foreground" }
       : stats.todayTotal === 0
-        ? { Icon: Minus, text: "—", tone: "text-muted-foreground" }
+        ? { Icon: Minus, text: "—", tone: "text-foreground" }
         : Math.abs(delta) < 5
-          ? { Icon: Minus, text: "On pace", tone: "text-muted-foreground" }
+          ? { Icon: Minus, text: "On pace", tone: "text-foreground" }
           : delta > 0
             ? { Icon: TrendingUp, text: `+${Math.round(delta)}%`, tone: "text-success" }
             : { Icon: TrendingDown, text: `${Math.round(delta)}%`, tone: "text-destructive" };
 
   const cards = [
-    <div key="goal" className="hover-lift h-full bg-card border border-border rounded-md p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
-      <ActivityRing value={stats.todayTotal} target={goal} size={52} strokeWidth={5}>
-        <span className="tabular-nums">{goalPct}%</span>
+    <div key="goal" className="hover-lift h-full bg-card border border-border/80 rounded-lg p-4 sm:p-5 flex items-center gap-4 sm:gap-5">
+      <ActivityRing value={stats.todayTotal} target={goal} size={48} strokeWidth={4.5}>
+        <span className="tabular-nums text-[11px]">{goalPct}%</span>
       </ActivityRing>
       <div className="min-w-0">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide font-heading">Docs Today</p>
-        <p className="text-xl sm:text-2xl font-bold tabular-nums">{animatedTotal}</p>
+        <p className="text-xs font-medium text-foreground">Docs Today</p>
+        <p className="text-2xl font-bold tabular-nums tracking-tight mt-0.5">{animatedTotal}</p>
         <Popover
           open={goalOpen}
           onOpenChange={(open) => {
@@ -136,15 +136,15 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
           <PopoverTrigger asChild>
             <button
               title="Edit daily goal"
-              className="flex items-center gap-1 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1 py-1 text-xs text-foreground hover:text-foreground transition-colors"
             >
               of {goal} goal <Pencil className="size-3" />
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-48 p-3">
+          <PopoverContent align="start" className="w-48 p-3 rounded-lg">
             <p className="text-xs font-semibold mb-2">Daily goal</p>
             <div className="flex items-center gap-1.5">
-              <Button variant="outline" size="icon" className="size-8 shrink-0" onClick={() => stepDraft(-1)}>
+              <Button variant="outline" size="icon" className="size-8 shrink-0 rounded-md" onClick={() => stepDraft(-1)}>
                 <Minus className="size-3.5" />
               </Button>
               <input
@@ -160,51 +160,51 @@ export function TodayHero({ logs }: { logs: DailyLog[] }) {
                 }}
                 className="h-8 flex-1 min-w-0 bg-muted/30 border border-border rounded-md text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-1 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
-              <Button variant="outline" size="icon" className="size-8 shrink-0" onClick={() => stepDraft(1)}>
+              <Button variant="outline" size="icon" className="size-8 shrink-0 rounded-md" onClick={() => stepDraft(1)}>
                 <Plus className="size-3.5" />
               </Button>
             </div>
-            <Button size="sm" className="w-full mt-2.5" onClick={commitGoal}>
+            <Button size="sm" className="w-full mt-2.5 rounded-md" onClick={commitGoal}>
               Set goal
             </Button>
           </PopoverContent>
         </Popover>
       </div>
     </div>,
-    <div key="streak" className="hover-lift h-full bg-card border border-border rounded-md p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
-      <div className="size-9 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
+    <div key="streak" className="hover-lift h-full bg-card border border-border/80 rounded-lg p-4 sm:p-5 flex items-center gap-4 sm:gap-5">
+      <div className="size-10 grid place-items-center shrink-0 bg-warning/8 rounded-lg border border-warning/15">
         <Flame className="size-5 text-warning" />
       </div>
       <div className="min-w-0">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide font-heading">Streak</p>
-        <p className="text-xl sm:text-2xl font-bold tabular-nums">
+        <p className="text-xs font-medium text-foreground">Streak</p>
+        <p className="text-2xl font-bold tabular-nums tracking-tight mt-0.5">
           {stats.current}
-          <span className="text-sm font-medium text-muted-foreground"> day{stats.current === 1 ? "" : "s"}</span>
+          <span className="text-sm font-medium text-foreground ml-1">days</span>
         </p>
-        <p className="text-xs text-muted-foreground">Best: {stats.best} day{stats.best === 1 ? "" : "s"}</p>
+        <p className="text-xs text-foreground mt-0.5">Best: {stats.best} day{stats.best === 1 ? "" : "s"}</p>
       </div>
     </div>,
-    <div key="avg" className="hover-lift h-full bg-card border border-border rounded-md p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
-      <div className="size-9 rounded-lg bg-info/10 flex items-center justify-center shrink-0">
-        <deltaDisplay.Icon className={cn("size-5", deltaDisplay.tone === "text-muted-foreground" ? "text-info" : deltaDisplay.tone)} />
+    <div key="avg" className="hover-lift h-full bg-card border border-border/80 rounded-lg p-4 sm:p-5 flex items-center gap-4 sm:gap-5">
+      <div className="size-10 grid place-items-center shrink-0 bg-info/8 rounded-lg border border-info/15">
+        <deltaDisplay.Icon className={cn("size-5", deltaDisplay.tone === "text-foreground" ? "text-info" : deltaDisplay.tone)} />
       </div>
       <div className="min-w-0">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide font-heading">vs Your Average</p>
-        <p className={cn("text-xl sm:text-2xl font-bold tabular-nums", deltaDisplay.tone)}>{deltaDisplay.text}</p>
+        <p className="text-xs font-medium text-foreground">vs Average</p>
+        <p className={cn("text-2xl font-bold tabular-nums tracking-tight mt-0.5", deltaDisplay.tone)}>{deltaDisplay.text}</p>
         {stats.avg > 0 && (
-          <p className="text-xs text-muted-foreground">avg {Math.round(stats.avg)} docs/day</p>
+          <p className="text-xs text-foreground mt-0.5">avg {Math.round(stats.avg)} docs/day</p>
         )}
       </div>
     </div>,
   ];
 
   return (
-    <section className="space-y-2 sm:space-y-3">
+    <section className="space-y-3">
       <div className="flex items-baseline justify-between gap-2">
-        <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-heading">Today</h2>
-        <span className="text-xs text-muted-foreground truncate">{todayLabel}</span>
+        <h2 className="text-sm font-semibold text-foreground">Today</h2>
+        <span className="text-xs text-foreground">{todayLabel}</span>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {cards.map((card, i) => (
           <motion.div
             key={card.key}
