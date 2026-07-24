@@ -61,7 +61,7 @@ function ChartCard({ title, subtitle, height = "h-48 sm:h-56", children, classNa
     <div className={`hover-lift cv-auto bg-card border border-border rounded-md p-4 sm:p-5 ${className}`}>
       <div className="mb-3 sm:mb-4">
         <h3 className="text-sm font-semibold">{title}</h3>
-        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+        {subtitle && <p className="text-xs text-foreground mt-0.5">{subtitle}</p>}
       </div>
       <div className={height}>
         <ResponsiveContainer width="100%" height="100%">
@@ -81,7 +81,7 @@ function CategoryLegend({ categories }: { categories: Category[] }) {
       {categories.map((c) => (
         <div key={c.key} className="flex items-center gap-1 min-w-0">
           <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: colorForKey(c.key) }} />
-          <span className="text-muted-foreground truncate">
+          <span className="text-foreground truncate">
             <span className="sm:hidden">{c.short}</span>
             <span className="hidden sm:inline">{c.label}</span>
           </span>
@@ -254,7 +254,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
             {categoryTotals.map((s) => (
               <div key={s.name} className="flex items-center gap-1 min-w-0">
                 <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: colorForKey(s.key) }} />
-                <span className="text-muted-foreground truncate">{s.name} ({s.value})</span>
+                <span className="text-foreground truncate">{s.name} ({s.value})</span>
               </div>
             ))}
           </div>
@@ -345,7 +345,7 @@ export const Charts = memo(function Charts({ logs, categories }: Props) {
       <div id="breakdown" className="hover-lift cv-auto bg-card border border-border rounded-md p-4 sm:p-5">
         <div className="mb-3 sm:mb-4">
           <h3 className="text-sm font-semibold">Document Breakdown</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">Last 14 working days by category</p>
+          <p className="text-xs text-foreground mt-0.5">Last 14 working days by category</p>
         </div>
         <div className="h-48 sm:h-56 md:h-64 xl:h-72">
           <ResponsiveContainer width="100%" height="100%">

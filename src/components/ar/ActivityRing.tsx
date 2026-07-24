@@ -58,6 +58,7 @@ export function ActivityRing({
           strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
           className="motion-reduce:transition-none transition-[stroke-dashoffset] duration-700 ease-out"
+          style={{ filter: "drop-shadow(0 0 4px hsl(var(--primary) / 0.2))" }}
         />
       </svg>
       {children && (

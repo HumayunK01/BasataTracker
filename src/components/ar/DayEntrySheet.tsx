@@ -68,7 +68,7 @@ function Stepper({
           onClick={dec}
           disabled={value === 0}
           aria-label={`Decrease ${label}`}
-          className="size-10 sm:size-8 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-25 disabled:cursor-not-allowed touch-manipulation"
+          className="size-10 sm:size-8 rounded-md border border-border flex items-center justify-center text-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-25 disabled:cursor-not-allowed touch-manipulation"
         >
           <Minus className="size-4 sm:size-3.5" />
         </button>
@@ -91,7 +91,7 @@ function Stepper({
           type="button"
           onClick={inc}
           aria-label={`Increase ${label}`}
-          className="size-10 sm:size-8 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors touch-manipulation"
+          className="size-10 sm:size-8 rounded-md border border-border flex items-center justify-center text-foreground hover:bg-muted hover:text-foreground transition-colors touch-manipulation"
         >
           <Plus className="size-4 sm:size-3.5" />
         </button>
@@ -157,14 +157,14 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
               <SheetTitle className="text-lg font-bold">
                 {editing ? "Edit log" : "Log a day"}
               </SheetTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-xs text-foreground mt-0.5">
                 {editing ? "Update counts for this day" : "Record your document counts"}
               </p>
             </div>
             {!draft.is_off_day && total > 0 && (
               <div className="shrink-0 text-right bg-primary/10 border border-primary/20 rounded-md px-4 py-2">
                 <div className="text-3xl font-black tabular-nums text-primary leading-none">{total}</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider mt-0.5 font-heading">total docs</div>
+                <div className="text-xs text-foreground uppercase tracking-wider mt-0.5 font-heading">total docs</div>
               </div>
             )}
           </div>
@@ -175,7 +175,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
 
           {/* Date */}
           <div className="px-5 space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-heading">Date</p>
+            <p className="text-xs font-semibold text-foreground uppercase tracking-wider font-heading">Date</p>
             <div className="flex gap-2">
               <Popover open={calOpen} onOpenChange={setCalOpen}>
                 <PopoverTrigger asChild>
@@ -185,7 +185,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
                     disabled={!!editing}
                     className="flex-1 h-10 justify-start text-left font-normal tabular-nums"
                   >
-                    <CalendarIcon className="size-4 mr-2 text-muted-foreground shrink-0" />
+                    <CalendarIcon className="size-4 mr-2 text-foreground shrink-0" />
                     {format(parseISO(draft.log_date), "PPP")}
                   </Button>
                 </PopoverTrigger>
@@ -223,10 +223,10 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
           <div className="px-5">
             <div className={`flex items-center justify-between rounded-md px-4 py-3 border ${draft.is_off_day ? "bg-muted/30 border-border" : "border-border"}`}>
               <div className="flex items-center gap-3">
-                <BedDouble className="size-4 text-muted-foreground shrink-0" />
+                <BedDouble className="size-4 text-foreground shrink-0" />
                 <div>
                   <p className="text-sm font-semibold leading-none font-heading">{weekend ? "Weekend" : "Off day"}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{weekend ? "Saturday or Sunday" : "Leave, holiday, or sick day"}</p>
+                  <p className="text-xs text-foreground mt-1">{weekend ? "Saturday or Sunday" : "Leave, holiday, or sick day"}</p>
                 </div>
               </div>
               <Switch checked={draft.is_off_day} onCheckedChange={(v) => update("is_off_day", v)} />
@@ -236,10 +236,10 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
           {/* Document counts */}
           {!draft.is_off_day && (
             <div className="space-y-2">
-              <p className="px-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider font-heading">Document Counts</p>
+              <p className="px-5 text-xs font-semibold text-foreground uppercase tracking-wider font-heading">Document Counts</p>
               <div className="bg-card border-y border-border">
                 {categories.length === 0 ? (
-                  <p className="px-5 py-8 text-sm text-center text-muted-foreground">No categories set up yet. Add them in Settings.</p>
+                  <p className="px-5 py-8 text-sm text-center text-foreground">No categories set up yet. Add them in Settings.</p>
                 ) : (
                   categories.map((c) => (
                     <Stepper
@@ -258,7 +258,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
 
           {draft.is_off_day && (
             <div className="px-5">
-              <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground rounded-md border border-dashed border-border">
+              <div className="flex flex-col items-center justify-center py-10 gap-2 text-foreground rounded-md border border-dashed border-border">
                 <BedDouble className="size-8 opacity-20" />
                 <p className="text-sm">No counts needed for an off day</p>
               </div>
@@ -267,7 +267,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
 
           {/* Notes */}
           <div className="px-5 space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-heading">
+            <p className="text-xs font-semibold text-foreground uppercase tracking-wider font-heading">
               Notes <span className="font-normal normal-case">(optional)</span>
             </p>
             <Textarea

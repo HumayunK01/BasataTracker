@@ -279,7 +279,7 @@ const ReportPage = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 font-sans">
-              <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Export filtered range</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs text-foreground font-normal">Export filtered range</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleExportCSV}>
                 <FileText className="size-4 mr-2" /> CSV (.csv)
@@ -294,17 +294,17 @@ const ReportPage = () => {
           </DropdownMenu>
         }
       />
-      <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6 animate-fade-in">
+      <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 sm:py-6 animate-fade-in">
         <div className="w-full space-y-4">
         {/* Date range controls */}
         <div className="bg-card border border-border rounded-md p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
           <div className="overflow-x-auto no-scrollbar -mx-1 px-1 max-w-full">
-            <div className="relative inline-flex items-center gap-1 rounded-lg border border-border bg-muted/30 p-1 snap-x snap-mandatory">
+            <div className="relative inline-flex items-center gap-1 rounded-lg border border-border/60 bg-muted/20 p-1 snap-x snap-mandatory">
               {/* Sliding active-segment highlight */}
               {indicator && (
                 <span
                   aria-hidden
-                  className="absolute left-0 top-1 bottom-1 rounded-none bg-primary shadow-none transition-transform duration-300 ease-out motion-reduce:transition-none"
+                  className="absolute left-0 top-1 bottom-1 rounded-md bg-primary shadow-sm transition-transform duration-300 ease-out motion-reduce:transition-none"
                   style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }}
                 />
               )}
@@ -317,11 +317,11 @@ const ReportPage = () => {
                     onClick={() => applyPreset(p.id)}
                     aria-pressed={active}
                     className={[
-                      "relative z-10 snap-start shrink-0 rounded-none px-3 py-2.5 sm:py-1.5 text-sm sm:text-xs font-medium whitespace-nowrap",
+                      "relative z-10 snap-start shrink-0 rounded-md px-3 py-2.5 sm:py-1.5 text-sm sm:text-xs font-medium whitespace-nowrap",
                       "transition-[color,background-color,opacity] duration-300 active:opacity-70",
                       active
                         ? "text-primary-foreground"
-                        : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+                        : "text-foreground hover:bg-muted/70 hover:text-foreground",
                     ].join(" ")}
                   >
                     {p.label}
@@ -331,7 +331,7 @@ const ReportPage = () => {
               {activePreset === "" && (
                 <span
                   ref={registerSegment("custom")}
-                  className="relative z-10 snap-start shrink-0 rounded-none px-3 py-2.5 sm:py-1.5 text-sm sm:text-xs font-medium whitespace-nowrap text-primary-foreground select-none animate-fade-in"
+                  className="relative z-10 snap-start shrink-0 rounded-md px-3 py-2.5 sm:py-1.5 text-sm sm:text-xs font-medium whitespace-nowrap text-primary-foreground select-none animate-fade-in"
                 >
                   Custom
                 </span>
@@ -341,7 +341,7 @@ const ReportPage = () => {
           <div className="grid grid-cols-1 xs:grid-cols-2 lg:flex gap-2 sm:gap-3 max-w-full grow lg:grow-0">
               <div
                 className={[
-                  "flex items-center h-10 rounded-none border bg-background/50 overflow-hidden cursor-pointer transition-colors",
+                  "flex items-center h-10 rounded-lg border bg-background/50 overflow-hidden cursor-pointer transition-colors",
                   rangeDays === 0
                     ? "border-destructive/70 focus-within:border-destructive"
                     : "border-input hover:border-primary/40 focus-within:border-primary",
@@ -352,7 +352,7 @@ const ReportPage = () => {
                   try { input?.showPicker(); } catch { input?.focus(); }
                 }}
               >
-                <span className="h-full flex items-center px-3 text-xs font-medium text-muted-foreground bg-muted/40 border-r border-input select-none shrink-0">
+                <span className="h-full flex items-center px-3 text-xs font-medium text-foreground bg-muted/30 border-r border-input select-none shrink-0">
                   From
                 </span>
                 <Input
@@ -360,12 +360,12 @@ const ReportPage = () => {
                   aria-label="Start date"
                   value={startDate}
                   onChange={(e) => filterDispatch({ type: "set_start", v: e.target.value })}
-                  className="h-full w-full lg:w-40 tabular-nums border-0 rounded-none bg-transparent shadow-none cursor-pointer focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="h-full w-full lg:w-40 tabular-nums border-0 bg-transparent shadow-none cursor-pointer focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
               </div>
               <div
                 className={[
-                  "flex items-center h-10 rounded-none border bg-background/50 overflow-hidden cursor-pointer transition-colors",
+                  "flex items-center h-10 rounded-lg border bg-background/50 overflow-hidden cursor-pointer transition-colors",
                   rangeDays === 0
                     ? "border-destructive/70 focus-within:border-destructive"
                     : "border-input hover:border-primary/40 focus-within:border-primary",
@@ -376,7 +376,7 @@ const ReportPage = () => {
                   try { input?.showPicker(); } catch { input?.focus(); }
                 }}
               >
-                <span className="h-full flex items-center px-3 text-xs font-medium text-muted-foreground bg-muted/40 border-r border-input select-none shrink-0">
+                <span className="h-full flex items-center px-3 text-xs font-medium text-foreground bg-muted/30 border-r border-input select-none shrink-0">
                   To
                 </span>
                 <Input
@@ -384,7 +384,7 @@ const ReportPage = () => {
                   aria-label="End date"
                   value={endDate}
                   onChange={(e) => filterDispatch({ type: "set_end", v: e.target.value })}
-                  className="h-full w-full lg:w-40 tabular-nums border-0 rounded-none bg-transparent shadow-none cursor-pointer focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="h-full w-full lg:w-40 tabular-nums border-0 bg-transparent shadow-none cursor-pointer focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
               </div>
           </div>
@@ -414,7 +414,7 @@ const ReportPage = () => {
             />
           ) : (
           <>
-            <FigHeader code="FIG.01" title="Summary" />
+            <FigHeader title="Summary" />
             <ReportStatsGrid
               totalDocs={totalDocs}
               filteredCount={filtered.length}
@@ -424,9 +424,9 @@ const ReportPage = () => {
               avgPerDay={avgPerDay}
               bestDay={bestDay}
             />
-            <FigHeader code="FIG.02" title="Category Breakdown" />
+            <FigHeader title="Category Breakdown" />
             <CategoryBreakdown breakdown={categoryBreakdown} totalDocs={totalDocs} chartData={chartData} />
-            <FigHeader code="FIG.03" title="Day Records" />
+            <FigHeader title="Day Records" />
             <ReportDayTable
               filtered={filtered}
               categories={categories}

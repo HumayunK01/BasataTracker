@@ -8,8 +8,8 @@ export function stepClasses(status: FaxStepStatus | null): string {
     case "Successfully Sent": return "text-emerald-700 dark:text-white";
     case "Failed":            return "text-rose-700 dark:text-white";
     case "Waiting":           return "text-amber-600 dark:text-white";
-    case "Pending":           return "text-muted-foreground dark:text-white";
-    default:                  return "text-muted-foreground/40";
+    case "Pending":           return "text-foreground dark:text-white";
+    default:                  return "text-foreground";
   }
 }
 
@@ -28,7 +28,7 @@ export function overallClasses(status: string): string {
   if (status === "All Steps Failed")    return "text-rose-700 dark:text-white";
   if (status.startsWith("Waiting"))     return "text-amber-700 dark:text-white";
   if (status.startsWith("Move to"))     return "text-amber-600 dark:text-white";
-  return "text-muted-foreground dark:text-white";
+  return "text-foreground dark:text-white";
 }
 
 export function displayStatus(status: string): string {

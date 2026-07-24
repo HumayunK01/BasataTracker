@@ -103,7 +103,7 @@ export function AppSidebar() {
           <Button
             variant="ghost"
             size="icon"
-            className="size-10 text-muted-foreground shrink-0 rounded-none"
+            className="size-10 text-foreground shrink-0 rounded-md"
             onClick={() => setOpenMobile(false)}
             aria-label="Close menu"
           >
@@ -117,7 +117,7 @@ export function AppSidebar() {
           <div key={group.label} className="mb-2 group-data-[collapsible=icon]:mb-0">
             <div className="flex items-center gap-1.5 px-3 py-1.5 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:h-0 group-data-[collapsible=icon]:py-0 group-data-[collapsible=icon]:overflow-hidden">
               <span className="size-1.5 bg-primary shrink-0" />
-              <span className="font-mono text-2xs font-medium text-muted-foreground uppercase tracking-[0.2em]">{group.label}</span>
+              <span className="font-mono text-2xs font-medium text-foreground uppercase tracking-[0.2em]">{group.label}</span>
             </div>
 
             <SidebarMenu className="px-2 group-data-[collapsible=icon]:px-1 space-y-0.5">
@@ -139,7 +139,7 @@ export function AppSidebar() {
                       onMouseEnter={() => prefetchRoute(item.path)}
                       onFocus={() => prefetchRoute(item.path)}
                       className={cn(
-                        "relative z-10 rounded-none border border-transparent h-9 text-xs font-mono uppercase tracking-wide [&>svg]:size-4",
+                        "relative z-10 rounded-md border border-transparent h-9 text-xs font-medium [&>svg]:size-4",
                         "data-[active=true]:!border-primary/40 data-[active=true]:!bg-primary/10 data-[active=true]:!text-primary",
                         "group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:[&>svg]:size-5",
                       )}
@@ -157,7 +157,7 @@ export function AppSidebar() {
         <div className="mb-2 group-data-[collapsible=icon]:mb-0">
           <div className="flex items-center gap-1.5 px-3 py-1.5 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:h-0 group-data-[collapsible=icon]:py-0 group-data-[collapsible=icon]:overflow-hidden">
             <span className="size-1.5 bg-primary shrink-0" />
-            <span className="font-mono text-2xs font-medium text-muted-foreground uppercase tracking-[0.2em]">Resources</span>
+            <span className="font-mono text-2xs font-medium text-foreground uppercase tracking-[0.2em]">Resources</span>
           </div>
 
           <SidebarMenu className="px-2 group-data-[collapsible=icon]:px-1 space-y-0.5">
@@ -166,12 +166,12 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   asChild
                   tooltip={link.title}
-                  className="relative z-10 rounded-none border border-transparent h-9 text-xs font-mono uppercase tracking-wide [&>svg]:size-4 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:[&>svg]:size-5"
+                  className="relative z-10 rounded-md border border-transparent h-9 text-xs font-medium [&>svg]:size-4 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:[&>svg]:size-5"
                 >
                   <a href={link.href} target="_blank" rel="noopener noreferrer">
                     <link.icon />
                     <span className="flex-1 truncate">{link.title}</span>
-                    <ExternalLink className="size-4 shrink-0 text-muted-foreground group-data-[collapsible=icon]:hidden" />
+                    <ExternalLink className="size-4 shrink-0 text-foreground group-data-[collapsible=icon]:hidden" />
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -183,16 +183,16 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarSeparator />
         <div className="flex items-center gap-2 px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <div className="grid size-8 place-items-center rounded-none bg-primary/15 text-primary text-xs font-mono font-semibold shrink-0">
+          <div className="grid size-8 place-items-center rounded-md bg-primary/12 text-primary text-xs font-semibold shrink-0">
             {initials}
           </div>
-          <p className="text-xs font-mono truncate text-muted-foreground group-data-[collapsible=icon]:hidden">{name}</p>
+          <p className="text-xs font-mono truncate text-foreground group-data-[collapsible=icon]:hidden">{name}</p>
         </div>
         <div className="flex items-center gap-1 px-2 pb-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:px-0">
           <Button
             variant="ghost"
             size="icon"
-            className="flex-1 size-9 text-foreground hover:text-foreground/80 rounded-none border border-sidebar-border group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
+            className="flex-1 size-9 text-foreground hover:text-foreground/80 rounded-md border border-sidebar-border/60 group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
             onClick={() => { navigate("/settings"); setOpenMobile(false); }}
             title="Settings"
             aria-label="Settings"
@@ -202,7 +202,7 @@ export function AppSidebar() {
           <Button
             variant="ghost"
             size="icon"
-            className="flex-1 size-9 text-foreground hover:text-foreground/80 rounded-none border border-sidebar-border group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
+            className="flex-1 size-9 text-foreground hover:text-foreground/80 rounded-md border border-sidebar-border/60 group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
             onClick={toggle}
             title={theme === "dark" ? "Light mode" : "Dark mode"}
             aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
@@ -214,7 +214,7 @@ export function AppSidebar() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="flex-1 size-9 text-foreground hover:text-destructive rounded-none border border-sidebar-border group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
+                className="flex-1 size-9 text-foreground hover:text-destructive rounded-md border border-sidebar-border/60 group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
                 title="Sign out"
                 aria-label="Sign out"
               >
@@ -241,7 +241,7 @@ export function AppSidebar() {
           </AlertDialog>
         </div>
         <div className="text-center pb-1 group-data-[collapsible=icon]:hidden">
-          <p className="font-mono text-2xs text-muted-foreground/50 tracking-[0.2em]">v1.2.1</p>
+          <p className="font-mono text-2xs text-foreground tracking-[0.2em]">v1.2.1</p>
         </div>
       </SidebarFooter>
 

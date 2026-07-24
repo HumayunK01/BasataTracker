@@ -44,13 +44,13 @@ export function DangerZone({ delState, delDispatch, onDeleteAccount }: DangerZon
           </div>
           <div>
             <h2 className="text-sm font-semibold text-destructive font-heading">Danger Zone</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Irreversible system actions · Proceed with caution</p>
+            <p className="text-xs text-foreground mt-0.5">Irreversible system actions · Proceed with caution</p>
           </div>
         </div>
         <div className="px-5 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="min-w-0 flex-1 space-y-1">
             <p className="text-sm font-bold text-foreground">Delete Account</p>
-            <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
+            <p className="text-xs text-foreground leading-relaxed max-w-2xl">
               Permanently delete your profile and wipe all document count history, custom categories, and immutable audit logs. This action cannot be reversed.
             </p>
           </div>
@@ -80,12 +80,12 @@ export function DangerZone({ delState, delDispatch, onDeleteAccount }: DangerZon
               {/* Premium Warning Alert */}
               <span className="flex gap-2.5 bg-destructive/10 border border-destructive/20 rounded-md p-3 text-xs leading-normal">
                 <ShieldAlert className="size-4 text-destructive shrink-0 mt-0.5" />
-                <span className="text-muted-foreground leading-relaxed">
+                <span className="text-foreground leading-relaxed">
                   All your historical counts, logs, custom shortnames, and data indices will be immediately deleted from Supabase. You will be logged out and cannot register with the same state again.
                 </span>
               </span>
 
-              <span className="block pt-1 text-muted-foreground">
+              <span className="block pt-1 text-foreground">
                 Please type <strong className="text-foreground select-all font-mono font-black">DELETE</strong> below and enter your password to confirm:
               </span>
             </AlertDialogDescription>

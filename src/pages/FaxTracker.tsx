@@ -375,7 +375,7 @@ const FaxTrackerPage = () => {
                 <DropdownMenuItem onClick={() => handleExport(false)}>
                   <div className="flex flex-col">
                     <span>This account only</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-foreground">
                       {activeAccount?.name ?? "Current account"} · current view
                     </span>
                   </div>
@@ -384,7 +384,7 @@ const FaxTrackerPage = () => {
                 <DropdownMenuItem onClick={() => handleExport(true)}>
                   <div className="flex flex-col">
                     <span>All accounts</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-foreground">
                       Same filters across every account
                     </span>
                   </div>
@@ -407,7 +407,7 @@ const FaxTrackerPage = () => {
       <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
         <div key={mode} className="w-full space-y-4 animate-fade-in">
 
-          <FigHeader code="FIG.01" title="Status" />
+          <FigHeader title="Status" />
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
             <StatCard label="Resolved" value={stats.resolved} tone="emerald" loading={isLoading} />
             <StatCard label="All Steps Failed" value={stats.allFailed} tone="rose" loading={isLoading} />
@@ -418,7 +418,7 @@ const FaxTrackerPage = () => {
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <div className="relative flex-1 min-w-48">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground" />
               <Input
                 placeholder="Search patient or notes…"
                 value={search}
@@ -430,7 +430,7 @@ const FaxTrackerPage = () => {
                   type="button"
                   onClick={() => setSearch("")}
                   title="Clear search"
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-foreground hover:text-foreground"
                 >
                   <X className="size-4" />
                 </button>
@@ -446,7 +446,7 @@ const FaxTrackerPage = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56 font-sans">
-                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Switch account</DropdownMenuLabel>
+                <DropdownMenuLabel className="text-xs text-foreground font-normal">Switch account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {accounts.map((a) => (
                   <DropdownMenuItem
@@ -465,7 +465,7 @@ const FaxTrackerPage = () => {
                         type="button"
                         title={`Rename ${a.name}`}
                         onClick={(e) => { e.stopPropagation(); setAccountToRename(a); }}
-                        className="press-scale p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-foreground/10 transition-colors"
+                        className="press-scale p-1 rounded text-foreground hover:text-foreground hover:bg-foreground/10 transition-colors"
                       >
                         <Pencil className="size-3.5" />
                       </button>
@@ -473,7 +473,7 @@ const FaxTrackerPage = () => {
                         type="button"
                         title={`Delete ${a.name}`}
                         onClick={(e) => { e.stopPropagation(); setAccountToDelete(a); }}
-                        className="press-scale p-1 rounded text-muted-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        className="press-scale p-1 rounded text-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                       >
                         <Trash2 className="size-3.5" />
                       </button>
@@ -495,7 +495,7 @@ const FaxTrackerPage = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 font-sans">
-                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Filter by overall status</DropdownMenuLabel>
+                <DropdownMenuLabel className="text-xs text-foreground font-normal">Filter by overall status</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {STATUS_GROUPS.map((s) => (
                   <DropdownMenuCheckboxItem
@@ -506,14 +506,14 @@ const FaxTrackerPage = () => {
                     className="flex items-center justify-between"
                   >
                     <span>{s}</span>
-                    <span className="ml-2 text-xs text-muted-foreground tabular-nums">{groupCounts[s]}</span>
+                    <span className="ml-2 text-xs text-foreground tabular-nums">{groupCounts[s]}</span>
                   </DropdownMenuCheckboxItem>
                 ))}
                 {statusFilter.size > 0 && (
                   <>
                     <DropdownMenuSeparator />
                     <button
-                      className="w-full text-left text-xs text-muted-foreground hover:text-foreground px-2 py-1.5"
+                      className="w-full text-left text-xs text-foreground hover:text-foreground px-2 py-1.5"
                       onClick={() => setStatusFilter(new Set())}
                     >
                       Clear filters
@@ -542,21 +542,21 @@ const FaxTrackerPage = () => {
                   }}
                   classNames={{
                     cell: "size-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
-                    day: "day-cell inline-flex items-center justify-center size-9 rounded-none p-0 font-normal hover:bg-accent hover:text-accent-foreground aria-selected:opacity-100",
+                    day: "day-cell inline-flex items-center justify-center size-9 rounded-md p-0 font-normal hover:bg-accent hover:text-accent-foreground aria-selected:opacity-100",
                     day_selected:
                       "bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
                     day_today: "ring-1 ring-inset ring-primary/40",
-                    day_disabled: "text-muted-foreground/40 opacity-50",
+                    day_disabled: "text-foreground opacity-50",
                   }}
                   disabled={(day) => !dataKeySet.has(dateKey(day.toISOString())!)}
                 />
                 {dateFilter.size > 0 && (
                   <div className="border-t border-border px-3 py-2 flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-foreground">
                       {dateFilter.size} day{dateFilter.size > 1 ? "s" : ""} selected
                     </span>
                     <button
-                      className="text-xs text-muted-foreground hover:text-foreground"
+                      className="text-xs text-foreground hover:text-foreground"
                       onClick={() => setDateFilter(new Set())}
                     >
                       Clear
@@ -566,18 +566,18 @@ const FaxTrackerPage = () => {
               </PopoverContent>
             </Popover>
             {hasActiveFilters && (
-              <Button variant="ghost" size="sm" className="h-10 shrink-0 text-muted-foreground animate-fade-in" onClick={clearAll}>
+              <Button variant="ghost" size="sm" className="h-10 shrink-0 text-foreground animate-fade-in" onClick={clearAll}>
                 <X className="size-4 mr-1.5" /> Clear all
               </Button>
             )}
           </div>
 
-          <FigHeader code="FIG.02" title="Patients" />
-          <div className="hidden md:block bg-card border border-border rounded-none overflow-hidden">
+          <FigHeader title="Patients" />
+          <div className="hidden md:block bg-card border border-border rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
-                  <tr className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
+                  <tr className="bg-muted/50 text-xs uppercase tracking-wide text-foreground">
                     <th className="px-3 py-2.5 text-left font-semibold">
                       <SortHeader label="Patient" sortKey="patient_name" sort={sort} onSort={toggleSort} align="left" />
                     </th>
@@ -638,8 +638,8 @@ const FaxTrackerPage = () => {
                           <td className={cn("px-3 py-2 text-center text-sm font-semibold", overallClasses(row.overall_status))}>
                             {displayStatus(row.overall_status)}
                           </td>
-                          <td className="px-3 py-2 text-muted-foreground max-w-[16rem] truncate" title={row.notes ?? ""}>
-                            {row.notes || <span className="text-muted-foreground/40">—</span>}
+                          <td className="px-3 py-2 text-foreground max-w-[16rem] truncate" title={row.notes ?? ""}>
+                            {row.notes || <span className="text-muted-foreground">—</span>}
                           </td>
                           <td className="px-3 py-2 text-center">
                             {mine ? (
@@ -665,7 +665,7 @@ const FaxTrackerPage = () => {
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             ) : (
-                              <span className="text-muted-foreground/30 text-xs" title="Only the creator can edit this row">—</span>
+                              <span className="text-muted-foreground text-xs" title="Only the creator can edit this row">—</span>
                             )}
                           </td>
                         </tr>
@@ -690,7 +690,7 @@ const FaxTrackerPage = () => {
           <div className="md:hidden space-y-3">
             {isLoading ? (
               Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="rounded-none border border-border p-3.5">
+                <div key={i} className="rounded-lg border border-border p-3.5">
                   <Skeleton height={20} width="55%" borderRadius={4} />
                   <Skeleton height={14} width="40%" borderRadius={4} className="!mt-2" />
                   <Skeleton height={64} borderRadius={6} className="!mt-3" />
@@ -718,7 +718,7 @@ const FaxTrackerPage = () => {
                   />
                 ))}
                 {totalPages > 1 && (
-                  <div className="rounded-none border border-border">
+                  <div className="rounded-lg border border-border">
                     <Pagination
                       page={page}
                       totalPages={totalPages}

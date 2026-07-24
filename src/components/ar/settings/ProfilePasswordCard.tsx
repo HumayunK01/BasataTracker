@@ -66,11 +66,11 @@ export function ProfilePasswordCard({
         {!profileState.open ? (
           <div className="flex-1 flex flex-col gap-3">
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide font-heading">Associate Name</p>
+              <p className="text-xs text-foreground uppercase tracking-wide font-heading">Associate Name</p>
               <p className="text-sm font-semibold text-foreground/90">
                 {profile?.first_name || profile?.last_name
                   ? `${profile.first_name} ${profile.last_name}`.trim()
-                  : <span className="text-muted-foreground italic font-normal">Not set</span>}
+                  : <span className="text-foreground italic font-normal">Not set</span>}
               </p>
             </div>
             <Button
@@ -91,7 +91,7 @@ export function ProfilePasswordCard({
         ) : (
           <div className="space-y-3 animate-fade-in">
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground font-semibold">First name</Label>
+              <Label className="text-xs text-foreground font-semibold">First name</Label>
               <Input
                 placeholder="First name"
                 value={profileState.first_name}
@@ -99,7 +99,7 @@ export function ProfilePasswordCard({
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground font-semibold">Last name</Label>
+              <Label className="text-xs text-foreground font-semibold">Last name</Label>
               <Input
                 placeholder="Last name"
                 value={profileState.last_name}
@@ -131,7 +131,7 @@ export function ProfilePasswordCard({
 
         {!pwState.open ? (
           <div className="flex-1 flex flex-col gap-3">
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-xs text-foreground leading-relaxed">
               Change your login password. You&#39;ll stay signed in after updating.
             </p>
             <Button
@@ -148,13 +148,13 @@ export function ProfilePasswordCard({
             {/* Custom Alert Box */}
             <div className="flex items-start gap-2 bg-warning/10 border border-warning/20 rounded-md p-2.5">
               <Info className="size-4 text-warning shrink-0 mt-0.5" />
-              <p className="text-xs text-muted-foreground leading-normal">
+              <p className="text-xs text-foreground leading-normal">
                 Must be at least 6 characters. Make it strong with numbers and special symbols.
               </p>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground font-semibold">New password</Label>
+              <Label className="text-xs text-foreground font-semibold">New password</Label>
               <Input
                 type="password"
                 placeholder="••••••••"
@@ -164,7 +164,7 @@ export function ProfilePasswordCard({
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground font-semibold">Confirm password</Label>
+              <Label className="text-xs text-foreground font-semibold">Confirm password</Label>
               <Input
                 type="password"
                 placeholder="••••••••"

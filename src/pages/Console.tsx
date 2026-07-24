@@ -1,10 +1,7 @@
 import { lazy, Suspense, useMemo } from "react";
 import { motion, type Easing, useReducedMotion } from "motion/react";
-import { useNavigate } from "react-router-dom";
-import { Plus, BarChart2, CalendarDays, LineChart } from "lucide-react";
+import { CalendarDays, LineChart } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
-import { Button } from "@/components/ui/button";
-import { TodayHero } from "@/components/ar/TodayHero";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { ContributionHeatmap } from "@/components/ar/ContributionHeatmap";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
@@ -26,7 +23,6 @@ const Console = () => {
   const { data: faxByDay = {} } = useFaxResolvedByDay();
   const { data: indexableByDay = {} } = useIndexableResolvedByDay();
   const { data: profile } = useProfile();
-  const navigate = useNavigate();
   const reduce = useReducedMotion();
 
   const displayName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ").trim();
@@ -51,45 +47,17 @@ const Console = () => {
     <div className="flex flex-col min-h-full">
       <PageHeader
         title="Console"
-        subtitle={displayName ? `OP: ${displayName}` : undefined}
+        subtitle={displayName || undefined}
         actions={<Clock />}
       />
 
-      <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6 relative z-[1]">
+      <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 sm:py-6 relative z-[1]">
         <div className="w-full space-y-6 sm:space-y-8">
-
-          {/* ── Status row ── */}
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="bg-card border border-border p-4 flex items-center gap-4">
-                  <Skeleton circle width={52} height={52} />
-                  <div className="space-y-1.5"><Skeleton width={72} height={12} /><Skeleton width={56} height={24} /></div>
-                </div>
-              ))}
-            </div>
-          ) : isEmpty ? (
-            <Panel tag="READOUT">
-              <EmptyState
-                icon={BarChart2}
-                title="No Activity Logged"
-                hint="Log your first day to bring this console online."
-                action={
-                  <Button size="sm" onClick={() => navigate("/log")}>
-                    <Plus className="size-4 mr-1.5" /> Log first day
-                  </Button>
-                }
-              />
-            </Panel>
-          ) : (
-            <TodayHero logs={logs} />
-          )}
 
           {/* ── Category breakdown ── */}
           <section>
-            <FigHeader code="FIG.01" title="Cumulative by Category" />
-            <Panel tag="CAT">
-              <div className="grid gap-2 sm:gap-3 [grid-template-columns:repeat(auto-fill,minmax(124px,1fr))] sm:[grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">
+            <FigHeader title="Cumulative by Category" />
+            <div className="grid gap-2 sm:gap-3 [grid-template-columns:repeat(auto-fill,minmax(124px,1fr))] sm:[grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">
                 {isLoading
                   ? Array.from({ length: 6 }).map((_, i) => (
                     <div key={i} className="bg-card border border-border p-3 space-y-2">
@@ -97,10 +65,9 @@ const Console = () => {
                     </div>
                   ))
                   : [...stats.categoryTotals].sort((a, b) => b.value - a.value).map((c, i) => (
-                    <CategoryStatCard key={c.key} code={`CAT-${String(i + 1).padStart(2, "0")}`} label={c.label} value={c.value} color={colorForKey(c.key)} />
+                    <CategoryStatCard key={c.key} label={c.label} value={c.value} color={colorForKey(c.key)} />
                   ))}
               </div>
-            </Panel>
           </section>
 
           {/* ── Heatmap ── */}
@@ -110,21 +77,19 @@ const Console = () => {
             viewport={{ once: true, amount: 0.3 }}
             transition={reduce ? { duration: 0 } : { duration: 0.35, ease: sectionEase }}
           >
-            <FigHeader code="FIG.02" title="Activity Density" />
+            <FigHeader title="Activity Density" />
             {isLoading ? (
-              <Panel tag="HEATMAP">
-                <Skeleton height={144} />
-              </Panel>
+              <Skeleton height={144} />
             ) : isEmpty ? (
-              <Panel tag="HEATMAP">
+              <div className="bg-card border border-border rounded-lg p-6">
                 <EmptyState
                   icon={CalendarDays}
                   title="No Activity Yet"
                   hint="The density grid populates as you log days."
                 />
-              </Panel>
+              </div>
             ) : (
-              <Panel tag="HEATMAP"><ContributionHeatmap logs={logs} /></Panel>
+              <ContributionHeatmap logs={logs} />
             )}
           </motion.section>
 
@@ -135,7 +100,7 @@ const Console = () => {
             viewport={{ once: true, amount: 0.2 }}
             transition={reduce ? { duration: 0 } : { duration: 0.35, ease: sectionEase }}
           >
-            <FigHeader code="FIG.03" title="Trends & Breakdown" />
+            <FigHeader title="Trends & Breakdown" />
             {isLoading ? (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                 {Array.from({ length: 4 }).map((_, i) => (

@@ -113,7 +113,7 @@ export function StepEntryDialog({
 
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label htmlFor={`${idPrefix}-name`} className="text-xs font-semibold text-muted-foreground">Patient Name</Label>
+            <Label htmlFor={`${idPrefix}-name`} className="text-xs font-semibold text-foreground">Patient Name</Label>
             <Input
               id={`${idPrefix}-name`}
               placeholder="e.g. John Doe"
@@ -149,7 +149,7 @@ export function StepEntryDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor={`${idPrefix}-notes`} className="text-xs font-semibold text-muted-foreground">Notes</Label>
+            <Label htmlFor={`${idPrefix}-notes`} className="text-xs font-semibold text-foreground">Notes</Label>
             <Textarea
               id={`${idPrefix}-notes`}
               placeholder="Optional notes (e.g. fax number, follow-up)"
@@ -160,7 +160,7 @@ export function StepEntryDialog({
             />
           </div>
 
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-foreground">
             Overall status is calculated automatically from the three steps.
           </p>
 
@@ -207,7 +207,7 @@ function StepSelect({
 }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs font-semibold text-muted-foreground">{label}</Label>
+      <Label className="text-xs font-semibold text-foreground">{label}</Label>
       <Select value={value} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger>
           <SelectValue />
@@ -219,7 +219,7 @@ function StepSelect({
           ))}
         </SelectContent>
       </Select>
-      {disabled && hint && <p className="text-xs text-muted-foreground/70 italic">{hint}</p>}
+      {disabled && hint && <p className="text-xs text-foreground italic">{hint}</p>}
     </div>
   );
 }

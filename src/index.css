@@ -4,196 +4,184 @@
 
 @layer base {
   html, body {
-    font-family: "IBM Plex Sans", system-ui, sans-serif;
-  }
-
-  h1, h2, h3, h4, h5, h6,
-  th,
-  label,
-  legend,
-  caption,
-  .font-heading {
-    font-family: "Archivo", system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
   }
 
   :root {
-    /* Neutral instrument panel — gray surfaces, blue #2A66EA signal only. */
-    --background: 0 0% 7%;            /* neutral near-black */
-    --foreground: 0 0% 100%;          /* #FFFFFF */
+    --background: 240 3% 6%;            /* Deep minimal near-black */
+    --foreground: 0 0% 96%;             /* #F5F5F5 */
 
-    --card: 0 0% 11%;                 /* #1C1C1C */
-    --card-foreground: 0 0% 100%;
+    --card: 0 0% 10%;                   /* #1A1A1A */
+    --card-foreground: 0 0% 96%;
 
-    --popover: 0 0% 11%;              /* #1C1C1C */
-    --popover-foreground: 0 0% 100%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 96%;
 
-    --primary: 221 82% 54%;           /* #2A66EA — the signal */
+    --primary: 221 78% 56%;             /* #3474F0 — refined blue */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 16%;            /* #292929 */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 0 0% 14%;              /* #242424 */
+    --secondary-foreground: 0 0% 96%;
 
-    --muted: 0 0% 16%;                /* #292929 */
-    --muted-foreground: 0 0% 64%;     /* #A3A3A3 */
+    --muted: 0 0% 13%;                  /* #212121 */
+    --muted-foreground: 0 0% 55%;       /* #8C8C8C */
 
-    --accent: 0 0% 16%;               /* #292929 */
-    --accent-foreground: 0 0% 100%;
+    --accent: 0 0% 14%;
+    --accent-foreground: 0 0% 96%;
 
-    --destructive: 0 96% 65%;         /* #FB5050 */
+    --destructive: 0 82% 60%;           /* #EB4D4D */
     --destructive-foreground: 0 0% 100%;
 
-    --warning: 38 88% 60%;            /* #F3B13F */
+    --warning: 38 88% 60%;              /* #F3B13F */
     --warning-foreground: 0 0% 9%;
 
-    --success: 130 60% 67%;           /* #78DD89 */
+    --success: 130 55% 55%;             /* #5FCC73 */
     --success-foreground: 0 0% 9%;
 
-    --info: 213 93% 68%;              /* #62A6F9 */
+    --info: 213 90% 64%;                /* #56A0F5 */
     --info-foreground: 0 0% 100%;
 
-    --border: 0 0% 18%;               /* hairline #2E2E2E */
-    --input: 0 0% 18%;
-    --ring: 221 82% 54%;              /* #2A66EA */
+    --border: 0 0% 16%;                 /* #292929 */
+    --input: 0 0% 16%;
+    --ring: 221 78% 56%;
 
-    --radius: 0;                      /* hard corners */
+    --radius: 6px;
 
-    /* Motion — strong custom easing curves (built-in CSS easings lack punch) */
-    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);       /* entering/exiting UI */
-    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);   /* on-screen movement */
-    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);    /* iOS-like slide */
+    /* Motion */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 
-    /* Category palette — pulled from the brand set */
-    --cat-0: 0 96% 65%;     /* #FB5050 red */
-    --cat-1: 221 82% 54%;   /* #2A66EA blue */
-    --cat-2: 38 88% 60%;    /* #F3B13F amber */
-    --cat-3: 300 55% 65%;   /* #D775D7 magenta */
-    --cat-4: 130 60% 67%;   /* #78DD89 green */
-    --cat-5: 25 90% 55%;    /* #F47B25 orange */
-    --cat-6: 168 60% 55%;   /* #47D1B6 teal */
-    --cat-7: 240 65% 70%;   /* #8181E4 indigo */
-    --cat-8: 80 60% 55%;    /* #A3D147 lime */
-    --cat-9: 213 93% 68%;   /* #62A6F9 blue */
-    --cat-10: 174 55% 55%;  /* #4DCBBF teal */
-    --cat-11: 0 72% 65%;    /* #E66565 red */
-    --cat-12: 155 55% 62%;  /* #69D3A7 green */
-    --cat-13: 214 71% 68%;  /* #74A6E7 blue */
-    --cat-14: 204 59% 73%;  /* #91C2E3 sky */
-    --cat-15: 215 20% 33%;  /* #435165 slate */
+    /* Category palette */
+    --cat-0: 0 82% 60%;      /* #EB4D4D */
+    --cat-1: 221 78% 56%;    /* #3474F0 */
+    --cat-2: 38 88% 60%;     /* #F3B13F */
+    --cat-3: 300 55% 65%;    /* #D775D7 */
+    --cat-4: 130 55% 55%;    /* #5FCC73 */
+    --cat-5: 25 88% 55%;     /* #F2802A */
+    --cat-6: 168 55% 50%;    /* #3DBFA6 */
+    --cat-7: 240 60% 65%;    /* #7878D9 */
+    --cat-8: 80 55% 50%;     /* #94C23D */
+    --cat-9: 213 90% 64%;    /* #56A0F5 */
+    --cat-10: 174 50% 50%;   /* #40BFB3 */
+    --cat-11: 0 65% 60%;     /* #D95C5C */
+    --cat-12: 155 50% 58%;   /* #5FC99A */
+    --cat-13: 214 65% 62%;   /* #619EE0 */
+    --cat-14: 204 55% 68%;   /* #7EBAD9 */
+    --cat-15: 215 15% 35%;   /* #4C5666 */
 
-    --skeleton-base: 0 0% 14%;
-    --skeleton-highlight: 0 0% 19%;
+    --skeleton-base: 0 0% 13%;
+    --skeleton-highlight: 0 0% 18%;
 
-    /* Floating surfaces (tooltip/popover/menu). Dark: pure deep black shadow,
-       subtle dark border. No light/inset highlight — it read as a white glow. */
     --popover-border: 0 0% 18%;
     --shadow-popover:
-      0 10px 30px -8px rgb(0 0 0 / 0.7),
-      0 4px 10px -4px rgb(0 0 0 / 0.5);
+      0 12px 32px -12px rgb(0 0 0 / 0.6),
+      0 4px 12px -6px rgb(0 0 0 / 0.4);
 
-    --sidebar-background: 0 0% 10%;     /* #1A1A1A — a hair above page bg */
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 221 82% 54%;     /* #2A66EA */
+    --sidebar-background: 0 0% 8%;      /* #141414 */
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-primary: 221 78% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 16%;         /* #292929 muted hover fill */
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 221 82% 54%;
+    --sidebar-accent: 0 0% 13%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 221 78% 56%;
   }
 
   .light {
-    --background: 0 0% 100%;          /* #FFFFFF */
-    --foreground: 221 39% 11%;        /* #111827 */
+    --background: 0 0% 97%;            /* #F7F7F7 */
+    --foreground: 240 8% 12%;          /* #1C1C1F */
 
-    --card: 0 0% 100%;                /* #FFFFFF */
-    --card-foreground: 221 39% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 8% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 221 39% 11%;
+    --popover-foreground: 240 8% 12%;
 
-    --primary: 221 82% 54%;           /* #2A66EA */
+    --primary: 221 78% 56%;            /* #3474F0 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 91%;         /* #E5E7EB gray-200 */
-    --secondary-foreground: 221 39% 11%;
+    --secondary: 0 0% 92%;             /* #EBEBEB */
+    --secondary-foreground: 240 8% 12%;
 
-    --muted: 220 14% 91%;             /* #E5E7EB gray-200 */
-    --muted-foreground: 0 0% 42%;     /* neutral grey — secondary text on light */
+    --muted: 0 0% 92%;
+    --muted-foreground: 0 0% 45%;      /* #737373 */
 
-    --accent: 220 14% 91%;            /* #E5E7EB */
-    --accent-foreground: 221 39% 11%;
+    --accent: 0 0% 92%;
+    --accent-foreground: 240 8% 12%;
 
-    --destructive: 0 96% 65%;         /* #FB5050 */
+    --destructive: 0 82% 56%;          /* #E84A4A */
     --destructive-foreground: 0 0% 100%;
 
-    --warning: 38 88% 60%;            /* #F3B13F */
-    --warning-foreground: 221 39% 11%;
+    --warning: 38 88% 56%;
+    --warning-foreground: 0 0% 9%;
 
-    --success: 130 60% 67%;           /* #78DD89 */
-    --success-foreground: 221 39% 11%;
+    --success: 130 55% 50%;
+    --success-foreground: 0 0% 9%;
 
-    --info: 213 93% 68%;              /* #62A6F9 */
+    --info: 213 90% 60%;
     --info-foreground: 0 0% 100%;
 
-    --border: 220 13% 86%;            /* #D1D5DB gray-300 */
-    --input: 220 13% 86%;
-    --ring: 221 82% 54%;              /* #2A66EA */
+    --border: 0 0% 88%;                /* #E0E0E0 */
+    --input: 0 0% 88%;
+    --ring: 221 78% 56%;
 
-    /* Category palette — brand hues (fills read fine on white) */
-    --cat-0: 0 96% 65%;     /* #FB5050 red */
-    --cat-1: 221 82% 54%;   /* #2A66EA blue */
-    --cat-2: 38 88% 60%;    /* #F3B13F amber */
-    --cat-3: 300 55% 65%;   /* #D775D7 magenta */
-    --cat-4: 130 60% 67%;   /* #78DD89 green */
-    --cat-5: 25 90% 55%;    /* #F47B25 orange */
-    --cat-6: 168 60% 55%;   /* #47D1B6 teal */
-    --cat-7: 240 65% 70%;   /* #8181E4 indigo */
-    --cat-8: 80 60% 55%;    /* #A3D147 lime */
-    --cat-9: 213 93% 68%;   /* #62A6F9 blue */
-    --cat-10: 174 55% 55%;  /* #4DCBBF teal */
-    --cat-11: 0 72% 65%;    /* #E66565 red */
-    --cat-12: 155 55% 62%;  /* #69D3A7 green */
-    --cat-13: 214 71% 68%;  /* #74A6E7 blue */
-    --cat-14: 204 59% 73%;  /* #91C2E3 sky */
-    --cat-15: 215 20% 33%;  /* #435165 slate */
+    --cat-0: 0 82% 56%;
+    --cat-1: 221 78% 56%;
+    --cat-2: 38 88% 56%;
+    --cat-3: 300 50% 60%;
+    --cat-4: 130 55% 50%;
+    --cat-5: 25 88% 52%;
+    --cat-6: 168 55% 48%;
+    --cat-7: 240 55% 60%;
+    --cat-8: 80 55% 48%;
+    --cat-9: 213 90% 60%;
+    --cat-10: 174 48% 48%;
+    --cat-11: 0 60% 55%;
+    --cat-12: 155 48% 55%;
+    --cat-13: 214 60% 58%;
+    --cat-14: 204 50% 62%;
+    --cat-15: 215 12% 38%;
 
-    --skeleton-base: 220 14% 91%;     /* gray-200 */
-    --skeleton-highlight: 220 14% 97%;
+    --skeleton-base: 0 0% 90%;
+    --skeleton-highlight: 0 0% 95%;
 
-    /* Light: soft neutral drop shadow, no inset highlight */
-    --popover-border: 220 13% 88%;
+    --popover-border: 0 0% 86%;
     --shadow-popover:
-      0 10px 28px -10px rgb(0 0 0 / 0.18),
-      0 3px 8px -4px rgb(0 0 0 / 0.10);
+      0 10px 24px -10px rgb(0 0 0 / 0.12),
+      0 4px 10px -4px rgb(0 0 0 / 0.08);
 
-    --sidebar-background: 0 0% 100%;  /* #FFFFFF */
-    --sidebar-foreground: 221 39% 11%;
-    --sidebar-primary: 221 82% 54%;   /* #2A66EA */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 8% 12%;
+    --sidebar-primary: 221 78% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 91%;
-    --sidebar-accent-foreground: 221 39% 11%;
-    --sidebar-border: 220 13% 86%;
-    --sidebar-ring: 221 82% 54%;
+    --sidebar-accent: 0 0% 92%;
+    --sidebar-accent-foreground: 240 8% 12%;
+    --sidebar-border: 0 0% 88%;
+    --sidebar-ring: 221 78% 56%;
   }
 }
 
 @layer base {
   html {
     font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   @media (min-width: 640px) {
-    html {
-      font-size: 14.5px;
-    }
+    html { font-size: 14.5px; }
   }
   @media (min-width: 768px) {
-    html {
-      font-size: 15px;
-    }
+    html { font-size: 15px; }
   }
   @media (min-width: 1024px) {
-    html {
-      font-size: 16.5px;
-    }
+    html { font-size: 16px; }
+  }
+  @media (min-width: 1280px) {
+    html { font-size: 16.5px; }
+  }
+  @media (min-width: 1536px) {
+    html { font-size: 17px; }
   }
 
   * {
@@ -206,30 +194,35 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Exposed engineering grid — the "instrument panel" substrate.
-     Faint hairlines, non-interactive, behind all content. */
+  /* Subtle ambient depth — replaces the old engineering grid */
   body::before {
     content: "";
     position: fixed;
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background-image:
-      linear-gradient(hsl(40 12% 90% / 0.022) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(40 12% 90% / 0.022) 1px, transparent 1px);
-    background-size: 32px 32px;
+    background:
+      radial-gradient(ellipse 90% 45% at 50% 0%, hsl(var(--primary) / 0.035), transparent 70%),
+      radial-gradient(ellipse 60% 35% at 85% 100%, hsl(var(--primary) / 0.02), transparent 55%);
+  }
+
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
+  }
+  .safe-top {
+    padding-top: max(env(safe-area-inset-top, 0px), 0px);
   }
 
   ::selection {
-    background: hsl(var(--primary) / 0.3);
+    background: hsl(var(--primary) / 0.25);
     color: hsl(var(--foreground));
   }
 
   button, a, [role="button"] {
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /* Interaction affordances — clickable things show a pointer */
   input[type="date"],
   input[type="date"]::-webkit-calendar-picker-indicator,
   select,
@@ -242,7 +235,7 @@
     cursor: not-allowed;
   }
 
-  /* Autofill — kill the default bright/yellow fill and heavy text, match theme */
+  /* Autofill */
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
@@ -255,12 +248,6 @@
     transition: background-color 1ms;
   }
 
-  table, table * {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-  }
-
-  /* Theme toggle crossfade — View Transitions API snapshots the page and
-     fades the two frames on the GPU; far cheaper than per-element transitions */
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation-duration: 0.18s;
@@ -274,15 +261,15 @@
     }
   }
 
-  /* Reduced transparency — frosted/translucent chrome becomes solid so text
-     stays legible for users who can't parse blur-over-content (Apple §14). */
   @media (prefers-reduced-transparency: reduce) {
     .glass,
+    .glass-header,
     .popover-surface {
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
     }
-    .glass {
+    .glass,
+    .glass-header {
       background-color: hsl(var(--background)) !important;
     }
     .popover-surface {
@@ -290,11 +277,10 @@
     }
   }
 
-  /* Subtle scrollbars — desktop only */
   @media (min-width: 640px) {
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: hsl(var(--background)); }
-    ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 5px; }
+    ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.4); }
   }
 
@@ -303,33 +289,29 @@
     * { scrollbar-width: none; }
   }
 
-  /* Hide scrollbar utility */
   .no-scrollbar::-webkit-scrollbar { display: none; }
 
-  /* Fix tooltip text color in dark mode */
   .recharts-tooltip-item {
     color: hsl(var(--popover-foreground)) !important;
   }
-  
+
   .recharts-tooltip-label {
     color: hsl(var(--popover-foreground)) !important;
   }
 }
 
 @layer components {
-  /* Elevated floating surface — tooltips, popovers, menus, selects.
-     Theme-aware shadow reads correctly on dark (soft depth, no white glow). */
   .popover-surface {
     border-color: hsl(var(--popover-border));
     box-shadow: var(--shadow-popover);
   }
 
   .status-pill {
-    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium;
   }
-  .status-indexed { @apply bg-success/15 text-success; }
-  .status-pending { @apply bg-warning/15 text-warning; }
-  .status-escalated { @apply bg-destructive/15 text-destructive; }
+  .status-indexed { @apply bg-success/12 text-success; }
+  .status-pending { @apply bg-warning/12 text-warning; }
+  .status-escalated { @apply bg-destructive/12 text-destructive; }
 }
 
 @layer utilities {
@@ -337,23 +319,19 @@
     animation: fadeSlideIn 0.2s var(--ease-out) forwards;
   }
   .page-transition {
-    animation: pageSlideIn 0.35s var(--ease-out) forwards;
+    animation: pageSlideIn 0.3s var(--ease-out) forwards;
   }
-
-  /* Table row entering the list (new patient added). ease-out, under 250ms. */
   .animate-row-in {
     animation: rowIn 0.22s var(--ease-out) forwards;
   }
 
-  /* Pressable feedback: quick opacity dip (no floaty scale — industrial). */
   .press-scale {
     transition: opacity 0.1s var(--ease-out), background-color 0.14s var(--ease-out);
   }
   .press-scale:active {
-    opacity: 0.7;
+    opacity: 0.65;
   }
 
-  /* Stagger entrance for lists of children. Each child gets incremental delay. */
   .stagger-children > * {
     opacity: 0;
     animation: staggerFadeIn 0.3s var(--ease-out) forwards;
@@ -374,8 +352,6 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* Calendar day selection: smooth color/transform on every day cell, plus a
-     subtle pop when a day becomes selected. */
   .day-cell {
     transition: background-color 0.16s var(--ease-out), color 0.16s var(--ease-out),
       transform 0.16s var(--ease-out);
@@ -390,54 +366,47 @@
     100% { opacity: 1; transform: scale(1); }
   }
 
-  /* Counter number pop — retriggered by remounting the element (key change). */
   .counter-pop {
-    animation: counter-pop 180ms var(--ease-out);
+    animation: counter-pop 160ms var(--ease-out);
   }
 
   @keyframes counter-pop {
-    0% { transform: scale(1.18); }
+    0% { transform: scale(1.15); }
     60% { transform: scale(0.97); }
     100% { transform: scale(1); }
   }
 
-  /* Data-dense: tighter tables with hairlines */
   .dense-table tbody tr {
     transition: background-color 0.12s var(--ease-out);
   }
   .dense-table tbody tr:hover {
-    background: hsl(var(--accent) / 0.3);
+    background: hsl(var(--accent) / 0.25);
   }
 
-  /* Skip rendering/painting for offscreen heavy blocks (charts, heatmap).
-     `contain-intrinsic-size` reserves space so the scrollbar stays stable. */
   .cv-auto {
     content-visibility: auto;
     contain-intrinsic-size: auto 300px;
   }
 
-  /* Origin-aware popovers — scale from trigger instead of center */
   [data-radix-popper-content-wrapper] {
     transform-origin: var(--radix-popper-transform-origin) !important;
   }
 
-  /* Hover animations only on hover-capable devices.
-     Industrial: hard orange edge on hover, not a soft float. */
   @media (hover: hover) and (pointer: fine) {
     .hover-lift {
-      transition: border-color 0.14s var(--ease-out), background-color 0.14s var(--ease-out);
+      transition: border-color 0.14s var(--ease-out), background-color 0.14s var(--ease-out),
+        box-shadow 0.14s var(--ease-out);
     }
     .hover-lift:hover {
-      border-color: hsl(var(--primary) / 0.5);
+      border-color: hsl(var(--primary) / 0.35);
+      box-shadow: 0 2px 8px -4px hsl(var(--primary) / 0.1);
     }
-    /* Day cells scale only on real hover; touch taps must not stick a transform */
     .day-cell:hover {
       transform: scale(1.06);
     }
   }
 }
 
-/* Reduced motion — keep fades/color, drop movement and large transforms */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
   .page-transition,
@@ -473,37 +442,18 @@
 }
 
 @keyframes fadeSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pageSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* New row: never from scale(0); start from a near-final state and settle. */
 @keyframes rowIn {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .kudos-float {
@@ -511,19 +461,8 @@
 }
 
 @keyframes kudos-float {
-  0% {
-    opacity: 0;
-    transform: translateY(0) scale(0.85) rotate(0deg);
-  }
-  15% {
-    opacity: 1;
-    transform: translateY(-60px) scale(1.2) rotate(15deg);
-  }
-  80% {
-    opacity: 0.8;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-320px) scale(0.8) rotate(-15deg);
-  }
+  0% { opacity: 0; transform: translateY(0) scale(0.85) rotate(0deg); }
+  15% { opacity: 1; transform: translateY(-60px) scale(1.2) rotate(15deg); }
+  80% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-320px) scale(0.8) rotate(-15deg); }
 }

@@ -1,4 +1,4 @@
-﻿import { AppLogo } from "@/components/ar/AppLogo";
+import { AppLogo } from "@/components/ar/AppLogo";
 
 interface AboutCardProps {
   categoriesCount: number;
@@ -13,15 +13,15 @@ export function AboutCard({ categoriesCount, logsCount }: AboutCardProps) {
 
         <div className="space-y-2 bg-muted/20 border border-border/40 rounded-md p-3">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground font-medium">Version</span>
+            <span className="text-foreground font-medium">Version</span>
             <span className="font-mono bg-background/80 border border-border/60 text-foreground/95 px-2 py-0.5 rounded text-xs">1.2.0</span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground font-medium">Categories</span>
+            <span className="text-foreground font-medium">Categories</span>
             <span className="font-mono bg-background/80 border border-border/60 text-foreground/95 px-2 py-0.5 rounded text-xs">{categoriesCount} active</span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground font-medium">Days logged</span>
+            <span className="text-foreground font-medium">Days logged</span>
             <span className="font-mono bg-background/80 border border-border/60 text-foreground/95 px-2 py-0.5 rounded text-xs">{logsCount} days</span>
           </div>
         </div>

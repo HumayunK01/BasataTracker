@@ -84,16 +84,16 @@ export function FaxCard({
           const skipped = stepIsSkipped(row, field, mode);
           return (
             <div key={field} className="flex items-center justify-between gap-3 text-sm min-h-8">
-              <dt className="text-muted-foreground">{labels[i]}</dt>
+              <dt className="text-foreground">{labels[i]}</dt>
               <dd className="text-right">
                 {!active ? (
-                  <span className="font-semibold text-muted-foreground/40">—</span>
+                  <span className="font-semibold text-muted-foreground">—</span>
                 ) : skipped ? (
-                  <span className="text-xs font-medium text-muted-foreground/60 italic">No need</span>
+                  <span className="text-xs font-medium text-foreground italic">No need</span>
                 ) : mine ? (
                   <StepPicker status={status} onPick={(v) => onPickStep(field, v)} label={labels[i]} />
                 ) : (
-                  <span className={cn("font-semibold", status ? stepClasses(status) : "text-muted-foreground/40")}>
+                  <span className={cn("font-semibold", status ? stepClasses(status) : "text-muted-foreground")}>
                     {status ?? "—"}
                   </span>
                 )}
@@ -104,7 +104,7 @@ export function FaxCard({
       </dl>
 
       {row.notes && (
-        <p className="mt-3 pt-3 border-t border-border/60 text-sm text-muted-foreground leading-snug">
+        <p className="mt-3 pt-3 border-t border-border/60 text-sm text-foreground leading-snug">
           {row.notes}
         </p>
       )}

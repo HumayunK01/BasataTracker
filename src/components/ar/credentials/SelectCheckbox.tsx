@@ -18,7 +18,7 @@ export function SelectCheckbox({ checked, onChange, ariaLabel, disabled, classNa
         checked={checked}
         disabled={disabled}
         onChange={onChange}
-        className="peer absolute inset-0 size-4 cursor-pointer appearance-none rounded-none border border-border bg-background checked:border-primary checked:bg-primary disabled:cursor-not-allowed"
+        className="peer absolute inset-0 size-4 cursor-pointer appearance-none rounded-sm border border-border bg-background checked:border-primary checked:bg-primary disabled:cursor-not-allowed"
       />
       <Check className="size-3 text-primary-foreground opacity-0 peer-checked:opacity-100" strokeWidth={3} />
     </label>

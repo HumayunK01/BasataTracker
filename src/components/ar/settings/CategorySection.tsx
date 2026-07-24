@@ -92,7 +92,7 @@ export function CategorySection({
             </div>
             <div>
               <h2 className="text-sm font-semibold font-heading">Categories</h2>
-              <p className="text-xs text-muted-foreground mt-0.5 hidden xs:block">
+              <p className="text-xs text-foreground mt-0.5 hidden xs:block">
                 Drag to rearrange keys · {categories.length} active categories
               </p>
             </div>
@@ -155,12 +155,12 @@ export function CategorySection({
                   ].join(" ")}
                 >
                   <div className="cursor-grab active:cursor-grabbing shrink-0 -ml-1">
-                    <GripVertical className="size-4 text-muted-foreground/40" />
+                    <GripVertical className="size-4 text-foreground" />
                   </div>
                   <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: clr }} aria-hidden />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate" title={c.label}>{c.label}</p>
-                    <p className="text-xs font-mono text-muted-foreground truncate">{c.short}</p>
+                    <p className="text-xs font-mono text-foreground truncate">{c.short}</p>
                   </div>
                    <div className="flex items-center shrink-0">
                     {cat.dragging !== c.key && (
@@ -168,7 +168,7 @@ export function CategorySection({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="size-9 sm:size-7 text-muted-foreground hover:text-foreground hover:bg-muted/80 disabled:opacity-30"
+                          className="size-9 sm:size-7 text-foreground hover:text-foreground hover:bg-muted/80 disabled:opacity-30"
                           title={`Move ${c.label} up`}
                           aria-label={`Move ${c.label} up`}
                           disabled={index === 0}
@@ -179,7 +179,7 @@ export function CategorySection({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="size-9 sm:size-7 text-muted-foreground hover:text-foreground hover:bg-muted/80 disabled:opacity-30"
+                          className="size-9 sm:size-7 text-foreground hover:text-foreground hover:bg-muted/80 disabled:opacity-30"
                           title={`Move ${c.label} down`}
                           aria-label={`Move ${c.label} down`}
                           disabled={index === categories.length - 1}
@@ -192,7 +192,7 @@ export function CategorySection({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="size-9 sm:size-7 text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                      className="size-9 sm:size-7 text-foreground hover:text-foreground hover:bg-muted/80"
                       title={`Edit ${c.label}`}
                       onClick={() => onEdit(c)}
                     >
@@ -201,7 +201,7 @@ export function CategorySection({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="size-9 sm:size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      className="size-9 sm:size-7 text-foreground hover:text-destructive hover:bg-destructive/10"
                       title={`Delete ${c.label}`}
                       onClick={() => catDispatch({ type: "set_delete_target", cat: c })}
                     >
@@ -229,14 +229,14 @@ export function CategorySection({
             {!cat.editingKey && (
               <div className="flex gap-2 bg-info/10 border border-info/20 rounded-md p-2.5 text-xs leading-normal">
                 <HelpCircle className="size-4 text-info shrink-0 mt-0.5" />
-                <span className="text-muted-foreground">
+                <span className="text-foreground">
                   Labels drive dynamic key binding (e.g. <strong>&ldquo;Worked on NG&rdquo;</strong> will generate the database target key <strong>&ldquo;worked_on_ng&rdquo;</strong>).
                 </span>
               </div>
             )}
 
             <div className="space-y-1.5">
-              <Label htmlFor="cat-label" className="text-xs font-semibold text-muted-foreground">Category Label</Label>
+              <Label htmlFor="cat-label" className="text-xs font-semibold text-foreground">Category Label</Label>
               <Input
                 id="cat-label"
                 placeholder="e.g. Worked on NG"
@@ -247,7 +247,7 @@ export function CategorySection({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="cat-short" className="text-xs font-semibold text-muted-foreground">Abbreviation / Short Name</Label>
+              <Label htmlFor="cat-short" className="text-xs font-semibold text-foreground">Abbreviation / Short Name</Label>
               <Input
                 id="cat-short"
                 placeholder="e.g. NG"
@@ -257,7 +257,7 @@ export function CategorySection({
                 onChange={(e) => catDispatch({ type: "set_form", patch: { short: e.target.value } })}
                 onKeyDown={(e) => e.key === "Enter" && onSave()}
               />
-              <p className="text-xs text-muted-foreground">Displayed on counters and mobile screens (Max 10 chars)</p>
+              <p className="text-xs text-foreground">Displayed on counters and mobile screens (Max 10 chars)</p>
             </div>
             
             {cat.formError && (
@@ -290,14 +290,14 @@ export function CategorySection({
               <Info className="size-5 shrink-0" />
               Remove Document Category?
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-3 mt-2 text-sm leading-relaxed text-muted-foreground">
+            <AlertDialogDescription className="space-y-3 mt-2 text-sm leading-relaxed text-foreground">
               <span>
                 Removing <strong>&ldquo;{cat.deleteTarget?.label}&rdquo;</strong> (`{cat.deleteTarget?.short}`) will delete it from counters and form selections.
               </span>
               
               <span className="flex gap-2.5 bg-warning/10 border border-warning/20 rounded-md p-3 text-xs leading-normal">
                 <Info className="size-4 text-warning shrink-0 mt-0.5" />
-                <span className="text-muted-foreground">
+                <span className="text-foreground">
                   Existing logging history in your daily tables is not erased, but this category will no longer appear on the Counter active list.
                 </span>
               </span>
