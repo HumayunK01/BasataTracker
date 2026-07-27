@@ -115,8 +115,6 @@ const ReportPage = () => {
   const { data: indexableByDay = {} } = useIndexableResolvedByDay();
   const { data: profile } = useProfile();
   const userName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || undefined;
-  const [now] = useState(() => new Date());
-
   const [filter, filterDispatch] = useReducer(reportReducer, undefined, () => {
     const r = getPresetRange("this_week");
     return { startDate: r.start, endDate: r.end, activePreset: "this_week", tablePage: 1 };
@@ -263,37 +261,6 @@ const ReportPage = () => {
 
   return (
     <>
-      <PageHeader
-        now={now}
-        subtitle="Report"
-        actions={
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="size-10 sm:hidden shrink-0" disabled={filtered.length === 0} aria-label="Export report">
-                <Download className="size-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="hidden sm:flex h-8 shrink-0" disabled={filtered.length === 0}>
-                <Download className="size-4 mr-1" /> Export <ChevronDown className="size-3 ml-1 opacity-60" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 font-sans">
-              <DropdownMenuLabel className="text-xs text-foreground font-normal">Export filtered range</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleExportCSV}>
-                <FileText className="size-4 mr-2" /> CSV (.csv)
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleExportJSON}>
-                <FileJson className="size-4 mr-2" /> JSON (.json)
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleExportPDF}>
-                <FileType className="size-4 mr-2" /> PDF (.pdf)
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        }
-      />
       <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 sm:py-6 animate-fade-in">
         <div className="w-full space-y-4">
         {/* Date range controls */}
@@ -388,6 +355,26 @@ const ReportPage = () => {
                 />
               </div>
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-10 shrink-0" disabled={filtered.length === 0}>
+                <Download className="size-4 mr-1" /> Export <ChevronDown className="size-3 ml-1 opacity-60" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 font-sans">
+              <DropdownMenuLabel className="text-xs text-foreground font-normal">Export filtered range</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleExportCSV}>
+                <FileText className="size-4 mr-2" /> CSV (.csv)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportJSON}>
+                <FileJson className="size-4 mr-2" /> JSON (.json)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportPDF}>
+                <FileType className="size-4 mr-2" /> PDF (.pdf)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {isLoading ? (

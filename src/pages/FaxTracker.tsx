@@ -5,7 +5,6 @@ import { useFaxTracker, useDeleteFax, useUpdateStep as useFaxUpdateStep, fetchAl
 import { useIndexableTracker, useDeleteIndexable, useUpdateStep as useIndexableUpdateStep, fetchAllIndexableRows } from "@/hooks/useIndexableTracker";
 import { useFaxAccounts, useDeleteFaxAccount, type FaxAccount } from "@/hooks/useFaxAccounts";
 import { downloadTrackerPDF, FAX_PDF_CONFIG, INDEXABLE_PDF_CONFIG } from "@/lib/tracker-utils";
-import { PageHeader } from "@/components/ar/PageHeader";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
 import { FaxEntryDialog } from "@/components/ar/fax/FaxEntryDialog";
 import { IndexableEntryDialog } from "@/components/ar/indexable/IndexableEntryDialog";
@@ -17,14 +16,11 @@ import { SortHeader } from "@/components/ar/tracker/SortHeader";
 import type { SortKey } from "@/components/ar/tracker/SortHeader";
 import { StatCard } from "@/components/ar/tracker/StatCard";
 import { Pagination } from "@/components/Pagination";
-import {
-  copyName, displayStatus, formatDateTime, dateKey, statusGroup, rowClasses, overallClasses,
+import { copyName, displayStatus, formatDateTime, dateKey, statusGroup, rowClasses, overallClasses,
   stepLabels, pageNumbersArr, STATUS_GROUPS, type TrackerMode,
 } from "@/components/ar/tracker/tracker-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,7 +40,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Pencil, Trash2, Search, ListFilter, CalendarDays, FileWarning, MoreVertical, FileText, X, Check, ChevronDown, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ListFilter, FileWarning, MoreVertical, FileText, X, Check, ChevronDown, Users } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -117,7 +113,6 @@ const FaxTrackerPage = () => {
   const labels = stepLabels(mode);
   const [exporting, setExporting] = useState(false);
 
-  const [now] = useState(() => new Date());
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<Set<string>>(
     () => {
@@ -132,7 +127,6 @@ const FaxTrackerPage = () => {
   useEffect(() => {
     try { localStorage.setItem(STATUS_FILTER_KEY, JSON.stringify([...statusFilter])); } catch { /* ignore */ }
   }, [statusFilter]);
-  const [dateFilter, setDateFilter] = useState<Set<string>>(new Set());
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" } | null>(null);
   const [page, setPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -146,14 +140,10 @@ const FaxTrackerPage = () => {
         const group = statusGroup(r.overall_status);
         if (!group || !statusFilter.has(group)) return false;
       }
-      if (dateFilter.size) {
-        const key = dateKey(r.updated_at);
-        if (!key || !dateFilter.has(key)) return false;
-      }
       if (q && !r.patient_name.toLowerCase().includes(q) && !(r.notes ?? "").toLowerCase().includes(q)) return false;
       return true;
     };
-  }, [search, statusFilter, dateFilter]);
+  }, [search, statusFilter]);
 
   const filtered = useMemo(() => {
     const rowsFiltered = rows.filter(matchesFilters);
@@ -177,7 +167,7 @@ const FaxTrackerPage = () => {
     });
   }, [rows, matchesFilters, sort]);
 
-  useEffect(() => { setPage(1); }, [search, statusFilter, dateFilter]);
+  useEffect(() => { setPage(1); }, [search, statusFilter]);
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
@@ -213,24 +203,6 @@ const FaxTrackerPage = () => {
     return counts;
   }, [rows]);
 
-  const dataDayKeys = useMemo(() => {
-    const keys = new Set<string>();
-    for (const r of rows) {
-      const key = dateKey(r.updated_at);
-      if (key) keys.add(key);
-    }
-    return [...keys].sort((a, b) => b.localeCompare(a));
-  }, [rows]);
-  const dataKeySet = useMemo(() => new Set(dataDayKeys), [dataDayKeys]);
-  const datesWithData = useMemo(
-    () => dataDayKeys.map((k) => new Date(`${k}T12:00:00`)),
-    [dataDayKeys],
-  );
-  const selectedDates = useMemo(
-    () => [...dateFilter].map((k) => new Date(`${k}T12:00:00`)),
-    [dateFilter],
-  );
-
   const stats = useMemo(
     () => ({
       resolved: groupCounts.Resolved,
@@ -242,15 +214,8 @@ const FaxTrackerPage = () => {
     [groupCounts, rows.length],
   );
 
-  const hasActiveFilters = search.trim() !== "" || statusFilter.size > 0 || dateFilter.size > 0;
-  const clearAll = () => { setSearch(""); setStatusFilter(new Set()); setDateFilter(new Set()); };
-
-  const handleSelectDates = (days: Date[] | undefined) => {
-    const keys = (days ?? [])
-      .map((d) => dateKey(d.toISOString()))
-      .filter((k): k is string => k !== null);
-    setDateFilter(new Set(keys));
-  };
+  const hasActiveFilters = search.trim() !== "" || statusFilter.size > 0;
+  const clearAll = () => { setSearch(""); setStatusFilter(new Set()); };
 
   const toggleSort = (key: SortKey) => {
     setSort((prev) => {
@@ -332,14 +297,22 @@ const FaxTrackerPage = () => {
 
   return (
     <>
-      <PageHeader
-        now={now}
-        subtitle="Tracker"
-        actions={
-          <div className="flex items-center gap-2">
+      <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
+        <div key={mode} className="w-full space-y-4 animate-fade-in">
+
+          <FigHeader title="Status" />
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+            <StatCard label="Resolved" value={stats.resolved} tone="emerald" loading={isLoading} />
+            <StatCard label="All Steps Failed" value={stats.allFailed} tone="rose" loading={isLoading} />
+            <StatCard label="Waiting" value={stats.waiting} tone="sky" loading={isLoading} />
+            <StatCard label="Incomplete" value={stats.incomplete} tone="slate" loading={isLoading} />
+            <StatCard label="Total Patients" value={stats.total} tone="neutral" loading={isLoading} />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 shrink-0 min-w-32 justify-between">
+                <Button variant="outline" size="sm" className="h-10 shrink-0 min-w-32 justify-between">
                   {MODES.find((m) => m.id === mode)?.label ?? "Fax"}
                   <ChevronDown className="size-4 ml-1.5 opacity-60" />
                 </Button>
@@ -357,66 +330,6 @@ const FaxTrackerPage = () => {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 shrink-0"
-                  disabled={exporting || filtered.length === 0}
-                  title={filtered.length === 0 ? "Nothing to export" : "Export to PDF"}
-                >
-                  <FileText className="size-4 mr-1" />
-                  {exporting ? "Exporting…" : "Export PDF"}
-                  <ChevronDown className="size-4 ml-1.5 opacity-60" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64 font-sans">
-                <DropdownMenuItem onClick={() => handleExport(false)}>
-                  <div className="flex flex-col">
-                    <span>This account only</span>
-                    <span className="text-xs text-foreground">
-                      {activeAccount?.name ?? "Current account"} · current view
-                    </span>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleExport(true)}>
-                  <div className="flex flex-col">
-                    <span>All accounts</span>
-                    <span className="text-xs text-foreground">
-                      Same filters across every account
-                    </span>
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button
-              size="sm"
-              className="h-8 shrink-0 bg-primary hover:bg-primary/95 text-primary-foreground"
-              onClick={openAdd}
-              disabled={!accountId}
-              title={!accountId ? "Create an account first" : undefined}
-            >
-              <Plus className="size-4 mr-1" /> Add Patient
-            </Button>
-          </div>
-        }
-      />
-
-      <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
-        <div key={mode} className="w-full space-y-4 animate-fade-in">
-
-          <FigHeader title="Status" />
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-            <StatCard label="Resolved" value={stats.resolved} tone="emerald" loading={isLoading} />
-            <StatCard label="All Steps Failed" value={stats.allFailed} tone="rose" loading={isLoading} />
-            <StatCard label="Waiting" value={stats.waiting} tone="sky" loading={isLoading} />
-            <StatCard label="Incomplete" value={stats.incomplete} tone="slate" loading={isLoading} />
-            <StatCard label="Total Patients" value={stats.total} tone="neutral" loading={isLoading} />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <div className="relative flex-1 min-w-48">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground" />
               <Input
@@ -523,53 +436,54 @@ const FaxTrackerPage = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-10 shrink-0">
-                  <CalendarDays className="size-4 mr-1.5" />
-                  Date{dateFilter.size ? ` (${dateFilter.size})` : ""}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-auto p-0 font-sans">
-                <Calendar
-                  mode="multiple"
-                  selected={selectedDates}
-                  onSelect={handleSelectDates}
-                  defaultMonth={selectedDates[0] ?? datesWithData[0]}
-                  modifiers={{ hasData: datesWithData }}
-                  modifiersClassNames={{
-                    hasData: "font-semibold after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:size-1 after:rounded-full after:bg-primary after:transition-opacity data-[selected=true]:after:opacity-0",
-                  }}
-                  classNames={{
-                    cell: "size-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
-                    day: "day-cell inline-flex items-center justify-center size-9 rounded-md p-0 font-normal hover:bg-accent hover:text-accent-foreground aria-selected:opacity-100",
-                    day_selected:
-                      "bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                    day_today: "ring-1 ring-inset ring-primary/40",
-                    day_disabled: "text-foreground opacity-50",
-                  }}
-                  disabled={(day) => !dataKeySet.has(dateKey(day.toISOString())!)}
-                />
-                {dateFilter.size > 0 && (
-                  <div className="border-t border-border px-3 py-2 flex items-center justify-between">
-                    <span className="text-xs text-foreground">
-                      {dateFilter.size} day{dateFilter.size > 1 ? "s" : ""} selected
-                    </span>
-                    <button
-                      className="text-xs text-foreground hover:text-foreground"
-                      onClick={() => setDateFilter(new Set())}
-                    >
-                      Clear
-                    </button>
-                  </div>
-                )}
-              </PopoverContent>
-            </Popover>
             {hasActiveFilters && (
               <Button variant="ghost" size="sm" className="h-10 shrink-0 text-foreground animate-fade-in" onClick={clearAll}>
                 <X className="size-4 mr-1.5" /> Clear all
               </Button>
             )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-10 shrink-0"
+                  disabled={exporting || filtered.length === 0}
+                  title={filtered.length === 0 ? "Nothing to export" : "Export to PDF"}
+                >
+                  <FileText className="size-4 mr-1" />
+                  {exporting ? "Exporting…" : "Export PDF"}
+                  <ChevronDown className="size-4 ml-1.5 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64 font-sans">
+                <DropdownMenuItem onClick={() => handleExport(false)}>
+                  <div className="flex flex-col">
+                    <span>This account only</span>
+                    <span className="text-xs text-foreground">
+                      {activeAccount?.name ?? "Current account"} · current view
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleExport(true)}>
+                  <div className="flex flex-col">
+                    <span>All accounts</span>
+                    <span className="text-xs text-foreground">
+                      Same filters across every account
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              size="sm"
+              className="h-10 shrink-0 bg-primary hover:bg-primary/95 text-primary-foreground"
+              onClick={openAdd}
+              disabled={!accountId}
+              title={!accountId ? "Create an account first" : undefined}
+            >
+              <Plus className="size-4 mr-1" /> Add Patient
+            </Button>
           </div>
 
           <FigHeader title="Patients" />

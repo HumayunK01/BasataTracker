@@ -293,9 +293,10 @@ function tableReducer(s: TableState, a: TableAction): TableState {
 interface Props {
   logs: DailyLog[];
   onEdit: (log: DailyLog) => void;
+  actions?: React.ReactNode;
 }
 
-export function DaysTable({ logs, onEdit }: Props) {
+export function DaysTable({ logs, onEdit, actions }: Props) {
   const [{ page, itemsPerPage, search, deleteTarget, copiedId }, tDispatch] = useReducer(tableReducer, tableInit);
   const deleteLog = useDeleteLog();
   const { data: categories = [] } = useCategories();
@@ -366,7 +367,7 @@ export function DaysTable({ logs, onEdit }: Props) {
     <>
       <div className="flex flex-col h-full min-h-0 gap-4">
 
-        {/* Search + summary */}
+        {/* Search + summary + actions */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 shrink-0">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground pointer-events-none" />
@@ -378,11 +379,14 @@ export function DaysTable({ logs, onEdit }: Props) {
               onChange={(e) => tDispatch({ type: "set_search", q: e.target.value })}
             />
           </div>
-          <div className="sm:ml-auto flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs sm:text-sm text-foreground">
-            <span><span className="font-semibold text-foreground">{workingLogs.length}</span> working days</span>
-            <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && isWeekend(l.log_date)).length}</span> weekends</span>
-            <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && !isWeekend(l.log_date)).length}</span> off days</span>
-            <span>Avg <span className="font-semibold text-foreground">{avgTotal}</span> docs/day</span>
+          <div className="flex items-center gap-3 sm:ml-auto">
+            <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs sm:text-sm text-foreground">
+              <span><span className="font-semibold text-foreground">{workingLogs.length}</span> working days</span>
+              <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && isWeekend(l.log_date)).length}</span> weekends</span>
+              <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && !isWeekend(l.log_date)).length}</span> off days</span>
+              <span>Avg <span className="font-semibold text-foreground">{avgTotal}</span> docs/day</span>
+            </div>
+            {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
           </div>
         </div>
 

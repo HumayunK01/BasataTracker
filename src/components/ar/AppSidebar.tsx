@@ -1,9 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, useReducedMotion, type Easing } from "motion/react";
-import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, Settings, Sun, Moon, LogOut, BookOpen, Tags, ExternalLink, Send, KeyRound } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { useTheme } from "@/hooks/useTheme";
-import { useProfile } from "@/hooks/useProfile";
+import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, BookOpen, Tags, ExternalLink, Send, KeyRound } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -14,21 +11,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarMenuBadge,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { AppLogo } from "@/components/ar/AppLogo";
 import { AppFavicon } from "@/components/ar/AppFavicon";
 import { cn } from "@/lib/utils";
@@ -72,24 +57,12 @@ export function AppSidebar() {
   const { isMobile, setOpenMobile } = useSidebar();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, signOut } = useAuth();
-  const { theme, toggle } = useTheme();
-  const { data: profile } = useProfile();
   const reduce = useReducedMotion();
 
   const go = (path: string) => {
     navigate(path);
     if (isMobile) setOpenMobile(false);
   };
-
-  const email = user?.email ?? "";
-  const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || email;
-  const initials = (() => {
-    const f = profile?.first_name?.[0] ?? "";
-    const l = profile?.last_name?.[0] ?? "";
-    return ((f + l) || email[0] || "?").toUpperCase();
-  })();
-
 
   return (
     <Sidebar collapsible="icon">
@@ -182,64 +155,6 @@ export function AppSidebar() {
 
       <SidebarFooter>
         <SidebarSeparator />
-        <div className="flex items-center gap-2 px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <div className="grid size-8 place-items-center rounded-md bg-primary/12 text-primary text-xs font-semibold shrink-0">
-            {initials}
-          </div>
-          <p className="text-xs font-mono truncate text-foreground group-data-[collapsible=icon]:hidden">{name}</p>
-        </div>
-        <div className="flex items-center gap-1 px-2 pb-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:px-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="flex-1 size-9 text-foreground hover:text-foreground/80 rounded-md border border-sidebar-border/60 group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
-            onClick={() => { navigate("/settings"); setOpenMobile(false); }}
-            title="Settings"
-            aria-label="Settings"
-          >
-            <Settings className="size-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="flex-1 size-9 text-foreground hover:text-foreground/80 rounded-md border border-sidebar-border/60 group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
-            onClick={toggle}
-            title={theme === "dark" ? "Light mode" : "Dark mode"}
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="flex-1 size-9 text-foreground hover:text-destructive rounded-md border border-sidebar-border/60 group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:size-8"
-                title="Sign out"
-                aria-label="Sign out"
-              >
-                <LogOut className="size-5" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Sign out?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  You'll need to sign in again to access your tracker.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  onClick={() => { signOut(); setOpenMobile(false); }}
-                >
-                  Sign out
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
         <div className="text-center pb-1 group-data-[collapsible=icon]:hidden">
           <p className="font-mono text-2xs text-foreground tracking-[0.2em]">v1.2.1</p>
         </div>

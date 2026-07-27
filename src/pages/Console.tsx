@@ -2,7 +2,6 @@ import { lazy, Suspense, useMemo } from "react";
 import { motion, type Easing, useReducedMotion } from "motion/react";
 import { CalendarDays, LineChart } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
-import { PageHeader } from "@/components/ar/PageHeader";
 import { ContributionHeatmap } from "@/components/ar/ContributionHeatmap";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
@@ -10,7 +9,7 @@ import { useFaxResolvedByDay, FAX_CATEGORY_KEY, FAX_CATEGORY_LABEL } from "@/hoo
 import { useIndexableResolvedByDay, INDEXABLE_CATEGORY_KEY, INDEXABLE_CATEGORY_LABEL } from "@/hooks/useIndexableTracker";
 import { isoDate, totalForLog } from "@/types/log";
 import { colorForKey } from "@/lib/cat-colors";
-import { FigHeader, Panel, CategoryStatCard, Clock, EmptyState } from "@/components/ar/industrial";
+import { FigHeader, Panel, CategoryStatCard, EmptyState } from "@/components/ar/industrial";
 
 const Charts = lazy(() => import("@/components/ar/Charts").then((m) => ({ default: m.Charts })));
 
@@ -41,11 +40,6 @@ const Console = () => {
 
   return (
     <div className="flex flex-col min-h-full">
-      <PageHeader
-        title="Console"
-        actions={<Clock />}
-      />
-
       <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 sm:py-6 relative z-[1]">
         <div className="w-full space-y-6 sm:space-y-8">
 

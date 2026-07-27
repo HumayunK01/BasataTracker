@@ -11,7 +11,6 @@ import {
   type Credential,
   type CredentialFolder,
 } from "@/hooks/useCredentials";
-import { PageHeader } from "@/components/ar/PageHeader";
 import { EmptyState } from "@/components/ar/industrial";
 import { CredentialDialog } from "@/components/ar/credentials/CredentialDialog";
 import { NewFolderDialog } from "@/components/ar/credentials/NewFolderDialog";
@@ -188,7 +187,6 @@ const CredentialsPage = () => {
   const bulkDelete = useBulkDeleteCredentials();
   const bulkMove = useBulkMoveCredentials();
 
-  const [now] = useState(() => new Date());
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Credential | null>(null);
@@ -350,36 +348,6 @@ const CredentialsPage = () => {
 
   return (
     <>
-      <PageHeader
-        now={now}
-        subtitle="Vault"
-        actions={
-          <>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 shrink-0"
-                  disabled={credentials.length === 0}
-                  title={credentials.length === 0 ? "Nothing to export" : undefined}
-                >
-                  <FileDown className="size-4 mr-1" /> Export
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-36 font-sans p-1">
-                <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={() => downloadCredentialCSV(credentials, showAll ? "all-credentials" : activeFolder?.name ?? "vault")}>
-                  <FileText className="size-3.5" /> CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={() => downloadCredentialPDF(credentials, showAll ? "all-credentials" : activeFolder?.name ?? "vault", showAll ? "Credential Vault" : (activeFolder?.name ?? "Credential Vault"))}>
-                  <FileDown className="size-3.5" /> PDF
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
-        }
-      />
-
       <main className="flex-1 overflow-y-auto px-3 sm:px-6 pt-2 sm:pt-3 pb-4 sm:pb-6">
         <div className="w-full space-y-4 animate-fade-in">
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none -mx-3 sm:-mx-0 px-3 sm:px-0">
@@ -494,6 +462,27 @@ const CredentialsPage = () => {
             >
               <Plus className="size-4 mr-1" /> Add Credential
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-10 shrink-0"
+                  disabled={credentials.length === 0}
+                  title={credentials.length === 0 ? "Nothing to export" : undefined}
+                >
+                  <FileDown className="size-4 mr-1" /> Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36 font-sans p-1">
+                <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={() => downloadCredentialCSV(credentials, showAll ? "all-credentials" : activeFolder?.name ?? "vault")}>
+                  <FileText className="size-3.5" /> CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={() => downloadCredentialPDF(credentials, showAll ? "all-credentials" : activeFolder?.name ?? "vault", showAll ? "Credential Vault" : (activeFolder?.name ?? "Credential Vault"))}>
+                  <FileDown className="size-3.5" /> PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {selected.size > 0 && (

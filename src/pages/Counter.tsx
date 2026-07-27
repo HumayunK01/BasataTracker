@@ -13,7 +13,6 @@ import {
 import { useCategories, type Category } from "@/hooks/useCategories";
 import { useUpsertLog, useDailyLogs } from "@/hooks/useDailyLogs";
 import { isoDate, totalForLog } from "@/types/log";
-import { PageHeader } from "@/components/ar/PageHeader";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
 import { RotateCcw, Save, CheckCircle2, Hash, Plus, Tag, ChevronRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -107,18 +106,12 @@ export default function CounterPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [newCatOpen, setNewCatOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
-  const [now, setNow] = useState(() => new Date());
 
   // Cross-device persistence. Saving is manual (Save button) into today's
   // daily_logs row; on first load the counter hydrates from the server so a
   // device that wasn't the last writer continues where the others left off.
   const hydratedRef = useRef(false);
   const skipUnsavedMarkRef = useRef(false);
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(id);
-  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -302,59 +295,53 @@ export default function CounterPage() {
 
   return (
     <>
-      <PageHeader
-        now={now}
-        subtitle="Counter"
-        actions={
-          <div className="flex items-center">
-            <Button
-              variant="outline"
-              size="sm"
-              aria-label="Reset counter"
-              className="h-10 md:h-8 px-3 mr-2 border-border/60 hover:bg-muted/80 transition-colors duration-200"
-              onClick={() => setResetOpen(true)}
-              disabled={total === 0 && activeCategories.length === 0}
-            >
-              <RotateCcw className="size-4" />
-              <span className="hidden xs:inline ml-1 font-semibold">Reset</span>
-            </Button>
-            <Button
-              size="sm"
-              aria-label="Save counts"
-              className={`h-10 md:h-8 px-3 shadow-sm transition-colors duration-200 ${
-                saved
-                  ? "bg-success hover:bg-success/90 text-success-foreground shadow-success/10"
-                  : "bg-primary hover:bg-primary/95 text-primary-foreground shadow-primary/10"
-              }`}
-              onClick={handleSave}
-              disabled={upsert.isPending || total === 0 || saved}
-            >
-              {saved ? (
-                <>
-                  <CheckCircle2 className="size-4" />
-                  <span className="hidden xs:inline ml-1 font-semibold">Saved</span>
-                </>
-              ) : upsert.isPending ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  <span className="hidden xs:inline ml-1 font-semibold">Saving…</span>
-                </>
-              ) : (
-                <>
-                  <Save className="size-4" />
-                  <span className="hidden xs:inline ml-1 font-semibold">Save</span>
-                </>
-              )}
-            </Button>
-          </div>
-        }
-      />
-
       <main className="flex-1 overflow-y-auto">
         <div className="w-full px-4 sm:px-6 py-5 sm:py-6 flex flex-col gap-4">
           {/* Hero — session total monument */}
           <section className="relative pt-2 pb-3 sm:pb-4">
-            <p className="font-mono text-2xs uppercase tracking-[0.2em] text-foreground">Session Total</p>
+            <div className="flex items-center justify-between gap-4">
+              <p className="font-mono text-2xs uppercase tracking-[0.2em] text-foreground">Session Total</p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  aria-label="Reset counter"
+                  className="h-9 px-3 border-border/60 hover:bg-muted/80"
+                  onClick={() => setResetOpen(true)}
+                  disabled={total === 0 && activeCategories.length === 0}
+                >
+                  <RotateCcw className="size-4" />
+                  <span className="hidden xs:inline ml-1 font-semibold">Reset</span>
+                </Button>
+                <Button
+                  size="sm"
+                  className={`h-9 px-3 shadow-sm ${
+                    saved
+                      ? "bg-success hover:bg-success/90 text-success-foreground shadow-success/10"
+                      : "bg-primary hover:bg-primary/95 text-primary-foreground shadow-primary/10"
+                  }`}
+                  onClick={handleSave}
+                  disabled={upsert.isPending || total === 0 || saved}
+                >
+                  {saved ? (
+                    <>
+                      <CheckCircle2 className="size-4" />
+                      <span className="hidden xs:inline ml-1 font-semibold">Saved</span>
+                    </>
+                  ) : upsert.isPending ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      <span className="hidden xs:inline ml-1 font-semibold">Saving…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="size-4" />
+                      <span className="hidden xs:inline ml-1 font-semibold">Save</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
             <div className="mt-2 flex items-center gap-4 flex-wrap">
               <p className="text-8xl sm:text-9xl font-bold tabular-nums text-primary leading-none tracking-tight">
                 {animatedTotal}
