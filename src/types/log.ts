@@ -21,7 +21,7 @@ const isoFmt = new Intl.DateTimeFormat(US_LOCALE, { timeZone: US_TZ, year: "nume
 const weekdayFmt = new Intl.DateTimeFormat(US_LOCALE, { timeZone: US_TZ, weekday: "short" });
 const shortDateFmt = new Intl.DateTimeFormat(US_LOCALE, { timeZone: US_TZ, month: "short", day: "numeric" });
 const dayNameFmt = new Intl.DateTimeFormat(US_LOCALE, { timeZone: US_TZ, weekday: "short" });
-const headerDateFmt = new Intl.DateTimeFormat(US_LOCALE, { timeZone: US_TZ, weekday: "long", month: "long", day: "numeric", year: "numeric" });
+const shortHeaderDateFmt = new Intl.DateTimeFormat(US_LOCALE, { timeZone: US_TZ, weekday: "short", month: "short", day: "numeric" });
 const headerTimeFmt = new Intl.DateTimeFormat(US_LOCALE, { timeZone: US_TZ, hour: "numeric", minute: "2-digit", hour12: true });
 const tableDateFmt = new Intl.DateTimeFormat(US_LOCALE, { timeZone: US_TZ, month: "2-digit", day: "2-digit", year: "numeric" });
 
@@ -45,7 +45,7 @@ export function formatDayName(iso: string) {
 }
 
 export function formatHeaderDate(d: Date = new Date()) {
-  return `${headerDateFmt.format(d)} · ${headerTimeFmt.format(d)}`;
+  return `${shortHeaderDateFmt.format(d)} · ${headerTimeFmt.format(d)}`;
 }
 
 export function formatTableDate(iso: string) {
