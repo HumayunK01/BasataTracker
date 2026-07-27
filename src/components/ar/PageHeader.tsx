@@ -18,14 +18,20 @@ export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
         <div className="flex items-center gap-3 min-w-0 -ml-2">
           <SidebarTrigger className="shrink-0 size-9 md:size-8 [&>svg]:h-[18px] [&>svg]:w-[18px]" />
           <div className="min-w-0">
-            {(title || subtitle) && (
-              <h1 className="text-sm font-semibold text-foreground truncate leading-tight">
-                {title ?? subtitle}
-              </h1>
+            {title && (
+              <>
+                <h1 className="text-sm font-semibold text-foreground truncate leading-tight">{title}</h1>
+                {subtitle && (
+                  <p className="text-xs text-foreground/70 truncate leading-tight">{subtitle}</p>
+                )}
+              </>
             )}
             <p className="text-[10px] font-medium text-muted-foreground truncate leading-tight mt-px">
               {formatHeaderDate(date)}
             </p>
+            {!title && subtitle && (
+              <h1 className="text-sm font-semibold text-foreground truncate leading-tight">{subtitle}</h1>
+            )}
           </div>
         </div>
 

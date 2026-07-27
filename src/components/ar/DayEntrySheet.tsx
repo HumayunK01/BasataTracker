@@ -48,29 +48,27 @@ function Stepper({
   const inc = () => onChange(value + 1);
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3 border-b border-border/50 last:border-0">
-      {/* Color dot + label */}
-      <div className="flex items-center gap-2.5 flex-1 min-w-0">
-        <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+    <div className="flex items-center gap-3 px-5 py-3 border-b border-border/40 last:border-0">
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <span className="size-3 rounded-full shrink-0 ring-2 ring-offset-2 ring-offset-background" style={{ backgroundColor: color, ringColor: color }} />
         <span className="text-sm font-medium text-foreground truncate">{label}</span>
         <span
-          className="text-xs font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide font-heading"
+          className="text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wider font-heading"
           style={{ color, backgroundColor: withAlpha(color, 0.13) }}
         >
           {shortLabel}
         </span>
       </div>
 
-      {/* −  value  + */}
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-1.5 shrink-0">
         <button
           type="button"
           onClick={dec}
           disabled={value === 0}
           aria-label={`Decrease ${label}`}
-          className="size-10 sm:size-8 rounded-md border border-border flex items-center justify-center text-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-25 disabled:cursor-not-allowed touch-manipulation"
+          className="size-9 sm:size-8 rounded-lg border border-border flex items-center justify-center text-foreground hover:bg-muted transition-colors active:scale-90 disabled:opacity-20 disabled:cursor-not-allowed disabled:active:scale-100 touch-manipulation"
         >
-          <Minus className="size-4 sm:size-3.5" />
+          <Minus className="size-3.5" />
         </button>
         <input
           type="number"
@@ -84,19 +82,27 @@ function Stepper({
             if (e.key === "ArrowUp") { e.preventDefault(); inc(); }
             if (e.key === "ArrowDown") { e.preventDefault(); dec(); }
           }}
-          className="w-12 h-10 sm:h-8 text-center text-sm font-bold tabular-nums bg-muted/50 border border-border rounded-md outline-none transition-colors focus:border-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          className="w-14 h-9 sm:h-8 text-center text-sm font-bold tabular-nums bg-background border border-border rounded-lg outline-none transition-[border-color,box-shadow] focus:border-primary/50 focus:ring-1 focus:ring-primary/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           style={{ color: value > 0 ? color : "hsl(var(--muted-foreground))" }}
         />
         <button
           type="button"
           onClick={inc}
           aria-label={`Increase ${label}`}
-          className="size-10 sm:size-8 rounded-md border border-border flex items-center justify-center text-foreground hover:bg-muted hover:text-foreground transition-colors touch-manipulation"
+          className="size-9 sm:size-8 rounded-lg border border-border flex items-center justify-center text-foreground hover:bg-muted transition-colors active:scale-90 touch-manipulation"
         >
-          <Plus className="size-4 sm:size-3.5" />
+          <Plus className="size-3.5" />
         </button>
       </div>
     </div>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[11px] font-semibold text-foreground/60 uppercase tracking-[0.08em] font-heading flex items-center gap-2">
+      {children}
+    </p>
   );
 }
 
@@ -151,31 +157,34 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
       <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0 gap-0 bg-sidebar font-sans">
 
         {/* ── Header ── */}
-        <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b border-border">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <SheetTitle className="text-lg font-bold">
+        <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b border-border/60">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <SheetTitle className="text-base font-bold">
                 {editing ? "Edit log" : "Log a day"}
               </SheetTitle>
-              <p className="text-xs text-foreground mt-0.5">
+              <p className="text-xs text-foreground/60">
                 {editing ? "Update counts for this day" : "Record your document counts"}
               </p>
             </div>
             {!draft.is_off_day && total > 0 && (
-              <div className="shrink-0 text-right bg-primary/10 border border-primary/20 rounded-md px-4 py-2">
-                <div className="text-3xl font-black tabular-nums text-primary leading-none">{total}</div>
-                <div className="text-xs text-foreground uppercase tracking-wider mt-0.5 font-heading">total docs</div>
+              <div className="shrink-0 text-right -mt-0.5">
+                <div className="text-2xl font-bold tabular-nums text-primary leading-none">{total}</div>
+                <div className="text-[10px] text-foreground/40 uppercase tracking-[0.08em] mt-0.5 font-heading">total</div>
               </div>
             )}
           </div>
         </SheetHeader>
 
         {/* ── Body ── */}
-        <div className="flex-1 overflow-y-auto no-scrollbar py-5 space-y-5">
+        <div className="flex-1 overflow-y-auto no-scrollbar py-5 space-y-5 animate-fade-in">
 
           {/* Date */}
-          <div className="px-5 space-y-2">
-            <p className="text-xs font-semibold text-foreground uppercase tracking-wider font-heading">Date</p>
+          <div className="px-5 space-y-2.5">
+            <SectionLabel>
+              <CalendarIcon className="size-3" />
+              Date
+            </SectionLabel>
             <div className="flex gap-2">
               <Popover open={calOpen} onOpenChange={setCalOpen}>
                 <PopoverTrigger asChild>
@@ -185,8 +194,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
                     disabled={!!editing}
                     className="flex-1 h-10 justify-start text-left font-normal tabular-nums"
                   >
-                    <CalendarIcon className="size-4 mr-2 text-foreground shrink-0" />
-                    {format(parseISO(draft.log_date), "PPP")}
+                    {format(parseISO(draft.log_date), "EEE, MMM d, yyyy")}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -210,36 +218,46 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
               )}
             </div>
 
-            {/* Conflict */}
             {conflict && (
-              <div className="flex items-start gap-2 text-xs text-warning bg-warning/10 border border-warning/25 rounded-md px-3 py-2.5">
-                <TriangleAlert className="size-3.5 shrink-0 mt-0.5" />
-                <span>A log already exists for this date. Saving overwrites it.</span>
+              <div className="flex items-start gap-2.5 text-xs rounded-lg px-3.5 py-2.5 bg-warning/[0.08] border border-warning/20">
+                <TriangleAlert className="size-3.5 shrink-0 mt-0.5 text-warning" />
+                <span className="text-foreground/80">A log already exists for this date. Saving overwrites it.</span>
               </div>
             )}
           </div>
 
           {/* Off-day toggle */}
           <div className="px-5">
-            <div className={`flex items-center justify-between rounded-md px-4 py-3 border ${draft.is_off_day ? "bg-muted/30 border-border" : "border-border"}`}>
+            <div className={`flex items-center justify-between rounded-lg px-4 py-3 border transition-colors ${draft.is_off_day ? "bg-primary/[0.03] border-primary/15" : "border-border"}`}>
               <div className="flex items-center gap-3">
-                <BedDouble className="size-4 text-foreground shrink-0" />
+                <BedDouble className={`size-4 shrink-0 transition-colors ${draft.is_off_day ? "text-primary/70" : "text-foreground/50"}`} />
                 <div>
-                  <p className="text-sm font-semibold leading-none font-heading">{weekend ? "Weekend" : "Off day"}</p>
-                  <p className="text-xs text-foreground mt-1">{weekend ? "Saturday or Sunday" : "Leave, holiday, or sick day"}</p>
+                  <p className={`text-sm font-semibold leading-none font-heading transition-colors ${draft.is_off_day ? "text-primary" : "text-foreground"}`}>
+                    {weekend ? "Weekend" : "Off day"}
+                  </p>
+                  <p className="text-xs text-foreground/50 mt-1">{weekend ? "Saturday or Sunday" : "Leave, holiday, or sick day"}</p>
                 </div>
               </div>
-              <Switch checked={draft.is_off_day} onCheckedChange={(v) => update("is_off_day", v)} />
+              <Switch
+                checked={draft.is_off_day}
+                onCheckedChange={(v) => update("is_off_day", v)}
+                className={draft.is_off_day ? "data-[state=checked]:bg-primary" : undefined}
+              />
             </div>
           </div>
 
           {/* Document counts */}
           {!draft.is_off_day && (
-            <div className="space-y-2">
-              <p className="px-5 text-xs font-semibold text-foreground uppercase tracking-wider font-heading">Document Counts</p>
-              <div className="bg-card border-y border-border">
+            <div className="space-y-2.5">
+              <div className="px-5">
+                <SectionLabel>
+                  <span className="size-2 rounded-sm bg-primary/60" />
+                  Document Counts
+                </SectionLabel>
+              </div>
+              <div className="bg-card border-y border-border/60">
                 {categories.length === 0 ? (
-                  <p className="px-5 py-8 text-sm text-center text-foreground">No categories set up yet. Add them in Settings.</p>
+                  <p className="px-5 py-10 text-sm text-center text-foreground/50">No categories set up yet. Add them in Settings.</p>
                 ) : (
                   categories.map((c) => (
                     <Stepper
@@ -258,36 +276,41 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
 
           {draft.is_off_day && (
             <div className="px-5">
-              <div className="flex flex-col items-center justify-center py-10 gap-2 text-foreground rounded-md border border-dashed border-border">
-                <BedDouble className="size-8 opacity-20" />
-                <p className="text-sm">No counts needed for an off day</p>
+              <div className="flex flex-col items-center justify-center py-10 gap-3 rounded-lg bg-muted/20 border border-border/60">
+                <span className="size-10 rounded-xl bg-primary/[0.06] grid place-items-center">
+                  <BedDouble className="size-5 text-foreground/25" />
+                </span>
+                <p className="text-sm text-foreground/50">No counts needed for an off day</p>
               </div>
             </div>
           )}
 
           {/* Notes */}
-          <div className="px-5 space-y-2">
-            <p className="text-xs font-semibold text-foreground uppercase tracking-wider font-heading">
-              Notes <span className="font-normal normal-case">(optional)</span>
-            </p>
+          <div className="px-5 space-y-2.5">
+            <SectionLabel>
+              <svg className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+              </svg>
+              Notes <span className="font-normal normal-case text-foreground/40">(optional)</span>
+            </SectionLabel>
             <Textarea
               value={draft.notes ?? ""}
               onChange={(e) => update("notes", e.target.value)}
               placeholder="Anything worth noting about today…"
               maxLength={500}
               rows={3}
-              className="resize-none text-sm"
+              className="resize-none text-sm bg-background"
             />
           </div>
 
         </div>
 
         {/* ── Footer ── */}
-        <div className="shrink-0 px-5 py-4 border-t border-border flex gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+        <div className="shrink-0 px-5 py-4 border-t border-border/60 flex gap-3">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 h-10">
             Cancel
           </Button>
-          <Button onClick={save} disabled={upsert.isPending} className="flex-1 gap-1.5">
+          <Button onClick={save} disabled={upsert.isPending} className="flex-1 h-10 gap-2">
             <CalendarCheck className="size-4" />
             {upsert.isPending
               ? "Saving…"

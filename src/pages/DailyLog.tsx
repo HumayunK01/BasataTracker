@@ -14,10 +14,10 @@ import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
 import { useProfile } from "@/hooks/useProfile";
 import { downloadCSV, downloadJSON, downloadPDF } from "@/lib/log-utils";
-import { isoDate, totalForLog, type DailyLog } from "@/types/log";
+import { isoDate, type DailyLog } from "@/types/log";
 import { CalendarDays, Download, FileJson, FileText, FileType, Plus, ChevronDown } from "lucide-react";
 import { PageHeader } from "@/components/ar/PageHeader";
-import { FigHeader, EmptyState } from "@/components/ar/industrial";
+import { EmptyState } from "@/components/ar/industrial";
 import Skeleton from "react-loading-skeleton";
 
 const DailyLogPage = () => {
@@ -62,7 +62,7 @@ const DailyLogPage = () => {
     <>
       <PageHeader
         now={now}
-        subtitle={todayLog ? <span className="text-success">{totalForLog(todayLog)} docs logged today</span> : undefined}
+        title="Daily Log"
         actions={
           <>
             <DropdownMenu>
@@ -95,7 +95,7 @@ const DailyLogPage = () => {
           </>
         }
       />
-      <main className="flex-1 overflow-hidden flex flex-col px-4 sm:px-6 py-5 sm:py-6 animate-fade-in">
+      <main className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-5 sm:py-6 animate-fade-in">
             {isLoading ? (
               <div className="flex-1 flex flex-col gap-3 pt-2">
                 <div className="flex gap-3">
@@ -128,10 +128,7 @@ const DailyLogPage = () => {
                 />
               </div>
             ) : (
-              <>
-                <FigHeader title="Daily Log" />
-                <DaysTable logs={logs} onEdit={openEdit} />
-              </>
+              <DaysTable logs={logs} onEdit={openEdit} />
             )}
           </main>
 
