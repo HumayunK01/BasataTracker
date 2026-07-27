@@ -380,20 +380,20 @@ const CredentialsPage = () => {
         }
       />
 
-      <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
+      <main className="flex-1 overflow-y-auto px-3 sm:px-6 pt-2 sm:pt-3 pb-4 sm:pb-6">
         <div className="w-full space-y-4 animate-fade-in">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none -mx-3 sm:-mx-0 px-3 sm:px-0">
             <button
               type="button"
               onClick={() => setShowAll(true)}
               className={cn(
                 "flex items-center gap-2 h-10 px-3 border rounded-md text-sm font-medium transition-colors shrink-0",
                 showAll
-                  ? "border-primary/40 bg-primary/10 text-primary"
-                  : "border-border bg-card text-foreground hover:bg-muted/40",
+                  ? "border-primary/50 bg-primary/[0.06] text-primary"
+                  : "border-border bg-card text-foreground hover:bg-muted/40 hover:border-border",
               )}
             >
-              <Layers className={cn("size-4 shrink-0", showAll ? "text-primary" : "text-foreground")} />
+              <Layers className="size-4 shrink-0" />
               <span>All</span>
             </button>
             {folders.map((f) => {
@@ -404,8 +404,8 @@ const CredentialsPage = () => {
                   className={cn(
                     "group relative flex items-center gap-1 h-10 pl-3 pr-1 max-w-[16rem] border rounded-md text-sm font-medium transition-colors",
                     active
-                      ? "border-primary/40 bg-primary/10 text-primary"
-                      : "border-border bg-card text-foreground hover:bg-muted/40",
+                      ? "border-primary/50 bg-primary/[0.06] text-primary"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/40 hover:border-border",
                   )}
                 >
                   <button
@@ -415,7 +415,7 @@ const CredentialsPage = () => {
                     aria-label={f.name}
                   />
                   <span className="relative flex items-center gap-2 min-w-0 flex-1 pointer-events-none">
-                    <Folder className={cn("size-4 shrink-0", active ? "text-primary" : "text-foreground")} />
+                    <Folder className="size-4 shrink-0" />
                     <span className="truncate">{f.name}</span>
                   </span>
                   <span className="relative z-10 flex items-center shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 max-md:opacity-100 transition-opacity">
@@ -423,7 +423,7 @@ const CredentialsPage = () => {
                       type="button"
                       title={`Rename ${f.name}`}
                       onClick={() => setFolderToRename(f)}
-                      className="press-scale p-1 rounded text-foreground hover:text-foreground hover:bg-foreground/10 transition-colors"
+                      className="press-scale p-1 rounded text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06] transition-colors"
                     >
                       <Pencil className="size-3.5" />
                     </button>
@@ -434,20 +434,20 @@ const CredentialsPage = () => {
             <button
               type="button"
               onClick={() => setFolderDialogOpen(true)}
-              className="flex items-center gap-1.5 h-10 px-3 border border-dashed border-border rounded-md text-sm font-medium text-foreground hover:text-foreground hover:border-primary/40 transition-colors shrink-0"
+              className="flex items-center gap-1.5 h-10 px-3 border border-dashed border-border/60 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors shrink-0"
             >
               <FolderPlus className="size-4" /> New folder
             </button>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <div className="relative flex-1 min-w-48">
+            <div className="relative flex-1 min-w-[160px] sm:min-w-48">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground" />
               <Input
-                placeholder="Search service, login, or notes…"
+                placeholder="Search…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 pr-9 h-10"
+                className="pl-9 pr-9 h-10 text-sm sm:text-base"
               />
               {search && (
                 <button
@@ -461,15 +461,15 @@ const CredentialsPage = () => {
               )}
             </div>
 
-            <div className="flex items-center gap-1 h-10 px-1 border border-border rounded-md bg-card shrink-0" role="group" aria-label="View format">
+            <div className="flex items-center gap-0.5 h-10 px-1 border border-border rounded-md bg-card shrink-0" role="group" aria-label="View format">
               <button
                 type="button"
                 onClick={() => setViewMode("list")}
                 title="List view"
                 aria-pressed={viewMode === "list"}
                 className={cn(
-                  "flex items-center gap-1.5 h-8 px-2.5 text-sm font-medium transition-colors",
-                  viewMode === "list" ? "bg-primary/10 text-primary" : "text-foreground hover:text-foreground",
+                  "flex items-center gap-1.5 h-8 px-2.5 text-sm font-medium transition-colors rounded",
+                  viewMode === "list" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <List className="size-4" /> <span className="hidden sm:inline">List</span>
@@ -480,8 +480,8 @@ const CredentialsPage = () => {
                 title="Card view"
                 aria-pressed={viewMode === "cards"}
                 className={cn(
-                  "flex items-center gap-1.5 h-8 px-2.5 text-sm font-medium transition-colors",
-                  viewMode === "cards" ? "bg-primary/10 text-primary" : "text-foreground hover:text-foreground",
+                  "flex items-center gap-1.5 h-8 px-2.5 text-sm font-medium transition-colors rounded",
+                  viewMode === "cards" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <LayoutGrid className="size-4" /> <span className="hidden sm:inline">Cards</span>
@@ -497,16 +497,16 @@ const CredentialsPage = () => {
           </div>
 
           {selected.size > 0 && (
-            <div className="flex flex-wrap items-center gap-2 border border-primary/30 bg-primary/5 rounded-md px-3 py-2">
-              <span className="text-sm font-medium text-primary">{selectedRows.length} selected</span>
+            <div className="flex flex-wrap items-center gap-2 border border-primary/30 bg-primary/[0.04] rounded-lg px-3 py-2.5">
+              <span className="text-sm font-semibold text-primary">{selectedRows.length} selected</span>
               <div className="flex items-center gap-2 ml-auto flex-wrap">
-                <Button variant="outline" size="sm" className="h-9" onClick={() => copyCredentialsTable(selectedRows)}>
+                <Button variant="outline" size="sm" className="h-9 border-border/60" onClick={() => copyCredentialsTable(selectedRows)}>
                   <Copy className="size-4 mr-1.5" /> Copy table
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-9"
+                  className="h-9 border-border/60"
                   onClick={() => downloadCredentialCSV(selectedRows, `selected-${selectedRows.length}-credentials`)}
                 >
                   <FileText className="size-4 mr-1.5" /> Export CSV
@@ -514,20 +514,20 @@ const CredentialsPage = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-9"
+                  className="h-9 border-border/60"
                   onClick={() => downloadCredentialPDF(selectedRows, `selected-${selectedRows.length}-credentials`, `Credential Vault: ${selectedRows.length} selected`)}
                 >
                   <FileDown className="size-4 mr-1.5" /> Export PDF
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-9">
+                    <Button variant="outline" size="sm" className="h-9 border-border/60">
                       <FolderInput className="size-4 mr-1.5" /> Move to
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-44 font-sans">
                     {folders.length === 0 ? (
-                      <span className="block px-2 py-1.5 text-xs text-foreground">No folders</span>
+                      <span className="block px-2 py-1.5 text-xs text-muted-foreground">No folders</span>
                     ) : (
                       folders.map((f) => (
                         <DropdownMenuItem
@@ -544,7 +544,7 @@ const CredentialsPage = () => {
                 <Button variant="destructive" size="sm" className="h-9" onClick={() => setBulkDeleteOpen(true)}>
                   <Trash2 className="size-4 mr-1.5" /> Delete
                 </Button>
-                <Button variant="ghost" size="sm" className="h-9" onClick={clearSelection}>
+                <Button variant="ghost" size="sm" className="h-9 text-muted-foreground" onClick={clearSelection}>
                   Clear
                 </Button>
               </div>
@@ -556,8 +556,8 @@ const CredentialsPage = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
-                  <tr className="bg-muted/50 text-xs uppercase tracking-wide text-foreground">
-                    <th className="w-10 px-3 py-2.5">
+                  <tr className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground/70">
+                    <th className="w-8 px-3 py-3">
                       <SelectCheckbox
                         ariaLabel="Select all"
                         checked={allVisibleSelected}
@@ -566,18 +566,18 @@ const CredentialsPage = () => {
                         className="align-middle"
                       />
                     </th>
-                    <th className="px-3 py-2.5 text-left font-semibold">Service</th>
-                    <th className="px-3 py-2.5 text-left font-semibold">Login ID</th>
-                    <th className="px-3 py-2.5 text-left font-semibold">Password</th>
-                    <th className="px-3 py-2.5 text-left font-semibold">Notes</th>
-                    <th className="px-3 py-2.5 text-center font-semibold w-12" aria-label="Actions" />
+                    <th className="px-3 py-3 text-left font-semibold">Service</th>
+                    <th className="px-3 py-3 text-left font-semibold">Login ID</th>
+                    <th className="px-3 py-3 text-left font-semibold">Password</th>
+                    <th className="px-3 py-3 text-left font-semibold hidden xl:table-cell">Notes</th>
+                    <th className="px-3 py-3 text-center font-semibold w-12" aria-label="Actions" />
                   </tr>
                 </thead>
                 <tbody>
                   {isLoading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <tr key={i} className="border-t border-border">
-                        <td colSpan={6} className="px-3 py-2.5"><div className="h-6 bg-muted/40 animate-pulse rounded" /></td>
+                        <td colSpan={6} className="px-3 py-2.5"><div className="h-6 bg-muted/30 animate-pulse rounded" /></td>
                       </tr>
                     ))
                   ) : filtered.length === 0 ? (
@@ -595,27 +595,27 @@ const CredentialsPage = () => {
                     filtered.map((c) => {
                       const show = revealed.has(c.id);
                       return (
-                        <tr key={c.id} className={cn("border-t border-border transition-colors hover:bg-muted/30", selected.has(c.id) && "bg-primary/5")}>
-                          <td className="px-3 py-2 w-10">
+                        <tr key={c.id} className={cn("border-t border-border transition-colors hover:bg-muted/30", selected.has(c.id) && "bg-primary/[0.03]")}>
+                          <td className="px-3 py-2.5 w-8">
                             <SelectCheckbox
                               ariaLabel={`Select ${c.service}`}
                               checked={selected.has(c.id)}
                               onChange={() => toggleSelect(c.id)}
                             />
                           </td>
-                          <td className="px-3 py-2 font-medium max-w-[16rem]">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <ServiceLogo service={c.service} website={c.website} className="size-5" />
-                              <span className="truncate" title={c.service}>{c.service}</span>
+                          <td className="px-3 py-2.5">
+                            <div className="flex items-center gap-2.5 min-w-0 max-w-xs">
+                              <ServiceLogo service={c.service} website={c.website} className="size-6 shrink-0" />
+                              <span className="font-semibold text-foreground truncate" title={c.service}>{c.service}</span>
                             </div>
                           </td>
-                          <td className="px-3 py-2 max-w-[16rem]">
-                            <div className="flex items-center gap-1.5">
+                          <td className="px-3 py-2.5">
+                            <div className="flex items-center gap-1.5 max-w-xs">
                               <button
                                 type="button"
                                 onClick={() => copyField(`${c.id}:login`, c.login_id, "Login ID")}
                                 title={`${c.login_id}: click to copy`}
-                                className="press-scale text-left hover:underline underline-offset-2 truncate flex-1 min-w-0"
+                                className="press-scale text-left font-medium text-foreground/90 hover:text-foreground hover:underline underline-offset-2 truncate flex-1 min-w-0"
                               >
                                 {c.login_id}
                               </button>
@@ -624,8 +624,8 @@ const CredentialsPage = () => {
                                 onClick={() => copyField(`${c.id}:login`, c.login_id, "Login ID")}
                                 title="Copy login ID"
                                 className={cn(
-                                  "shrink-0 press-scale transition-colors",
-                                  copied.has(`${c.id}:login`) ? "text-success" : "text-foreground hover:text-foreground",
+                                  "shrink-0 press-scale transition-colors opacity-0 group-hover:tr opacity-100 focus:opacity-100",
+                                  copied.has(`${c.id}:login`) ? "text-success" : "text-muted-foreground hover:text-foreground",
                                 )}
                               >
                                 {copied.has(`${c.id}:login`)
@@ -634,16 +634,19 @@ const CredentialsPage = () => {
                               </button>
                             </div>
                           </td>
-                          <td className="px-3 py-2 max-w-[16rem]">
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-mono truncate" title={show ? c.password : undefined}>
+                          <td className="px-3 py-2.5">
+                            <div className="flex items-center gap-1.5 max-w-xs">
+                              <span className="font-mono text-sm text-foreground/90 truncate" title={show ? c.password : undefined}>
                                 {show ? c.password : "•".repeat(12)}
                               </span>
                               <button
                                 type="button"
                                 onClick={() => toggleReveal(c.id)}
                                 title={show ? "Hide" : "Show"}
-                                className="text-foreground hover:text-foreground shrink-0"
+                                className={cn(
+                                  "shrink-0 transition-colors",
+                                  show ? "text-muted-foreground hover:text-foreground" : "text-muted-foreground/50 hover:text-muted-foreground",
+                                )}
                               >
                                 {show ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
                               </button>
@@ -653,7 +656,7 @@ const CredentialsPage = () => {
                                 title="Copy password"
                                 className={cn(
                                   "shrink-0 press-scale transition-colors",
-                                  copied.has(`${c.id}:pwd`) ? "text-success" : "text-foreground hover:text-foreground",
+                                  copied.has(`${c.id}:pwd`) ? "text-success" : "text-muted-foreground hover:text-foreground",
                                 )}
                               >
                                 {copied.has(`${c.id}:pwd`)
@@ -662,10 +665,10 @@ const CredentialsPage = () => {
                               </button>
                             </div>
                           </td>
-                          <td className="px-3 py-2 text-foreground max-w-[16rem] truncate" title={c.notes ?? ""}>
-                            {c.notes || <span className="text-muted-foreground">—</span>}
+                          <td className="px-3 py-2.5 text-muted-foreground/80 max-w-[12rem] truncate hidden xl:table-cell" title={c.notes ?? ""}>
+                            {c.notes || <span className="text-muted-foreground/40">—</span>}
                           </td>
-                          <td className="px-3 py-2 text-center">
+                          <td className="px-3 py-2.5 text-center w-12">
                             <div className="flex items-center justify-center gap-0.5">
                               <button
                                 type="button"
@@ -673,7 +676,7 @@ const CredentialsPage = () => {
                                 title="Copy all"
                                 className={cn(
                                   "press-scale transition-colors p-1.5 rounded",
-                                  copied.has(`${c.id}:copy`) ? "text-success" : "text-foreground hover:text-foreground hover:bg-muted/40",
+                                  copied.has(`${c.id}:copy`) ? "text-success" : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
                                 )}
                               >
                                 {copied.has(`${c.id}:copy`)
@@ -682,8 +685,8 @@ const CredentialsPage = () => {
                               </button>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="size-8" aria-label={`Actions for ${c.label}`}>
-                                    <MoreVertical className="size-4" />
+                                  <Button variant="ghost" size="icon" className="size-8" aria-label={`Actions for ${c.service}`}>
+                                    <MoreVertical className="size-4 text-muted-foreground" />
                                   </Button>
                                 </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-40 font-sans p-1">
@@ -697,7 +700,7 @@ const CredentialsPage = () => {
                                   <DropdownMenuPortal>
                                     <DropdownMenuSubContent className="w-40 font-sans p-1">
                                       {otherFolders.length === 0 ? (
-                                        <span className="block px-2 py-1.5 text-xs text-foreground">No other folders</span>
+                                        <span className="block px-2 py-1.5 text-xs text-muted-foreground">No other folders</span>
                                       ) : (
                                         otherFolders.map((f) => (
                                           <DropdownMenuItem
@@ -735,7 +738,7 @@ const CredentialsPage = () => {
 
           {viewMode === "cards" && (
             <div className="hidden md:block">
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3.5">
                 {isLoading ? (
                   Array.from({ length: 6 }).map((_, i) => (
                     <div key={i} className="rounded-lg border border-border p-3.5 space-y-2.5">
