@@ -1,8 +1,8 @@
 import { lazy, Suspense, useMemo } from "react";
-import { motion, type Easing, useReducedMotion } from "motion/react";
-import { CalendarDays, LineChart } from "lucide-react";
+import { motion, type Easing } from "motion/react";
+import { LineChart } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
-import { ContributionHeatmap } from "@/components/ar/ContributionHeatmap";
+import { ActivitySection } from "@/components/ar/ActivitySection";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
 import { useFaxResolvedByDay, FAX_CATEGORY_KEY, FAX_CATEGORY_LABEL } from "@/hooks/useFaxTracker";
@@ -20,7 +20,6 @@ const Console = () => {
   const { data: categories = [] } = useCategories();
   const { data: faxByDay = {} } = useFaxResolvedByDay();
   const { data: indexableByDay = {} } = useIndexableResolvedByDay();
-  const reduce = useReducedMotion();
 
   const stats = useMemo(() => {
     const today = isoDate();
@@ -59,35 +58,20 @@ const Console = () => {
               </div>
           </section>
 
-          {/* ── Heatmap ── */}
+          {/* ── Activity ── */}
           <motion.section
-            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={reduce ? { duration: 0 } : { duration: 0.35, ease: sectionEase }}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: sectionEase }}
           >
-            <FigHeader title="Activity Density" />
-            {isLoading ? (
-              <Skeleton height={144} />
-            ) : isEmpty ? (
-              <div className="bg-card border border-border rounded-lg p-6">
-                <EmptyState
-                  icon={CalendarDays}
-                  title="No Activity Yet"
-                  hint="The density grid populates as you log days."
-                />
-              </div>
-            ) : (
-              <ContributionHeatmap logs={logs} />
-            )}
+            <ActivitySection logs={logs} isLoading={isLoading} />
           </motion.section>
 
           {/* ── Charts ── */}
           <motion.section
-            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={reduce ? { duration: 0 } : { duration: 0.35, ease: sectionEase }}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: sectionEase, delay: 0.1 }}
           >
             <FigHeader title="Trends & Breakdown" />
             {isLoading ? (
