@@ -40,18 +40,15 @@ export function ReportDayTable({
   onPageChange,
 }: ReportDayTableProps) {
   return (
-    <div className="bg-card border border-border rounded-md overflow-hidden">
-      <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between bg-muted/[0.04]">
+    <div className="bg-card border border-border/60 rounded-lg overflow-hidden">
+      <div className="px-5 py-4 border-b border-border/40 bg-muted/[0.04]">
         <h2 className="text-sm font-semibold font-heading">Day-by-Day Breakdown</h2>
-        <span className="text-xs text-foreground sm:hidden font-medium bg-muted/40 border border-border/60 px-2 py-0.5 rounded">
-          {"← swipe to scroll →"}
-        </span>
       </div>
       <div className="overflow-x-auto no-scrollbar">
-        <Table className="[&_th]:border-r [&_th]:border-border [&_th:last-child]:border-r-0 [&_td]:border-r [&_td]:border-border/40 [&_td:last-child]:border-r-0">
+        <Table className="[&_th]:border-r [&_th]:border-border [&_th:last-child]:border-r-0 [&_td]:border-r [&_td]:border-border/40 [&_td:last-child]:border-r-0 [&_td]:py-2.5 [&_th]:py-2">
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
-              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center py-3 font-heading">Date</TableHead>
+              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center font-heading">Date</TableHead>
               {categories.map((c) => (
                 <TableHead key={c.key} className="font-bold text-xs uppercase tracking-wider text-center text-foreground font-heading">
                   {c.short}
@@ -67,10 +64,10 @@ export function ReportDayTable({
 
               return l.is_off_day ? (
                 <TableRow key={l.id} className="border-b border-border/40 last:border-0 bg-muted/10">
-                  <TableCell className="tabular-nums text-sm font-medium py-3 text-foreground text-center">
+                  <TableCell className="tabular-nums text-sm font-medium text-foreground text-center">
                     {formatTableDate(l.log_date)}
                   </TableCell>
-                  <TableCell colSpan={categories.length + 1} className="py-3">
+                  <TableCell colSpan={categories.length + 1}>
                     <div className="flex items-center gap-1.5">
                       <BedDouble className="size-3.5 text-foreground" />
                       <span className="text-xs font-medium text-foreground tracking-wide uppercase">
@@ -86,13 +83,13 @@ export function ReportDayTable({
                 </TableRow>
               ) : (
                 <TableRow key={l.id} className="border-b border-border/40 last:border-0 hover:bg-muted/20 transition-colors">
-                  <TableCell className="tabular-nums text-sm font-medium py-3 text-foreground text-center">
+                  <TableCell className="tabular-nums text-sm font-medium text-foreground text-center">
                     {formatTableDate(l.log_date)}
                   </TableCell>
                   {categories.map((c) => {
                     const v = (l.counts ?? {})[c.key] ?? 0;
                     return (
-                      <TableCell key={c.key} className="text-center tabular-nums text-sm py-3">
+                      <TableCell key={c.key} className="text-center tabular-nums text-sm">
                         {v > 0 ? (
                           <span className="font-medium text-foreground">{v}</span>
                         ) : (
@@ -101,7 +98,7 @@ export function ReportDayTable({
                       </TableCell>
                     );
                   })}
-                  <TableCell className="text-center tabular-nums py-3">
+                  <TableCell className="text-center tabular-nums">
                     <span className="font-bold text-sm text-foreground">{rowTotal}</span>
                   </TableCell>
                 </TableRow>
@@ -167,15 +164,15 @@ export function ReportDayTable({
           <span>
             Total Docs Processed: <span className="font-bold text-foreground">{totalDocs}</span>
           </span>
-          <span className="text-border/80">|</span>
+          <span className="hidden sm:inline text-border/80">|</span>
           <span>
             Working Shifts: <span className="font-bold text-foreground">{workingLogs.length}</span>
           </span>
-          <span className="text-border/80">|</span>
+          <span className="hidden sm:inline text-border/80">|</span>
           <span>
             Average document processing speed: <span className="font-bold text-foreground">{avgPerDay}</span> docs/day
           </span>
-          <span className="text-border/80">|</span>
+          <span className="hidden sm:inline text-border/80">|</span>
           {categories.map((c) => {
             const val = workingLogs.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0);
             return val > 0 ? (

@@ -30,7 +30,7 @@ export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryB
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Category breakdown leaderboard */}
-      <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-4">
+      <div className="bg-card border border-border/60 rounded-lg p-4 sm:p-5 space-y-4">
         <div className="flex items-center gap-2">
           <Trophy className="size-4 text-primary shrink-0" />
           <h2 className="text-sm font-semibold font-heading">Category Breakdown</h2>
@@ -81,15 +81,15 @@ export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryB
       </div>
 
       {/* Daily bar chart container */}
-      <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-4 flex flex-col">
+      <div className="bg-card border border-border/60 rounded-lg p-4 sm:p-5 space-y-4 flex flex-col">
         <div className="flex items-center gap-2">
           <TrendingUp className="size-4 text-info shrink-0" />
           <h2 className="text-sm font-semibold font-heading">Daily Document Output</h2>
         </div>
-        {/* flex-1 so the chart absorbs whatever height the breakdown card forces on this
-            row. The chart itself is absolutely positioned so its rendered SVG never
+        {/* flex-1 lets the chart match the leaderboard card height in the same grid row.
+            The chart itself is absolutely positioned so its rendered SVG never
             contributes to layout height — otherwise the card can grow but never shrink. */}
-        <div className="flex-1 min-h-44 sm:min-h-48 md:min-h-52 xl:min-h-60 relative">
+        <div className="flex-1 relative min-h-[180px]">
           <Suspense fallback={
             <div className="absolute inset-0 flex items-center justify-center text-xs text-foreground animate-pulse">
               Generating active output trend...

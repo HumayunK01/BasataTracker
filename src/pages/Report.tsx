@@ -297,7 +297,7 @@ const ReportPage = () => {
       <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 sm:py-6 animate-fade-in">
         <div className="w-full space-y-4">
         {/* Date range controls */}
-        <div className="bg-card border border-border rounded-md p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+        <div className="-mx-4 sm:-mx-6 bg-muted/10 px-4 sm:px-6 py-4 sm:py-5 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
           <div className="overflow-x-auto no-scrollbar -mx-1 px-1 max-w-full">
             <div className="relative inline-flex items-center gap-1 rounded-lg border border-border/60 bg-muted/20 p-1 snap-x snap-mandatory">
               {/* Sliding active-segment highlight */}
@@ -394,27 +394,44 @@ const ReportPage = () => {
           <>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-card border border-border rounded-md p-3 sm:p-4 space-y-2">
-                  <Skeleton width={80} height={12} borderRadius={0} />
-                  <Skeleton width={64} height={32} borderRadius={0} />
-                  <Skeleton width={96} height={12} borderRadius={0} />
+                <div key={i} className="bg-card border border-border rounded-md p-4 space-y-2">
+                  <Skeleton width={80} height={12} />
+                  <div className="flex items-end justify-between">
+                    <Skeleton width={i === 0 ? 72 : 48} height={32} />
+                    <Skeleton width={36} height={36} borderRadius={999} />
+                  </div>
+                  <Skeleton width={i === 0 ? 120 : 88} height={12} />
                 </div>
               ))}
             </div>
-            <div className="bg-card border border-border rounded-md p-4 sm:p-5 space-y-3">
-              <Skeleton width={144} height={16} borderRadius={0} />
-              <Skeleton height={176} borderRadius={0} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-card border border-border rounded-md p-5 space-y-4">
+                <Skeleton width={144} height={16} />
+                {Array.from({ length: 3 }).map((_, j) => (
+                  <div key={j} className="space-y-1.5">
+                    <div className="flex justify-between">
+                      <Skeleton width={100} height={12} />
+                      <Skeleton width={48} height={12} />
+                    </div>
+                    <Skeleton height={8} />
+                  </div>
+                ))}
+              </div>
+              <div className="bg-card border border-border rounded-md p-5 space-y-3">
+                <Skeleton width={144} height={16} />
+                <Skeleton height={200} />
+              </div>
             </div>
           </>
           ) : filtered.length === 0 ? (
             <EmptyState
               icon={CalendarRange}
               title="No Logs Found"
-              hint="No days were logged in the selected date range."
+              hint={`No logs between ${formatUSDate(startDate)} and ${formatUSDate(endDate)}. Try a different date range.`}
             />
           ) : (
           <>
-            <FigHeader title="Summary" />
+            <FigHeader title="Summary" sub={`${workingLogs.length} working days · ${totalDocs} docs`} />
             <ReportStatsGrid
               totalDocs={totalDocs}
               filteredCount={filtered.length}
@@ -424,9 +441,9 @@ const ReportPage = () => {
               avgPerDay={avgPerDay}
               bestDay={bestDay}
             />
-            <FigHeader title="Category Breakdown" />
+            <FigHeader title="Category Breakdown" sub={`${categoryBreakdown.length} categories`} />
             <CategoryBreakdown breakdown={categoryBreakdown} totalDocs={totalDocs} chartData={chartData} />
-            <FigHeader title="Day Records" />
+            <FigHeader title="Day Records" sub={`${filtered.length} days`} />
             <ReportDayTable
               filtered={filtered}
               categories={categories}
