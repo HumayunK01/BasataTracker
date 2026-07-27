@@ -180,7 +180,7 @@ export default function LoginPage() {
                 </div>
                 <div className="space-y-1 text-center">
                   <h1 className="text-xl font-bold tracking-tight text-foreground">
-                    {mode === "login" ? "Welcome back" : "Create your account"}
+                    {mode === "login" ? "" : "Create your account"}
                   </h1>
                   <p className="text-sm text-foreground">
                     {mode === "login"

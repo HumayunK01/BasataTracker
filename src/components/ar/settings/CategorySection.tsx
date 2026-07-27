@@ -20,7 +20,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, GripVertical, Tag, Loader2, Info, HelpCircle, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, MoreVertical, Pencil, Trash2, GripVertical, Tag, Loader2, Info, HelpCircle, ChevronUp, ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Skeleton from "react-loading-skeleton";
 import { EmptyState } from "@/components/ar/industrial";
 import type { Category } from "@/hooks/useCategories";
@@ -162,51 +169,46 @@ export function CategorySection({
                     <p className="text-sm font-semibold truncate" title={c.label}>{c.label}</p>
                     <p className="text-xs font-mono text-foreground truncate">{c.short}</p>
                   </div>
-                   <div className="flex items-center shrink-0">
-                    {cat.dragging !== c.key && (
-                      <>
+                  <div className="flex items-center shrink-0">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="size-9 sm:size-7 text-foreground hover:text-foreground hover:bg-muted/80 disabled:opacity-30"
-                          title={`Move ${c.label} up`}
-                          aria-label={`Move ${c.label} up`}
+                          className="size-8 text-foreground hover:text-foreground hover:bg-muted/80"
+                          aria-label={`Actions for ${c.label}`}
+                        >
+                          <MoreVertical className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44 font-sans">
+                        <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={() => onEdit(c)}>
+                          <Pencil className="size-3.5" /> Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-sm gap-2 cursor-pointer"
                           disabled={index === 0}
                           onClick={() => onMove(c.key, -1)}
                         >
-                          <ChevronUp className="size-4 sm:size-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-9 sm:size-7 text-foreground hover:text-foreground hover:bg-muted/80 disabled:opacity-30"
-                          title={`Move ${c.label} down`}
-                          aria-label={`Move ${c.label} down`}
+                          <ChevronUp className="size-3.5" /> Move up
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-sm gap-2 cursor-pointer"
                           disabled={index === categories.length - 1}
                           onClick={() => onMove(c.key, 1)}
                         >
-                          <ChevronDown className="size-4 sm:size-3.5" />
-                        </Button>
-                      </>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-9 sm:size-7 text-foreground hover:text-foreground hover:bg-muted/80"
-                      title={`Edit ${c.label}`}
-                      onClick={() => onEdit(c)}
-                    >
-                      <Pencil className="size-4 sm:size-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-9 sm:size-7 text-foreground hover:text-destructive hover:bg-destructive/10"
-                      title={`Delete ${c.label}`}
-                      onClick={() => catDispatch({ type: "set_delete_target", cat: c })}
-                    >
-                      <Trash2 className="size-4 sm:size-3.5" />
-                    </Button>
+                          <ChevronDown className="size-3.5" /> Move down
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-sm gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                          onClick={() => catDispatch({ type: "set_delete_target", cat: c })}
+                        >
+                          <Trash2 className="size-3.5" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               );
