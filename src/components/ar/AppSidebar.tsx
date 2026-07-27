@@ -18,6 +18,7 @@ import { AppLogo } from "@/components/ar/AppLogo";
 import { AppFavicon } from "@/components/ar/AppFavicon";
 import { cn } from "@/lib/utils";
 import { prefetchRoute } from "@/lib/routePreload";
+import { APP_VERSION } from "@/lib/version";
 
 const ease: Easing = [0.23, 1, 0.32, 1];
 
@@ -156,7 +157,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarSeparator />
         <div className="text-center pb-1 group-data-[collapsible=icon]:hidden">
-          <p className="font-mono text-2xs text-foreground tracking-[0.2em]">v1.2.1</p>
+          <p className="font-mono text-2xs text-foreground tracking-[0.2em]">{APP_VERSION}</p>
         </div>
       </SidebarFooter>
 

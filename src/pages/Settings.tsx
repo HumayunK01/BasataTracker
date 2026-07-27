@@ -1,4 +1,4 @@
-import { useReducer } from "react";
+import { useReducer, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FigHeader } from "@/components/ar/industrial";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ import {
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
+import { APP_VERSION } from "@/lib/version";
 import { toast } from "sonner";
 
 import {
@@ -228,6 +229,16 @@ export default function SettingsPage() {
 
   const isBusy = addCategory.isPending || updateCategory.isPending;
 
+  const ORG_TZ = "America/Phoenix";
+  const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const [tzPreference, setTzPreference] = useState(() => localStorage.getItem("tz_preference") ?? "org");
+
+  const handleTzChange = (val: string) => {
+    setTzPreference(val);
+    localStorage.setItem("tz_preference", val);
+    toast.success("Time zone preference updated.");
+  };
+
   return (
     <>
       <main className="flex-1 overflow-y-auto">
@@ -255,6 +266,30 @@ export default function SettingsPage() {
           <section>
             <FigHeader title="Preferences" />
             <PreferencesCard dailyGoal={profile?.daily_goal ?? null} />
+          </section>
+
+          {/* ── Time Zone ── */}
+          <section>
+            <FigHeader title="Time Zone" />
+            <div className="bg-card border border-border/80 rounded-lg p-5 space-y-4">
+              <p className="text-sm text-foreground">Choose how dates and times are displayed across the app.</p>
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 p-3 rounded-md border border-border/60 cursor-pointer hover:bg-muted/20 transition-colors has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.04]">
+                  <input type="radio" name="tz" value="org" checked={tzPreference === "org"} onChange={() => handleTzChange("org")} className="size-4 accent-primary" />
+                  <div>
+                    <span className="text-sm font-medium text-foreground">Use organization time zone</span>
+                    <p className="text-xs text-muted-foreground mt-0.5">{ORG_TZ}</p>
+                  </div>
+                </label>
+                <label className="flex items-center gap-3 p-3 rounded-md border border-border/60 cursor-pointer hover:bg-muted/20 transition-colors has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.04]">
+                  <input type="radio" name="tz" value="local" checked={tzPreference === "local"} onChange={() => handleTzChange("local")} className="size-4 accent-primary" />
+                  <div>
+                    <span className="text-sm font-medium text-foreground">Use my local time zone</span>
+                    <p className="text-xs text-muted-foreground mt-0.5">{LOCAL_TZ}</p>
+                  </div>
+                </label>
+              </div>
+            </div>
           </section>
 
           {/* ── Categories ── */}
@@ -285,6 +320,8 @@ export default function SettingsPage() {
           <section>
             <DangerZone delState={delState} delDispatch={delDispatch} onDeleteAccount={handleDeleteAccount} />
           </section>
+
+          <p className="text-center font-mono text-2xs text-foreground tracking-[0.2em] pt-4">{APP_VERSION}</p>
 
         </div>
       </main>
