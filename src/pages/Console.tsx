@@ -6,7 +6,6 @@ import { PageHeader } from "@/components/ar/PageHeader";
 import { ContributionHeatmap } from "@/components/ar/ContributionHeatmap";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
-import { useProfile } from "@/hooks/useProfile";
 import { useFaxResolvedByDay, FAX_CATEGORY_KEY, FAX_CATEGORY_LABEL } from "@/hooks/useFaxTracker";
 import { useIndexableResolvedByDay, INDEXABLE_CATEGORY_KEY, INDEXABLE_CATEGORY_LABEL } from "@/hooks/useIndexableTracker";
 import { isoDate, totalForLog } from "@/types/log";
@@ -22,10 +21,7 @@ const Console = () => {
   const { data: categories = [] } = useCategories();
   const { data: faxByDay = {} } = useFaxResolvedByDay();
   const { data: indexableByDay = {} } = useIndexableResolvedByDay();
-  const { data: profile } = useProfile();
   const reduce = useReducedMotion();
-
-  const displayName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ").trim();
 
   const stats = useMemo(() => {
     const today = isoDate();
@@ -47,7 +43,6 @@ const Console = () => {
     <div className="flex flex-col min-h-full">
       <PageHeader
         title="Console"
-        subtitle={displayName || undefined}
         actions={<Clock />}
       />
 

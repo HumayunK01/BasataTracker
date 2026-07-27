@@ -56,11 +56,11 @@ export function CredentialCardItem({
   return (
     <div
       className={cn(
-        "group rounded-lg border bg-card overflow-hidden transition-colors",
-        selected ? "border-primary/40 bg-primary/5" : "border-border hover:border-primary/30",
+        "group rounded-lg border bg-card overflow-hidden transition-all",
+        selected ? "border-primary/50 bg-primary/[0.04]" : "border-border hover:border-primary/30",
       )}
     >
-      <div className="flex items-start gap-3 p-3.5">
+      <div className="flex items-start gap-3 p-3.5 pb-0">
         <SelectCheckbox
           ariaLabel={`Select ${c.service}`}
           checked={selected}
@@ -70,7 +70,7 @@ export function CredentialCardItem({
         <ServiceLogo service={c.service} website={c.website} className="size-9 shrink-0 mt-0.5" />
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-foreground truncate leading-tight">{c.service}</p>
-          {website && <p className="text-xs text-foreground truncate mt-0.5">{website}</p>}
+          {website && <p className="text-xs text-muted-foreground truncate mt-0.5">{website}</p>}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -89,7 +89,7 @@ export function CredentialCardItem({
               <DropdownMenuPortal>
                 <DropdownMenuSubContent className="w-40 font-sans p-1">
                   {otherFolders.length === 0 ? (
-                    <span className="block px-2 py-1.5 text-xs text-foreground">No other folders</span>
+                    <span className="block px-2 py-1.5 text-xs text-muted-foreground">No other folders</span>
                   ) : (
                     otherFolders.map((f) => (
                       <DropdownMenuItem
@@ -115,7 +115,7 @@ export function CredentialCardItem({
         </DropdownMenu>
       </div>
 
-      <div className="px-3.5 pb-3.5 -mt-1 space-y-2">
+      <div className="px-3.5 pb-3.5 pt-2 space-y-1.5">
         <Field label="Login" value={c.login_id} copied={copiedLogin} onCopy={onCopyLogin} />
 
         <Field
@@ -129,7 +129,7 @@ export function CredentialCardItem({
         />
 
         {c.notes && (
-          <p className="text-xs text-foreground leading-relaxed border-t border-border pt-2 mt-1 break-words">
+          <p className="text-xs text-muted-foreground/80 leading-relaxed border-t border-border pt-2 mt-2.5 break-words">
             {c.notes}
           </p>
         )}
@@ -150,10 +150,12 @@ interface FieldProps {
 
 function Field({ label, value, mono, reveal, copied, onCopy, onReveal }: FieldProps) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 min-w-0">
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-foreground">{label}</p>
-        <p className={cn("text-sm text-foreground/90 truncate", mono && "font-mono")} title={value}>{value}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">{label}</p>
+        <p className={cn("text-sm truncate", mono ? "font-mono text-foreground/90" : "font-medium text-foreground/90")} title={value}>
+          {value}
+        </p>
       </div>
       {reveal !== undefined && (
         <button
@@ -161,7 +163,7 @@ function Field({ label, value, mono, reveal, copied, onCopy, onReveal }: FieldPr
           onClick={onReveal}
           title={reveal ? "Hide password" : "Show password"}
           aria-label={reveal ? "Hide password" : "Show password"}
-          className="shrink-0 text-foreground hover:text-foreground transition-colors cursor-pointer"
+          className="shrink-0 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
           {reveal ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
         </button>
@@ -173,7 +175,7 @@ function Field({ label, value, mono, reveal, copied, onCopy, onReveal }: FieldPr
         aria-label={`Copy ${label}`}
         className={cn(
           "shrink-0 press-scale transition-colors cursor-pointer",
-          copied ? "text-success" : "text-foreground hover:text-foreground",
+          copied ? "text-success" : "text-muted-foreground hover:text-foreground",
         )}
       >
         {copied ? <Check className="size-4 animate-fade-in" /> : <Copy className="size-4" />}

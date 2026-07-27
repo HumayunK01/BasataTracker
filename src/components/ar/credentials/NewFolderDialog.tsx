@@ -61,7 +61,7 @@ export function NewFolderDialog({ open, onOpenChange, onCreated }: NewFolderDial
               onChange={(e) => { setName(e.target.value); setError(""); }}
               onKeyDown={(e) => e.key === "Enter" && save()}
             />
-            <p className="text-xs text-foreground">Each folder keeps its own separate list of credentials.</p>
+            <p className="text-xs text-muted-foreground/70">Each folder keeps its own separate list of credentials.</p>
           </div>
 
           {error && (
