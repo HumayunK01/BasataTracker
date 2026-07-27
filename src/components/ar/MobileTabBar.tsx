@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
 import { prefetchRoute } from "@/lib/routePreload";
 
 const tabs = [
-  { title: "Console", icon: LayoutDashboard, path: "/" },
-  { title: "Counter", icon: Hash, path: "/counter" },
+  { title: "Console", icon: LayoutDashboard, path: "/console" },
   { title: "Daily Log", icon: CalendarDays, path: "/log" },
+  { title: "Counter", icon: Hash, path: "/counter" },
   { title: "Tracker", icon: Send, path: "/tracker" },
   { title: "Report", icon: FileBarChart, path: "/report" },
 ];
