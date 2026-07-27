@@ -1,6 +1,5 @@
 import { useReducer } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageHeader } from "@/components/ar/PageHeader";
 import { FigHeader } from "@/components/ar/industrial";
 import { supabase } from "@/integrations/supabase/client";
 import { logAuditEvent } from "@/hooks/useAuditLog";
@@ -231,8 +230,6 @@ export default function SettingsPage() {
 
   return (
     <>
-      <PageHeader subtitle="Settings" />
-
       <main className="flex-1 overflow-y-auto">
         <div className="w-full px-4 sm:px-6 py-6 sm:py-8 space-y-8">
 

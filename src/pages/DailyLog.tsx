@@ -16,7 +16,6 @@ import { useProfile } from "@/hooks/useProfile";
 import { downloadCSV, downloadJSON, downloadPDF } from "@/lib/log-utils";
 import { isoDate, type DailyLog } from "@/types/log";
 import { CalendarDays, Download, FileJson, FileText, FileType, Plus, ChevronDown } from "lucide-react";
-import { PageHeader } from "@/components/ar/PageHeader";
 import { EmptyState } from "@/components/ar/industrial";
 import Skeleton from "react-loading-skeleton";
 
@@ -27,12 +26,6 @@ const DailyLogPage = () => {
   const userName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || undefined;
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<DailyLog | null>(null);
-  const [now, setNow] = useState(() => new Date());
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(id);
-  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -55,41 +48,6 @@ const DailyLogPage = () => {
 
   return (
     <>
-      <PageHeader
-        now={now}
-        title="Daily Log"
-        actions={
-          <>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="size-10 sm:h-8 sm:w-auto sm:px-3" disabled={logs.length === 0} aria-label="Export logs">
-                  <Download className="size-5 sm:size-4 sm:mr-1" />
-                  <span className="hidden sm:inline">Export</span>
-                  <ChevronDown className="size-3 ml-1 opacity-60 hidden sm:inline" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuLabel className="text-xs text-foreground font-normal">Export all logs</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => downloadCSV(logs, categories, "daily-log.csv")}>
-                  <FileText className="size-4 mr-2" /> CSV (.csv)
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => downloadJSON(logs, categories, "daily-log.json")}>
-                  <FileJson className="size-4 mr-2" /> JSON (.json)
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => downloadPDF(logs, categories, "daily-log.pdf", { title: "", userName })}>
-                  <FileType className="size-4 mr-2" /> PDF (.pdf)
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button size="sm" className="h-10 sm:h-8" onClick={openNew}>
-              <Plus className="size-5 sm:size-4 sm:mr-1" />
-              <span className="hidden sm:inline">Log day</span>
-              <kbd className="ml-2 hidden sm:inline-flex text-xs border border-primary-foreground/30 rounded px-1">N</kbd>
-            </Button>
-          </>
-        }
-      />
       <main className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-5 sm:py-6 animate-fade-in">
             {isLoading ? (
               <div className="flex-1 flex flex-col gap-3 pt-2">
@@ -123,7 +81,37 @@ const DailyLogPage = () => {
                 />
               </div>
             ) : (
-              <DaysTable logs={logs} onEdit={openEdit} />
+              <DaysTable logs={logs} onEdit={openEdit} actions={
+                <div className="flex items-center gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-10 sm:h-9" disabled={logs.length === 0} aria-label="Export logs">
+                        <Download className="size-4 mr-1.5" />
+                        Export
+                        <ChevronDown className="size-3 ml-1 opacity-60" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuLabel className="text-xs text-foreground font-normal">Export all logs</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => downloadCSV(logs, categories, "daily-log.csv")}>
+                        <FileText className="size-4 mr-2" /> CSV (.csv)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => downloadJSON(logs, categories, "daily-log.json")}>
+                        <FileJson className="size-4 mr-2" /> JSON (.json)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => downloadPDF(logs, categories, "daily-log.pdf", { title: "", userName })}>
+                        <FileType className="size-4 mr-2" /> PDF (.pdf)
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button size="sm" className="h-10 sm:h-9" onClick={openNew}>
+                    <Plus className="size-4 mr-1.5" />
+                    Log day
+                    <kbd className="ml-2 text-xs border border-primary-foreground/30 rounded px-1">N</kbd>
+                  </Button>
+                </div>
+              } />
             )}
           </main>
 
