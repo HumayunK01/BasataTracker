@@ -31,7 +31,17 @@ import { EmptyState } from "@/components/ar/industrial";
 // ── Helpers ────────────────────────────────────────────────────────────────
 function getVal(l: DailyLog, key: string): number { return (l.counts ?? {})[key] ?? 0; }
 
-
+function CategoryBadge({ catKey, value }: { catKey: string; value: number }) {
+  const clr = colorForKey(catKey);
+  return (
+    <span
+      className="text-xs font-medium px-2 py-0.5 rounded-full tabular-nums"
+      style={{ color: clr, backgroundColor: withAlpha(clr, 0.13), border: `1px solid ${withAlpha(clr, 0.2)}` }}
+    >
+      {catKey} · {value}
+    </span>
+  );
+}
 
 // ── Mobile card list ───────────────────────────────────────────────────────
 interface MobileCardListProps {
@@ -46,37 +56,44 @@ interface MobileCardListProps {
 
 function MobileCardList({ paginated, categories, search, copiedId, onEdit, onDelete, onCopy }: MobileCardListProps) {
   return (
-    <div className="flex flex-col flex-1 min-h-0 sm:hidden bg-card border border-border rounded-md overflow-hidden">
-      <div className="flex-1 overflow-y-auto no-scrollbar divide-y divide-border/50 min-h-0">
-        {paginated.length === 0 && (
-          <EmptyState
-            className="py-12"
-            icon={CalendarDays}
-            title={search ? "No Matches" : "No Days Yet"}
-            hint={search ? "Nothing matches your search." : "Log a day to start your history."}
-          />
-        )}
-        {paginated.map((l) => {
+    <div className="flex flex-col flex-1 min-h-0 sm:hidden">
+      {paginated.length === 0 && (
+        <EmptyState
+          className="py-12"
+          icon={CalendarDays}
+          title={search ? "No Matches" : "No Days Yet"}
+          hint={search ? "Nothing matches your search." : "Log a day to start your history."}
+        />
+      )}
+      <div className="space-y-2">
+        {paginated.map((l, idx) => {
           const isOff = l.is_off_day;
           const weekend = isWeekend(l.log_date);
           const total = categories.reduce((s, c) => s + getVal(l, c.key), 0);
           const activeCats = categories.filter((c) => getVal(l, c.key) > 0);
+          // ponytail: latest category with non-zero count used for accent strip
+          const accentKey = activeCats.length > 0 ? activeCats[activeCats.length - 1].key : null;
+          const accentColor = accentKey ? colorForKey(accentKey) : undefined;
 
           if (isOff) {
             return (
-              <div key={l.id} className="flex items-center gap-3 px-4 py-2.5 bg-muted/20">
-                <BedDouble className="size-3.5 text-foreground shrink-0" />
-                <span className="text-sm text-foreground tabular-nums flex-1">
+              <div
+                key={l.id}
+                className="flex items-center gap-3 px-4 py-2.5 bg-muted/20 border border-border/40 rounded-md animate-row-in"
+                style={{ animationDelay: `${idx * 30}ms` }}
+              >
+                <BedDouble className="size-4 text-muted-foreground/50 shrink-0" />
+                <span className="text-sm tabular-nums flex-1 font-medium text-muted-foreground/80">
                   {formatTableDate(l.log_date)}
                 </span>
-                <span className="text-xs text-foreground uppercase tracking-wide font-medium font-heading">
+                <span className="text-xs text-muted-foreground/60 uppercase tracking-wide font-medium font-heading">
                   {weekend ? "Weekend" : "Off day"}
                 </span>
                 <div className="flex items-center gap-0.5 ml-1">
-                  <Button variant="ghost" size="icon" className="size-9 text-foreground hover:text-foreground" onClick={() => onEdit(l)}>
-                    <Pencil className="size-4" />
+                  <Button variant="ghost" size="icon" className="size-9" onClick={() => onEdit(l)}>
+                    <Pencil className="size-4 text-muted-foreground" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="size-9 text-foreground hover:text-destructive" onClick={() => onDelete(l)}>
+                  <Button variant="outline" size="icon" className="size-9 border-destructive/30 text-destructive/80" onClick={() => onDelete(l)}>
                     <Trash2 className="size-4" />
                   </Button>
                 </div>
@@ -85,38 +102,43 @@ function MobileCardList({ paginated, categories, search, copiedId, onEdit, onDel
           }
 
           return (
-            <div key={l.id} className="px-4 py-3 space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold tabular-nums flex-1">{formatTableDate(l.log_date)}</span>
-                <span className="text-2xl font-black tabular-nums text-primary leading-none">{total}</span>
-                <div className="flex items-center gap-0.5 ml-1">
-                  <Button variant="ghost" size="icon" className="size-9 text-foreground hover:text-foreground" onClick={() => onCopy(l)}>
-                    {copiedId === l.id ? <Check className="size-4" /> : <Copy className="size-4" />}
-                  </Button>
-                  <Button variant="ghost" size="icon" className="size-9 text-foreground hover:text-foreground" onClick={() => onEdit(l)}>
-                    <Pencil className="size-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="size-9 text-foreground hover:text-destructive" onClick={() => onDelete(l)}>
-                    <Trash2 className="size-4" />
-                  </Button>
+            <div
+              key={l.id}
+              className="bg-card border border-border/60 rounded-md overflow-hidden animate-row-in"
+              style={{ animationDelay: `${idx * 30}ms` }}
+            >
+              <div className="flex">
+                {accentColor && (
+                  <div className="w-1 shrink-0" style={{ backgroundColor: accentColor }} />
+                )}
+                <div className="flex-1 px-4 py-3 space-y-2">
+                  {/* Top row: date + total */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold tabular-nums flex-1">{formatTableDate(l.log_date)}</span>
+                    <span className="text-2xl font-bold tabular-nums text-primary leading-none">{total}</span>
+                  </div>
+                  {/* Category badges */}
+                  {activeCats.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {activeCats.map((c) => (
+                        <CategoryBadge key={c.key} catKey={c.short} value={getVal(l, c.key)} />
+                      ))}
+                    </div>
+                  )}
+                  {/* Actions */}
+                  <div className="flex items-center gap-0.5 pt-0.5 border-t border-border/30">
+                    <Button variant="outline" size="icon" className="size-8 border-success/30 text-success" onClick={() => onCopy(l)}>
+                      {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                    </Button>
+                    <Button variant="outline" size="icon" className="size-8" onClick={() => onEdit(l)}>
+                      <Pencil className="size-3.5" />
+                    </Button>
+                    <Button variant="outline" size="icon" className="size-8 border-destructive/30 text-destructive/80" onClick={() => onDelete(l)}>
+                      <Trash2 className="size-3.5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
-              {activeCats.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {activeCats.map((c) => {
-                    const clr = colorForKey(c.key);
-                    return (
-                      <span
-                        key={c.key}
-                        className="text-xs font-medium px-2 py-0.5 rounded-full tabular-nums"
-                        style={{ color: clr, backgroundColor: withAlpha(clr, 0.13), border: `1px solid ${withAlpha(clr, 0.2)}` }}
-                      >
-                        {c.short} · {getVal(l, c.key)}
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
             </div>
           );
         })}
@@ -150,7 +172,7 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
                 </TableHead>
               ))}
               <TableHead className="font-bold text-xs uppercase tracking-wider text-center text-foreground font-heading">Total</TableHead>
-              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center font-heading">Actions</TableHead>
+              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center font-heading w-28">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -166,64 +188,68 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
                 </TableCell>
               </TableRow>
             )}
-            {paginated.map((l) => {
+            {paginated.map((l, idx) => {
               const total = categories.reduce((s, c) => s + getVal(l, c.key), 0);
-              return l.is_off_day ? (
-                <TableRow key={l.id} className="border-b border-border/40 last:border-0 bg-muted/10">
-                  <TableCell className="tabular-nums text-sm font-medium py-3 text-foreground text-center">
+              const isOff = l.is_off_day;
+              const weekend = isWeekend(l.log_date);
+
+              return isOff ? (
+                <TableRow key={l.id} className="border-b border-border/40 last:border-0 bg-muted/10 even:bg-muted/[0.08]">
+                  <TableCell className="tabular-nums text-sm font-medium py-3 text-muted-foreground/80 text-center">
                     {formatTableDate(l.log_date)}
                   </TableCell>
                   <TableCell colSpan={categories.length + 1} className="py-3">
                     <div className="flex items-center gap-1.5">
-                      <BedDouble className="size-3.5 text-foreground" />
-                      <span className="text-xs font-medium text-foreground tracking-wide uppercase">
-                        {isWeekend(l.log_date) ? "Weekend" : "Off Day"}
+                      <BedDouble className="size-3.5 text-muted-foreground/50" />
+                      <span className="text-xs font-medium text-muted-foreground/60 tracking-wide uppercase">
+                        {weekend ? "Weekend" : "Off Day"}
                       </span>
                     </div>
                   </TableCell>
                   <TableCell className="py-3">
                     <div className="flex gap-1 justify-center">
-                      <Button size="icon" className="size-7 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => onCopy(l)} title="Copy">
+                      <Button size="icon" className="size-7 border-success/30 text-success hover:bg-success/10" variant="outline" onClick={() => onCopy(l)} title="Copy">
                         {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                       </Button>
-                      <Button variant="secondary" size="icon" className="size-7" onClick={() => onEdit(l)} title="Edit">
+                      <Button size="icon" className="size-7" variant="outline" onClick={() => onEdit(l)} title="Edit">
                         <Pencil className="size-3.5" />
                       </Button>
-                      <Button variant="secondary" size="icon" className="size-7 hover:bg-destructive/20 hover:text-destructive" onClick={() => onDelete(l)} title="Delete">
+                      <Button size="icon" className="size-7 border-destructive/30 text-destructive/80 hover:bg-destructive/10 hover:text-destructive" variant="outline" onClick={() => onDelete(l)} title="Delete">
                         <Trash2 className="size-3.5" />
                       </Button>
                     </div>
                   </TableCell>
                 </TableRow>
               ) : (
-                <TableRow key={l.id} className="border-b border-border/40 last:border-0 hover:bg-muted/20 transition-colors">
+                <TableRow key={l.id} className="border-b border-border/40 last:border-0 hover:bg-muted/30 transition-colors even:bg-muted/[0.04] animate-row-in" style={{ animationDelay: `${idx * 20}ms` }}>
                   <TableCell className="tabular-nums text-sm font-medium py-3 text-foreground text-center">
                     {formatTableDate(l.log_date)}
                   </TableCell>
                   {categories.map((c) => {
                     const v = getVal(l, c.key);
+                    const clr = colorForKey(c.key);
                     return (
                       <TableCell key={c.key} className="text-center tabular-nums text-sm py-3">
                         {v > 0 ? (
-                          <span className="font-medium text-foreground">{v}</span>
+                          <span className="font-medium" style={{ color: clr }}>{v}</span>
                         ) : (
-                          <span className="text-muted-foreground" aria-hidden="true">{"—"}</span>
+                          <span className="text-muted-foreground/40" aria-hidden="true">{"—"}</span>
                         )}
                       </TableCell>
                     );
                   })}
                   <TableCell className="text-center tabular-nums py-3">
-                    <span className="font-bold text-sm text-foreground">{total}</span>
+                    <span className="font-bold text-sm text-primary">{total}</span>
                   </TableCell>
                   <TableCell className="py-3">
                     <div className="flex gap-1 justify-center">
-                      <Button size="icon" className="size-7 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => onCopy(l)} title="Copy">
+                      <Button size="icon" className="size-7 border-success/30 text-success hover:bg-success/10" variant="outline" onClick={() => onCopy(l)} title="Copy">
                         {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                       </Button>
-                      <Button variant="secondary" size="icon" className="size-7" onClick={() => onEdit(l)} title="Edit">
+                      <Button size="icon" className="size-7" variant="outline" onClick={() => onEdit(l)} title="Edit">
                         <Pencil className="size-3.5" />
                       </Button>
-                      <Button variant="secondary" size="icon" className="size-7 hover:bg-destructive/20 hover:text-destructive" onClick={() => onDelete(l)} title="Delete">
+                      <Button size="icon" className="size-7 border-destructive/30 text-destructive/80 hover:bg-destructive/10 hover:text-destructive" variant="outline" onClick={() => onDelete(l)} title="Delete">
                         <Trash2 className="size-3.5" />
                       </Button>
                     </div>
@@ -234,6 +260,9 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
           </TableBody>
         </Table>
       </div>
+      {categories.length > 6 && (
+        <p className="hidden sm:block text-center text-2xs text-foreground/50 -mt-px select-none py-1">← scroll horizontally →</p>
+      )}
     </div>
   );
 }
@@ -349,7 +378,7 @@ export function DaysTable({ logs, onEdit }: Props) {
               onChange={(e) => tDispatch({ type: "set_search", q: e.target.value })}
             />
           </div>
-          <div className="sm:ml-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-foreground">
+          <div className="sm:ml-auto flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs sm:text-sm text-foreground">
             <span><span className="font-semibold text-foreground">{workingLogs.length}</span> working days</span>
             <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && isWeekend(l.log_date)).length}</span> weekends</span>
             <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && !isWeekend(l.log_date)).length}</span> off days</span>
@@ -358,9 +387,6 @@ export function DaysTable({ logs, onEdit }: Props) {
         </div>
 
         <MobileCardList {...sharedProps} />
-        {categories.length > 6 && (
-          <p className="hidden sm:block text-center text-2xs text-foreground -mt-2 select-none">← scroll horizontally →</p>
-        )}
         <DesktopTable {...sharedProps} />
 
         <Pagination
