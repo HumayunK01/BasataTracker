@@ -1,10 +1,11 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-export function FigHeader({ title, className }: { title: string; className?: string }) {
+export function FigHeader({ title, sub, className }: { title: string; sub?: string; className?: string }) {
   return (
     <div className={cn("flex items-center gap-3 mb-3", className)}>
       <h2 className="font-heading text-sm font-semibold text-foreground">{title}</h2>
+      {sub && <span className="text-[11px] text-muted-foreground font-medium">{sub}</span>}
       <span className="flex-1 h-px bg-border/50" />
     </div>
   );
