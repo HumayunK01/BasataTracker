@@ -40,15 +40,15 @@ const groups = [
       {
         label: "Dashboards",
         items: [
-          { title: "Console", icon: LayoutDashboard, path: "/" },
+          { title: "Console", icon: LayoutDashboard, path: "/console" },
           { title: "Report", icon: FileBarChart, path: "/report" },
         ],
       },
       {
         label: "Documents",
         items: [
-          { title: "Counter", icon: Hash, path: "/counter" },
           { title: "Daily Log", icon: CalendarDays, path: "/log" },
+          { title: "Counter", icon: Hash, path: "/counter" },
           { title: "Tracker", icon: Send, path: "/tracker" },
           { title: "Vault", icon: KeyRound, path: "/vault" },
         ],

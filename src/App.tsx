@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { SkeletonTheme } from "react-loading-skeleton";
 import { toast } from "sonner";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -58,7 +58,8 @@ const App = () => (
             >
               <Routes>
                 <Route element={<AppLayout><Outlet /></AppLayout>}>
-                  <Route path="/" element={<ConsolePage />} />
+                  <Route path="/" element={<Navigate to="/log" replace />} />
+                  <Route path="/console" element={<ConsolePage />} />
                   <Route path="/log" element={<DailyLogPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/report" element={<ReportPage />} />
