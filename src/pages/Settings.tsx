@@ -16,8 +16,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 
-// Import modular components & types
-import { AccountCard } from "@/components/ar/settings/AccountCard";
 import {
   ProfilePasswordCard,
   type ProfileState,
@@ -25,7 +23,7 @@ import {
   type PwState,
   type PwAction,
 } from "@/components/ar/settings/ProfilePasswordCard";
-import { AboutCard } from "@/components/ar/settings/AboutCard";
+import { PreferencesCard } from "@/components/ar/settings/PreferencesCard";
 import {
   CategorySection,
   type CatState,
@@ -40,7 +38,6 @@ function toKey(label: string) {
 
 const emptyForm: CategoryFormState = { label: "", short: "" };
 
-// ── Reducers ────────────────────────────────────────────────────────────────
 const catInit: CatState = {
   dialogOpen: false,
   editingKey: null,
@@ -66,15 +63,16 @@ function catReducer(s: CatState, a: CatAction): CatState {
   }
 }
 
-const pwInit: PwState = { open: false, next: "", confirm: "", loading: false, error: "" };
+const pwInit: PwState = { open: false, next: "", confirm: "", loading: false, error: "", showPassword: false };
 
 function pwReducer(s: PwState, a: PwAction): PwState {
   switch (a.type) {
     case "open": return { ...s, open: true };
     case "close": return { ...pwInit };
     case "set": return { ...s, ...a.patch, error: "" };
+    case "toggle_show": return { ...s, showPassword: !s.showPassword };
     case "submitting": return { ...s, loading: true, error: "" };
-    case "done": return { ...s, loading: false, error: a.error ?? "", ...(a.error ? {} : { open: false, next: "", confirm: "" }) };
+    case "done": return { ...s, loading: false, error: a.error ?? "", ...(a.error ? {} : { open: false, next: "", confirm: "", showPassword: false }) };
     default: return s;
   }
 }
@@ -106,7 +104,6 @@ function profileReducer(s: ProfileState, a: ProfileAction): ProfileState {
   }
 }
 
-// ── Settings Page ───────────────────────────────────────────────────────────
 export default function SettingsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -237,10 +234,11 @@ export default function SettingsPage() {
       <PageHeader subtitle="Settings" />
 
       <main className="flex-1 overflow-y-auto">
-        <div className="w-full px-4 sm:px-6 py-5 sm:py-6 space-y-4">
-          <FigHeader title="Account" />
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-            <AccountCard email={user?.email} createdAt={user?.created_at} />
+        <div className="w-full px-4 sm:px-6 py-6 sm:py-8 space-y-8">
+
+          {/* ── Profile ── */}
+          <section>
+            <FigHeader title="Profile" />
             <ProfilePasswordCard
               profile={profile}
               profileState={profileState}
@@ -249,33 +247,48 @@ export default function SettingsPage() {
               pwDispatch={pwDispatch}
               onUpdateProfile={handleUpdateProfile}
               onChangePassword={handleChangePassword}
+              email={user?.email}
+              createdAt={user?.created_at}
+              categoriesCount={categories.length}
+              logsCount={logs.length}
             />
-            <AboutCard categoriesCount={categories.length} logsCount={logs.length} />
-          </div>
+          </section>
 
-          <FigHeader title="Categories" />
-          <CategorySection
-            categories={categories}
-            isLoading={isLoading}
-            cat={cat}
-            catDispatch={catDispatch}
-            isBusy={isBusy}
-            onAdd={() => catDispatch({ type: "open_add" })}
-            onEdit={(c) => catDispatch({ type: "open_edit", cat: c })}
-            onSave={handleSave}
-            onDelete={handleDelete}
-            onDragStart={(key) => catDispatch({ type: "drag_start", key })}
-            onDragOver={(e, key) => {
-              e.preventDefault();
-              e.dataTransfer.dropEffect = "move";
-              if (cat.dragOver !== key) catDispatch({ type: "drag_over", key });
-            }}
-            onDrop={handleDrop}
-            onMove={handleMove}
-          />
+          {/* ── Preferences ── */}
+          <section>
+            <FigHeader title="Preferences" />
+            <PreferencesCard dailyGoal={profile?.daily_goal ?? null} />
+          </section>
 
-          <FigHeader title="Danger Zone" />
-          <DangerZone delState={delState} delDispatch={delDispatch} onDeleteAccount={handleDeleteAccount} />
+          {/* ── Categories ── */}
+          <section>
+            <FigHeader title="Categories" />
+            <CategorySection
+              categories={categories}
+              isLoading={isLoading}
+              cat={cat}
+              catDispatch={catDispatch}
+              isBusy={isBusy}
+              onAdd={() => catDispatch({ type: "open_add" })}
+              onEdit={(c) => catDispatch({ type: "open_edit", cat: c })}
+              onSave={handleSave}
+              onDelete={handleDelete}
+              onDragStart={(key) => catDispatch({ type: "drag_start", key })}
+              onDragOver={(e, key) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                if (cat.dragOver !== key) catDispatch({ type: "drag_over", key });
+              }}
+              onDrop={handleDrop}
+              onMove={handleMove}
+            />
+          </section>
+
+          {/* ── Danger Zone ── */}
+          <section>
+            <DangerZone delState={delState} delDispatch={delDispatch} onDeleteAccount={handleDeleteAccount} />
+          </section>
+
         </div>
       </main>
     </>
