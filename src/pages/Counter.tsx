@@ -226,11 +226,14 @@ export default function CounterPage() {
   useEffect(() => {
     if (hydratedRef.current) return;
     if (categories.length === 0) return;
-    hydratedRef.current = true;
 
     const serverCounts = todayLog?.counts ?? {};
     const localTotal = Object.values(counts).reduce((s, v) => s + (v || 0), 0);
     const serverTotal = Object.values(serverCounts).reduce((s, v) => s + (v || 0), 0);
+
+    // Wait for todayLog if local has counts that might match the server row.
+    if (localTotal > 0 && !todayLog) return;
+
     if (localTotal === 0 && serverTotal > 0) {
       skipUnsavedMarkRef.current = true;
       const next = new Set(selectedKeys);
@@ -246,6 +249,8 @@ export default function CounterPage() {
       }
       if (match) cDispatch({ type: "set_saved", v: true });
     }
+
+    hydratedRef.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todayLog, categories]);
 
