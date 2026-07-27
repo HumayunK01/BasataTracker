@@ -68,7 +68,7 @@ export function CounterCard({
     ring.style.opacity = "0.4";
     // ponytail: forced reflow so the browser registers the reset before the transition starts
     void ring.offsetHeight;
-    ring.style.transition = "transform 0.4s ease-out, opacity 0.4s ease-out";
+    ring.style.transition = "transform 0.35s ease-out, opacity 0.35s ease-out";
     ring.style.transform = "scale(2.5)";
     ring.style.opacity = "0";
   }, [count]);
@@ -76,21 +76,24 @@ export function CounterCard({
   return (
     <div
       ref={cardRef}
-      className="group rounded-lg border flex flex-col relative overflow-hidden focus-within:ring-2 focus-within:ring-primary/30 active:opacity-90 transition-opacity duration-100"
-      style={{ borderColor: withAlpha(clr, 0.25), backgroundColor: withAlpha(clr, 0.07) }}
+      className="group rounded-xl border flex flex-col relative overflow-hidden focus-within:ring-2 focus-within:ring-primary/30 active:scale-[0.98] transition-[opacity,transform] duration-100"
+      style={{ borderColor: withAlpha(clr, 0.15), backgroundColor: withAlpha(clr, 0.04) }}
     >
       {/* GSAP pulse ring */}
       <div className="pulse-ring absolute inset-0 pointer-events-none rounded-lg" style={{ backgroundColor: clr }} />
       {/* Progress fill (share of the busiest category) */}
       <div
         className="absolute inset-x-0 bottom-0 transition-[height] duration-500 ease-out pointer-events-none"
-        style={{ height: `${fill}%`, backgroundColor: withAlpha(clr, 0.12) }}
+        style={{ height: `${fill}%`, backgroundColor: withAlpha(clr, 0.10) }}
         aria-hidden
       />
 
+      {/* Baseline accent strip */}
+      <div className="absolute inset-x-0 bottom-0 h-px pointer-events-none" style={{ backgroundColor: withAlpha(clr, 0.25) }} aria-hidden />
+
       {/* Header */}
       <div className="relative flex items-center gap-2 px-3.5 pt-3.5 pb-1 pr-9 min-w-0">
-        <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: clr }} aria-hidden />
+        <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: withAlpha(clr, 0.5) }} aria-hidden />
         <p className="text-xs font-semibold truncate text-foreground/90 flex-1 min-w-0" title={cat.label}>
           {cat.label}
         </p>
@@ -135,8 +138,8 @@ export function CounterCard({
       >
         <span
           key={bump}
-          className="counter-pop text-5xl sm:text-6xl font-black font-mono tabular-nums leading-none select-none"
-          style={{ color: count > 0 ? clr : "hsl(var(--muted-foreground) / 0.3)" }}
+          className="counter-pop text-5xl sm:text-7xl font-bold font-mono tabular-nums leading-none select-none"
+          style={{ color: count > 0 ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground) / 0.3)" }}
         >
           {count}
         </span>
@@ -151,11 +154,11 @@ export function CounterCard({
           onPointerLeave={dec.stop}
           onPointerCancel={dec.stop}
           disabled={count === 0}
-          className="flex-1 flex items-center justify-center h-11 rounded-md border transition-opacity duration-100 active:opacity-70 disabled:opacity-35 disabled:cursor-not-allowed touch-manipulation border-border/40"
-          style={{ backgroundColor: withAlpha(clr, 0.15) }}
-          aria-label={`Decrease ${cat.label}`}
-        >
-          <Minus className="size-4" style={{ color: clr }} />
+              className="flex-1 flex items-center justify-center h-12 rounded-md border active:scale-[0.97] transition-all duration-100 disabled:opacity-35 disabled:cursor-not-allowed touch-manipulation border-border/40"
+              style={{ backgroundColor: withAlpha(clr, 0.08) }}
+              aria-label={`Decrease ${cat.label}`}
+            >
+              <Minus className="size-4" style={{ color: withAlpha(clr, 0.5) }} />
         </button>
         <button
           type="button"
@@ -163,11 +166,11 @@ export function CounterCard({
           onPointerUp={inc.stop}
           onPointerLeave={inc.stop}
           onPointerCancel={inc.stop}
-          className="flex-1 flex items-center justify-center h-11 rounded-md border transition-opacity duration-100 active:opacity-70 touch-manipulation border-border/40"
-          style={{ backgroundColor: withAlpha(clr, 0.15) }}
+              className="flex-1 flex items-center justify-center h-12 rounded-md border active:scale-[0.97] transition-all duration-100 touch-manipulation border-border/40"
+              style={{ backgroundColor: withAlpha(clr, 0.08) }}
           aria-label={`Increase ${cat.label}`}
         >
-          <Plus className="size-4" style={{ color: clr }} />
+          <Plus className="size-4" style={{ color: withAlpha(clr, 0.5) }} />
         </button>
       </div>
     </div>
