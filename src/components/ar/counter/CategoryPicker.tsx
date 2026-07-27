@@ -54,13 +54,15 @@ function CategoryPickerList({
             if (e.key === "Enter" && filtered.length > 0) onPick(filtered[0]);
           }}
           placeholder="Search categories…"
-          className="pl-9"
+          className="pl-9 bg-background/60"
         />
       </div>
-      <div className="max-h-[50vh] overflow-y-auto -mx-1 px-1 space-y-1 no-scrollbar">
+      <div className="max-h-[55vh] overflow-y-auto -mx-1 px-1 space-y-0.5 no-scrollbar">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-10 text-foreground">
-            <Search className="size-8 opacity-20" />
+          <div className="flex flex-col items-center gap-3 py-14 text-foreground">
+            <div className="size-12 rounded-xl border border-border/50 grid place-items-center">
+              <Search className="size-5 opacity-30" />
+            </div>
             <p className="text-sm">No categories match &ldquo;{q}&rdquo;.</p>
           </div>
         ) : (
@@ -71,10 +73,10 @@ function CategoryPickerList({
                 key={cat.key}
                 type="button"
                 onClick={() => onPick(cat)}
-                className="w-full flex items-center gap-3 p-2.5 rounded-md border border-transparent hover:border-border/60 hover:bg-muted/50 active:bg-muted active:scale-[0.99] transition-[background-color,border-color,transform] duration-150 text-left touch-manipulation group"
+                className="w-full flex items-center gap-3 p-3 rounded-lg border border-transparent hover:border-border/60 hover:bg-muted/40 active:bg-muted/60 active:scale-[0.99] transition-all duration-150 text-left touch-manipulation group"
               >
                 <span
-                  className="size-8 rounded-md flex items-center justify-center text-xs font-mono font-bold shrink-0 group-hover:scale-105 transition-transform"
+                  className="size-9 rounded-lg flex items-center justify-center text-xs font-mono font-bold shrink-0 group-hover:scale-105 transition-transform"
                   style={{
                     color: clr,
                     backgroundColor: withAlpha(clr, 0.13),
@@ -84,7 +86,7 @@ function CategoryPickerList({
                   {cat.short.slice(0, 3)}
                 </span>
                 <span className="text-sm flex-1 font-medium truncate">{cat.label}</span>
-                <span className="size-6 rounded-full flex items-center justify-center text-foreground bg-muted/40 group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0">
+                <span className="size-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 text-foreground bg-primary group-hover:text-primary-foreground transition-all duration-150 shrink-0">
                   <Plus className="size-3.5" />
                 </span>
               </button>
@@ -103,7 +105,7 @@ export function CategoryPicker({ open, onOpenChange, categories, onPick }: Categ
     onOpenChange(false);
   };
 
-  const subtitle = `${categories.length} ${categories.length === 1 ? "category" : "categories"} available. Pick one to start counting.`;
+  const subtitle = `Pick from ${categories.length} categor${categories.length === 1 ? "y" : "ies"} to add to the counter`;
 
   if (isMobile) {
     return (

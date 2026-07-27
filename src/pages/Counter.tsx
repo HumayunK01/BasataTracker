@@ -238,6 +238,13 @@ export default function CounterPage() {
         if ((serverCounts[k] ?? 0) > 0 && categories.some((c) => c.key === k)) next.add(k);
       }
       cDispatch({ type: "hydrate", counts: { ...serverCounts }, keys: [...next] });
+    } else if (todayLog && localTotal > 0) {
+      let match = true;
+      const all = new Set([...Object.keys(counts), ...Object.keys(serverCounts)]);
+      for (const k of all) {
+        if ((counts[k] ?? 0) !== (serverCounts[k] ?? 0)) { match = false; break; }
+      }
+      if (match) cDispatch({ type: "set_saved", v: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todayLog, categories]);
@@ -315,7 +322,7 @@ export default function CounterPage() {
                   : "bg-primary hover:bg-primary/95 text-primary-foreground shadow-primary/10"
               }`}
               onClick={handleSave}
-              disabled={upsert.isPending || total === 0}
+              disabled={upsert.isPending || total === 0 || saved}
             >
               {saved ? (
                 <>
@@ -340,14 +347,11 @@ export default function CounterPage() {
 
       <main className="flex-1 overflow-y-auto">
         <div className="w-full px-4 sm:px-6 py-5 sm:py-6 flex flex-col gap-4">
-          {/* Hero — session total instrument */}
-          <section className="relative bg-card border border-border p-5 sm:p-6 overflow-hidden">
-            <span className="pointer-events-none absolute top-0 left-0 size-2 border-t border-l border-primary/40" />
-            <span className="pointer-events-none absolute bottom-0 right-0 size-2 border-b border-r border-primary/40" />
-
+          {/* Hero — session total monument */}
+          <section className="relative pt-2 pb-3 sm:pb-4">
             <p className="font-mono text-2xs uppercase tracking-[0.2em] text-foreground">Session Total</p>
-            <div className="mt-3 flex items-center gap-3 flex-wrap">
-              <p className="text-7xl sm:text-8xl font-black tabular-nums text-primary leading-none">
+            <div className="mt-2 flex items-center gap-4 flex-wrap">
+              <p className="text-8xl sm:text-9xl font-bold tabular-nums text-primary leading-none tracking-tight">
                 {animatedTotal}
               </p>
               <span
@@ -362,7 +366,7 @@ export default function CounterPage() {
                 {saved ? "Synced" : total > 0 ? "Unsaved" : "Empty"}
               </span>
             </div>
-            <p className="text-xs text-foreground mt-3 font-medium">
+            <p className="text-xs text-foreground/60 mt-3">
               {saved
                 ? "All counts synchronized to database"
                 : todayLog
@@ -393,7 +397,7 @@ export default function CounterPage() {
           )}
 
           {/* Manage categories */}
-          <FigHeader title="Manage Categories" />
+          <div className="h-px bg-border/40 my-3" />
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               type="button"
