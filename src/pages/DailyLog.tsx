@@ -48,11 +48,6 @@ const DailyLogPage = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const todayLog = useMemo(() => {
-    const today = isoDate();
-    return logs.find((l) => l.log_date === today) ?? null;
-  }, [logs]);
-
   const existingDates = useMemo(() => logs.map((l) => l.log_date), [logs]);
 
   const openNew = () => { setEditing(null); setOpen(true); };
