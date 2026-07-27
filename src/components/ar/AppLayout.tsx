@@ -6,13 +6,6 @@ import { MobileTabBar } from "@/components/ar/MobileTabBar";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 
 const pageEase: Easing = [0.23, 1, 0.32, 1];
 
@@ -27,7 +20,7 @@ const pageTitles: Record<string, string> = {
 };
 
 const INACTIVITY_WARNING_MS = 22 * 60 * 1000;
-const INACTIVITY_COUNTDOWN_SEC = 180;
+const INACTIVITY_LOGOUT_MS = 25 * 60 * 1000;
 
 export function AnimatedPage({ children }: { children: React.ReactNode }) {
   const reduce = useReducedMotion();
@@ -48,52 +41,41 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [now, setNow] = useState(() => new Date());
   const { signOut } = useAuth();
-  const [showWarning, setShowWarning] = useState(false);
-  const [countdown, setCountdown] = useState(INACTIVITY_COUNTDOWN_SEC);
-  const warningTimerRef = useRef<ReturnType<typeof setTimeout>>();
-  const countdownRef = useRef<ReturnType<typeof setInterval>>();
+  const signOutRef = useRef(signOut);
+  signOutRef.current = signOut;
+  const lastActivityRef = useRef(Date.now());
   const warningActiveRef = useRef(false);
+  const [showWarning, setShowWarning] = useState(false);
 
-  useEffect(() => { warningActiveRef.current = showWarning; }, [showWarning]);
-
-  function clearTimers() {
-    if (warningTimerRef.current) { clearTimeout(warningTimerRef.current); warningTimerRef.current = undefined; }
-    if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = undefined; }
-  }
-
-  function startWarningTimer() {
-    clearTimers();
-    warningTimerRef.current = setTimeout(() => {
-      setShowWarning(true);
-      setCountdown(INACTIVITY_COUNTDOWN_SEC);
-      countdownRef.current = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) { signOut(); return 0; }
-          return prev - 1;
-        });
-      }, 1000);
-    }, INACTIVITY_WARNING_MS);
-  }
-
-  function handleStillHere() {
-    clearTimers();
-    setShowWarning(false);
-    startWarningTimer();
-  }
+  useEffect(() => {
+    const id = setInterval(() => {
+      const elapsed = Date.now() - lastActivityRef.current;
+      if (elapsed >= INACTIVITY_LOGOUT_MS) {
+        signOutRef.current?.();
+      } else if (elapsed >= INACTIVITY_WARNING_MS) {
+        if (!warningActiveRef.current) {
+          warningActiveRef.current = true;
+          setShowWarning(true);
+        }
+      } else {
+        if (warningActiveRef.current) {
+          warningActiveRef.current = false;
+          setShowWarning(false);
+        }
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const events = ["mousemove", "keydown", "click", "touchstart", "scroll", "wheel"];
     function onActivity() {
       if (warningActiveRef.current) return;
-      startWarningTimer();
+      lastActivityRef.current = Date.now();
     }
     events.forEach((e) => window.addEventListener(e, onActivity, { passive: true }));
-    startWarningTimer();
-    return () => {
-      events.forEach((e) => window.removeEventListener(e, onActivity));
-      clearTimers();
-    };
-  }, [signOut]);
+    return () => events.forEach((e) => window.removeEventListener(e, onActivity));
+  }, []);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
@@ -116,25 +98,33 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
       <div id="kudos-animation-container" className="fixed inset-0 pointer-events-none z-50 overflow-hidden" />
 
-      <Dialog open={showWarning} onOpenChange={(open) => { if (!open) handleStillHere(); }}>
-        <DialogContent className="sm:max-w-sm [&>button:last-child]:hidden">
-          <DialogHeader>
-            <DialogTitle>Inactivity warning</DialogTitle>
-            <DialogDescription>
-              Your session will expire due to inactivity.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col items-center gap-4 py-4">
-            <div className="text-4xl font-bold tabular-nums text-foreground">{countdown}s</div>
-            <p className="text-sm text-foreground/70 text-center">
-              Signing out in <span className="font-semibold tabular-nums">{countdown}</span> seconds.
-            </p>
-            <Button className="w-full mt-2" onClick={handleStillHere}>
-              I'm still here
-            </Button>
+      {showWarning && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60">
+          <div className="w-full max-w-sm mx-4 border border-border/60 bg-background p-6 shadow-2xl">
+            <div className="space-y-1.5 mb-4">
+              <h2 className="text-lg font-semibold tracking-tight">Inactivity warning</h2>
+              <p className="text-sm text-foreground/70">
+                Your session will expire due to inactivity.
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-4 py-4">
+              <p className="text-sm text-foreground/70 text-center">
+                You will be signed out automatically.
+              </p>
+              <Button
+                className="w-full mt-2"
+                onClick={() => {
+                  warningActiveRef.current = false;
+                  setShowWarning(false);
+                  lastActivityRef.current = Date.now();
+                }}
+              >
+                I'm still here
+              </Button>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </div>
   );
 }

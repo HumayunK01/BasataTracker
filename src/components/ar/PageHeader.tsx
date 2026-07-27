@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { formatHeaderDate } from "@/types/log";
@@ -39,11 +40,13 @@ export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
   const { theme, toggle } = useTheme();
   const { user, signOut } = useAuth();
   const { data: profile } = useProfile();
+  const [showSignOut, setShowSignOut] = useState(false);
 
   const email = user?.email ?? "";
   const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || email;
 
   return (
+    <>
     <header className="sticky top-0 z-10 border-b border-border/60 bg-sidebar backdrop-blur-xl shrink-0">
       <div className="px-4 sm:px-6 py-2 flex items-center justify-between gap-2 min-h-11">
         <div className="flex items-center gap-3 min-w-0 -ml-2">
@@ -92,31 +95,13 @@ export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <AlertDialog>
-                  <DropdownMenuItem asChild className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                    <AlertDialogTrigger className="w-full">
-                      <LogOut className="size-4 mr-2" />
-                      Sign out
-                    </AlertDialogTrigger>
-                  </DropdownMenuItem>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Sign out?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        You'll need to sign in again to access your tracker.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        onClick={() => signOut()}
-                      >
-                        Sign out
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                  onClick={() => setShowSignOut(true)}
+                >
+                  <LogOut className="size-4 mr-2" />
+                  Sign out
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <Button
@@ -143,5 +128,25 @@ export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
         </div>
       </div>
     </header>
+      <AlertDialog open={showSignOut} onOpenChange={setShowSignOut}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign out?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You'll need to sign in again to access your tracker.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => signOut()}
+            >
+              Sign out
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
