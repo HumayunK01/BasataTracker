@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { pageNumbersArr as sharedPageNumbers } from "@/components/ar/tracker/tracker-helpers";
 import { Pagination } from "@/components/Pagination";
-import { formatTableDate, isWeekend, type DailyLog } from "@/types/log";
+import { formatTableDate, formatDayName, isWeekend, type DailyLog } from "@/types/log";
 import { useDeleteLog } from "@/hooks/useDailyLogs";
 import { useCategories, type Category } from "@/hooks/useCategories";
 import { Trash2, Pencil, Search, BedDouble, Copy, Check, CalendarDays } from "lucide-react";
@@ -30,6 +30,15 @@ import { EmptyState } from "@/components/ar/industrial";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function getVal(l: DailyLog, key: string): number { return (l.counts ?? {})[key] ?? 0; }
+
+function DateDay({ iso }: { iso: string }) {
+  return (
+    <div className="flex flex-col leading-tight">
+      <span>{formatTableDate(iso)}</span>
+      <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-heading">{formatDayName(iso)}</span>
+    </div>
+  );
+}
 
 function CategoryBadge({ catKey, value }: { catKey: string; value: number }) {
   const clr = colorForKey(catKey);
@@ -83,9 +92,9 @@ function MobileCardList({ paginated, categories, search, copiedId, onEdit, onDel
                 style={{ animationDelay: `${idx * 30}ms` }}
               >
                 <BedDouble className="size-4 text-muted-foreground/50 shrink-0" />
-                <span className="text-sm tabular-nums flex-1 font-medium text-muted-foreground/80">
-                  {formatTableDate(l.log_date)}
-                </span>
+                <div className="flex-1">
+                  <DateDay iso={l.log_date} />
+                </div>
                 <span className="text-xs text-muted-foreground/60 uppercase tracking-wide font-medium font-heading">
                   {weekend ? "Weekend" : "Off day"}
                 </span>
@@ -114,7 +123,9 @@ function MobileCardList({ paginated, categories, search, copiedId, onEdit, onDel
                 <div className="flex-1 px-4 py-3 space-y-2">
                   {/* Top row: date + total */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold tabular-nums flex-1">{formatTableDate(l.log_date)}</span>
+                    <div className="flex-1">
+                      <DateDay iso={l.log_date} />
+                    </div>
                     <span className="text-2xl font-bold tabular-nums text-primary leading-none">{total}</span>
                   </div>
                   {/* Category badges */}
@@ -165,7 +176,7 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
         <Table className="[&_th]:border-r [&_th]:border-border [&_th:last-child]:border-r-0 [&_td]:border-r [&_td]:border-border/40 [&_td:last-child]:border-r-0">
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
-              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center py-3 font-heading">Date</TableHead>
+              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center py-3 font-heading">Date / Day</TableHead>
               {categories.map((c) => (
                 <TableHead key={c.key} className="font-bold text-xs uppercase tracking-wider text-center text-foreground font-heading">
                   {c.short}
@@ -195,8 +206,8 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
 
               return isOff ? (
                 <TableRow key={l.id} className="border-b border-border/40 last:border-0 bg-muted/10 even:bg-muted/[0.08]">
-                  <TableCell className="tabular-nums text-sm font-medium py-3 text-muted-foreground/80 text-center">
-                    {formatTableDate(l.log_date)}
+                  <TableCell className="text-sm font-medium py-3 text-muted-foreground/80 text-center">
+                    <DateDay iso={l.log_date} />
                   </TableCell>
                   <TableCell colSpan={categories.length + 1} className="py-3">
                     <div className="flex items-center gap-1.5">
@@ -222,8 +233,8 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
                 </TableRow>
               ) : (
                 <TableRow key={l.id} className="border-b border-border/40 last:border-0 hover:bg-muted/30 transition-colors even:bg-muted/[0.04] animate-row-in" style={{ animationDelay: `${idx * 20}ms` }}>
-                  <TableCell className="tabular-nums text-sm font-medium py-3 text-foreground text-center">
-                    {formatTableDate(l.log_date)}
+                  <TableCell className="text-sm font-medium py-3 text-foreground text-center">
+                    <DateDay iso={l.log_date} />
                   </TableCell>
                   {categories.map((c) => {
                     const v = getVal(l, c.key);
