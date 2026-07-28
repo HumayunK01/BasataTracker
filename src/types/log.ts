@@ -1,5 +1,6 @@
 export interface DailyLog {
   id: string;
+  user_id: string;
   log_date: string;
   counts: Record<string, number>;
   is_off_day: boolean;
