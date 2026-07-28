@@ -17,6 +17,7 @@ const pageTitles: Record<string, string> = {
   "/vault": "Vault",
   "/console": "Console",
   "/settings": "Settings",
+  "/team": "Team",
 };
 
 const INACTIVITY_WARNING_MS = 22 * 60 * 1000;

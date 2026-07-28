@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, useReducedMotion, type Easing } from "motion/react";
-import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, BookOpen, Tags, ExternalLink, Send, KeyRound } from "lucide-react";
+import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, BookOpen, Tags, ExternalLink, Send, KeyRound, Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -14,6 +14,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 import { AppLogo } from "@/components/ar/AppLogo";
 import { AppFavicon } from "@/components/ar/AppFavicon";
 import { cn } from "@/lib/utils";
@@ -22,24 +23,29 @@ import { APP_VERSION } from "@/lib/version";
 
 const ease: Easing = [0.23, 1, 0.32, 1];
 
-const groups = [
-      {
-        label: "Dashboards",
-        items: [
-          { title: "Console", icon: LayoutDashboard, path: "/console" },
-          { title: "Report", icon: FileBarChart, path: "/report" },
-        ],
-      },
-      {
-        label: "Documents",
-        items: [
-          { title: "Daily Log", icon: CalendarDays, path: "/log" },
-          { title: "Counter", icon: Hash, path: "/counter" },
-          { title: "Tracker", icon: Send, path: "/tracker" },
-          { title: "Vault", icon: KeyRound, path: "/vault" },
-        ],
-      },
-];
+const TEAM_VIEWER_ID = "eaa58c9a-a0b8-4c00-9399-0e16fe8600ee";
+
+function buildGroups(userId?: string) {
+  return [
+    {
+      label: "Dashboards",
+      items: [
+        { title: "Console", icon: LayoutDashboard, path: "/console" },
+        { title: "Report", icon: FileBarChart, path: "/report" },
+        ...(userId === TEAM_VIEWER_ID ? [{ title: "Team", icon: Users, path: "/team" }] : []),
+      ],
+    },
+    {
+      label: "Documents",
+      items: [
+        { title: "Daily Log", icon: CalendarDays, path: "/log" },
+        { title: "Counter", icon: Hash, path: "/counter" },
+        { title: "Tracker", icon: Send, path: "/tracker" },
+        { title: "Vault", icon: KeyRound, path: "/vault" },
+      ],
+    },
+  ];
+}
 
 const externalLinks = [
   {
@@ -59,6 +65,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const reduce = useReducedMotion();
+  const { user } = useAuth();
 
   const go = (path: string) => {
     navigate(path);
@@ -87,7 +94,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="py-2">
-        {groups.map((group) => (
+        {buildGroups(user?.id).map((group) => (
           <div key={group.label} className="mb-2 group-data-[collapsible=icon]:mb-0">
             <div className="flex items-center gap-1.5 px-3 py-1.5 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:h-0 group-data-[collapsible=icon]:py-0 group-data-[collapsible=icon]:overflow-hidden">
               <span className="size-1.5 bg-primary shrink-0" />
