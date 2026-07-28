@@ -36,16 +36,16 @@ export function isoDate(d: Date = new Date()) {
 }
 
 export function isWeekend(iso: string): boolean {
-  const day = weekdayFmt().format(new Date(`${iso}T12:00:00`));
+  const day = weekdayFmt().format(new Date(`${iso}T12:00:00Z`));
   return day === "Sun" || day === "Sat";
 }
 
 export function formatShortDate(iso: string) {
-  return shortDateFmt().format(new Date(`${iso}T12:00:00`));
+  return shortDateFmt().format(new Date(`${iso}T12:00:00Z`));
 }
 
 export function formatDayName(iso: string) {
-  return dayNameFmt().format(new Date(`${iso}T12:00:00`));
+  return dayNameFmt().format(new Date(`${iso}T12:00:00Z`));
 }
 
 export function formatHeaderDate(d: Date = new Date()) {
@@ -53,5 +53,5 @@ export function formatHeaderDate(d: Date = new Date()) {
 }
 
 export function formatTableDate(iso: string) {
-  return tableDateFmt().format(new Date(`${iso}T12:00:00`));
+  return tableDateFmt().format(new Date(`${iso}T12:00:00Z`));
 }
