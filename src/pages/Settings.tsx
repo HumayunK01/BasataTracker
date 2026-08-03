@@ -272,19 +272,19 @@ export default function SettingsPage() {
           <section>
             <FigHeader title="Time Zone" />
             <div className="bg-card border border-border/80 rounded-lg p-5 space-y-4">
-              <p className="text-sm text-foreground">Choose how dates and times are displayed across the app.</p>
+              <p className="text-xs text-foreground">Choose how dates and times are displayed across the app.</p>
               <div className="space-y-3">
                 <label className="flex items-center gap-3 p-3 rounded-md border border-border/60 cursor-pointer hover:bg-muted/20 transition-colors has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.04]">
                   <input type="radio" name="tz" value="org" checked={tzPreference === "org"} onChange={() => handleTzChange("org")} className="size-4 accent-primary" />
                   <div>
-                    <span className="text-sm font-medium text-foreground">Use organization time zone</span>
+                    <span className="text-xs font-medium text-foreground">Use organization time zone</span>
                     <p className="text-xs text-muted-foreground mt-0.5">{ORG_TZ}</p>
                   </div>
                 </label>
                 <label className="flex items-center gap-3 p-3 rounded-md border border-border/60 cursor-pointer hover:bg-muted/20 transition-colors has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.04]">
                   <input type="radio" name="tz" value="local" checked={tzPreference === "local"} onChange={() => handleTzChange("local")} className="size-4 accent-primary" />
                   <div>
-                    <span className="text-sm font-medium text-foreground">Use my local time zone</span>
+                    <span className="text-xs font-medium text-foreground">Use my local time zone</span>
                     <p className="text-xs text-muted-foreground mt-0.5">{LOCAL_TZ}</p>
                   </div>
                 </label>

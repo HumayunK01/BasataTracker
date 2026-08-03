@@ -391,7 +391,7 @@ export function DaysTable({ logs, onEdit, actions }: Props) {
             />
           </div>
           <div className="flex items-center gap-3 sm:ml-auto">
-            <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs sm:text-sm text-foreground">
+            <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs text-foreground">
               <span><span className="font-semibold text-foreground">{workingLogs.length}</span> working days</span>
               <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && isWeekend(l.log_date)).length}</span> weekends</span>
               <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && !isWeekend(l.log_date)).length}</span> off days</span>

@@ -284,7 +284,7 @@ const ReportPage = () => {
                     onClick={() => applyPreset(p.id)}
                     aria-pressed={active}
                     className={[
-                      "relative z-10 snap-start shrink-0 rounded-md px-3 py-2.5 sm:py-1.5 text-sm sm:text-xs font-medium whitespace-nowrap",
+                      "relative z-10 snap-start shrink-0 rounded-md px-3 py-2.5 sm:py-1.5 text-xs font-medium whitespace-nowrap",
                       "transition-[color,background-color,opacity] duration-300 active:opacity-70",
                       active
                         ? "text-primary-foreground"
@@ -298,7 +298,7 @@ const ReportPage = () => {
               {activePreset === "" && (
                 <span
                   ref={registerSegment("custom")}
-                  className="relative z-10 snap-start shrink-0 rounded-md px-3 py-2.5 sm:py-1.5 text-sm sm:text-xs font-medium whitespace-nowrap text-primary-foreground select-none animate-fade-in"
+                  className="relative z-10 snap-start shrink-0 rounded-md px-3 py-2.5 sm:py-1.5 text-xs font-medium whitespace-nowrap text-primary-foreground select-none animate-fade-in"
                 >
                   Custom
                 </span>

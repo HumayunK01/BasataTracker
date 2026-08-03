@@ -16,7 +16,7 @@ const NotFound = () => {
           </h1>
         </div>
 
-        <p className="text-sm text-foreground max-w-xs leading-relaxed">
+        <p className="text-xs text-foreground max-w-xs leading-relaxed">
           The page you are looking for does not exist or has been moved.
         </p>
 

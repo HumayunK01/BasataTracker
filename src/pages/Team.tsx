@@ -150,7 +150,7 @@ export default function TeamPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => { setSelectedUserId(null); setSearch(""); }}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors shrink-0 flex items-center gap-1"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0 flex items-center gap-1"
           >
             <ArrowLeft className="size-4" /> Back
           </button>
@@ -177,7 +177,7 @@ export default function TeamPage() {
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground pointer-events-none" />
             <Input
-              className="pl-9 h-10 text-sm w-full bg-card border-border"
+              className="pl-9 h-10 text-xs w-full bg-card border-border"
               placeholder="Search by date…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -185,7 +185,7 @@ export default function TeamPage() {
           </div>
           <div className="bg-card border border-border rounded-md overflow-hidden">
             {filteredLogs.length === 0 ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">No entries found for this member.</div>
+              <div className="p-8 text-center text-xs text-muted-foreground">No entries found for this member.</div>
             ) : (
               <div className="divide-y divide-border/40">
                 {filteredLogs.sort((a, b) => b.log_date.localeCompare(a.log_date)).map((l) => {
@@ -194,7 +194,7 @@ export default function TeamPage() {
                   const total = totalForLog(l);
                   return (
                     <div key={l.id} className="flex items-center gap-4 px-4 py-3">
-                      <div className="tabular-nums text-sm font-medium min-w-[120px]">
+                      <div className="tabular-nums text-xs font-medium min-w-[120px]">
                         <div className="flex flex-col leading-tight">
                           <span>{formatTableDate(l.log_date)}</span>
                           <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-heading">{formatDayName(l.log_date)}</span>
