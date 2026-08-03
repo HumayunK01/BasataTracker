@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { format, parseISO } from "date-fns";
-import { useFaxedBackDocs, useUpsertFaxedBackDoc, useDeleteFaxedBackDoc, FAXED_BACK_STATUSES, type FaxedBackDoc, type FaxedBackInput, type FaxedBackStatus } from "@/hooks/useFaxedBackDocs";
+import { useFaxedBackDocs, useUpsertFaxedBackDoc, useDeleteFaxedBackDoc, useDeleteFaxedBackSection, FAXED_BACK_STATUSES, type FaxedBackDoc, type FaxedBackInput, type FaxedBackStatus } from "@/hooks/useFaxedBackDocs";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,6 +72,7 @@ const FaxedBackPage = () => {
   const { data: rows = [], isLoading } = useFaxedBackDocs();
   const upsert = useUpsertFaxedBackDoc();
   const deleteDoc = useDeleteFaxedBackDoc();
+  const deleteSection = useDeleteFaxedBackSection();
 
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" } | null>(null);
@@ -80,6 +81,7 @@ const FaxedBackPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<FaxedBackDoc | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FaxedBackDoc | null>(null);
+  const [deleteSectionTarget, setDeleteSectionTarget] = useState<{ date: string; count: number } | null>(null);
 
   const groups = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -217,6 +219,7 @@ const FaxedBackPage = () => {
                         onToggleSort={toggleSort}
                         onEdit={openEdit}
                         onDelete={setDeleteTarget}
+                        onDeleteSection={setDeleteSectionTarget}
                         onSaveNotes={saveNotes}
                       />
                     ))
@@ -235,6 +238,32 @@ const FaxedBackPage = () => {
         upsert={upsert}
         onSaved={(date) => expandDate(date)}
       />
+
+      <AlertDialog open={!!deleteSectionTarget} onOpenChange={(o) => !o && setDeleteSectionTarget(null)}>
+        <AlertDialogContent className="sm:max-w-md border-destructive/20 bg-background/95 backdrop-blur-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-lg font-semibold">Delete this section?</AlertDialogTitle>
+            <AlertDialogDescription className="mt-2 text-sm leading-relaxed">
+              This permanently removes all {deleteSectionTarget?.count} document{deleteSectionTarget?.count === 1 ? "" : "s"} worked on{" "}
+              <span className="font-medium text-foreground">
+                {deleteSectionTarget ? format(parseISO(deleteSectionTarget.date), "MMMM d, yyyy") : ""}
+              </span>. This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4">
+            <AlertDialogCancel className="border-border/60">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              onClick={() => {
+                if (deleteSectionTarget) deleteSection.mutate(deleteSectionTarget.date);
+                setDeleteSectionTarget(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent className="sm:max-w-md border-destructive/20 bg-background/95 backdrop-blur-lg">
@@ -271,6 +300,7 @@ function GroupRows({
   onToggleSort,
   onEdit,
   onDelete,
+  onDeleteSection,
   onSaveNotes,
 }: {
   date: string;
@@ -281,6 +311,7 @@ function GroupRows({
   onToggleSort: (key: SortKey) => void;
   onEdit: (row: FaxedBackDoc) => void;
   onDelete: (row: FaxedBackDoc) => void;
+  onDeleteSection: (target: { date: string; count: number }) => void;
   onSaveNotes: (row: FaxedBackDoc, notes: string) => void;
 }) {
   const [copied, setCopied] = useState(false);
@@ -345,6 +376,14 @@ function GroupRows({
             >
               {copied ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
             </button>
+            <button
+              type="button"
+              onClick={() => onDeleteSection({ date, count: rows.length })}
+              title="Delete this whole section"
+              className="press-scale p-1.5 rounded text-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            >
+              <Trash2 className="size-3.5" />
+            </button>
           </div>
         </td>
       </tr>
@@ -352,7 +391,7 @@ function GroupRows({
         <>
           <tr className="bg-muted/50 text-xs uppercase tracking-wide text-foreground">
         <th className="px-3 py-2.5 text-left font-bold"><SortHeader label="File Name" sortKey="file_name" sort={sort} onSort={onToggleSort} align="left" /></th>
-        <th className="px-3 py-2.5 text-left font-bold"><SortHeader label="Patient Name" sortKey="patient_name" sort={sort} onSort={onToggleSort} align="left" /></th>
+        <th className="px-3 pl-8 py-2.5 text-left font-bold"><SortHeader label="Patient Name" sortKey="patient_name" sort={sort} onSort={onToggleSort} align="left" /></th>
         <th className="px-3 py-2.5 text-left font-bold"><SortHeader label="Patient DOB" sortKey="patient_dob" sort={sort} onSort={onToggleSort} align="left" /></th>
         <th className="px-3 py-2.5 text-left font-bold">Status</th>
         <th className="px-3 py-2.5 text-left font-bold">Fax Back Message</th>
@@ -360,15 +399,15 @@ function GroupRows({
       </tr>
       {rows.map((row) => (
         <tr key={row.id} className="border-t border-border transition-colors hover:bg-foreground/[0.03]">
-          <td className="px-3 py-2 max-w-[16rem] font-medium text-foreground">
+          <td className="px-3 py-2 w-64 max-w-64 font-medium text-foreground">
             <span className="inline-flex items-center gap-1.5 min-w-0">
               <img src="/pdf.png" alt="" className="size-4 shrink-0 object-contain" />
               <span className="truncate" title={withPdf(row.file_name)}>{withPdf(row.file_name)}</span>
             </span>
           </td>
-          <td className="px-3 py-2 max-w-[14rem] truncate text-foreground" title={row.patient_name}>{row.patient_name}</td>
-          <td className="px-3 py-2 text-foreground tabular-nums">{row.patient_dob ? format(parseISO(row.patient_dob), "MM/dd/yyyy") : <span className="text-muted-foreground">—</span>}</td>
-          <td className={cn("px-3 py-2 text-sm font-semibold", STATUS_CLASSES[row.status] ?? "text-foreground")}>
+          <td className="px-3 pl-8 py-2 w-56 max-w-56 truncate text-foreground" title={row.patient_name}>{row.patient_name}</td>
+          <td className="px-3 py-2 w-36 text-foreground tabular-nums truncate" title={row.patient_dob ?? ""}>{row.patient_dob ? format(parseISO(row.patient_dob), "MM/dd/yyyy") : <span className="text-muted-foreground">—</span>}</td>
+          <td className={cn("px-3 py-2 w-32 text-sm font-semibold", STATUS_CLASSES[row.status] ?? "text-foreground")}>
             <span className="inline-flex items-center gap-1.5">
               {row.status === "Sent" && <CheckCheck className="size-4 text-emerald-500" />}
               {row.status === "Failed" && <X className="size-4 text-rose-500" />}
