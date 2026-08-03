@@ -401,7 +401,7 @@ export default function CounterPage() {
                 <Plus className="size-5 text-primary" />
               </span>
               <span className="flex-1 min-w-0">
-                <span className="block text-sm font-semibold text-foreground">
+                <span className="block text-xs font-semibold text-foreground">
                   {catsLoading
                     ? "Loading categories…"
                     : availableToAdd.length === 0 && activeCategories.length === 0
@@ -430,7 +430,7 @@ export default function CounterPage() {
                 <Tag className="size-5 text-primary" />
               </span>
               <span className="flex-1 min-w-0">
-                <span className="block text-sm font-semibold text-primary">New category</span>
+                <span className="block text-xs font-semibold text-primary">New category</span>
                 <span className="block text-xs text-foreground mt-0.5 truncate">Create your own from scratch</span>
               </span>
             </button>

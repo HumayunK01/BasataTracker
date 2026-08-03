@@ -355,7 +355,7 @@ const CredentialsPage = () => {
               type="button"
               onClick={() => setShowAll(true)}
               className={cn(
-                "flex items-center gap-2 h-10 px-3 border rounded-md text-sm font-medium transition-colors shrink-0",
+                "flex items-center gap-2 h-10 px-3 border rounded-md text-xs font-medium transition-colors shrink-0",
                 showAll
                   ? "border-primary/50 bg-primary/[0.06] text-primary"
                   : "border-border bg-card text-foreground hover:bg-muted/40 hover:border-border",
@@ -370,7 +370,7 @@ const CredentialsPage = () => {
                 <div
                   key={f.id}
                   className={cn(
-                    "group relative flex items-center gap-1 h-10 pl-3 pr-1 max-w-[16rem] border rounded-md text-sm font-medium transition-colors",
+                    "group relative flex items-center gap-1 h-10 pl-3 pr-1 max-w-[16rem] border rounded-md text-xs font-medium transition-colors",
                     active
                       ? "border-primary/50 bg-primary/[0.06] text-primary"
                       : "border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/40 hover:border-border",
@@ -402,7 +402,7 @@ const CredentialsPage = () => {
             <button
               type="button"
               onClick={() => setFolderDialogOpen(true)}
-              className="flex items-center gap-1.5 h-10 px-3 border border-dashed border-border/60 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors shrink-0"
+              className="flex items-center gap-1.5 h-10 px-3 border border-dashed border-border/60 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors shrink-0"
             >
               <FolderPlus className="size-4" /> New folder
             </button>
@@ -436,7 +436,7 @@ const CredentialsPage = () => {
                 title="List view"
                 aria-pressed={viewMode === "list"}
                 className={cn(
-                  "flex items-center gap-1.5 h-8 px-2.5 text-sm font-medium transition-colors rounded",
+                  "flex items-center gap-1.5 h-8 px-2.5 text-xs font-medium transition-colors rounded",
                   viewMode === "list" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -448,7 +448,7 @@ const CredentialsPage = () => {
                 title="Card view"
                 aria-pressed={viewMode === "cards"}
                 className={cn(
-                  "flex items-center gap-1.5 h-8 px-2.5 text-sm font-medium transition-colors rounded",
+                  "flex items-center gap-1.5 h-8 px-2.5 text-xs font-medium transition-colors rounded",
                   viewMode === "cards" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -475,10 +475,10 @@ const CredentialsPage = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-36 font-sans p-1">
-                <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={() => downloadCredentialCSV(credentials, showAll ? "all-credentials" : activeFolder?.name ?? "vault")}>
+                <DropdownMenuItem className="text-xs gap-2 cursor-pointer" onClick={() => downloadCredentialCSV(credentials, showAll ? "all-credentials" : activeFolder?.name ?? "vault")}>
                   <FileText className="size-3.5" /> CSV
                 </DropdownMenuItem>
-                <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={() => downloadCredentialPDF(credentials, showAll ? "all-credentials" : activeFolder?.name ?? "vault", showAll ? "Credential Vault" : (activeFolder?.name ?? "Credential Vault"))}>
+                <DropdownMenuItem className="text-xs gap-2 cursor-pointer" onClick={() => downloadCredentialPDF(credentials, showAll ? "all-credentials" : activeFolder?.name ?? "vault", showAll ? "Credential Vault" : (activeFolder?.name ?? "Credential Vault"))}>
                   <FileDown className="size-3.5" /> PDF
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -487,7 +487,7 @@ const CredentialsPage = () => {
 
           {selected.size > 0 && (
             <div className="flex flex-wrap items-center gap-2 border border-primary/30 bg-primary/[0.04] rounded-lg px-3 py-2.5">
-              <span className="text-sm font-semibold text-primary">{selectedRows.length} selected</span>
+              <span className="text-xs font-semibold text-primary">{selectedRows.length} selected</span>
               <div className="flex items-center gap-2 ml-auto flex-wrap">
                 <Button variant="outline" size="sm" className="h-9 border-border/60" onClick={() => copyCredentialsTable(selectedRows)}>
                   <Copy className="size-4 mr-1.5" /> Copy table
@@ -521,7 +521,7 @@ const CredentialsPage = () => {
                       folders.map((f) => (
                         <DropdownMenuItem
                           key={f.id}
-                          className="text-sm"
+                          className="text-xs"
                           onClick={() => bulkMove.mutate({ ids: [...selected], folderId: f.id }, { onSuccess: clearSelection })}
                         >
                           {f.name}
@@ -543,7 +543,7 @@ const CredentialsPage = () => {
           {viewMode === "list" && (
           <div className="hidden md:block bg-card border border-border rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
+              <table className="w-full text-xs border-collapse">
                 <thead>
                   <tr className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground/70">
                     <th className="w-8 px-3 py-3">
@@ -625,7 +625,7 @@ const CredentialsPage = () => {
                           </td>
                           <td className="px-3 py-2.5">
                             <div className="flex items-center gap-1.5 max-w-xs">
-                              <span className="font-mono text-sm text-foreground/90 truncate" title={show ? c.password : undefined}>
+                              <span className="font-mono text-xs text-foreground/90 truncate" title={show ? c.password : undefined}>
                                 {show ? c.password : "•".repeat(12)}
                               </span>
                               <button
@@ -679,11 +679,11 @@ const CredentialsPage = () => {
                                   </Button>
                                 </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-40 font-sans p-1">
-                                <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={() => copyCredential(c)}>
+                                <DropdownMenuItem className="text-xs gap-2 cursor-pointer" onClick={() => copyCredential(c)}>
                                   <Copy className="size-3.5" /> Copy all
                                 </DropdownMenuItem>
                                 <DropdownMenuSub>
-                                  <DropdownMenuSubTrigger className="text-sm gap-2 cursor-pointer">
+                                  <DropdownMenuSubTrigger className="text-xs gap-2 cursor-pointer">
                                     <FolderInput className="size-3.5" /> Move to
                                   </DropdownMenuSubTrigger>
                                   <DropdownMenuPortal>
@@ -694,7 +694,7 @@ const CredentialsPage = () => {
                                         otherFolders.map((f) => (
                                           <DropdownMenuItem
                                             key={f.id}
-                                            className="text-sm gap-2 cursor-pointer"
+                                            className="text-xs gap-2 cursor-pointer"
                                             onClick={() => moveCredential.mutate({ id: c.id, folderId: f.id })}
                                           >
                                             {f.name}
@@ -705,10 +705,10 @@ const CredentialsPage = () => {
                                   </DropdownMenuPortal>
                                 </DropdownMenuSub>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={() => openEdit(c)}>
+                                <DropdownMenuItem className="text-xs gap-2 cursor-pointer" onClick={() => openEdit(c)}>
                                   <Pencil className="size-3.5" /> Edit
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-sm gap-2 text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10" onClick={() => setDeleteTarget(c)}>
+                                <DropdownMenuItem className="text-xs gap-2 text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10" onClick={() => setDeleteTarget(c)}>
                                   <Trash2 className="size-3.5" /> Delete
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -823,7 +823,7 @@ const CredentialsPage = () => {
         <AlertDialogContent className="sm:max-w-md border-destructive/20 bg-background/95 backdrop-blur-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-lg font-semibold">Delete this credential?</AlertDialogTitle>
-            <AlertDialogDescription className="mt-2 text-sm leading-relaxed">
+            <AlertDialogDescription className="mt-2 text-xs leading-relaxed">
               This permanently removes <span className="font-medium text-foreground">{deleteTarget?.service}</span> from the vault. This can't be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -846,7 +846,7 @@ const CredentialsPage = () => {
         <AlertDialogContent className="sm:max-w-md border-destructive/20 bg-background/95 backdrop-blur-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-lg font-semibold">Delete folder?</AlertDialogTitle>
-            <AlertDialogDescription className="mt-2 text-sm leading-relaxed">
+            <AlertDialogDescription className="mt-2 text-xs leading-relaxed">
               This deletes the folder <span className="font-medium text-foreground">{folderToDelete?.name}</span>
               {" "}and <span className="font-medium text-destructive">all of its credentials</span>. This can't be undone.
             </AlertDialogDescription>
@@ -879,7 +879,7 @@ const CredentialsPage = () => {
         <AlertDialogContent className="sm:max-w-md border-destructive/20 bg-background/95 backdrop-blur-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-lg font-semibold">Delete {selectedRows.length} credentials?</AlertDialogTitle>
-            <AlertDialogDescription className="mt-2 text-sm leading-relaxed">
+            <AlertDialogDescription className="mt-2 text-xs leading-relaxed">
               This permanently removes the selected credentials from the vault. This can't be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

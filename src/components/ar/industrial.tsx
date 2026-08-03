@@ -43,7 +43,7 @@ export function EmptyState({
       </div>
       <div className="space-y-1.5">
         <p className="font-heading text-sm font-semibold text-foreground">{title}</p>
-        {hint && <p className="text-sm text-foreground max-w-xs">{hint}</p>}
+        {hint &&       <p className="text-xs text-foreground max-w-xs">{hint}</p>}
       </div>
       {action}
     </div>

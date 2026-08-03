@@ -139,7 +139,7 @@ export default function LoginPage() {
           </div>
                 <div className="space-y-1.5">
                   <h1 className="text-xl font-bold tracking-tight text-foreground">Account created!</h1>
-                  <p className="text-sm text-foreground leading-relaxed">
+                  <p className="text-xs text-foreground leading-relaxed">
                     We sent a confirmation link to{" "}
                     <span className="font-medium text-foreground break-all">{confirmEmail}</span>.
                     Please check your inbox to activate your account.
@@ -182,7 +182,7 @@ export default function LoginPage() {
                   <h1 className="text-xl font-bold tracking-tight text-foreground">
                     {mode === "login" ? "" : "Create your account"}
                   </h1>
-                  <p className="text-sm text-foreground">
+                  <p className="text-xs text-foreground">
                     {mode === "login"
                       ? "Sign in to continue to Basata Tracker"
                       : "Start tracking your daily document work"}
@@ -296,7 +296,7 @@ export default function LoginPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.1 }}
-                className="text-center text-sm text-foreground"
+                className="text-center text-xs text-foreground"
               >
                 {mode === "login" ? (
                   <>Don't have an account?{" "}

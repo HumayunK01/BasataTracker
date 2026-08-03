@@ -565,13 +565,13 @@ const FaxTrackerPage = () => {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-36 font-sans">
                                   <button
-                                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-accent rounded-sm"
+                                    className="w-full flex items-center gap-2 px-2 py-1.5 text-xs hover:bg-accent rounded-sm"
                                     onClick={() => openEdit(row)}
                                   >
                                     <Pencil className="size-3.5" /> Edit
                                   </button>
                                   <button
-                                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 rounded-sm"
+                                    className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-destructive hover:bg-destructive/10 rounded-sm"
                                     onClick={() => setDeleteTarget(row)}
                                   >
                                     <Trash2 className="size-3.5" /> Delete
@@ -667,7 +667,7 @@ const FaxTrackerPage = () => {
         <AlertDialogContent className="sm:max-w-md border-destructive/20 bg-background/95 backdrop-blur-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-lg font-semibold">Delete this patient?</AlertDialogTitle>
-            <AlertDialogDescription className="mt-2 text-sm leading-relaxed">
+            <AlertDialogDescription className="mt-2 text-xs leading-relaxed">
               This permanently removes <span className="font-medium text-foreground">{deleteTarget?.patient_name}</span> from the {mode} tracker. This can't be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -690,7 +690,7 @@ const FaxTrackerPage = () => {
         <AlertDialogContent className="sm:max-w-md border-destructive/20 bg-background/95 backdrop-blur-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-lg font-semibold">Delete account?</AlertDialogTitle>
-            <AlertDialogDescription className="mt-2 text-sm leading-relaxed">
+            <AlertDialogDescription className="mt-2 text-xs leading-relaxed">
               This deletes the account <span className="font-medium text-foreground">{accountToDelete?.name}</span>
               {" "}and <span className="font-medium text-destructive">all of its patients in both Fax and Indexable</span>. This can't be undone.
             </AlertDialogDescription>
