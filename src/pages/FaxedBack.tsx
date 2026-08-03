@@ -209,7 +209,7 @@ const FaxedBackPage = () => {
 
           <div className="bg-card border border-border rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
+              <table className="w-full text-xs border-collapse">
                 <tbody>
                   {isLoading ? (
                     Array.from({ length: 6 }).map((_, i) => (
@@ -264,7 +264,7 @@ const FaxedBackPage = () => {
         <AlertDialogContent className="sm:max-w-md border-destructive/20 bg-background/95 backdrop-blur-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-lg font-semibold">Delete this section?</AlertDialogTitle>
-            <AlertDialogDescription className="mt-2 text-sm leading-relaxed">
+            <AlertDialogDescription className="mt-2 text-xs leading-relaxed">
               This permanently removes all {deleteSectionTarget?.count} document{deleteSectionTarget?.count === 1 ? "" : "s"} worked on{" "}
               <span className="font-medium text-foreground">
                 {deleteSectionTarget ? format(parseISO(deleteSectionTarget.date), "MMMM d, yyyy") : ""}
@@ -290,7 +290,7 @@ const FaxedBackPage = () => {
         <AlertDialogContent className="sm:max-w-md border-destructive/20 bg-background/95 backdrop-blur-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-lg font-semibold">Delete this document?</AlertDialogTitle>
-            <AlertDialogDescription className="mt-2 text-sm leading-relaxed">
+            <AlertDialogDescription className="mt-2 text-xs leading-relaxed">
               This permanently removes <span className="font-medium text-foreground">{deleteTarget?.file_name}</span> from the list. This can't be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -385,7 +385,7 @@ function GroupRows({
             >
               {expanded ? <ChevronDown className="size-4 shrink-0 text-foreground/60" /> : <ChevronRight className="size-4 shrink-0 text-foreground/60" />}
               <CalendarDays className="size-4 text-primary shrink-0" />
-              <span className="text-sm text-foreground">{format(parseISO(date), "MMMM d, yyyy")}</span>
+              <span className="text-xs text-foreground">{format(parseISO(date), "MMMM d, yyyy")}</span>
               <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wide">{format(parseISO(date), "EEEE")}</span>
               <span className="text-xs text-foreground">({rows.length})</span>
             </button>
@@ -442,7 +442,7 @@ function GroupRows({
               <span className="text-muted-foreground">—</span>
             )}
           </td>
-          <td className={cn("px-3 py-2 w-32 text-sm", STATUS_CLASSES[row.status] ?? "text-foreground")}>
+          <td className={cn("px-3 py-2 w-32 text-xs", STATUS_CLASSES[row.status] ?? "text-foreground")}>
             <span className="inline-flex items-center gap-1.5">
               {row.status === "Pending" && <Loader2 className="size-4 text-blue-500 animate-spin" />}
               {row.status === "Sent" && <CheckCheck className="size-4 text-emerald-500" />}

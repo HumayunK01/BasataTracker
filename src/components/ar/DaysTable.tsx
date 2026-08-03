@@ -206,7 +206,7 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
 
               return isOff ? (
                 <TableRow key={l.id} className="border-b border-border/40 last:border-0 bg-muted/10 even:bg-muted/[0.08]">
-                  <TableCell className="text-sm font-medium py-3 text-muted-foreground/80 text-center">
+                  <TableCell className="text-xs font-medium py-3 text-muted-foreground/80 text-center">
                     <DateDay iso={l.log_date} />
                   </TableCell>
                   <TableCell colSpan={categories.length + 1} className="py-3">
@@ -233,14 +233,14 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
                 </TableRow>
               ) : (
                 <TableRow key={l.id} className="border-b border-border/40 last:border-0 hover:bg-muted/30 transition-colors even:bg-muted/[0.04] animate-row-in" style={{ animationDelay: `${idx * 20}ms` }}>
-                  <TableCell className="text-sm font-medium py-3 text-foreground text-center">
+                  <TableCell className="text-xs font-medium py-3 text-foreground text-center">
                     <DateDay iso={l.log_date} />
                   </TableCell>
                   {categories.map((c) => {
                     const v = getVal(l, c.key);
                     const clr = colorForKey(c.key);
                     return (
-                      <TableCell key={c.key} className="text-center tabular-nums text-sm py-3">
+                      <TableCell key={c.key} className="text-center tabular-nums text-xs py-3">
                         {v > 0 ? (
                           <span className="font-medium" style={{ color: clr }}>{v}</span>
                         ) : (
@@ -250,7 +250,7 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
                     );
                   })}
                   <TableCell className="text-center tabular-nums py-3">
-                    <span className="font-bold text-sm text-primary">{total}</span>
+                    <span className="font-bold text-xs text-primary">{total}</span>
                   </TableCell>
                   <TableCell className="py-3">
                     <div className="flex gap-1 justify-center">

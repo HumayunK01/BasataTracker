@@ -29,7 +29,7 @@ export function StepCell({
 
   if (!editable) {
     return (
-      <td className={cn("px-3 py-2 text-center text-sm font-semibold", status ? stepClasses(status) : "text-muted-foreground")}>
+      <td className={cn("px-3 py-2 text-center text-xs font-semibold", status ? stepClasses(status) : "text-muted-foreground")}>
         {status ?? "—"}
       </td>
     );
