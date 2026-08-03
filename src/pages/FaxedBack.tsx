@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { isoDate } from "@/types/log";
-import { useFaxedBackDocs, useUpsertFaxedBackDoc, useDeleteFaxedBackDoc, useDeleteFaxedBackSection, FAXED_BACK_STATUSES, type FaxedBackDoc, type FaxedBackInput, type FaxedBackStatus } from "@/hooks/useFaxedBackDocs";
+import { useFaxedBackDocs, useUpsertFaxedBackDoc, useDeleteFaxedBackDoc, useDeleteFaxedBackSection, useUpdateFaxedBackStatus, FAXED_BACK_STATUSES, type FaxedBackDoc, type FaxedBackInput, type FaxedBackStatus } from "@/hooks/useFaxedBackDocs";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Plus, Search, X, Pencil, Trash2, FileText, Info, Loader2, CalendarDays, Copy, Check, CheckCheck, ChevronDown, ChevronRight } from "lucide-react";
 import { SortHeader, type SortKey } from "@/components/ar/tracker/SortHeader";
 import { copyName } from "@/components/ar/tracker/tracker-helpers";
@@ -94,6 +102,7 @@ const FaxedBackPage = () => {
   const upsert = useUpsertFaxedBackDoc();
   const deleteDoc = useDeleteFaxedBackDoc();
   const deleteSection = useDeleteFaxedBackSection();
+  const updateStatus = useUpdateFaxedBackStatus();
 
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" } | null>(null);
@@ -242,6 +251,7 @@ const FaxedBackPage = () => {
                         onDelete={setDeleteTarget}
                         onDeleteSection={setDeleteSectionTarget}
                         onSaveNotes={saveNotes}
+                        updateStatus={updateStatus}
                       />
                     ))
                   )}
@@ -323,6 +333,7 @@ function GroupRows({
   onDelete,
   onDeleteSection,
   onSaveNotes,
+  updateStatus,
 }: {
   date: string;
   rows: FaxedBackDoc[];
@@ -334,6 +345,7 @@ function GroupRows({
   onDelete: (row: FaxedBackDoc) => void;
   onDeleteSection: (target: { date: string; count: number }) => void;
   onSaveNotes: (row: FaxedBackDoc, notes: string) => void;
+  updateStatus: { isPending: boolean; mutate: (vars: { id: string; status: FaxedBackStatus }) => void };
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -443,12 +455,7 @@ function GroupRows({
             )}
           </td>
           <td className={cn("px-3 py-2 w-32 text-xs", STATUS_CLASSES[row.status] ?? "text-foreground")}>
-            <span className="inline-flex items-center gap-1.5">
-              {row.status === "Pending" && <Loader2 className="size-4 text-blue-500 animate-spin" />}
-              {row.status === "Sent" && <CheckCheck className="size-4 text-emerald-500" />}
-              {row.status === "Failed" && <X className="size-4 text-rose-500" />}
-              <span>{STATUS_LABEL[row.status] ?? row.status}</span>
-            </span>
+            <StatusPicker row={row} status={row.status as FaxedBackStatus} onPick={updateStatus} />
           </td>
           <td className="px-3 py-2 text-foreground w-72 max-w-72">
             <NotesPopover row={row} onSave={onSaveNotes} />
@@ -516,6 +523,48 @@ function NotesPopover({ row, onSave }: { row: FaxedBackDoc; onSave: (row: FaxedB
         </div>
       </PopoverContent>
     </Popover>
+  );
+}
+ 
+function StatusPicker({ row, status, onPick }: {
+  row: FaxedBackDoc;
+  status: FaxedBackStatus;
+  onPick: { isPending: boolean; mutate: (vars: { id: string; status: FaxedBackStatus }) => void };
+}) {
+  const iconFor = (s: FaxedBackStatus) => {
+    if (s === "Pending") return <Loader2 className="size-4 text-blue-500 animate-spin" />;
+    if (s === "Sent") return <CheckCheck className="size-4 text-emerald-500" />;
+    if (s === "Failed") return <X className="size-4 text-rose-500" />;
+    return null;
+  };
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          title="Click to change status"
+          className="press-scale inline-flex items-center gap-1.5 cursor-pointer hover:text-foreground transition-colors"
+        >
+          {iconFor(status)}
+          <span>{STATUS_LABEL[status] ?? status}</span>
+          <ChevronDown className="size-3 opacity-50" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-44 font-sans text-xs">
+        <DropdownMenuLabel className="text-xs text-foreground font-normal">Status</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {FAXED_BACK_STATUSES.map((s) => (
+          <DropdownMenuItem
+            key={s}
+            onClick={() => { if (s !== status) onPick.mutate({ id: row.id, status: s }); }}
+            className={cn("flex items-center justify-between gap-2", STATUS_CLASSES[s] ?? "text-foreground")}
+          >
+            <span className="font-medium flex items-center gap-1.5">{iconFor(s)}{STATUS_LABEL[s]}</span>
+            {s === status && <Check className="size-3.5 opacity-80" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
