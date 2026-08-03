@@ -15,6 +15,9 @@ dist-ssr
 # ponytail plugin checkout
 .opencode/
 
+# understand-anything knowledge graph (local analysis artifact)
+.ua/
+
 # Environment variables
 .env
 .env.local
