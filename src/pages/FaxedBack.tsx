@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { useFaxedBackDocs, useUpsertFaxedBackDoc, useDeleteFaxedBackDoc, FAXED_BACK_STATUSES, type FaxedBackDoc, type FaxedBackInput, type FaxedBackStatus } from "@/hooks/useFaxedBackDocs";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
@@ -35,7 +35,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Plus, Search, X, Pencil, Trash2, FileText, Info, Loader2, CalendarDays, Copy, Check, CheckCheck } from "lucide-react";
+import { Plus, Search, X, Pencil, Trash2, FileText, Info, Loader2, CalendarDays, Copy, Check, CheckCheck, ChevronDown, ChevronRight } from "lucide-react";
 import { SortHeader, type SortKey } from "@/components/ar/tracker/SortHeader";
 import Skeleton from "react-loading-skeleton";
 import { cn } from "@/lib/utils";
@@ -75,6 +75,8 @@ const FaxedBackPage = () => {
 
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" } | null>(null);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const expandedDefaulted = useRef(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<FaxedBackDoc | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FaxedBackDoc | null>(null);
@@ -102,6 +104,24 @@ const FaxedBackPage = () => {
   }, [rows, search, sort]);
 
   const total = useMemo(() => groups.reduce((n, [, l]) => n + l.length, 0), [groups]);
+
+  useEffect(() => {
+    if (!expandedDefaulted.current && groups.length > 0) {
+      expandedDefaulted.current = true;
+      setExpanded(new Set([groups[0][0]]));
+    }
+  }, [groups]);
+
+  const toggleGroup = (date: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(date)) next.delete(date);
+      else next.add(date);
+      return next;
+    });
+  };
+
+  const expandDate = (date: string) => setExpanded((prev) => new Set(prev).add(date));
 
   const toggleSort = (key: SortKey) => {
     setSort((prev) => {
@@ -139,7 +159,7 @@ const FaxedBackPage = () => {
             <div className="relative flex-1 min-w-48">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground" />
               <Input
-                placeholder="Search file, patient or notes…"
+                placeholder="Search file, patient or message…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9 pr-9 h-10"
@@ -192,6 +212,8 @@ const FaxedBackPage = () => {
                         date={date}
                         rows={list}
                         sort={sort}
+                        expanded={expanded.has(date)}
+                        onToggle={toggleGroup}
                         onToggleSort={toggleSort}
                         onEdit={openEdit}
                         onDelete={setDeleteTarget}
@@ -211,6 +233,7 @@ const FaxedBackPage = () => {
         onOpenChange={setDialogOpen}
         row={editing}
         upsert={upsert}
+        onSaved={(date) => expandDate(date)}
       />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
@@ -243,6 +266,8 @@ function GroupRows({
   date,
   rows,
   sort,
+  expanded,
+  onToggle,
   onToggleSort,
   onEdit,
   onDelete,
@@ -251,6 +276,8 @@ function GroupRows({
   date: string;
   rows: FaxedBackDoc[];
   sort: { key: SortKey; dir: "asc" | "desc" } | null;
+  expanded: boolean;
+  onToggle: (date: string) => void;
   onToggleSort: (key: SortKey) => void;
   onEdit: (row: FaxedBackDoc) => void;
   onDelete: (row: FaxedBackDoc) => void;
@@ -261,7 +288,7 @@ function GroupRows({
   const copySection = async () => {
     const fmt = (d: string | null) => (d ? format(parseISO(d), "MM/dd/yyyy") : "");
     const escHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const header = ["File Name", "Patient Name", "Patient DOB", "Status", "Notes"];
+    const header = ["File Name", "Patient Name", "Patient DOB", "Status", "Fax Back Message"];
     const body = rows.map((r) => [withPdf(r.file_name), r.patient_name, fmt(r.patient_dob), r.status, r.notes ?? ""]);
     const tdStyle = "border:1px solid #444;padding:4px 12px;text-align:left;";
     const thStyle = `${tdStyle}font-weight:600;background:#1e2130;color:#e2e8f0;`;
@@ -298,29 +325,38 @@ function GroupRows({
       <tr className="bg-muted/40">
         <td colSpan={6} className="px-3 py-2">
           <div className="flex items-center gap-2">
-            <CalendarDays className="size-4 text-primary shrink-0" />
-            <span className="text-sm font-bold text-foreground">{format(parseISO(date), "MMMM d, yyyy")}</span>
-            <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wide">{format(parseISO(date), "EEEE")}</span>
-            <span className="text-xs text-foreground">({rows.length})</span>
+            <button
+              type="button"
+              onClick={() => onToggle(date)}
+              className="flex items-center gap-2 flex-1 min-w-0 text-left cursor-pointer"
+              title={expanded ? "Collapse this day" : "Expand this day"}
+            >
+              {expanded ? <ChevronDown className="size-4 shrink-0 text-foreground/60" /> : <ChevronRight className="size-4 shrink-0 text-foreground/60" />}
+              <CalendarDays className="size-4 text-primary shrink-0" />
+              <span className="text-sm font-bold text-foreground">{format(parseISO(date), "MMMM d, yyyy")}</span>
+              <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wide">{format(parseISO(date), "EEEE")}</span>
+              <span className="text-xs text-foreground">({rows.length})</span>
+            </button>
+            <button
+              type="button"
+              onClick={copySection}
+              title="Copy this section as a table"
+              className="ml-auto press-scale p-1.5 rounded text-foreground hover:bg-foreground/10 transition-colors"
+            >
+              {copied ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+            </button>
           </div>
         </td>
       </tr>
-      <tr className="bg-muted/50 text-xs uppercase tracking-wide text-foreground">
+      {expanded && (
+        <>
+          <tr className="bg-muted/50 text-xs uppercase tracking-wide text-foreground">
         <th className="px-3 py-2.5 text-left font-bold"><SortHeader label="File Name" sortKey="file_name" sort={sort} onSort={onToggleSort} align="left" /></th>
         <th className="px-3 py-2.5 text-left font-bold"><SortHeader label="Patient Name" sortKey="patient_name" sort={sort} onSort={onToggleSort} align="left" /></th>
         <th className="px-3 py-2.5 text-left font-bold"><SortHeader label="Patient DOB" sortKey="patient_dob" sort={sort} onSort={onToggleSort} align="left" /></th>
         <th className="px-3 py-2.5 text-left font-bold">Status</th>
-        <th className="px-3 py-2.5 text-left font-bold">Notes</th>
-        <th className="px-3 py-2.5 text-right font-bold w-12">
-          <button
-            type="button"
-            onClick={copySection}
-            title="Copy this section as a table"
-            className="ml-auto press-scale p-1.5 rounded text-foreground hover:bg-foreground/10 transition-colors"
-          >
-            {copied ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
-          </button>
-        </th>
+        <th className="px-3 py-2.5 text-left font-bold">Fax Back Message</th>
+        <th className="px-3 py-2.5 text-right font-bold w-12" aria-label="Actions" />
       </tr>
       {rows.map((row) => (
         <tr key={row.id} className="border-t border-border transition-colors hover:bg-foreground/[0.03]">
@@ -335,7 +371,8 @@ function GroupRows({
           <td className={cn("px-3 py-2 text-sm font-semibold", STATUS_CLASSES[row.status] ?? "text-foreground")}>
             <span className="inline-flex items-center gap-1.5">
               {row.status === "Sent" && <CheckCheck className="size-4 text-emerald-500" />}
-              <span className={row.status === "Sent" ? "text-foreground" : ""}>{row.status}</span>
+              {row.status === "Failed" && <X className="size-4 text-rose-500" />}
+              <span className={row.status === "Sent" || row.status === "Failed" ? "text-foreground" : ""}>{row.status}</span>
             </span>
           </td>
           <td className="px-3 py-2 text-foreground w-72 max-w-72">
@@ -363,6 +400,8 @@ function GroupRows({
           </td>
         </tr>
       ))}
+        </>
+      )}
     </>
   );
 }
@@ -389,7 +428,7 @@ function NotesPopover({ row, onSave }: { row: FaxedBackDoc; onSave: (row: FaxedB
             rows={3}
             autoFocus
             className="resize-none text-sm bg-background"
-            placeholder="Add a note…"
+            placeholder="Add a message…"
           />
           <div className="flex justify-end gap-1.5">
             <Button size="sm" variant="outline" className="border-border/60" onClick={() => setOpen(false)}>
@@ -410,11 +449,13 @@ function DocDialog({
   onOpenChange,
   row,
   upsert,
+  onSaved,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   row?: FaxedBackDoc | null;
   upsert: { isPending: boolean; mutate: (vars: { id?: string; input: FaxedBackInput }, options?: { onSuccess?: () => void }) => void };
+  onSaved?: (workedOn: string) => void;
 }) {
   const [fileName, setFileName] = useState("");
   const [patientName, setPatientName] = useState("");
@@ -452,7 +493,7 @@ function DocDialog({
           notes: notes.trim() || null,
         },
       },
-      { onSuccess: () => onOpenChange(false) },
+      { onSuccess: () => { onSaved?.(workedOn); onOpenChange(false); } },
     );
   };
 
@@ -524,10 +565,10 @@ function DocDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="fb-notes" className="text-xs font-semibold text-foreground">Notes</Label>
+            <Label htmlFor="fb-notes" className="text-xs font-semibold text-foreground">Fax Back Message</Label>
             <Textarea
               id="fb-notes"
-              placeholder="Optional notes"
+              placeholder="Optional message"
               value={notes}
               maxLength={1000}
               rows={3}
