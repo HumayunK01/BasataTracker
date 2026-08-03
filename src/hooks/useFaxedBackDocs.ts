@@ -96,3 +96,26 @@ export function useDeleteFaxedBackDoc() {
     onError: (e: Error) => toast.error(e.message),
   });
 }
+
+export function useDeleteFaxedBackSection() {
+  const qc = useQueryClient();
+  const { checkLimit } = useMutationRateLimit({ maxRequests: 15, windowMs: 60_000 });
+  return useMutation({
+    mutationFn: async (workedOn: string) => {
+      if (!checkLimit()) throw new Error("Too many deletes. Please wait a moment.");
+      const created_by = await getUserId();
+      await logAuditEvent("faxed_back_section_deleted", { worked_on: workedOn });
+      const { error } = await supabase
+        .from("faxed_back_docs")
+        .delete()
+        .eq("worked_on", workedOn)
+        .eq("created_by", created_by);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["faxed_back_docs"] });
+      toast.success("Section deleted");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
