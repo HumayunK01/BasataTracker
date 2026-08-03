@@ -38,15 +38,35 @@ import {
 } from "@/components/ui/popover";
 import { Plus, Search, X, Pencil, Trash2, FileText, Info, Loader2, CalendarDays, Copy, Check, CheckCheck, ChevronDown, ChevronRight } from "lucide-react";
 import { SortHeader, type SortKey } from "@/components/ar/tracker/SortHeader";
+import { copyName } from "@/components/ar/tracker/tracker-helpers";
 import Skeleton from "react-loading-skeleton";
 import { cn } from "@/lib/utils";
 
 const STATUS_CLASSES: Record<string, string> = {
-  Pending: "text-amber-500",
-  Sent: "text-emerald-500",
-  Failed: "text-rose-500",
-  Rejected: "text-rose-500",
+  Pending: "text-foreground",
+  Sent: "text-foreground",
+  Failed: "text-foreground",
+  Rejected: "text-foreground",
 };
+
+// Display label (Pending → Sending); DB stores the real status value.
+const STATUS_LABEL: Record<string, string> = {
+  Pending: "Sending",
+  Sent: "Sent",
+  Failed: "Failed",
+  Rejected: "Rejected",
+};
+
+const CopyValue = ({ value, children, title }: { value: string; children: React.ReactNode; title?: string }) => (
+  <button
+    type="button"
+    onClick={() => copyName(value)}
+    title={title ?? "Copy"}
+    className="truncate text-left cursor-pointer underline decoration-transparent underline-offset-2 hover:decoration-current hover:text-foreground transition-colors"
+  >
+    {children}
+  </button>
+);
 
 const today = () => isoDate();
 
@@ -365,7 +385,7 @@ function GroupRows({
             >
               {expanded ? <ChevronDown className="size-4 shrink-0 text-foreground/60" /> : <ChevronRight className="size-4 shrink-0 text-foreground/60" />}
               <CalendarDays className="size-4 text-primary shrink-0" />
-              <span className="text-sm font-bold text-foreground">{format(parseISO(date), "MMMM d, yyyy")}</span>
+              <span className="text-sm text-foreground">{format(parseISO(date), "MMMM d, yyyy")}</span>
               <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wide">{format(parseISO(date), "EEEE")}</span>
               <span className="text-xs text-foreground">({rows.length})</span>
             </button>
@@ -391,28 +411,43 @@ function GroupRows({
       {expanded && (
         <>
           <tr className="bg-muted/50 text-xs uppercase tracking-wide text-foreground">
-        <th className="px-3 py-2.5 text-left font-bold"><SortHeader label="File Name" sortKey="file_name" sort={sort} onSort={onToggleSort} align="left" /></th>
-        <th className="px-3 pl-8 py-2.5 text-left font-bold"><SortHeader label="Patient Name" sortKey="patient_name" sort={sort} onSort={onToggleSort} align="left" /></th>
-        <th className="px-3 py-2.5 text-left font-bold"><SortHeader label="Patient DOB" sortKey="patient_dob" sort={sort} onSort={onToggleSort} align="left" /></th>
-        <th className="px-3 py-2.5 text-left font-bold">Status</th>
-        <th className="px-3 py-2.5 text-left font-bold">Fax Back Message</th>
-        <th className="px-3 py-2.5 text-right font-bold w-12" aria-label="Actions" />
+        <th className="px-3 py-2.5 text-left"><SortHeader label="File Name" sortKey="file_name" sort={sort} onSort={onToggleSort} align="left" /></th>
+        <th className="px-3 pl-8 py-2.5 text-left"><SortHeader label="Patient Name" sortKey="patient_name" sort={sort} onSort={onToggleSort} align="left" /></th>
+        <th className="px-3 py-2.5 text-left"><SortHeader label="Patient DOB" sortKey="patient_dob" sort={sort} onSort={onToggleSort} align="left" /></th>
+        <th className="px-3 py-2.5 text-left">Status</th>
+        <th className="px-3 py-2.5 text-left">Fax Back Message</th>
+        <th className="px-3 py-2.5 text-right w-12" aria-label="Actions" />
       </tr>
       {rows.map((row) => (
         <tr key={row.id} className="border-t border-border transition-colors hover:bg-foreground/[0.03]">
           <td className="px-3 py-2 w-64 max-w-64 font-medium text-foreground">
-            <span className="inline-flex items-center gap-1.5 min-w-0">
+            <span className="inline-flex items-center gap-1 min-w-0">
               <img src="/pdf.png" alt="" className="size-4 shrink-0 object-contain" />
-              <span className="truncate" title={withPdf(row.file_name)}>{withPdf(row.file_name)}</span>
+              <CopyValue value={withPdf(row.file_name)} title={withPdf(row.file_name)}>
+                <span className="truncate block">{withPdf(row.file_name)}</span>
+              </CopyValue>
             </span>
           </td>
-          <td className="px-3 pl-8 py-2 w-56 max-w-56 truncate text-foreground" title={row.patient_name}>{row.patient_name}</td>
-          <td className="px-3 py-2 w-36 text-foreground tabular-nums truncate" title={row.patient_dob ?? ""}>{row.patient_dob ? format(parseISO(row.patient_dob), "MM/dd/yyyy") : <span className="text-muted-foreground">—</span>}</td>
-          <td className={cn("px-3 py-2 w-32 text-sm font-semibold", STATUS_CLASSES[row.status] ?? "text-foreground")}>
+          <td className="px-3 pl-8 py-2 w-56 max-w-56 truncate text-foreground" title={row.patient_name}>
+            <CopyValue value={row.patient_name} title={row.patient_name}>
+              <span className="truncate block">{row.patient_name}</span>
+            </CopyValue>
+          </td>
+          <td className="px-3 py-2 w-36 text-foreground tabular-nums truncate" title={row.patient_dob ?? ""}>
+            {row.patient_dob ? (
+              <CopyValue value={format(parseISO(row.patient_dob), "MM/dd/yyyy")} title={format(parseISO(row.patient_dob), "MM/dd/yyyy")}>
+                <span className="truncate block">{format(parseISO(row.patient_dob), "MM/dd/yyyy")}</span>
+              </CopyValue>
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            )}
+          </td>
+          <td className={cn("px-3 py-2 w-32 text-sm", STATUS_CLASSES[row.status] ?? "text-foreground")}>
             <span className="inline-flex items-center gap-1.5">
+              {row.status === "Pending" && <Loader2 className="size-4 text-blue-500 animate-spin" />}
               {row.status === "Sent" && <CheckCheck className="size-4 text-emerald-500" />}
               {row.status === "Failed" && <X className="size-4 text-rose-500" />}
-              <span className={row.status === "Sent" || row.status === "Failed" ? "text-foreground" : ""}>{row.status}</span>
+              <span>{STATUS_LABEL[row.status] ?? row.status}</span>
             </span>
           </td>
           <td className="px-3 py-2 text-foreground w-72 max-w-72">
@@ -598,7 +633,7 @@ function DocDialog({
               </SelectTrigger>
               <SelectContent>
                 {FAXED_BACK_STATUSES.map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                  <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
