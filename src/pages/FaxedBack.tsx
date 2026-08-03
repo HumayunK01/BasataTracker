@@ -30,7 +30,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, X, Pencil, Trash2, FileText, Info, Loader2, CalendarDays, Copy, Check } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Plus, Search, X, Pencil, Trash2, FileText, Info, Loader2, CalendarDays, Copy, Check, CheckCheck } from "lucide-react";
 import { SortHeader, type SortKey } from "@/components/ar/tracker/SortHeader";
 import Skeleton from "react-loading-skeleton";
 import { cn } from "@/lib/utils";
@@ -56,6 +61,8 @@ const parseDob = (v: string): string | null => {
   }
   return null;
 };
+
+const withPdf = (name: string) => (/\.pdf$/i.test(name) ? name : `${name}.pdf`);
 
 // ponytail: naive title case — splits on spaces and hyphens only, so "O'Brien" → "O'brien" (fine for pasted names)
 const titleCase = (v: string) =>
@@ -106,6 +113,20 @@ const FaxedBackPage = () => {
 
   const openAdd = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (row: FaxedBackDoc) => { setEditing(row); setDialogOpen(true); };
+
+  const saveNotes = (row: FaxedBackDoc, notes: string) => {
+    upsert.mutate({
+      id: row.id,
+      input: {
+        file_name: row.file_name,
+        patient_name: row.patient_name,
+        patient_dob: row.patient_dob,
+        worked_on: row.worked_on,
+        status: row.status as FaxedBackStatus,
+        notes: notes || null,
+      },
+    });
+  };
 
   return (
     <>
@@ -174,6 +195,7 @@ const FaxedBackPage = () => {
                         onToggleSort={toggleSort}
                         onEdit={openEdit}
                         onDelete={setDeleteTarget}
+                        onSaveNotes={saveNotes}
                       />
                     ))
                   )}
@@ -224,6 +246,7 @@ function GroupRows({
   onToggleSort,
   onEdit,
   onDelete,
+  onSaveNotes,
 }: {
   date: string;
   rows: FaxedBackDoc[];
@@ -231,6 +254,7 @@ function GroupRows({
   onToggleSort: (key: SortKey) => void;
   onEdit: (row: FaxedBackDoc) => void;
   onDelete: (row: FaxedBackDoc) => void;
+  onSaveNotes: (row: FaxedBackDoc, notes: string) => void;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -238,7 +262,7 @@ function GroupRows({
     const fmt = (d: string | null) => (d ? format(parseISO(d), "MM/dd/yyyy") : "");
     const escHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const header = ["File Name", "Patient Name", "Patient DOB", "Status", "Notes"];
-    const body = rows.map((r) => [r.file_name, r.patient_name, fmt(r.patient_dob), r.status, r.notes ?? ""]);
+    const body = rows.map((r) => [withPdf(r.file_name), r.patient_name, fmt(r.patient_dob), r.status, r.notes ?? ""]);
     const tdStyle = "border:1px solid #444;padding:4px 12px;text-align:left;";
     const thStyle = `${tdStyle}font-weight:600;background:#1e2130;color:#e2e8f0;`;
     const html =
@@ -300,11 +324,23 @@ function GroupRows({
       </tr>
       {rows.map((row) => (
         <tr key={row.id} className="border-t border-border transition-colors hover:bg-foreground/[0.03]">
-          <td className="px-3 py-2 max-w-[16rem] truncate font-medium text-foreground" title={row.file_name}>{row.file_name}</td>
+          <td className="px-3 py-2 max-w-[16rem] font-medium text-foreground">
+            <span className="inline-flex items-center gap-1.5 min-w-0">
+              <img src="/pdf.png" alt="" className="size-4 shrink-0 object-contain" />
+              <span className="truncate" title={withPdf(row.file_name)}>{withPdf(row.file_name)}</span>
+            </span>
+          </td>
           <td className="px-3 py-2 max-w-[14rem] truncate text-foreground" title={row.patient_name}>{row.patient_name}</td>
           <td className="px-3 py-2 text-foreground tabular-nums">{row.patient_dob ? format(parseISO(row.patient_dob), "MM/dd/yyyy") : <span className="text-muted-foreground">—</span>}</td>
-          <td className={cn("px-3 py-2 text-sm font-semibold", STATUS_CLASSES[row.status] ?? "text-foreground")}>{row.status}</td>
-          <td className="px-3 py-2 text-foreground w-72 whitespace-normal break-words">{row.notes || <span className="text-muted-foreground">—</span>}</td>
+          <td className={cn("px-3 py-2 text-sm font-semibold", STATUS_CLASSES[row.status] ?? "text-foreground")}>
+            <span className="inline-flex items-center gap-1.5">
+              {row.status === "Sent" && <CheckCheck className="size-4 text-emerald-500" />}
+              <span className={row.status === "Sent" ? "text-foreground" : ""}>{row.status}</span>
+            </span>
+          </td>
+          <td className="px-3 py-2 text-foreground w-72 max-w-72">
+            <NotesPopover row={row} onSave={onSaveNotes} />
+          </td>
           <td className="px-3 py-2 text-center">
             <div className="inline-flex items-center gap-1">
               <button
@@ -328,6 +364,44 @@ function GroupRows({
         </tr>
       ))}
     </>
+  );
+}
+
+function NotesPopover({ row, onSave }: { row: FaxedBackDoc; onSave: (row: FaxedBackDoc, notes: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(row.notes ?? "");
+  return (
+    <Popover open={open} onOpenChange={(o) => { setOpen(o); if (o) setDraft(row.notes ?? ""); }}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="w-full text-left truncate hover:underline hover:text-foreground transition-colors cursor-pointer"
+          title={row.notes ? "Click to edit notes" : "Click to add notes"}
+        >
+          {row.notes || <span className="text-muted-foreground">—</span>}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-80 p-2.5">
+        <div className="space-y-2">
+          <Textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            rows={3}
+            autoFocus
+            className="resize-none text-sm bg-background"
+            placeholder="Add a note…"
+          />
+          <div className="flex justify-end gap-1.5">
+            <Button size="sm" variant="outline" className="border-border/60" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" className="bg-primary hover:bg-primary/95 text-primary-foreground" onClick={() => { onSave(row, draft); setOpen(false); }}>
+              Save
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
