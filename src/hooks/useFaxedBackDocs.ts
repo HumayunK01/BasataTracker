@@ -1,0 +1,98 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
+import { supabase, getUserId } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { useMutationRateLimit } from "@/hooks/useMutationRateLimit";
+import { logAuditEvent } from "@/hooks/useAuditLog";
+import type { Tables } from "@/integrations/supabase/types";
+
+export type FaxedBackDoc = Tables<"faxed_back_docs">;
+
+export const FAXED_BACK_STATUSES = ["Pending", "Sent", "Failed", "Rejected"] as const;
+export type FaxedBackStatus = (typeof FAXED_BACK_STATUSES)[number];
+
+const DocSchema = z.object({
+  file_name: z.string().trim().min(1, "File name is required").max(255, "Name too long"),
+  patient_name: z.string().trim().min(1, "Patient name is required").max(200, "Name too long"),
+  patient_dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date").nullable().optional(),
+  worked_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date"),
+  status: z.enum(FAXED_BACK_STATUSES),
+  notes: z.string().max(1000, "Notes must be 1000 characters or fewer").nullable().optional(),
+});
+
+export type FaxedBackInput = z.infer<typeof DocSchema>;
+
+export function useFaxedBackDocs() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["faxed_back_docs", user?.id],
+    enabled: !!user,
+    staleTime: 60_000,
+    refetchOnWindowFocus: true,
+    queryFn: async (): Promise<FaxedBackDoc[]> => {
+      const { data, error } = await supabase
+        .from("faxed_back_docs")
+        .select("*")
+        .order("worked_on", { ascending: false })
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useUpsertFaxedBackDoc() {
+  const qc = useQueryClient();
+  const { checkLimit } = useMutationRateLimit({ maxRequests: 30, windowMs: 60_000 });
+  return useMutation({
+    mutationFn: async ({ id, input }: { id?: string; input: FaxedBackInput }) => {
+      if (!checkLimit()) throw new Error("Too many saves. Please wait a moment.");
+      const validated = DocSchema.parse(input);
+      const created_by = await getUserId();
+      if (id) {
+        const { error } = await supabase
+          .from("faxed_back_docs")
+          .update(validated)
+          .eq("id", id)
+          .eq("created_by", created_by);
+        if (error) throw error;
+        await logAuditEvent("faxed_back_updated", { id });
+      } else {
+        const { error } = await supabase
+          .from("faxed_back_docs")
+          .insert({ ...validated, created_by });
+        if (error) throw error;
+        await logAuditEvent("faxed_back_created", { file_name: validated.file_name });
+      }
+    },
+    onSuccess: (_d, { id }) => {
+      qc.invalidateQueries({ queryKey: ["faxed_back_docs"] });
+      toast.success(id ? "Document updated" : "Document added");
+    },
+    onError: (e: Error) => toast.error(e instanceof z.ZodError ? e.issues[0]?.message : e.message),
+  });
+}
+
+export function useDeleteFaxedBackDoc() {
+  const qc = useQueryClient();
+  const { checkLimit } = useMutationRateLimit({ maxRequests: 15, windowMs: 60_000 });
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!checkLimit()) throw new Error("Too many deletes. Please wait a moment.");
+      const created_by = await getUserId();
+      await logAuditEvent("faxed_back_deleted", { id });
+      const { error } = await supabase
+        .from("faxed_back_docs")
+        .delete()
+        .eq("id", id)
+        .eq("created_by", created_by);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["faxed_back_docs"] });
+      toast.success("Document deleted");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
