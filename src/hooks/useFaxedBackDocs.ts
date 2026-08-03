@@ -9,7 +9,7 @@ import type { Tables } from "@/integrations/supabase/types";
 
 export type FaxedBackDoc = Tables<"faxed_back_docs">;
 
-export const FAXED_BACK_STATUSES = ["Pending", "Sent", "Failed", "Rejected"] as const;
+export const FAXED_BACK_STATUSES = ["Pending", "Sent", "Failed"] as const;
 export type FaxedBackStatus = (typeof FAXED_BACK_STATUSES)[number];
 
 const DocSchema = z.object({
@@ -71,6 +71,44 @@ export function useUpsertFaxedBackDoc() {
       toast.success(id ? "Document updated" : "Document added");
     },
     onError: (e: Error) => toast.error(e instanceof z.ZodError ? e.issues[0]?.message : e.message),
+  });
+}
+
+export function useUpdateFaxedBackStatus() {
+  const qc = useQueryClient();
+  const { checkLimit } = useMutationRateLimit({ maxRequests: 40, windowMs: 60_000 });
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: FaxedBackStatus }) => {
+      if (!checkLimit()) throw new Error("Too many updates. Please wait a moment.");
+      const created_by = await getUserId();
+      const { error } = await supabase
+        .from("faxed_back_docs")
+        .update({ status })
+        .eq("id", id)
+        .eq("created_by", created_by);
+      if (error) throw error;
+      await logAuditEvent("faxed_back_updated", { id, field: "status", value: status });
+    },
+    onMutate: async ({ id, status }) => {
+      await qc.cancelQueries({ queryKey: ["faxed_back_docs"] });
+      const key = ["faxed_back_docs"];
+      const snapshots = qc.getQueriesData<FaxedBackDoc[]>({ queryKey: key });
+      for (const [qKey, data] of snapshots) {
+        if (!data) continue;
+        qc.setQueryData<FaxedBackDoc[]>(qKey, data.map((r) => (r.id === id ? { ...r, status } : r)));
+      }
+      return { snapshots };
+    },
+    onError: (_e: Error, _vars, ctx) => {
+      ctx?.snapshots.forEach(([qKey, data]) => qc.setQueryData(qKey, data));
+      toast.error(_e.message);
+    },
+    onSuccess: (_d, { status }) => {
+      toast.success(`Status changed to ${status}`);
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["faxed_back_docs"] });
+    },
   });
 }
 
