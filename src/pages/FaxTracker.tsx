@@ -489,7 +489,7 @@ const FaxTrackerPage = () => {
           <FigHeader title="Patients" />
           <div className="hidden md:block bg-card border border-border rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
+              <table className="w-full text-xs border-collapse">
                 <thead>
                   <tr className="bg-muted/50 text-xs uppercase tracking-wide text-foreground">
                     <th className="px-3 py-2.5 text-left font-semibold">
@@ -549,7 +549,7 @@ const FaxTrackerPage = () => {
                               mode={mode}
                             />
                           ))}
-                          <td className={cn("px-3 py-2 text-center text-sm font-semibold", overallClasses(row.overall_status))}>
+                          <td className={cn("px-3 py-2 text-center text-xs font-semibold", overallClasses(row.overall_status))}>
                             {displayStatus(row.overall_status)}
                           </td>
                           <td className="px-3 py-2 text-foreground max-w-[16rem] truncate" title={row.notes ?? ""}>
