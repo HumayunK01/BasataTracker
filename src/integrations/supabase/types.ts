@@ -167,6 +167,45 @@ export type Database = {
         }
         Relationships: []
       }
+      faxed_back_docs: {
+        Row: {
+          id: string
+          file_name: string
+          patient_name: string
+          patient_dob: string | null
+          worked_on: string
+          status: string
+          notes: string | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          file_name: string
+          patient_name: string
+          patient_dob?: string | null
+          worked_on?: string
+          status?: string
+          notes?: string | null
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          file_name?: string
+          patient_name?: string
+          patient_dob?: string | null
+          worked_on?: string
+          status?: string
+          notes?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fax_accounts: {
         Row: {
           id: string

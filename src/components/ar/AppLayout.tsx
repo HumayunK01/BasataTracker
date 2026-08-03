@@ -18,6 +18,7 @@ const pageTitles: Record<string, string> = {
   "/console": "Console",
   "/settings": "Settings",
   "/team": "Team",
+  "/faxed-back": "Faxed Back",
 };
 
 const INACTIVITY_WARNING_MS = 22 * 60 * 1000;

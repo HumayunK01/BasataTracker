@@ -1,7 +1,7 @@
 import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type SortKey = "patient_name" | "overall_status" | "updated_at";
+export type SortKey = "patient_name" | "overall_status" | "updated_at" | "file_name" | "patient_dob";
 
 export function SortHeader({
   label,

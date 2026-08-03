@@ -16,7 +16,10 @@ export type AuditEvent =
   | "fax_deleted"
   | "indexable_created"
   | "indexable_updated"
-  | "indexable_deleted";
+  | "indexable_deleted"
+  | "faxed_back_created"
+  | "faxed_back_updated"
+  | "faxed_back_deleted";
 
 export async function logAuditEvent(
   event: AuditEvent,
