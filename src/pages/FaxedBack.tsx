@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { format, parseISO } from "date-fns";
+import { isoDate } from "@/types/log";
 import { useFaxedBackDocs, useUpsertFaxedBackDoc, useDeleteFaxedBackDoc, useDeleteFaxedBackSection, FAXED_BACK_STATUSES, type FaxedBackDoc, type FaxedBackInput, type FaxedBackStatus } from "@/hooks/useFaxedBackDocs";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,7 @@ const STATUS_CLASSES: Record<string, string> = {
   Rejected: "text-rose-500",
 };
 
-const today = () => new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+const today = () => isoDate();
 
 // Accept MM/DD/YYYY (as it appears on the document) or YYYY-MM-DD; returns ISO for storage.
 const parseDob = (v: string): string | null => {
