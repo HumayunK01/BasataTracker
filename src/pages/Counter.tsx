@@ -293,6 +293,24 @@ export default function CounterPage() {
     }
   };
 
+  // ponytail: hourly autosave — once an hour so system load stays minimal.
+  // Ref keeps the interval stable instead of recreating it on every tap.
+  const autoSaveRef = useRef({ counts, activeCategories, saved, isPending: upsert.isPending });
+  autoSaveRef.current = { counts, activeCategories, saved, isPending: upsert.isPending };
+  useEffect(() => {
+    const id = setInterval(async () => {
+      const { counts: c, activeCategories: cats, saved: s, isPending } = autoSaveRef.current;
+      if (s || isPending || cats.length === 0) return;
+      try {
+        await flush(c, cats.map((cat) => cat.key));
+        cDispatch({ type: "set_saved", v: true });
+      } catch {
+        // Silent — retries next hourly tick; localStorage still holds the counts.
+      }
+    }, 60 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [flush]);
+
   return (
     <>
       <main className="flex-1 overflow-y-auto">
