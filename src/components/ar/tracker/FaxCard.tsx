@@ -8,7 +8,8 @@ import {
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StepPicker } from "./StepPicker";
-import { displayStatus, overallClasses, rowClasses, stepClasses, stepIsActive, stepIsSkipped, type TrackerMode } from "./tracker-helpers";
+import { displayStatus, labelFor, stepClasses, stepIsActive, stepIsSkipped, type TrackerMode } from "./tracker-helpers";
+import { StatusIcon } from "./StepPicker";
 import { copyName } from "./tracker-helpers";
 
 export function FaxCard({
@@ -35,19 +36,21 @@ export function FaxCard({
     <div
       className={cn(
         "rounded-lg border border-border p-3.5 transition-colors",
-        rowClasses(row.overall_status),
         isNew && "animate-row-in",
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <button
-          type="button"
-          onClick={() => copyName(row.patient_name)}
-          title="Tap to copy name"
-          className="press-scale font-semibold text-base text-foreground rounded px-1 -mx-1 text-left active:bg-foreground/10 transition-colors"
-        >
-          {row.patient_name}
-        </button>
+        <span className="inline-flex items-center gap-1 min-w-0">
+          <img src="/pdf.png" alt="" className="size-4 shrink-0 object-contain" />
+          <button
+            type="button"
+            onClick={() => copyName(row.patient_name)}
+            title="Tap to copy name"
+            className="press-scale font-normal text-base text-foreground rounded px-1 -mx-1 text-left active:bg-foreground/10 transition-colors"
+          >
+            {row.patient_name}
+          </button>
+        </span>
         {mine ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -73,7 +76,7 @@ export function FaxCard({
         ) : null}
       </div>
 
-      <div className={cn("mt-1 text-sm font-semibold", overallClasses(row.overall_status))}>
+      <div className="mt-1 text-sm font-normal text-foreground">
         {displayStatus(row.overall_status)}
       </div>
 
@@ -87,15 +90,16 @@ export function FaxCard({
               <dt className="text-foreground">{labels[i]}</dt>
               <dd className="text-right">
                 {!active ? (
-                  <span className="font-semibold text-muted-foreground">—</span>
+                   <span className="font-normal text-muted-foreground">—</span>
                 ) : skipped ? (
-                  <span className="text-xs font-medium text-foreground italic">No need</span>
+                  <span className="text-xs font-normal text-foreground italic">No need</span>
                 ) : mine ? (
                   <StepPicker status={status} onPick={(v) => onPickStep(field, v)} label={labels[i]} />
                 ) : (
-                  <span className={cn("font-semibold", status ? stepClasses(status) : "text-muted-foreground")}>
-                    {status ?? "—"}
-                  </span>
+                   <span className={cn("inline-flex items-center gap-1 font-normal rounded px-1", status === "Successfully Sent" ? "text-white bg-emerald-700" : status === "Failed" ? "text-white bg-rose-700" : (status ? stepClasses(status) : "text-muted-foreground"))}>
+                     <StatusIcon status={status} tickColor={status === "Successfully Sent" ? "text-emerald-500" : undefined} />
+                     {status ? labelFor(status) : "—"}
+                   </span>
                 )}
               </dd>
             </div>

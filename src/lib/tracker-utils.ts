@@ -1,4 +1,5 @@
 import type { TrackerRow } from "@/hooks/useTracker";
+import { displayStatus, labelFor } from "@/components/ar/tracker/tracker-helpers";
 
 export interface TrackerPDFConfig {
   title: string;
@@ -93,10 +94,10 @@ export async function downloadTrackerPDF(
       head: [["Patient", ...stepHead, "Overall Status", "Notes"]],
       body: tableRows.map((r) => [
         r.patient_name,
-        r.step1 ?? "—",
-        r.step2 ?? "—",
-        r.step3 ?? "—",
-        r.overall_status.replace(/\s*#\s*$/, "").trim(),
+        labelFor(r.step1),
+        labelFor(r.step2 ?? "—"),
+        labelFor(r.step3 ?? "—"),
+        displayStatus(r.overall_status),
         r.notes ?? "",
       ]),
       theme: "grid",
@@ -123,7 +124,7 @@ export async function downloadTrackerPDF(
         }
         const text = String(data.cell.raw ?? "");
         if (data.column.index >= 1 && data.column.index <= 4) {
-          if (text === "Successfully Sent" || text.startsWith("Resolved")) data.cell.styles.textColor = [21, 128, 61];
+          if (text === "Sent" || text.startsWith("Resolved")) data.cell.styles.textColor = [21, 128, 61];
           else if (text === "Failed" || text === "All Steps Failed") data.cell.styles.textColor = [185, 28, 28];
           else if (text === "Waiting" || text.startsWith("Waiting")) data.cell.styles.textColor = [161, 98, 7];
         }
