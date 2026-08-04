@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useProfile } from "@/hooks/useProfile";
-import { useFaxTracker, useDeleteFax, useUpdateStep as useFaxUpdateStep, fetchAllFaxRows } from "@/hooks/useFaxTracker";
-import { useIndexableTracker, useDeleteIndexable, useUpdateStep as useIndexableUpdateStep, fetchAllIndexableRows } from "@/hooks/useIndexableTracker";
+import { useFaxTracker, useDeleteFax, useUpdateStep as useFaxUpdateStep } from "@/hooks/useFaxTracker";
+import { useIndexableTracker, useDeleteIndexable, useUpdateStep as useIndexableUpdateStep } from "@/hooks/useIndexableTracker";
 import { useFaxAccounts, useDeleteFaxAccount, type FaxAccount } from "@/hooks/useFaxAccounts";
-import { downloadTrackerPDF, FAX_PDF_CONFIG, INDEXABLE_PDF_CONFIG } from "@/lib/tracker-utils";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
 import { FaxEntryDialog } from "@/components/ar/fax/FaxEntryDialog";
 import { IndexableEntryDialog } from "@/components/ar/indexable/IndexableEntryDialog";
@@ -41,9 +39,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Pencil, Trash2, Search, ListFilter, FileWarning, MoreVertical, FileText, X, Check, ChevronDown, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ListFilter, FileWarning, MoreVertical, X, Check, ChevronDown, Users } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { FaxRow, FaxStepStatus, StepField } from "@/hooks/useFaxTracker";
 
@@ -59,7 +56,6 @@ const MODES: { id: TrackerMode; label: string }[] = [
 
 const FaxTrackerPage = () => {
   const { user } = useAuth();
-  const { data: profile } = useProfile();
   const { data: accounts = [], isLoading: accountsLoading } = useFaxAccounts();
 
   const [mode, setMode] = useState<TrackerMode>(
@@ -112,7 +108,6 @@ const FaxTrackerPage = () => {
   };
 
   const labels = stepLabels(mode);
-  const [exporting, setExporting] = useState(false);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<Set<string>>(
@@ -229,62 +224,6 @@ const FaxTrackerPage = () => {
 
   const openAdd = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (row: FaxRow) => { setEditing(row); setDialogOpen(true); };
-
-  const handleExport = async (allAccounts = false) => {
-    setExporting(true);
-    try {
-      const userName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || undefined;
-      const activeFilters = statusFilter.size ? Array.from(statusFilter).join(", ") : null;
-
-      let exportRows: FaxRow[] = filtered;
-      let accountName: ((row: FaxRow) => string) | undefined;
-      if (allAccounts) {
-        const all = isFax ? await fetchAllFaxRows() : await fetchAllIndexableRows();
-        exportRows = all
-          .filter(matchesFilters)
-          .sort((a, b) => {
-            const at = a.updated_at ? new Date(a.updated_at).getTime() : 0;
-            const bt = b.updated_at ? new Date(b.updated_at).getTime() : 0;
-            return bt - at;
-          });
-        if (exportRows.length === 0) {
-          toast.error("No matching rows across any account.");
-          return;
-        }
-        const nameById = new Map(accounts.map((a) => [a.id, a.name]));
-        accountName = (row) => nameById.get(row.account_id) ?? "—";
-      }
-
-      const subtitleBits = [
-        allAccounts
-          ? `Accounts: All (${new Set(exportRows.map((r) => r.account_id)).size})`
-          : activeAccount ? `Account: ${activeAccount.name}` : null,
-        activeFilters ? `Status: ${activeFilters}` : "All patients",
-        search.trim() ? `Search: "${search.trim()}"` : null,
-      ].filter(Boolean);
-
-      const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-      const accountPart = allAccounts ? "all-accounts-" : activeAccount ? `${slug(activeAccount.name)}-` : "";
-      const statusPart = statusFilter.size
-        ? STATUS_GROUPS.filter((g) => statusFilter.has(g)).map(slug).join("-")
-        : "all";
-      const searchPart = search.trim() ? `-${slug(search.trim())}` : "";
-      const datePart = new Date().toISOString().slice(0, 10);
-      const prefix = isFax ? "fax-tracker" : "indexable-tracker";
-      const filename = `${prefix}-${accountPart}${statusPart}${searchPart}-${datePart}.pdf`;
-
-      const config = isFax ? FAX_PDF_CONFIG : INDEXABLE_PDF_CONFIG;
-      await downloadTrackerPDF(exportRows, config, filename, {
-        userName,
-        subtitle: subtitleBits.join("  ·  "),
-        accountName,
-      });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Export failed.");
-    } finally {
-      setExporting(false);
-    }
-  };
 
   const toggleStatus = (s: string) => {
     setStatusFilter((prev) => {
@@ -455,40 +394,6 @@ const FaxTrackerPage = () => {
                 <X className="size-4 mr-1.5" /> Clear all
               </Button>
             )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-10 shrink-0"
-                  disabled={exporting || filtered.length === 0}
-                  title={filtered.length === 0 ? "Nothing to export" : "Export to PDF"}
-                >
-                  <FileText className="size-4 mr-1" />
-                  {exporting ? "Exporting…" : "Export PDF"}
-                  <ChevronDown className="size-4 ml-1.5 opacity-60" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64 font-sans">
-                <DropdownMenuItem onClick={() => handleExport(false)}>
-                  <div className="flex flex-col">
-                    <span>This account only</span>
-                    <span className="text-xs text-foreground">
-                      {activeAccount?.name ?? "Current account"} · current view
-                    </span>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleExport(true)}>
-                  <div className="flex flex-col">
-                    <span>All accounts</span>
-                    <span className="text-xs text-foreground">
-                      Same filters across every account
-                    </span>
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
             <Button
               size="sm"
               className="h-10 shrink-0 bg-primary hover:bg-primary/95 text-primary-foreground"
