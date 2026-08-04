@@ -412,18 +412,30 @@ const FaxTrackerPage = () => {
               <DropdownMenuContent align="end" className="w-56 font-sans">
                 <DropdownMenuLabel className="text-xs text-foreground font-normal">Filter by overall status</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {STATUS_GROUPS.map((s) => (
-                  <DropdownMenuCheckboxItem
-                    key={s}
-                    checked={statusFilter.has(s)}
-                    onCheckedChange={() => toggleStatus(s)}
-                    onSelect={(e) => e.preventDefault()}
-                    className="flex items-center justify-between"
-                  >
-                    <span>{s}</span>
-                    <span className="ml-2 text-xs text-foreground tabular-nums">{groupCounts[s]}</span>
-                  </DropdownMenuCheckboxItem>
-                ))}
+                {STATUS_GROUPS.map((s) => {
+                  const active = statusFilter.has(s);
+                  return (
+                    <DropdownMenuItem
+                      key={s}
+                      onClick={() => toggleStatus(s)}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="flex items-center gap-2">
+                        <StatusIcon status={
+                          s === "Resolved" ? "Successfully Sent"
+                          : s === "Failed" ? "Failed"
+                          : s === "Waiting" ? "Waiting"
+                          : "Pending"
+                        } />
+                        <span>{s}</span>
+                      </span>
+                      <span className="flex items-center gap-2">
+                        {active && <Check className="size-3.5 text-primary" />}
+                        <span className="text-xs text-foreground tabular-nums">{groupCounts[s]}</span>
+                      </span>
+                    </DropdownMenuItem>
+                  );
+                })}
                 {statusFilter.size > 0 && (
                   <>
                     <DropdownMenuSeparator />
