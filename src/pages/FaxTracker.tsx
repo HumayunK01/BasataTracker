@@ -343,7 +343,14 @@ const FaxTrackerPage = () => {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-10 shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "h-10 shrink-0",
+                    statusFilter.size > 0 && "border-primary/60 bg-primary/10 text-primary hover:bg-primary/15",
+                  )}
+                >
                   <ListFilter className="size-4 mr-1.5" />
                   Status{statusFilter.size ? ` (${statusFilter.size})` : ""}
                 </Button>
@@ -356,17 +363,18 @@ const FaxTrackerPage = () => {
                   return (
                     <DropdownMenuItem
                       key={s}
+                      onSelect={(e) => e.preventDefault()}
                       onClick={() => toggleStatus(s)}
-                      className="flex items-center justify-between"
+                      className="flex items-center justify-between gap-2"
                     >
-                      <span className="flex items-center gap-2">
+                      <span className={cn("flex items-center gap-2", active && "text-primary")}>
                         <StatusIcon status={
                           s === "Resolved" ? "Successfully Sent"
                           : s === "Failed" ? "Failed"
                           : s === "Waiting" ? "Waiting"
                           : "Pending"
                         } />
-                        <span>{s}</span>
+                        <span className={cn(active && "font-semibold")}>{s}</span>
                       </span>
                       <span className="flex items-center gap-2">
                         {active && <Check className="size-3.5 text-primary" />}
