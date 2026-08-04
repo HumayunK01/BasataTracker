@@ -535,9 +535,10 @@ const FaxTrackerPage = () => {
                               type="button"
                               onClick={() => copyName(row.patient_name)}
                               title={row.patient_name}
-                              className="press-scale font-medium text-foreground rounded px-1 -mx-1 text-left hover:bg-foreground/10 hover:underline underline-offset-2 transition-colors cursor-pointer block max-w-full truncate"
+                              className="press-scale inline-flex items-center gap-1.5 font-medium text-foreground rounded px-1 -mx-1 text-left hover:bg-foreground/10 hover:underline underline-offset-2 transition-colors cursor-pointer max-w-full"
                             >
-                              {row.patient_name}
+                              <img src="/pdf.png" alt="" className="size-4 shrink-0 object-contain" />
+                              <span className="truncate min-w-0">{row.patient_name}</span>
                             </button>
                           </td>
                           {(["step1", "step2", "step3"] as StepField[]).map((field) => (
