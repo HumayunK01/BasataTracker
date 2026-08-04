@@ -103,8 +103,9 @@ export function stepIsSkipped(row: { step1: FaxStepStatus; step2: FaxStepStatus 
   if (mode !== "indexable") return false;
   const status = row[field];
   if (status && status !== "Pending") return false;
-  const laterFields: StepField[] = field === "step1" ? ["step2", "step3"] : field === "step2" ? ["step3"] : [];
-  return laterFields.some((f) => row[f] === "Successfully Sent");
+  return (["step1", "step2", "step3"] as StepField[])
+    .filter((f) => f !== field)
+    .some((f) => row[f] === "Successfully Sent");
 }
 
 export function stepLabels(mode: TrackerMode): [string, string, string] {
