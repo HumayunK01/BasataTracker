@@ -24,7 +24,7 @@ export function StepCell({
   if (!active) return <td className="px-3 py-2 text-center w-28 text-muted-foreground">—</td>;
 
   if (stepIsSkipped(row, field, mode)) {
-    return <td className="px-3 py-2 text-center w-28 text-xs font-normal text-foreground italic">No need</td>;
+    return <td className="px-3 py-2 text-center w-28 text-xs font-normal text-foreground italic">—</td>;
   }
 
   if (!editable) {

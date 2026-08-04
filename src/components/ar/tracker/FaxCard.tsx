@@ -92,7 +92,7 @@ export function FaxCard({
                 {!active ? (
                    <span className="font-normal text-muted-foreground">—</span>
                 ) : skipped ? (
-                  <span className="text-xs font-normal text-foreground italic">No need</span>
+                  <span className="text-xs font-normal text-foreground italic">—</span>
                 ) : mine ? (
                   <StepPicker status={status} onPick={(v) => onPickStep(field, v)} label={labels[i]} />
                 ) : (
