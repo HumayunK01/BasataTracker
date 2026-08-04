@@ -1,4 +1,4 @@
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, CheckCheck, Loader2, X } from "lucide-react";
 import { STEP_STATUSES, type FaxStepStatus } from "@/hooks/useFaxTracker";
 import {
   DropdownMenu,
@@ -9,7 +9,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { stepClasses, stepMenuClasses } from "./tracker-helpers";
+import { labelFor } from "./tracker-helpers";
+
+export function StatusIcon({ status, tickColor }: { status: FaxStepStatus | null; tickColor?: string }) {
+  switch (status) {
+    case "Successfully Sent": return <CheckCheck className={`size-4 ${tickColor ?? "text-emerald-500"}`} />;
+    case "Failed":            return <X className={`size-4 ${tickColor ?? "text-rose-500"}`} />;
+    case "Waiting":           return <Loader2 className="size-3.5 text-amber-600 animate-spin" />;
+    case "Pending":           return <Loader2 className="size-3.5 text-blue-500 animate-spin" />;
+    default:                  return null;
+  }
+}
+
 
 export function StepPicker({
   status,
@@ -29,12 +40,16 @@ export function StepPicker({
           type="button"
           title="Click to change status"
           className={cn(
-            "press-scale inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-sm font-semibold transition-colors hover:bg-foreground/10",
-            status ? stepClasses(status) : "text-foreground",
+            "press-scale inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-normal transition-colors hover:bg-foreground/10 text-foreground",
             triggerClassName,
           )}
         >
-          {status ?? "Set status"}
+          {status ? (
+            <span className="inline-flex items-center gap-1">
+              <StatusIcon status={status} tickColor={status === "Successfully Sent" ? "text-emerald-500" : undefined} />
+              {labelFor(status)}
+            </span>
+          ) : "Set status"}
           <ChevronDown className="size-3 opacity-50" />
         </button>
       </DropdownMenuTrigger>
@@ -45,9 +60,12 @@ export function StepPicker({
           <DropdownMenuItem
             key={s}
             onClick={() => { if (s !== status) onPick(s); }}
-            className={cn("flex items-center justify-between gap-2", stepMenuClasses(s))}
+            className="flex items-center justify-between gap-2 text-foreground"
           >
-            <span className="font-medium">{s}</span>
+            <span className="font-normal inline-flex items-center gap-1.5">
+              <StatusIcon status={s} />
+              {labelFor(s)}
+            </span>
             {s === status && <Check className="size-3.5 opacity-80" />}
           </DropdownMenuItem>
         ))}

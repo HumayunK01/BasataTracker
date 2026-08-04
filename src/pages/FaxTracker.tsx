@@ -11,12 +11,13 @@ import { IndexableEntryDialog } from "@/components/ar/indexable/IndexableEntryDi
 import { NewAccountDialog } from "@/components/ar/fax/NewAccountDialog";
 import { RenameAccountDialog } from "@/components/ar/fax/RenameAccountDialog";
 import { StepCell } from "@/components/ar/tracker/StepCell";
+import { StatusIcon } from "@/components/ar/tracker/StepPicker";
 import { FaxCard } from "@/components/ar/tracker/FaxCard";
 import { SortHeader } from "@/components/ar/tracker/SortHeader";
 import type { SortKey } from "@/components/ar/tracker/SortHeader";
 import { StatCard } from "@/components/ar/tracker/StatCard";
 import { Pagination } from "@/components/Pagination";
-import { copyName, displayStatus, formatDateTime, dateKey, statusGroup, rowClasses, overallClasses,
+import { copyName, displayStatus, formatDateTime, dateKey, statusGroup,
   stepLabels, pageNumbersArr, STATUS_GROUPS, type TrackerMode,
 } from "@/components/ar/tracker/tracker-helpers";
 import { Button } from "@/components/ui/button";
@@ -49,7 +50,7 @@ import type { FaxRow, FaxStepStatus, StepField } from "@/hooks/useFaxTracker";
 const ACCOUNT_KEY = "fax-tracker-account";
 const MODE_KEY = "tracker-mode";
 const STATUS_FILTER_KEY = "tracker-status-filter";
-const PAGE_SIZE = 25;
+const DEFAULT_PAGE_SIZE = 10;
 
 const MODES: { id: TrackerMode; label: string }[] = [
   { id: "fax", label: "Fax" },
@@ -129,6 +130,7 @@ const FaxTrackerPage = () => {
   }, [statusFilter]);
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" } | null>(null);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<FaxRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FaxRow | null>(null);
@@ -168,13 +170,13 @@ const FaxTrackerPage = () => {
   }, [rows, matchesFilters, sort]);
 
   useEffect(() => { setPage(1); }, [search, statusFilter]);
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
   const paginated = useMemo(
-    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [filtered, page],
+    () => filtered.slice((page - 1) * pageSize, page * pageSize),
+    [filtered, page, pageSize],
   );
   const pageNumbers = useMemo(() => pageNumbersArr(totalPages, page), [totalPages, page]);
 
@@ -489,20 +491,20 @@ const FaxTrackerPage = () => {
           <FigHeader title="Patients" />
           <div className="hidden md:block bg-card border border-border rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-xs border-collapse">
+              <table className="w-full text-xs border-collapse table-fixed">
                 <thead>
                   <tr className="bg-muted/50 text-xs uppercase tracking-wide text-foreground">
-                    <th className="px-3 py-2.5 text-left font-semibold">
+                    <th className="px-3 py-2.5 text-left font-semibold w-[20%]">
                       <SortHeader label="Patient" sortKey="patient_name" sort={sort} onSort={toggleSort} align="left" />
                     </th>
-                    <th className="px-3 py-2.5 text-center font-semibold">{labels[0]}</th>
-                    <th className="px-3 py-2.5 text-center font-semibold">{labels[1]}</th>
-                    <th className="px-3 py-2.5 text-center font-semibold">{labels[2]}</th>
-                    <th className="px-3 py-2.5 text-center font-semibold">
+                    <th className="px-3 py-2.5 text-center font-semibold w-[12%]">{labels[0]}</th>
+                    <th className="px-3 py-2.5 text-center font-semibold w-[12%]">{labels[1]}</th>
+                    <th className="px-3 py-2.5 text-center font-semibold w-[12%]">{labels[2]}</th>
+                    <th className="px-3 py-2.5 text-center font-semibold w-[16%]">
                       <SortHeader label="Overall Status" sortKey="overall_status" sort={sort} onSort={toggleSort} align="center" />
                     </th>
-                    <th className="px-3 py-2.5 text-left font-semibold">Notes</th>
-                    <th className="px-3 py-2.5 text-center font-semibold w-12" aria-label="Actions" />
+                    <th className="px-3 py-2.5 text-left font-semibold w-[22%]">Notes</th>
+                    <th className="px-3 py-2.5 text-center font-semibold w-[6%]" aria-label="Actions" />
                   </tr>
                 </thead>
                 <tbody>
@@ -527,7 +529,7 @@ const FaxTrackerPage = () => {
                     paginated.map((row) => {
                       const mine = row.created_by === user?.id;
                       return (
-                        <tr key={row.id} className={cn("border-t border-border transition-colors", rowClasses(row.overall_status), newIds.has(row.id) && "animate-row-in")}>
+                        <tr key={row.id} className={cn("border-t border-border transition-colors hover:bg-muted/30", newIds.has(row.id) && "animate-row-in")}>
                           <td className="px-3 py-2 max-w-[16rem]">
                             <button
                               type="button"
@@ -549,8 +551,18 @@ const FaxTrackerPage = () => {
                               mode={mode}
                             />
                           ))}
-                          <td className={cn("px-3 py-2 text-center text-xs font-semibold", overallClasses(row.overall_status))}>
-                            {displayStatus(row.overall_status)}
+                          <td className="px-3 py-2 text-center text-xs font-semibold text-foreground truncate">
+                            <span className="inline-flex items-center justify-center gap-1.5 w-full min-w-0 overflow-hidden">
+                              <span className="shrink-0">
+                                <StatusIcon status={
+                                  statusGroup(row.overall_status) === "Resolved" ? "Successfully Sent"
+                                  : statusGroup(row.overall_status) === "Failed" ? "Failed"
+                                  : statusGroup(row.overall_status) === "Waiting" ? "Waiting"
+                                  : "Pending"
+                                } />
+                              </span>
+                              <span className="truncate">{displayStatus(row.overall_status)}</span>
+                            </span>
                           </td>
                           <td className="px-3 py-2 text-foreground max-w-[16rem] truncate" title={row.notes ?? ""}>
                             {row.notes || <span className="text-muted-foreground">—</span>}
@@ -589,16 +601,6 @@ const FaxTrackerPage = () => {
                 </tbody>
               </table>
             </div>
-            {!isLoading && (
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                pageNumbers={pageNumbers}
-                total={filtered.length}
-                pageSize={PAGE_SIZE}
-                onPageChange={setPage}
-              />
-            )}
           </div>
 
           <div className="md:hidden space-y-3">
@@ -617,7 +619,7 @@ const FaxTrackerPage = () => {
                 hint={rows.length === 0 ? "Add your first one to start tracking." : "No patients match your current filters."}
               />
             ) : (
-              <>
+              <div className="space-y-3">
                 {paginated.map((row) => (
                   <FaxCard
                     key={row.id}
@@ -631,21 +633,24 @@ const FaxTrackerPage = () => {
                     mode={mode}
                   />
                 ))}
-                {totalPages > 1 && (
-                  <div className="rounded-lg border border-border">
-                    <Pagination
-                      page={page}
-                      totalPages={totalPages}
-                      pageNumbers={pageNumbers}
-                      total={filtered.length}
-                      pageSize={PAGE_SIZE}
-                      onPageChange={setPage}
-                    />
-                  </div>
-                )}
-              </>
+              </div>
             )}
           </div>
+
+          {!isLoading && (
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              pageNumbers={pageNumbers}
+              onPageChange={setPage}
+              showFirstLast
+              itemsPerPage={pageSize}
+              onItemsPerPageChange={(n) => {
+                setPageSize(n);
+                setPage(1);
+              }}
+            />
+          )}
         </div>
       </main>
 

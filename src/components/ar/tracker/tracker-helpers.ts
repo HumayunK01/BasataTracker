@@ -1,11 +1,24 @@
 import type { FaxStepStatus, StepField } from "@/hooks/useFaxTracker";
 import type { TrackerMode } from "./types";
-
 export { type TrackerMode } from "./types";
+
+// ponytail: display label for step statuses — "Successfully Sent" is verbose for the
+// dropdown/cell, so the picker shows "Sent". The backend value stays "Successfully Sent"
+// (it's a stored enum) so no DB migration is needed.
+export const STATUS_LABEL: Record<string, string> = {
+  "Successfully Sent": "Sent",
+  "Failed": "Failed",
+  "Waiting": "Waiting",
+  "Pending": "Pending",
+};
+
+export function labelFor(status: string): string {
+  return STATUS_LABEL[status] ?? status;
+}
 
 export function stepClasses(status: FaxStepStatus | null): string {
   switch (status) {
-    case "Successfully Sent": return "text-emerald-700 dark:text-white";
+     case "Successfully Sent": return "text-emerald-700 dark:text-white";
     case "Failed":            return "text-rose-700 dark:text-white";
     case "Waiting":           return "text-amber-600 dark:text-white";
     case "Pending":           return "text-foreground dark:text-white";
@@ -16,7 +29,6 @@ export function stepClasses(status: FaxStepStatus | null): string {
 export function stepMenuClasses(status: FaxStepStatus | null): string {
   // ponytail: only differs from stepClasses on dark variants; avoids a second switch
   const dark: Record<string, string> = {
-    "Successfully Sent": "dark:text-emerald-300",
     "Failed": "dark:text-rose-300",
     "Waiting": "dark:text-amber-300",
   };
@@ -32,8 +44,12 @@ export function overallClasses(status: string): string {
 }
 
 export function displayStatus(status: string): string {
+  // The SQL view appends "– Refax Same/New/ROI #" after "Resolved"; users only need the
+  // top-level outcome, so collapse all "Resolved – …" variants to plain "Resolved".
+  if (status.startsWith("Resolved")) return "Resolved";
   return status.replace(/\s*#\s*$/, "").trim();
 }
+
 
 export function formatDateTime(value: string | null | undefined): { date: string; time: string } | null {
   if (!value) return null;
