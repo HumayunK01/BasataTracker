@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { stepIsSkipped } from "@/components/ar/tracker/tracker-helpers";
+import { formatDobInput, stepIsSkipped } from "@/components/ar/tracker/tracker-helpers";
 import type { FaxRow, StepField } from "@/hooks/useFaxTracker";
 
 const row = (step1: FaxRow["step1"], step2: FaxRow["step2"], step3: FaxRow["step3"]) =>
@@ -28,5 +28,23 @@ describe("stepIsSkipped (indexable)", () => {
   it("is inert outside indexable mode", () => {
     const r = row("Successfully Sent", "Pending", "Pending");
     expect(stepIsSkipped(r, "step2", "fax")).toBe(false);
+  });
+});
+
+describe("formatDobInput (MM/DD/YYYY mask)", () => {
+  it("inserts slashes as digits are typed", () => {
+    expect(formatDobInput("1")).toBe("1");
+    expect(formatDobInput("12")).toBe("12");
+    expect(formatDobInput("123")).toBe("12/3");
+    expect(formatDobInput("01011990")).toBe("01/01/1990");
+  });
+
+  it("is idempotent on already-formatted values and strips stray characters", () => {
+    expect(formatDobInput("01/01/1990")).toBe("01/01/1990");
+    expect(formatDobInput("01-01-1990")).toBe("01/01/1990");
+  });
+
+  it("caps at 8 digits", () => {
+    expect(formatDobInput("0101199011")).toBe("01/01/1990");
   });
 });

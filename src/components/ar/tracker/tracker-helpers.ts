@@ -127,6 +127,13 @@ export async function copyName(name: string) {
   }
 }
 
+// Mask DOB input as MM/DD/YYYY while typing — strips non-digits, inserts "/" every 2 digits.
+export function formatDobInput(v: string): string {
+  const d = v.replace(/\D/g, "").slice(0, 8);
+  if (d.length <= 4) return d.replace(/(\d{2})(?=\d)/g, "$1/");
+  return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
+}
+
 export function pageNumbersArr(totalPages: number, page: number): (number | "…")[] {
   if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
   const nums: (number | "…")[] = [1];
