@@ -46,7 +46,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Plus, Search, X, Pencil, Trash2, FileText, Info, Loader2, CalendarDays, Copy, Check, CheckCheck, ChevronDown, ChevronRight } from "lucide-react";
 import { SortHeader, type SortKey } from "@/components/ar/tracker/SortHeader";
-import { copyName } from "@/components/ar/tracker/tracker-helpers";
+import { copyName, formatDobInput } from "@/components/ar/tracker/tracker-helpers";
 import Skeleton from "react-loading-skeleton";
 import { cn } from "@/lib/utils";
 
@@ -441,9 +441,13 @@ function GroupRows({
             </span>
           </td>
           <td className="px-3 pl-8 py-2 w-56 max-w-56 truncate text-foreground" title={row.patient_name}>
-            <CopyValue value={row.patient_name} title={row.patient_name}>
-              <span className="truncate block">{row.patient_name}</span>
-            </CopyValue>
+            {row.patient_name ? (
+              <CopyValue value={row.patient_name} title={row.patient_name}>
+                <span className="truncate block">{row.patient_name}</span>
+              </CopyValue>
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            )}
           </td>
           <td className="px-3 py-2 w-36 text-foreground tabular-nums truncate" title={row.patient_dob ?? ""}>
             {row.patient_dob ? (
@@ -602,7 +606,6 @@ function DocDialog({
 
   const save = () => {
     if (!fileName.trim()) { setError("File name is required."); return; }
-    if (!patientName.trim()) { setError("Patient name is required."); return; }
     if (patientDob && !parseDob(patientDob)) { setError("Patient DOB must be a valid date (MM/DD/YYYY)."); return; }
     if (!workedOn || !/^\d{4}-\d{2}-\d{2}$/.test(workedOn)) { setError("Date worked is required."); return; }
     upsert.mutate(
@@ -660,7 +663,7 @@ function DocDialog({
               id="fb-dob"
               placeholder="MM/DD/YYYY"
               value={patientDob}
-              onChange={(e) => { setPatientDob(e.target.value); setError(""); }}
+              onChange={(e) => { setPatientDob(formatDobInput(e.target.value)); setError(""); }}
             />
           </div>
 

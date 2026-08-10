@@ -14,7 +14,8 @@ export type FaxedBackStatus = (typeof FAXED_BACK_STATUSES)[number];
 
 const DocSchema = z.object({
   file_name: z.string().trim().min(1, "File name is required").max(255, "Name too long"),
-  patient_name: z.string().trim().min(1, "Patient name is required").max(200, "Name too long"),
+  // ponytail: optional — empty string keeps the NOT NULL column happy without a migration
+  patient_name: z.string().trim().max(200, "Name too long").default(""),
   patient_dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date").nullable().optional(),
   worked_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date"),
   status: z.enum(FAXED_BACK_STATUSES),
