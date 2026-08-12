@@ -43,6 +43,7 @@ import {
 import { Check, Copy, Eye, EyeOff, FileDown, FileText, Folder, FolderInput, FolderPlus, KeyRound, Layers, LayoutGrid, List, MoreVertical, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 import { CredentialCardItem } from "@/components/ar/credentials/CredentialCardItem";
 
 const FOLDER_KEY = "credential-folder";
@@ -152,6 +153,8 @@ async function downloadCredentialPDF(rows: Credential[], name: string, title: st
 }
 
 const CredentialsPage = () => {
+  const { user } = useAuth();
+  const me = user?.id;
   const { data: folders = [], isLoading: foldersLoading } = useCredentialFolders();
 
   const [folderId, setFolderId] = useState<string | null>(() => localStorage.getItem(FOLDER_KEY));
@@ -317,6 +320,7 @@ const CredentialsPage = () => {
       return n;
     });
   const selectedRows = credentials.filter((c) => selected.has(c.id));
+  const allSelectedMine = selectedRows.length > 0 && selectedRows.every((c) => c.created_by === me);
   const clearSelection = () => setSelected(new Set());
 
   // Reveal a password; auto-hide it again after 5s. Toggling off clears the timer.
@@ -386,16 +390,18 @@ const CredentialsPage = () => {
                     <Folder className="size-4 shrink-0" />
                     <span className="truncate">{f.name}</span>
                   </span>
-                  <span className="relative z-10 flex items-center shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 max-md:opacity-100 transition-opacity">
-                    <button
-                      type="button"
-                      title={`Rename ${f.name}`}
-                      onClick={() => setFolderToRename(f)}
-                      className="press-scale p-1 rounded text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06] transition-colors"
-                    >
-                      <Pencil className="size-3.5" />
-                    </button>
-                  </span>
+                  {f.created_by === me && (
+                    <span className="relative z-10 flex items-center shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 max-md:opacity-100 transition-opacity">
+                      <button
+                        type="button"
+                        title={`Rename ${f.name}`}
+                        onClick={() => setFolderToRename(f)}
+                        className="press-scale p-1 rounded text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06] transition-colors"
+                      >
+                        <Pencil className="size-3.5" />
+                      </button>
+                    </span>
+                  )}
                 </div>
               );
             })}
@@ -508,31 +514,35 @@ const CredentialsPage = () => {
                 >
                   <FileDown className="size-4 mr-1.5" /> Export PDF
                 </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-9 border-border/60">
-                      <FolderInput className="size-4 mr-1.5" /> Move to
+                {allSelectedMine && (
+                  <>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-9 border-border/60">
+                          <FolderInput className="size-4 mr-1.5" /> Move to
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44 font-sans">
+                        {folders.length === 0 ? (
+                          <span className="block px-2 py-1.5 text-xs text-muted-foreground">No folders</span>
+                        ) : (
+                          folders.map((f) => (
+                            <DropdownMenuItem
+                              key={f.id}
+                              className="text-xs"
+                              onClick={() => bulkMove.mutate({ ids: [...selected], folderId: f.id }, { onSuccess: clearSelection })}
+                            >
+                              {f.name}
+                            </DropdownMenuItem>
+                          ))
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button variant="destructive" size="sm" className="h-9" onClick={() => setBulkDeleteOpen(true)}>
+                      <Trash2 className="size-4 mr-1.5" /> Delete
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44 font-sans">
-                    {folders.length === 0 ? (
-                      <span className="block px-2 py-1.5 text-xs text-muted-foreground">No folders</span>
-                    ) : (
-                      folders.map((f) => (
-                        <DropdownMenuItem
-                          key={f.id}
-                          className="text-xs"
-                          onClick={() => bulkMove.mutate({ ids: [...selected], folderId: f.id }, { onSuccess: clearSelection })}
-                        >
-                          {f.name}
-                        </DropdownMenuItem>
-                      ))
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button variant="destructive" size="sm" className="h-9" onClick={() => setBulkDeleteOpen(true)}>
-                  <Trash2 className="size-4 mr-1.5" /> Delete
-                </Button>
+                  </>
+                )}
                 <Button variant="ghost" size="sm" className="h-9 text-muted-foreground" onClick={clearSelection}>
                   Clear
                 </Button>
@@ -682,35 +692,39 @@ const CredentialsPage = () => {
                                 <DropdownMenuItem className="text-xs gap-2 cursor-pointer" onClick={() => copyCredential(c)}>
                                   <Copy className="size-3.5" /> Copy all
                                 </DropdownMenuItem>
-                                <DropdownMenuSub>
-                                  <DropdownMenuSubTrigger className="text-xs gap-2 cursor-pointer">
-                                    <FolderInput className="size-3.5" /> Move to
-                                  </DropdownMenuSubTrigger>
-                                  <DropdownMenuPortal>
-                                    <DropdownMenuSubContent className="w-40 font-sans p-1">
-                                      {otherFolders.length === 0 ? (
-                                        <span className="block px-2 py-1.5 text-xs text-muted-foreground">No other folders</span>
-                                      ) : (
-                                        otherFolders.map((f) => (
-                                          <DropdownMenuItem
-                                            key={f.id}
-                                            className="text-xs gap-2 cursor-pointer"
-                                            onClick={() => moveCredential.mutate({ id: c.id, folderId: f.id })}
-                                          >
-                                            {f.name}
-                                          </DropdownMenuItem>
-                                        ))
-                                      )}
-                                    </DropdownMenuSubContent>
-                                  </DropdownMenuPortal>
-                                </DropdownMenuSub>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-xs gap-2 cursor-pointer" onClick={() => openEdit(c)}>
-                                  <Pencil className="size-3.5" /> Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="text-xs gap-2 text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10" onClick={() => setDeleteTarget(c)}>
-                                  <Trash2 className="size-3.5" /> Delete
-                                </DropdownMenuItem>
+                                {c.created_by === me && (
+                                  <>
+                                    <DropdownMenuSub>
+                                      <DropdownMenuSubTrigger className="text-xs gap-2 cursor-pointer">
+                                        <FolderInput className="size-3.5" /> Move to
+                                      </DropdownMenuSubTrigger>
+                                      <DropdownMenuPortal>
+                                        <DropdownMenuSubContent className="w-40 font-sans p-1">
+                                          {otherFolders.length === 0 ? (
+                                            <span className="block px-2 py-1.5 text-xs text-muted-foreground">No other folders</span>
+                                          ) : (
+                                            otherFolders.map((f) => (
+                                              <DropdownMenuItem
+                                                key={f.id}
+                                                className="text-xs gap-2 cursor-pointer"
+                                                onClick={() => moveCredential.mutate({ id: c.id, folderId: f.id })}
+                                              >
+                                                {f.name}
+                                              </DropdownMenuItem>
+                                            ))
+                                          )}
+                                        </DropdownMenuSubContent>
+                                      </DropdownMenuPortal>
+                                    </DropdownMenuSub>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="text-xs gap-2 cursor-pointer" onClick={() => openEdit(c)}>
+                                      <Pencil className="size-3.5" /> Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-xs gap-2 text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10" onClick={() => setDeleteTarget(c)}>
+                                      <Trash2 className="size-3.5" /> Delete
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                             </div>
@@ -753,6 +767,7 @@ const CredentialsPage = () => {
                       copiedPassword={copied.has(`${c.id}:pwd`)}
                       copiedFull={copied.has(`${c.id}:copy`)}
                       otherFolders={otherFolders}
+                      canManage={c.created_by === me}
                       onToggleSelect={() => toggleSelect(c.id)}
                       onToggleReveal={() => toggleReveal(c.id)}
                       onCopyLogin={() => copyField(`${c.id}:login`, c.login_id, "Login ID")}
@@ -793,6 +808,7 @@ const CredentialsPage = () => {
                   copiedPassword={copied.has(`${c.id}:pwd`)}
                   copiedFull={copied.has(`${c.id}:copy`)}
                   otherFolders={otherFolders}
+                  canManage={c.created_by === me}
                   onToggleSelect={() => toggleSelect(c.id)}
                   onToggleReveal={() => toggleReveal(c.id)}
                   onCopyLogin={() => copyField(`${c.id}:login`, c.login_id, "Login ID")}
