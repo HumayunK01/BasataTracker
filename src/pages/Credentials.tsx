@@ -374,7 +374,7 @@ const CredentialsPage = () => {
                 <div
                   key={f.id}
                   className={cn(
-                    "group relative flex items-center gap-1 h-10 pl-3 pr-1 max-w-[16rem] border rounded-md text-xs font-medium transition-colors",
+                    "group flex items-center h-10 border rounded-md text-xs font-medium transition-colors shrink-0",
                     active
                       ? "border-primary/50 bg-primary/[0.06] text-primary"
                       : "border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/40 hover:border-border",
@@ -383,24 +383,21 @@ const CredentialsPage = () => {
                   <button
                     type="button"
                     onClick={() => { setFolderId(f.id); setShowAll(false); }}
-                    className="absolute inset-0"
-                    aria-label={f.name}
-                  />
-                  <span className="relative flex items-center gap-2 min-w-0 flex-1 pointer-events-none">
+                    title={f.name}
+                    className="flex items-center gap-2 h-full pl-3 pr-1.5 min-w-0 max-w-[14rem] cursor-pointer"
+                  >
                     <Folder className="size-4 shrink-0" />
                     <span className="truncate">{f.name}</span>
-                  </span>
+                  </button>
                   {f.created_by === me && (
-                    <span className="relative z-10 flex items-center shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 max-md:opacity-100 transition-opacity">
-                      <button
-                        type="button"
-                        title={`Rename ${f.name}`}
-                        onClick={() => setFolderToRename(f)}
-                        className="press-scale p-1 rounded text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06] transition-colors"
-                      >
-                        <Pencil className="size-3.5" />
-                      </button>
-                    </span>
+                    <button
+                      type="button"
+                      title={`Rename ${f.name}`}
+                      onClick={() => setFolderToRename(f)}
+                      className="mr-1 p-1 rounded text-current opacity-0 group-hover:opacity-100 focus-visible:opacity-100 max-md:opacity-100 hover:bg-foreground/[0.08] transition-opacity press-scale"
+                    >
+                      <Pencil className="size-3.5" />
+                    </button>
                   )}
                 </div>
               );
