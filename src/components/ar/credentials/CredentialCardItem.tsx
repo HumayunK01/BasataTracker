@@ -24,6 +24,7 @@ interface CredentialCardItemProps {
   copiedPassword: boolean;
   copiedFull: boolean;
   otherFolders: CredentialFolder[];
+  canManage: boolean;
   onToggleSelect: () => void;
   onToggleReveal: () => void;
   onCopyLogin: () => void;
@@ -42,6 +43,7 @@ export function CredentialCardItem({
   copiedPassword,
   copiedFull,
   otherFolders,
+  canManage,
   onToggleSelect,
   onToggleReveal,
   onCopyLogin,
@@ -82,35 +84,39 @@ export function CredentialCardItem({
             <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={onCopyFull}>
               <Copy className="size-3.5" /> Copy all
             </DropdownMenuItem>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="text-sm gap-2 cursor-pointer">
-                <FolderInput className="size-3.5" /> Move to
-              </DropdownMenuSubTrigger>
-              <DropdownMenuPortal>
-                <DropdownMenuSubContent className="w-40 font-sans p-1">
-                  {otherFolders.length === 0 ? (
-                    <span className="block px-2 py-1.5 text-xs text-muted-foreground">No other folders</span>
-                  ) : (
-                    otherFolders.map((f) => (
-                      <DropdownMenuItem
-                        key={f.id}
-                        className="text-sm cursor-pointer"
-                        onClick={() => onMove(f.id)}
-                      >
-                        {f.name}
-                      </DropdownMenuItem>
-                    ))
-                  )}
-                </DropdownMenuSubContent>
-              </DropdownMenuPortal>
-            </DropdownMenuSub>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={onEdit}>
-              <Pencil className="size-3.5" /> Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-sm gap-2 text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10" onClick={onDelete}>
-              <Trash2 className="size-3.5" /> Delete
-            </DropdownMenuItem>
+            {canManage && (
+              <>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="text-sm gap-2 cursor-pointer">
+                    <FolderInput className="size-3.5" /> Move to
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent className="w-40 font-sans p-1">
+                      {otherFolders.length === 0 ? (
+                        <span className="block px-2 py-1.5 text-xs text-muted-foreground">No other folders</span>
+                      ) : (
+                        otherFolders.map((f) => (
+                          <DropdownMenuItem
+                            key={f.id}
+                            className="text-sm cursor-pointer"
+                            onClick={() => onMove(f.id)}
+                          >
+                            {f.name}
+                          </DropdownMenuItem>
+                        ))
+                      )}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-sm gap-2 cursor-pointer" onClick={onEdit}>
+                  <Pencil className="size-3.5" /> Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-sm gap-2 text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10" onClick={onDelete}>
+                  <Trash2 className="size-3.5" /> Delete
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
