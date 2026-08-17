@@ -293,7 +293,7 @@ export default function CounterPage() {
     }
   };
 
-  // ponytail: hourly autosave — once an hour so system load stays minimal.
+  // ponytail: 5-min autosave — balances responsiveness with reasonable load.
   // Ref keeps the interval stable instead of recreating it on every tap.
   const autoSaveRef = useRef({ counts, activeCategories, saved, isPending: upsert.isPending });
   autoSaveRef.current = { counts, activeCategories, saved, isPending: upsert.isPending };
@@ -305,9 +305,9 @@ export default function CounterPage() {
         await flush(c, cats.map((cat) => cat.key));
         cDispatch({ type: "set_saved", v: true });
       } catch {
-        // Silent — retries next hourly tick; localStorage still holds the counts.
+        // Silent — retries next tick; localStorage still holds the counts.
       }
-    }, 60 * 60 * 1000);
+    }, 5 * 60 * 1000);
     return () => clearInterval(id);
   }, [flush]);
 
