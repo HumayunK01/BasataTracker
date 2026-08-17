@@ -190,7 +190,7 @@ export function createUseUpdateStep(tableName: "fax_tracker" | "indexable_tracke
           .eq("id", row.id)
           .eq("created_by", created_by);
         if (error) throw error;
-        await logAuditEvent(`${auditPrefix}updated` as AuditEvent, { [`${auditPrefix}id`]: row.id, field, value });
+        await logAuditEvent(`${auditPrefix}updated` as AuditEvent, { [`${auditPrefix}id`]: row.id, field, value, prev: row[field] });
       },
       onMutate: async ({ row, field, value }) => {
         await qc.cancelQueries({ queryKey: [queryKey] });

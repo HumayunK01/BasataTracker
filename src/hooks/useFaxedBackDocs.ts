@@ -82,13 +82,15 @@ export function useUpdateFaxedBackStatus() {
     mutationFn: async ({ id, status }: { id: string; status: FaxedBackStatus }) => {
       if (!checkLimit()) throw new Error("Too many updates. Please wait a moment.");
       const created_by = await getUserId();
+      const snaps = qc.getQueriesData<FaxedBackDoc[]>({ queryKey: ["faxed_back_docs"] });
+      const prev = snaps.flatMap(([, d]) => d ?? []).find((r) => r.id === id)?.status;
       const { error } = await supabase
         .from("faxed_back_docs")
         .update({ status })
         .eq("id", id)
         .eq("created_by", created_by);
       if (error) throw error;
-      await logAuditEvent("faxed_back_updated", { id, field: "status", value: status });
+      await logAuditEvent("faxed_back_updated", { id, field: "status", value: status, prev });
     },
     onMutate: async ({ id, status }) => {
       await qc.cancelQueries({ queryKey: ["faxed_back_docs"] });
