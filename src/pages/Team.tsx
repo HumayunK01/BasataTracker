@@ -1,34 +1,55 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 import {
   useTeamProfiles,
   useTeamDailyLogs,
   useSetUserRole,
-  useTeamFaxedBackDocs,
-  useTeamCategories,
-  useTeamAuditLogs,
+  useDeleteUser,
+  useTeamUserFaxedBack,
+  useTeamUserCategories,
+  useTeamUserAuditLogs,
+  useTeamUserLogs,
 } from "@/hooks/useTeamData";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin, useProfile } from "@/hooks/useProfile";
 import { isoDate, totalForLog, formatTableDate, formatDayName, isWeekend, type DailyLog } from "@/types/log";
 import {
   Users, FileText, CalendarCheck, TrendingUp, ChevronRight, Search, ArrowLeft, BedDouble,
-  Shield, FileCheck2, Tags, History, LayoutGrid, Clock,
+  Shield, FileCheck2, Tags, History, LayoutGrid, Clock, MoreVertical, Trash2, ShieldCheck, ShieldX,
+  Sun, Target, Loader2, CheckCheck, X, Ban,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
-import { labelFor, displayStatus, overallClasses, formatDateTime } from "@/components/ar/tracker/tracker-helpers";
+import { labelFor, displayStatus, overallClasses, formatDateTime, pageNumbersArr } from "@/components/ar/tracker/tracker-helpers";
+import { Pagination } from "@/components/Pagination";
 import Skeleton from "react-loading-skeleton";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 function StatCard({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: number | string }) {
   return (
-    <div className="bg-card border border-border/80 rounded-lg p-3 sm:p-4 flex items-center gap-3">
-      <div className="size-8 sm:size-9 rounded-lg border border-border/60 grid place-items-center text-primary/60 bg-primary/[0.04] shrink-0">
+    <div className="bg-card border border-border/50 rounded-lg p-3 flex items-center gap-3 transition-colors hover:border-border/80">
+      <div className="size-8 sm:size-9 rounded-lg grid place-items-center text-primary bg-primary/[0.07] shrink-0">
         <Icon className="size-4 sm:size-[18px]" />
       </div>
       <div className="min-w-0">
-        <p className="text-[11px] font-medium text-foreground uppercase tracking-wider truncate">{label}</p>
+        <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground uppercase tracking-wider truncate">{label}</p>
         <p className="text-lg sm:text-xl font-bold tabular-nums tracking-tight">{value}</p>
       </div>
     </div>
@@ -52,6 +73,42 @@ const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: st
   { id: "categories", label: "Categories", icon: Tags },
   { id: "activity", label: "Activity", icon: History },
 ];
+
+// Highlights the first case-insensitive match of `query` in `text`.
+function Highlight({ text, query }: { text: string; query: string }) {
+  const q = query.trim();
+  if (!q || !text) return <>{text}</>;
+  const idx = text.toLowerCase().indexOf(q.toLowerCase());
+  if (idx === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="bg-primary/15 text-primary rounded-sm px-0.5">{text.slice(idx, idx + q.length)}</mark>
+      {text.slice(idx + q.length)}
+    </>
+  );
+}
+
+// Debounce: API fires 300ms after typing pauses, not per keystroke.
+function useDebouncedValue<T>(value: T, delay = 300): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+  return debounced;
+}
+
+// Same icons/colors as the Faxed Back page's status picker.
+function FBStatusIcon({ status }: { status: string }) {
+  if (status === "Pending") return <Loader2 className="size-3.5 text-blue-500 animate-spin" />;
+  if (status === "Sent") return <CheckCheck className="size-3.5 text-emerald-500" />;
+  if (status === "Failed") return <X className="size-3.5 text-rose-500" />;
+  if (status === "Rejected") return <Ban className="size-3.5 text-amber-500" />;
+  return null;
+}
+
+const FB_FILTERS_INITIAL = { search: "" };
 
 function SectionCard({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
@@ -154,16 +211,34 @@ export default function TeamPage() {
   const { user, loading } = useAuth();
   const { data: profiles = [], isLoading: profilesLoading } = useTeamProfiles();
   const { data: allLogs = [], isLoading: logsLoading } = useTeamDailyLogs();
-  const { data: faxedBack = [], isLoading: faxedBackLoading } = useTeamFaxedBackDocs();
-  const { data: teamCategories = [], isLoading: categoriesLoading } = useTeamCategories();
-  const { data: auditLogs = [], isLoading: auditLoading } = useTeamAuditLogs();
   const isAdmin = useIsAdmin();
   const { isPending: profilePending } = useProfile();
   const setRole = useSetUserRole();
+  const deleteUser = useDeleteUser();
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("overview");
   const [search, setSearch] = useState("");
   const [expandedAuditId, setExpandedAuditId] = useState<string | null>(null);
+  const [pages, setPages] = useState({ logs: 1, faxedBack: 1, categories: 1, activity: 1 });
+  const [faxFilters, setFaxFilters] = useState(FB_FILTERS_INITIAL);
+  const debouncedFaxSearch = useDebouncedValue(faxFilters.search);
+
+  const { data: logsPage = { rows: [], total: 0 }, isLoading: logsLoading2 } = useTeamUserLogs(selectedUserId, pages.logs, search.trim() || undefined);
+  const { data: faxedBackPage = { rows: [], total: 0 }, isLoading: faxedBackLoading } = useTeamUserFaxedBack(selectedUserId, pages.faxedBack, {
+    search: debouncedFaxSearch.trim() || undefined,
+  });
+  const { data: categoriesPage = { rows: [], total: 0 }, isLoading: categoriesLoading } = useTeamUserCategories(selectedUserId, pages.categories);
+  const { data: auditPage = { rows: [], total: 0 }, isLoading: auditLoading } = useTeamUserAuditLogs(selectedUserId, pages.activity);
+
+  const selectedLogs = logsPage.rows;
+  const selectedFaxedBack = faxedBackPage.rows;
+  const selectedCategories = categoriesPage.rows;
+  const selectedAudit = auditPage.rows;
+  const logsTotal = logsPage.total;
+  const faxedBackTotal = faxedBackPage.total;
+  const categoriesTotal = categoriesPage.total;
+  const auditTotal = auditPage.total;
 
   const isLoading = profilesLoading || logsLoading;
 
@@ -186,21 +261,9 @@ export default function TeamPage() {
   }, [profiles, logsByUser]);
 
   const selectedMember = selectedUserId ? memberCards.find((m) => m.id === selectedUserId) : null;
-  const selectedLogs = selectedUserId ? (logsByUser.get(selectedUserId) ?? []) : [];
-  const selectedFaxedBack = selectedUserId ? faxedBack.filter((d) => d.created_by === selectedUserId) : [];
-  const selectedCategories = selectedUserId ? teamCategories.filter((c) => c.user_id === selectedUserId) : [];
-  const selectedAudit = selectedUserId ? auditLogs.filter((a) => a.user_id === selectedUserId) : [];
 
   const today = isoDate();
-  const todayEntry = selectedLogs.find((l) => l.log_date === today);
-
-  const filteredLogs = useMemo(() => {
-    if (!search.trim()) return selectedLogs;
-    const q = search.trim().toLowerCase();
-    return selectedLogs.filter(
-      (l) => l.log_date.includes(q) || formatTableDate(l.log_date).toLowerCase().includes(q),
-    );
-  }, [selectedLogs, search]);
+  const todayEntry = selectedUserId ? (logsByUser.get(selectedUserId) ?? []).find((l) => l.log_date === today) : null;
 
   const isMe = selectedUserId === user?.id;
 
@@ -211,13 +274,21 @@ export default function TeamPage() {
   if (!selectedUserId) {
     return (
       <main className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-5 sm:py-6 animate-fade-in">
-        <div className="w-full space-y-6">
-          <FigHeader title="Admin Panel" sub={`${profiles.length} members`} />
+        <div className="w-full space-y-4">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">Admin Panel</h1>
+              <p className="text-sm text-muted-foreground mt-1">{profiles.length} members · Team overview</p>
+            </div>
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-card border border-border/50 rounded-full px-3 py-1.5">
+              <span className="size-1.5 rounded-full bg-success" /> Live
+            </span>
+          </div>
 
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="bg-card border border-border/80 rounded-lg p-5 space-y-3">
+                <div key={i} className="bg-card border border-border/50 rounded-lg p-4 space-y-3">
                   <Skeleton width={120} height={16} />
                   <Skeleton width={80} height={12} />
                   <div className="grid grid-cols-3 gap-2 pt-2">
@@ -237,25 +308,28 @@ export default function TeamPage() {
                   key={m.id}
                   role="button"
                   tabIndex={0}
-                  onClick={() => { setSelectedUserId(m.id); setTab("overview"); }}
+                  onClick={() => { setSelectedUserId(m.id); setTab("overview"); setSearch(""); setFaxFilters(FB_FILTERS_INITIAL); setPages({ logs: 1, faxedBack: 1, categories: 1, activity: 1 }); }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
                       setSelectedUserId(m.id);
                       setTab("overview");
+                      setSearch("");
+                      setFaxFilters(FB_FILTERS_INITIAL);
+                      setPages({ logs: 1, faxedBack: 1, categories: 1, activity: 1 });
                     }
                   }}
-                  className="bg-card border border-border/80 rounded-lg p-5 text-left hover:border-primary/30 hover:bg-muted/10 transition-colors cursor-pointer"
+                  className="group bg-card border border-border/50 rounded-lg p-4 text-left hover:border-primary/30 hover:bg-muted/10 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 cursor-pointer"
                 >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="size-9 rounded-full bg-primary/10 border border-primary/20 grid place-items-center text-sm font-bold text-primary shrink-0">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="size-10 rounded-lg bg-primary/[0.08] border border-primary/15 grid place-items-center text-sm font-bold text-primary shrink-0">
                       {(m.first_name?.[0] ?? "").toUpperCase() || "?"}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold truncate flex items-center gap-2">
                         <span className="truncate">{m.first_name} {m.last_name}</span>
                         {m.role === "admin" && (
-                          <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                          <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
                             <Shield className="size-3" /> Admin
                           </span>
                         )}
@@ -263,32 +337,57 @@ export default function TeamPage() {
                       <p className="text-[11px] text-muted-foreground">{m.logCount} log entries</p>
                     </div>
                     {m.id !== user?.id && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setRole.mutate({ targetUserId: m.id, role: m.role === "admin" ? "user" : "admin", prevRole: m.role });
-                        }}
-                        disabled={setRole.isPending}
-                        className="shrink-0 text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md border border-border/60 hover:border-primary/40 hover:text-primary disabled:opacity-40 transition-colors"
-                        aria-label={m.role === "admin" ? `Revoke admin from ${m.first_name}` : `Make ${m.first_name} admin`}
-                      >
-                        {setRole.isPending ? "…" : m.role === "admin" ? "Revoke" : "Make admin"}
-                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={(e) => e.stopPropagation()}
+                            className="size-8 shrink-0 rounded-md grid place-items-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+                            aria-label={`Actions for ${m.first_name} ${m.last_name}`}
+                          >
+                            <MoreVertical className="size-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRole.mutate({ targetUserId: m.id, role: m.role === "admin" ? "user" : "admin", prevRole: m.role });
+                            }}
+                            disabled={setRole.isPending}
+                            className="cursor-pointer"
+                          >
+                            {m.role === "admin" ? <ShieldX className="size-4 mr-2" /> : <ShieldCheck className="size-4 mr-2" />}
+                            {m.role === "admin" ? "Revoke admin" : "Make admin"}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteTarget({ id: m.id, name: `${m.first_name} ${m.last_name}` });
+                            }}
+                            disabled={deleteUser.isPending}
+                            className="text-destructive focus:text-destructive cursor-pointer"
+                          >
+                            <Trash2 className="size-4 mr-2" />
+                            Delete user
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-heading flex items-center gap-1"><CalendarCheck className="size-3" /> Days Worked</p>
-                      <p className="text-base font-bold tabular-nums">{m.daysWorked}</p>
+                  <div className="grid grid-cols-3 gap-2 rounded-lg border border-border/40 bg-muted/20 p-2">
+                    <div className="text-center">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-heading flex items-center justify-center gap-1"><CalendarCheck className="size-3" /> Days</p>
+                      <p className="text-base font-bold tabular-nums mt-0.5">{m.daysWorked}</p>
                     </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-heading flex items-center gap-1"><FileText className="size-3" /> Documents</p>
-                      <p className="text-base font-bold tabular-nums">{m.totalDocs}</p>
+                    <div className="text-center border-x border-border/40">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-heading flex items-center justify-center gap-1"><FileText className="size-3" /> Docs</p>
+                      <p className="text-base font-bold tabular-nums mt-0.5">{m.totalDocs}</p>
                     </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-heading flex items-center gap-1"><TrendingUp className="size-3" /> Daily Avg</p>
-                      <p className="text-base font-bold tabular-nums">{m.avg}</p>
+                    <div className="text-center">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-heading flex items-center justify-center gap-1"><TrendingUp className="size-3" /> Avg</p>
+                      <p className="text-base font-bold tabular-nums mt-0.5">{m.avg}</p>
                     </div>
                   </div>
                 </div>
@@ -303,44 +402,48 @@ export default function TeamPage() {
   // ── Drill-down ─────────────────────────────────────────────────────────────
   return (
     <main className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-5 sm:py-6 animate-fade-in">
-      <div className="w-full space-y-6">
-        <div className="flex flex-wrap items-center gap-4">
-          <button
-            onClick={() => { setSelectedUserId(null); setSearch(""); }}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0 flex items-center gap-1"
-          >
-            <ArrowLeft className="size-4" /> Back
-          </button>
+      <div className="w-full space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="size-8 rounded-full bg-primary/10 border border-primary/20 grid place-items-center text-sm font-bold text-primary">
+            <button
+              onClick={() => { setSelectedUserId(null); setSearch(""); setFaxFilters(FB_FILTERS_INITIAL); }}
+              className="size-9 rounded-lg border border-border/50 bg-card text-muted-foreground hover:text-foreground hover:border-border transition-colors shrink-0 grid place-items-center"
+              aria-label="Back to team"
+            >
+              <ArrowLeft className="size-4" />
+            </button>
+            <div className="size-10 rounded-lg bg-primary/[0.08] border border-primary/15 grid place-items-center text-sm font-bold text-primary">
               {((selectedMember?.first_name?.[0] ?? "") + (selectedMember?.last_name?.[0] ?? "")).toUpperCase() || "?"}
             </div>
             <div>
-              <p className="text-sm font-semibold flex items-center gap-2">
+              <p className="text-base sm:text-lg font-semibold tracking-tight text-foreground flex items-center gap-2">
                 {selectedMember?.first_name} {selectedMember?.last_name}
                 {selectedMember?.role === "admin" && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
                     <Shield className="size-3" /> Admin
                   </span>
                 )}
               </p>
-              <p className="text-[11px] text-muted-foreground">{isMe ? "You" : "Team member"}</p>
+              <p className="text-xs text-muted-foreground">{isMe ? "You" : "Team member"}</p>
             </div>
           </div>
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-card border border-border/50 rounded-full px-3 py-1.5">
+            <span className="size-1.5 rounded-full bg-success" /> {selectedMember?.first_name}'s panel
+          </span>
         </div>
 
         {/* Tab bar */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+        <div className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1 bg-card border border-border/50 rounded-lg p-1 w-fit max-w-full">
           {TABS.map((t) => (
             <button
               key={t.id}
               type="button"
               onClick={() => setTab(t.id)}
               className={cn(
-                "shrink-0 inline-flex items-center gap-1.5 px-3 h-9 rounded-md text-xs font-semibold border transition-colors",
+                "shrink-0 inline-flex items-center gap-1.5 px-3.5 h-8 rounded-md text-xs font-medium transition-colors",
                 tab === t.id
-                  ? "bg-primary/10 text-primary border-primary/30"
-                  : "bg-card text-muted-foreground border-border/60 hover:text-foreground hover:border-foreground/20",
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
               )}
             >
               <t.icon className="size-3.5" />
@@ -351,42 +454,155 @@ export default function TeamPage() {
 
         {tab === "overview" && (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
               <StatCard icon={CalendarCheck} label="Days Worked" value={selectedMember?.daysWorked ?? 0} />
               <StatCard icon={FileText} label="Total Documents" value={selectedMember?.totalDocs ?? 0} />
               <StatCard icon={TrendingUp} label="Daily Average" value={selectedMember?.avg ?? 0} />
               <StatCard icon={ChevronRight} label="Today" value={!todayEntry || todayEntry.is_off_day ? 0 : totalForLog(todayEntry)} />
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-              <StatCard icon={FileCheck2} label="Faxed Back" value={selectedFaxedBack.length} />
-              <StatCard icon={Tags} label="Categories" value={selectedCategories.length} />
-              <StatCard icon={History} label="Audit Events" value={selectedAudit.length} />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
+              <StatCard icon={FileCheck2} label="Faxed Back" value={faxedBackTotal} />
+              <StatCard icon={Tags} label="Categories" value={categoriesTotal} />
+              <StatCard icon={History} label="Audit Events" value={auditTotal} />
             </div>
-            <div className="bg-card border border-border/80 rounded-lg p-4 text-xs text-muted-foreground space-y-1">
-              <p><span className="text-foreground font-semibold">Role:</span> {selectedMember?.role === "admin" ? "Admin" : "User"}</p>
-              <p><span className="text-foreground font-semibold">Daily goal:</span> {selectedMember?.daily_goal ?? "Not set"}</p>
-              <p><span className="text-foreground font-semibold">Audit events:</span> {selectedAudit.length}</p>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-2.5">
+              <div className="bg-card border border-border/50 rounded-lg p-3.5">
+                <p className="text-[10px] uppercase tracking-wider font-heading text-muted-foreground/70 mb-2 flex items-center gap-1.5">
+                  <Sun className="size-3" /> Today
+                </p>
+                {!todayEntry ? (
+                  <p className="text-sm text-muted-foreground">No entry logged yet today.</p>
+                ) : todayEntry.is_off_day ? (
+                  <p className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+                    <BedDouble className="size-4" /> {isWeekend(todayEntry.log_date) ? "Weekend" : "Off Day"}
+                  </p>
+                ) : (
+                  <>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-bold tabular-nums text-primary">{totalForLog(todayEntry)}</span>
+                      <span className="text-xs text-muted-foreground">documents today</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {selectedCategories.map((c) => {
+                        const v = (todayEntry.counts ?? {})[c.key] ?? 0;
+                        return v > 0 ? (
+                          <span key={c.key} className="text-xs font-medium px-2 py-0.5 rounded-full tabular-nums bg-muted/40 border border-border/40">{c.short} · {v}</span>
+                        ) : null;
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="bg-card border border-border/50 rounded-lg p-3.5">
+                <p className="text-[10px] uppercase tracking-wider font-heading text-muted-foreground/70 mb-2 flex items-center gap-1.5">
+                  <Target className="size-3" /> Daily Goal
+                </p>
+                {selectedMember?.daily_goal ? (
+                  <>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-bold tabular-nums">{selectedMember.avg}</span>
+                      <span className="text-xs text-muted-foreground">avg / {selectedMember.daily_goal} goal</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-muted/50 mt-2.5 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all"
+                        style={{ width: `${Math.min(100, Math.round((selectedMember.avg / selectedMember.daily_goal) * 100))}%` }}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No daily goal set.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-2.5">
+              <div className="bg-card border border-border/50 rounded-lg overflow-hidden">
+                <p className="text-[10px] uppercase tracking-wider font-heading text-muted-foreground/70 px-3.5 pt-3 pb-2">Recent Logs</p>
+                {logsLoading2 ? (
+                  <div className="px-3.5 pb-3 space-y-2"><Skeleton height={24} count={3} /></div>
+                ) : selectedLogs.length === 0 ? (
+                  <p className="px-3.5 pb-3 text-xs text-muted-foreground">No logs yet.</p>
+                ) : (
+                  <div className="divide-y divide-border/40">
+                    {selectedLogs.slice(0, 6).map((l) => {
+                      const weekend = isWeekend(l.log_date);
+                      const isOff = l.is_off_day;
+                      return (
+                        <div key={l.id} className="flex items-center justify-between px-3.5 py-2">
+                          <div className="flex flex-col leading-tight">
+                            <span className="text-xs font-medium tabular-nums">{formatTableDate(l.log_date)}</span>
+                            <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-heading">{formatDayName(l.log_date)}</span>
+                          </div>
+                          {isOff ? (
+                            <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wide font-heading flex items-center gap-1">
+                              <BedDouble className="size-3" /> {weekend ? "Weekend" : "Off"}
+                            </span>
+                          ) : (
+                            <span className="text-sm font-bold tabular-nums text-primary">{totalForLog(l)}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-card border border-border/50 rounded-lg overflow-hidden">
+                <p className="text-[10px] uppercase tracking-wider font-heading text-muted-foreground/70 px-3.5 pt-3 pb-2">Recent Activity</p>
+                {auditLoading ? (
+                  <div className="px-3.5 pb-3 space-y-2"><Skeleton height={24} count={3} /></div>
+                ) : selectedAudit.length === 0 ? (
+                  <p className="px-3.5 pb-3 text-xs text-muted-foreground">No activity yet.</p>
+                ) : (
+                  <div className="divide-y divide-border/40">
+                    {selectedAudit.slice(0, 6).map((a) => {
+                      const dt = formatDateTime(a.created_at);
+                      return (
+                        <div key={a.id} className="flex items-start gap-2.5 px-3.5 py-2">
+                          <Clock className="size-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-foreground leading-snug">
+                              {describeEvent(a.event, a.details, (id) => {
+                                const p = profiles.find((pr) => pr.id === id);
+                                return p ? `${p.first_name} ${p.last_name}`.trim() : null;
+                              })}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground tabular-nums mt-0.5">
+                              {dt ? `${dt.date} · ${dt.time}` : "—"}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </>
         )}
 
         {tab === "logs" && (
-          <SectionCard title="Daily Logs" sub={`${selectedLogs.length} entries`}>
+          <SectionCard title="Daily Logs" sub={`${logsTotal} entries`}>
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground pointer-events-none" />
               <Input
                 className="pl-9 h-10 text-xs w-full bg-card border-border"
                 placeholder="Search by date…"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setPages((p) => ({ ...p, logs: 1 })); }}
               />
             </div>
             <div className="bg-card border border-border rounded-md overflow-hidden">
-              {filteredLogs.length === 0 ? (
+              {logsLoading2 ? (
+                <div className="space-y-2 p-4"><Skeleton height={36} count={4} /></div>
+              ) : selectedLogs.length === 0 ? (
                 <div className="p-8 text-center text-xs text-muted-foreground">No entries found for this member.</div>
               ) : (
                 <div className="divide-y divide-border/40">
-                  {[...filteredLogs].sort((a, b) => b.log_date.localeCompare(a.log_date)).map((l) => {
+                  {selectedLogs.map((l) => {
                     const weekend = isWeekend(l.log_date);
                     const isOff = l.is_off_day;
                     const total = totalForLog(l);
@@ -421,46 +637,79 @@ export default function TeamPage() {
                 </div>
               )}
             </div>
+            {logsTotal > 30 && (
+              <Pagination
+                page={pages.logs}
+                totalPages={Math.ceil(logsTotal / 30)}
+                pageNumbers={pageNumbersArr(Math.ceil(logsTotal / 30), pages.logs)}
+                onPageChange={(p) => setPages((prev) => ({ ...prev, logs: p }))}
+              />
+            )}
           </SectionCard>
         )}
 
         {tab === "faxed-back" && (
-          <SectionCard title="Faxed Back" sub={`${selectedFaxedBack.length} docs`}>
+          <SectionCard title="Faxed Back" sub={`${faxedBackTotal} docs`}>
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground pointer-events-none" />
+              <Input
+                className="pl-9 h-10 text-xs w-full bg-card border-border"
+                placeholder="Search file, patient, notes…"
+                value={faxFilters.search}
+                onChange={(e) => { setFaxFilters((f) => ({ ...f, search: e.target.value })); setPages((p) => ({ ...p, faxedBack: 1 })); }}
+              />
+            </div>
             {faxedBackLoading ? (
               <div className="space-y-2"><Skeleton height={40} count={4} /></div>
             ) : selectedFaxedBack.length === 0 ? (
               <div className="p-8 text-center text-xs text-muted-foreground">No faxed-back docs.</div>
             ) : (
-              <div className="bg-card border border-border rounded-md overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="text-left text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/40">
-                      <th className="px-4 py-2.5 font-medium">File</th>
-                      <th className="px-3 py-2.5 font-medium">Patient</th>
-                      <th className="px-3 py-2.5 font-medium">Worked On</th>
-                      <th className="px-3 py-2.5 font-medium">Status</th>
-                      <th className="px-3 py-2.5 font-medium">Notes</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/40">
-                    {selectedFaxedBack.map((d) => (
-                      <tr key={d.id} className="hover:bg-muted/20">
-                        <td className="px-4 py-2.5 font-medium truncate max-w-[220px]">{d.file_name}</td>
-                        <td className="px-3 py-2.5 truncate max-w-[160px]">{d.patient_name || "—"}</td>
-                        <td className="px-3 py-2.5 text-muted-foreground">{formatTableDate(d.worked_on)}</td>
-                        <td className="px-3 py-2.5">{d.status}</td>
-                        <td className="px-3 py-2.5 text-muted-foreground truncate max-w-[200px]">{d.notes || "—"}</td>
+              <>
+                <div className="bg-card border border-border/50 rounded-lg overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="text-left text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/40">
+                        <th className="px-4 py-2.5 font-medium">File</th>
+                        <th className="px-3 py-2.5 font-medium">Patient</th>
+                        <th className="px-3 py-2.5 font-medium">Worked On</th>
+                        <th className="px-3 py-2.5 font-medium">Status</th>
+                        <th className="px-3 py-2.5 font-medium">Notes</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-border/40">
+                      {selectedFaxedBack.map((d) => (
+                        <tr key={d.id} className="hover:bg-muted/20">
+                          <td className="px-4 py-2.5 font-medium truncate max-w-[220px]">
+                            <span className="inline-flex items-center">
+                              <img src="/pdf.png" alt="" className="size-4 shrink-0 object-contain mr-1.5" />
+                              <Highlight text={d.file_name} query={faxFilters.search} />
+                              {!/\.pdf$/i.test(d.file_name) && <span>.pdf</span>}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 truncate max-w-[160px]">{d.patient_name ? <Highlight text={d.patient_name} query={faxFilters.search} /> : "—"}</td>
+                          <td className="px-3 py-2.5 text-muted-foreground">{formatTableDate(d.worked_on)}</td>
+                          <td className="px-3 py-2.5"><span className="inline-flex items-center gap-1.5"><FBStatusIcon status={d.status} />{d.status}</span></td>
+                          <td className="px-3 py-2.5 text-muted-foreground truncate max-w-[200px]">{d.notes ? <Highlight text={d.notes} query={faxFilters.search} /> : "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination
+                  page={pages.faxedBack}
+                  totalPages={Math.ceil(faxedBackTotal / 25)}
+                  pageNumbers={pageNumbersArr(Math.ceil(faxedBackTotal / 25), pages.faxedBack)}
+                  onPageChange={(p) => setPages((prev) => ({ ...prev, faxedBack: p }))}
+                  total={faxedBackTotal}
+                  pageSize={25}
+                />
+              </>
             )}
           </SectionCard>
         )}
 
         {tab === "categories" && (
-          <SectionCard title="Categories" sub={`${selectedCategories.length} categories`}>
+          <SectionCard title="Categories" sub={`${categoriesTotal} categories`}>
             {categoriesLoading ? (
               <div className="space-y-2"><Skeleton height={40} count={4} /></div>
             ) : selectedCategories.length === 0 ? (
@@ -483,64 +732,103 @@ export default function TeamPage() {
         )}
 
         {tab === "activity" && (
-          <SectionCard title="Audit Log" sub={`${selectedAudit.length} events`}>
+          <SectionCard title="Audit Log" sub={`${auditTotal} events`}>
             {auditLoading ? (
               <div className="space-y-2"><Skeleton height={40} count={4} /></div>
             ) : selectedAudit.length === 0 ? (
               <div className="p-8 text-center text-xs text-muted-foreground">No activity yet.</div>
             ) : (
-              <div className="bg-card border border-border rounded-md overflow-hidden">
-                <div className="divide-y divide-border/40">
-                  {selectedAudit.map((a) => {
-                    const dt = formatDateTime(a.created_at);
-                    const expanded = expandedAuditId === a.id;
-                    const changes = changeRows(a.event, a.details);
-                    return (
-                      <div key={a.id}>
-                        <button
-                          type="button"
-                          onClick={() => setExpandedAuditId(expanded ? null : a.id)}
-                          className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-muted/20 transition-colors cursor-pointer"
-                        >
-                          <Clock className="size-3.5 text-muted-foreground shrink-0 mt-0.5" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs text-muted-foreground tabular-nums">
-                              {dt ? `${dt.date} · ${dt.time}` : "—"}
-                            </p>
-                            <p className="text-sm font-medium text-foreground">
-                              {describeEvent(a.event, a.details, (id) => {
-                                const p = profiles.find((pr) => pr.id === id);
-                                return p ? `${p.first_name} ${p.last_name}`.trim() : null;
-                              })}
-                            </p>
-                          </div>
-                          <ChevronRight className={`size-4 text-muted-foreground shrink-0 mt-1 transition-transform ${expanded ? "rotate-90" : ""}`} />
-                        </button>
-                        {expanded && (
-                          <div className="px-4 pb-3 pl-10 space-y-1.5">
-                            {changes.length === 0 ? (
-                              <p className="text-xs text-muted-foreground/70 italic">No field details recorded for this event.</p>
-                            ) : (
-                              changes.map((c, i) => (
-                                <div key={i} className="flex items-center gap-2 text-xs flex-wrap">
-                                  <span className="text-muted-foreground">{c.label}:</span>
-                                  <span className="px-1.5 py-0.5 rounded bg-muted/60 border border-border/40 text-muted-foreground line-through decoration-destructive/60">{c.before}</span>
-                                  <span className="text-muted-foreground/60">→</span>
-                                  <span className="px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary font-medium">{c.after}</span>
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+              <>
+<div className="bg-card border border-border/50 rounded-lg overflow-hidden">
+                  <div className="divide-y divide-border/40">
+                    {selectedAudit.map((a) => {
+                      const dt = formatDateTime(a.created_at);
+                      const expanded = expandedAuditId === a.id;
+                      const changes = changeRows(a.event, a.details);
+                      return (
+                        <div key={a.id}>
+                          <button
+                            type="button"
+                            onClick={() => setExpandedAuditId(expanded ? null : a.id)}
+                            className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-muted/20 transition-colors cursor-pointer"
+                          >
+                            <Clock className="size-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs text-muted-foreground tabular-nums">
+                                {dt ? `${dt.date} · ${dt.time}` : "—"}
+                              </p>
+                              <p className="text-sm font-medium text-foreground">
+                                {describeEvent(a.event, a.details, (id) => {
+                                  const p = profiles.find((pr) => pr.id === id);
+                                  return p ? `${p.first_name} ${p.last_name}`.trim() : null;
+                                })}
+                              </p>
+                            </div>
+                            <ChevronRight className={`size-4 text-muted-foreground shrink-0 mt-1 transition-transform ${expanded ? "rotate-90" : ""}`} />
+                          </button>
+                          {expanded && (
+                            <div className="px-4 pb-3 pl-10 space-y-1.5">
+                              {changes.length === 0 ? (
+                                <p className="text-xs text-muted-foreground/70 italic">No field details recorded for this event.</p>
+                              ) : (
+                                changes.map((c, i) => (
+                                  <div key={i} className="flex items-center gap-2 text-xs flex-wrap">
+                                    <span className="text-muted-foreground">{c.label}:</span>
+                                    <span className="px-1.5 py-0.5 rounded bg-muted/60 border border-border/40 text-muted-foreground line-through decoration-destructive/60">{c.before}</span>
+                                    <span className="text-muted-foreground/60">→</span>
+                                    <span className="px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary font-medium">{c.after}</span>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+                <Pagination
+                  page={pages.activity}
+                  totalPages={Math.ceil(auditTotal / 25)}
+                  pageNumbers={pageNumbersArr(Math.ceil(auditTotal / 25), pages.activity)}
+                  onPageChange={(p) => setPages((prev) => ({ ...prev, activity: p }))}
+                  total={auditTotal}
+                  pageSize={25}
+                />
+              </>
             )}
           </SectionCard>
         )}
       </div>
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent className="sm:max-w-md border-destructive/20">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {deleteTarget?.name}?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span className="block">
+                This permanently deletes the user's account, their profile, all daily logs, categories, trackers, and audit history.
+              </span>
+              <span className="block text-destructive font-medium">
+                This action cannot be undone.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-border/60">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/95 text-destructive-foreground disabled:opacity-50"
+              disabled={deleteUser.isPending}
+              onClick={() => {
+                if (!deleteTarget) return;
+                deleteUser.mutate(deleteTarget.id);
+                setDeleteTarget(null);
+              }}
+            >
+              {deleteUser.isPending ? "Deleting…" : "Delete forever"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }
