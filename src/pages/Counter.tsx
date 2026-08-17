@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useCategories, type Category } from "@/hooks/useCategories";
 import { useUpsertLog, useDailyLogs } from "@/hooks/useDailyLogs";
-import { isoDate, totalForLog } from "@/types/log";
+import { isoDate, totalForLog, isWeekend } from "@/types/log";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
 import { RotateCcw, Save, CheckCircle2, Hash, Plus, Tag, ChevronRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -206,7 +206,7 @@ export default function CounterPage() {
       for (const key of keys) mergedCounts[key] = current[key] ?? 0;
       await upsert.mutateAsync({
         log_date: todayIso,
-        is_off_day: false,
+        is_off_day: isWeekend(todayIso),
         notes: existingLog?.notes ?? null,
         counts: mergedCounts,
       });
