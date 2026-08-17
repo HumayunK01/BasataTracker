@@ -20,7 +20,8 @@ export type AuditEvent =
   | "faxed_back_created"
   | "faxed_back_updated"
   | "faxed_back_deleted"
-  | "faxed_back_section_deleted";
+  | "faxed_back_section_deleted"
+  | "role_changed";
 
 export async function logAuditEvent(
   event: AuditEvent,

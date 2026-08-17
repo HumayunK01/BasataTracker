@@ -1,7 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { DailyLog } from "@/types/log";
 import type { Profile } from "@/hooks/useProfile";
+import { logAuditEvent } from "@/hooks/useAuditLog";
 
 export function useTeamProfiles() {
   return useQuery<Profile[]>({
@@ -25,6 +26,24 @@ export function useTeamDailyLogs() {
         ...row,
         counts: (row.counts ?? {}) as Record<string, number>,
       }));
+    },
+  });
+}
+
+export function useSetUserRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ targetUserId, role }: { targetUserId: string; role: "user" | "admin" }) => {
+      const { error } = await supabase.rpc("set_user_role", {
+        target_user: targetUserId,
+        new_role: role,
+      });
+      if (error) throw error;
+      await logAuditEvent("role_changed", { target_user_id: targetUserId, role });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["team_profiles"] });
+      qc.invalidateQueries({ queryKey: ["profile"] });
     },
   });
 }
