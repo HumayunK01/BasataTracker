@@ -8,6 +8,7 @@ export interface Profile {
   last_name: string;
   updated_at: string;
   daily_goal: number | null;
+  role: "user" | "admin";
 }
 
 export function useProfile() {
@@ -54,4 +55,9 @@ export function useUpdateDailyGoal() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["profile", user?.id] }),
   });
+}
+
+export function useIsAdmin() {
+  const { data: profile } = useProfile();
+  return profile?.role === "admin";
 }

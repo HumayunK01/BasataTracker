@@ -1,15 +1,14 @@
 import { useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { useTeamProfiles, useTeamDailyLogs } from "@/hooks/useTeamData";
+import { useTeamProfiles, useTeamDailyLogs, useSetUserRole } from "@/hooks/useTeamData";
 import { useCategories } from "@/hooks/useCategories";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsAdmin, useProfile } from "@/hooks/useProfile";
 import { isoDate, totalForLog, formatTableDate, formatDayName, isWeekend, type DailyLog } from "@/types/log";
 import { Users, FileText, CalendarCheck, TrendingUp, ChevronRight, Search, ArrowLeft, BedDouble } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
 import Skeleton from "react-loading-skeleton";
-
-const TEAM_VIEWER_ID = "eaa58c9a-a0b8-4c00-9399-0e16fe8600ee";
 
 function StatCard({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: number | string }) {
   return (
@@ -38,6 +37,9 @@ export default function TeamPage() {
   const { data: profiles = [], isLoading: profilesLoading } = useTeamProfiles();
   const { data: allLogs = [], isLoading: logsLoading } = useTeamDailyLogs();
   const { data: categories = [] } = useCategories();
+  const isAdmin = useIsAdmin();
+  const { isPending: profilePending } = useProfile();
+  const setRole = useSetUserRole();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
@@ -77,8 +79,8 @@ export default function TeamPage() {
 
   const isMe = selectedUserId === user?.id;
 
-  if (loading) return null;
-  if (user?.id !== TEAM_VIEWER_ID) return <Navigate to="/log" replace />;
+  if (loading || profilePending) return null;
+  if (!isAdmin) return <Navigate to="/log" replace />;
 
   // If no user is selected, show the team grid
   if (!selectedUserId) {
@@ -106,19 +108,46 @@ export default function TeamPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {memberCards.map((m) => (
-                <button
+                <div
                   key={m.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setSelectedUserId(m.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelectedUserId(m.id);
+                    }
+                  }}
                   className="bg-card border border-border/80 rounded-lg p-5 text-left hover:border-primary/30 hover:bg-muted/10 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div className="size-9 rounded-full bg-primary/10 border border-primary/20 grid place-items-center text-sm font-bold text-primary shrink-0">
                       {(m.first_name?.[0] ?? "").toUpperCase() || "?"}
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold truncate">{m.first_name} {m.last_name}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold truncate flex items-center gap-2">
+                        <span className="truncate">{m.first_name} {m.last_name}</span>
+                        {m.role === "admin" && (
+                          <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">Admin</span>
+                        )}
+                      </p>
                       <p className="text-[11px] text-muted-foreground">{m.logCount} entries</p>
                     </div>
+                    {m.id !== user?.id && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setRole.mutate({ targetUserId: m.id, role: m.role === "admin" ? "user" : "admin" });
+                        }}
+                        disabled={setRole.isPending}
+                        className="shrink-0 text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md border border-border/60 hover:border-primary/40 hover:text-primary disabled:opacity-40 transition-colors"
+                        aria-label={m.role === "admin" ? `Revoke admin from ${m.first_name}` : `Make ${m.first_name} admin`}
+                      >
+                        {setRole.isPending ? "…" : m.role === "admin" ? "Revoke" : "Make admin"}
+                      </button>
+                    )}
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
@@ -134,7 +163,7 @@ export default function TeamPage() {
                       <p className="text-base font-bold tabular-nums">{m.avg}</p>
                     </div>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           )}
