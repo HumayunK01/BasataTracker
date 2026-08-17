@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { DailyLog } from "@/types/log";
 import type { Profile } from "@/hooks/useProfile";
 import { logAuditEvent } from "@/hooks/useAuditLog";
+import { toast } from "sonner";
 
 export function useTeamProfiles() {
   return useQuery<Profile[]>({
@@ -31,25 +32,8 @@ export function useTeamDailyLogs() {
 }
 
 // ── Admin read-all fetchers. RLS lets admins read every user's rows (see the
-// "Admins can read all …" policies), so these query the tables directly.
-// ponytail: fetch everything once and filter client-side — the dataset is
-// small; switch to .eq("created_by", id) if it ever gets large.
-
-interface TeamQueryOptions {
-  staleTime?: number;
-}
-
-function useTeamTable<T>(key: string, table: string, build: (data: unknown[]) => T[], options?: TeamQueryOptions) {
-  return useQuery<T[]>({
-    queryKey: [key],
-    staleTime: options?.staleTime ?? 30_000,
-    queryFn: async () => {
-      const { data, error } = await supabase.from(table).select("*").order("created_at", { ascending: false }).limit(5000);
-      if (error) throw error;
-      return build(data ?? []);
-    },
-  });
-}
+// "Admins can read all …" policies), so these query the tables directly with
+// server-side pagination + exact counts.
 
 export interface TeamFaxedBackDoc {
   id: string;
@@ -63,10 +47,6 @@ export interface TeamFaxedBackDoc {
   created_at: string;
 }
 
-export function useTeamFaxedBackDocs() {
-  return useTeamTable<TeamFaxedBackDoc>("team_faxed_back", "faxed_back_docs", (rows) => rows as TeamFaxedBackDoc[], { staleTime: 15_000 });
-}
-
 export interface TeamCategory {
   id: string;
   user_id: string;
@@ -74,10 +54,6 @@ export interface TeamCategory {
   label: string;
   short: string;
   position: number;
-}
-
-export function useTeamCategories() {
-  return useTeamTable<TeamCategory>("team_categories", "categories", (rows) => rows as TeamCategory[], { staleTime: 15_000 });
 }
 
 export interface TeamAuditLog {
@@ -88,8 +64,95 @@ export interface TeamAuditLog {
   created_at: string;
 }
 
-export function useTeamAuditLogs() {
-  return useTeamTable<TeamAuditLog>("team_audit_logs", "audit_logs", (rows) => rows as TeamAuditLog[], { staleTime: 15_000 });
+export interface PagedRows<T> {
+  rows: T[];
+  total: number;
+}
+
+interface TeamPageOpts {
+  search?: string;
+  searchCols?: string[];
+  eq?: Record<string, string>;
+  gte?: [string, string];
+  lte?: [string, string];
+}
+
+function useTeamPaged<T>(
+  key: string,
+  table: string,
+  userIdCol: string,
+  userId: string | null,
+  page: number,
+  pageSize: number,
+  orderCol: string,
+  ascending = false,
+  opts: TeamPageOpts = {},
+) {
+  const optKey = JSON.stringify([opts.search ?? "", opts.searchCols ?? [], opts.eq ?? {}, opts.gte ?? null, opts.lte ?? null]);
+  return useQuery<PagedRows<T>>({
+    queryKey: [key, userId, page, optKey],
+    enabled: !!userId,
+    // Pull fresh rows on every visit so a just-added log shows up (the admin
+    // reads other users' data, which changes outside this session).
+    staleTime: 0,
+    queryFn: async () => {
+      const from = (page - 1) * pageSize;
+      let q = supabase.from(table).select("*", { count: "exact" }).eq(userIdCol, userId!);
+      if (opts.search && opts.searchCols?.length) {
+        const or = opts.searchCols.map((c) => `${c}.ilike.%${opts.search}%`).join(",");
+        q = q.or(or);
+      }
+      for (const [col, val] of Object.entries(opts.eq ?? {})) q = q.eq(col, val);
+      if (opts.gte) q = q.gte(opts.gte[0], opts.gte[1]);
+      if (opts.lte) q = q.lte(opts.lte[0], opts.lte[1]);
+      const { data, count, error } = await q.order(orderCol, { ascending }).range(from, from + pageSize - 1);
+      if (error) throw error;
+      return { rows: (data ?? []) as T[], total: count ?? 0 };
+    },
+  });
+}
+
+export function useTeamUserLogs(userId: string | null, page: number, search?: string) {
+  return useTeamPaged<DailyLog>("team_user_logs", "daily_logs", "user_id", userId, page, 30, "log_date", false, { search, searchCols: ["log_date"] });
+}
+
+export function useTeamUserFaxedBack(
+  userId: string | null,
+  page: number,
+  opts: { search?: string; status?: string; workedFrom?: string; workedTo?: string } = {},
+) {
+  return useTeamPaged<TeamFaxedBackDoc>("team_user_faxed_back", "faxed_back_docs", "created_by", userId, page, 25, "created_at", false, {
+    search: opts.search,
+    searchCols: ["file_name", "patient_name", "notes"],
+    eq: opts.status ? { status: opts.status } : undefined,
+    gte: opts.workedFrom ? ["worked_on", opts.workedFrom] : undefined,
+    lte: opts.workedTo ? ["worked_on", opts.workedTo] : undefined,
+  });
+}
+
+export function useTeamUserCategories(userId: string | null, page: number) {
+  return useTeamPaged<TeamCategory>("team_user_categories", "categories", "user_id", userId, page, 50, "position", true);
+}
+
+export function useTeamUserAuditLogs(userId: string | null, page: number) {
+  return useTeamPaged<TeamAuditLog>("team_user_audit_logs", "audit_logs", "user_id", userId, page, 25, "created_at");
+}
+
+export function useDeleteUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (targetUserId: string) => {
+      const { error } = await supabase.rpc("delete_user", { target_user: targetUserId });
+      if (error) throw error;
+      await logAuditEvent("account_deleted", { target_user_id: targetUserId });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["team_profiles"] });
+      qc.invalidateQueries({ queryKey: ["team_daily_logs"] });
+      toast.success("User deleted");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 }
 
 export function useSetUserRole() {
