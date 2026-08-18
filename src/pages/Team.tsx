@@ -9,14 +9,18 @@ import {
   useTeamUserCategories,
   useTeamUserAuditLogs,
   useTeamUserLogs,
+  fetchAllUserLogs,
+  fetchAllUserFaxedBack,
+  type TeamFaxedBackDoc,
 } from "@/hooks/useTeamData";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin, useProfile } from "@/hooks/useProfile";
 import { isoDate, totalForLog, formatTableDate, formatDayName, isWeekend, type DailyLog } from "@/types/log";
+import { downloadCSV, downloadPDF, formatUSDate } from "@/lib/log-utils";
 import {
   Users, FileText, CalendarCheck, TrendingUp, ChevronRight, Search, ArrowLeft, BedDouble,
   Shield, FileCheck2, Tags, History, LayoutGrid, Clock, MoreVertical, Trash2, ShieldCheck, ShieldX,
-  Sun, Target, Loader2, CheckCheck, X, Ban,
+  Sun, Target, Loader2, CheckCheck, X, Ban, Download,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
@@ -110,10 +114,40 @@ function FBStatusIcon({ status }: { status: string }) {
 
 const FB_FILTERS_INITIAL = { search: "" };
 
-function SectionCard({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
+// Same rule as the Faxed Back page: export names with a .pdf suffix.
+const withPdf = (name: string) => (/\.pdf$/i.test(name) ? name : `${name}.pdf`);
+
+function downloadTextFile(content: string, filename: string, mime: string) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function faxedBackCSV(rows: TeamFaxedBackDoc[]): string {
+  const safe = (v: unknown) => {
+    const s = v == null ? "" : /^[=+@\-|%]/.test(String(v)) ? `'${v}` : String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const headers = ["File Name", "Patient Name", "Patient DOB", "Worked On", "Status", "Fax Back Message"];
+  const body = rows.map((r) =>
+    [withPdf(r.file_name), r.patient_name, r.patient_dob ? formatUSDate(r.patient_dob) : "", r.worked_on, r.status, r.notes ?? ""]
+      .map(safe)
+      .join(","),
+  );
+  return [headers.join(","), ...body].join("\n");
+}
+
+function SectionCard({ title, sub, children, actions }: { title: string; sub?: string; children: React.ReactNode; actions?: React.ReactNode }) {
   return (
     <div className="space-y-3">
-      <FigHeader title={title} sub={sub} />
+      <div className="flex items-end justify-between gap-3">
+        <FigHeader title={title} sub={sub} />
+        {actions}
+      </div>
       {children}
     </div>
   );
@@ -223,6 +257,7 @@ export default function TeamPage() {
   const [pages, setPages] = useState({ logs: 1, faxedBack: 1, categories: 1, activity: 1 });
   const [faxFilters, setFaxFilters] = useState(FB_FILTERS_INITIAL);
   const debouncedFaxSearch = useDebouncedValue(faxFilters.search);
+  const [exporting, setExporting] = useState<"logs-csv" | "logs-pdf" | "faxed" | null>(null);
 
   const { data: logsPage = { rows: [], total: 0 }, isLoading: logsLoading2 } = useTeamUserLogs(selectedUserId, pages.logs, search.trim() || undefined);
   const { data: faxedBackPage = { rows: [], total: 0 }, isLoading: faxedBackLoading } = useTeamUserFaxedBack(selectedUserId, pages.faxedBack, {
@@ -266,6 +301,33 @@ export default function TeamPage() {
   const todayEntry = selectedUserId ? (logsByUser.get(selectedUserId) ?? []).find((l) => l.log_date === today) : null;
 
   const isMe = selectedUserId === user?.id;
+
+  const memberName = selectedMember ? `${selectedMember.first_name} ${selectedMember.last_name}`.trim() : "member";
+  const memberSlug = memberName.replace(/\s+/g, "-").toLowerCase();
+
+  const handleExportLogs = async (kind: "csv" | "pdf") => {
+    if (!selectedUserId) return;
+    setExporting(kind === "csv" ? "logs-csv" : "logs-pdf");
+    try {
+      const logs = await fetchAllUserLogs(selectedUserId);
+      const filename = `${memberSlug}-daily-log.${kind}`;
+      if (kind === "csv") downloadCSV(logs, selectedCategories, filename);
+      else await downloadPDF(logs, selectedCategories, filename, { title: `${memberName} — Daily Log`, userName: memberName });
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const handleExportFaxedBack = async () => {
+    if (!selectedUserId) return;
+    setExporting("faxed");
+    try {
+      const rows = await fetchAllUserFaxedBack(selectedUserId, { search: debouncedFaxSearch.trim() || undefined });
+      downloadTextFile(faxedBackCSV(rows), `${memberSlug}-faxed-back.csv`, "text/csv;charset=utf-8;");
+    } finally {
+      setExporting(null);
+    }
+  };
 
   if (loading || profilePending) return null;
   if (!isAdmin) return <Navigate to="/log" replace />;
@@ -585,7 +647,30 @@ export default function TeamPage() {
         )}
 
         {tab === "logs" && (
-          <SectionCard title="Daily Logs" sub={`${logsTotal} entries`}>
+          <SectionCard
+            title="Daily Logs"
+            sub={`${logsTotal} entries`}
+            actions={
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleExportLogs("csv")}
+                  disabled={exporting !== null}
+                  className="h-8 px-3 inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground bg-card border border-border/50 rounded-md transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <Download className="size-3.5" /> CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleExportLogs("pdf")}
+                  disabled={exporting !== null}
+                  className="h-8 px-3 inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground bg-card border border-border/50 rounded-md transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <Download className="size-3.5" /> PDF
+                </button>
+              </div>
+            }
+          >
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground pointer-events-none" />
               <Input
@@ -649,7 +734,21 @@ export default function TeamPage() {
         )}
 
         {tab === "faxed-back" && (
-          <SectionCard title="Faxed Back" sub={`${faxedBackTotal} docs`}>
+          <SectionCard
+            title="Faxed Back"
+            sub={`${faxedBackTotal} docs`}
+            actions={
+              <button
+                type="button"
+                onClick={handleExportFaxedBack}
+                disabled={exporting !== null}
+                title="Export all matching results (current search) as CSV"
+                className="h-8 px-3 inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground bg-card border border-border/50 rounded-md transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <Download className="size-3.5" /> CSV
+              </button>
+            }
+          >
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground pointer-events-none" />
               <Input
