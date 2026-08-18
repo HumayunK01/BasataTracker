@@ -302,6 +302,38 @@ export default function TeamPage() {
 
   const isMe = selectedUserId === user?.id;
 
+  const deleteDialog = (
+    <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+      <AlertDialogContent className="sm:max-w-md border-destructive/20">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete {deleteTarget?.name}?</AlertDialogTitle>
+          <AlertDialogDescription className="space-y-2">
+            <span className="block">
+              This permanently deletes the user's account, their profile, all daily logs, categories, trackers, and audit history.
+            </span>
+            <span className="block text-destructive font-medium">
+              This action cannot be undone.
+            </span>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="border-border/60">Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive hover:bg-destructive/95 text-destructive-foreground disabled:opacity-50"
+            disabled={deleteUser.isPending}
+            onClick={() => {
+              if (!deleteTarget) return;
+              deleteUser.mutate(deleteTarget.id);
+              setDeleteTarget(null);
+            }}
+          >
+            {deleteUser.isPending ? "Deleting…" : "Delete forever"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   const memberName = selectedMember ? `${selectedMember.first_name} ${selectedMember.last_name}`.trim() : "member";
   const memberSlug = memberName.replace(/\s+/g, "-").toLowerCase();
 
@@ -457,6 +489,7 @@ export default function TeamPage() {
             </div>
           )}
         </div>
+        {deleteDialog}
       </main>
     );
   }
@@ -899,35 +932,7 @@ export default function TeamPage() {
           </SectionCard>
         )}
       </div>
-      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
-        <AlertDialogContent className="sm:max-w-md border-destructive/20">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete {deleteTarget?.name}?</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <span className="block">
-                This permanently deletes the user's account, their profile, all daily logs, categories, trackers, and audit history.
-              </span>
-              <span className="block text-destructive font-medium">
-                This action cannot be undone.
-              </span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-border/60">Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive hover:bg-destructive/95 text-destructive-foreground disabled:opacity-50"
-              disabled={deleteUser.isPending}
-              onClick={() => {
-                if (!deleteTarget) return;
-                deleteUser.mutate(deleteTarget.id);
-                setDeleteTarget(null);
-              }}
-            >
-              {deleteUser.isPending ? "Deleting…" : "Delete forever"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {deleteDialog}
     </main>
   );
 }
