@@ -138,6 +138,35 @@ export function useTeamUserAuditLogs(userId: string | null, page: number) {
   return useTeamPaged<TeamAuditLog>("team_user_audit_logs", "audit_logs", "user_id", userId, page, 25, "created_at");
 }
 
+// On-demand fetch-all for exports (the paged queries only hold one page).
+
+export async function fetchAllUserLogs(userId: string) {
+  const { data, error } = await supabase
+    .from("daily_logs")
+    .select("*")
+    .eq("user_id", userId)
+    .order("log_date", { ascending: false })
+    .limit(1000);
+  if (error) throw error;
+  return (data ?? []) as DailyLog[];
+}
+
+export async function fetchAllUserFaxedBack(userId: string, opts: { search?: string } = {}) {
+  let q = supabase
+    .from("faxed_back_docs")
+    .select("*")
+    .eq("created_by", userId)
+    .order("created_at", { ascending: false })
+    .limit(5000);
+  if (opts.search) {
+    const or = ["file_name", "patient_name", "notes"].map((c) => `${c}.ilike.%${opts.search}%`).join(",");
+    q = q.or(or);
+  }
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as TeamFaxedBackDoc[];
+}
+
 export function useDeleteUser() {
   const qc = useQueryClient();
   return useMutation({
