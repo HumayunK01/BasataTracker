@@ -12,6 +12,7 @@ const importers = {
   "/vault": () => import("@/pages/Credentials.tsx"),
   "/faxed-back": () => import("@/pages/FaxedBack.tsx"),
   "/team": () => import("@/pages/Team.tsx"),
+  "/facilities": () => import("@/pages/Facilities.tsx"),
   "*": () => import("@/pages/NotFound.tsx"),
 } as const;
 
@@ -24,6 +25,7 @@ export const FaxTrackerPage = lazy(importers["/tracker"]);
 export const VaultPage = lazy(importers["/vault"]);
 export const FaxedBackPage = lazy(importers["/faxed-back"]);
 export const TeamPage = lazy(importers["/team"]);
+export const FacilitiesPage = lazy(importers["/facilities"]);
 export const NotFound = lazy(importers["*"]);
 
 export function prefetchRoute(path: string) {

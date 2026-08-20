@@ -18,6 +18,7 @@ import {
   FaxTrackerPage,
   VaultPage,
   TeamPage,
+  FacilitiesPage,
   FaxedBackPage,
   NotFound,
 } from "@/lib/routePreload";
@@ -72,6 +73,7 @@ const App = () => (
                   <Route path="/vault" element={<VaultPage />} />
                   <Route path="/faxed-back" element={<FaxedBackPage />} />
                   <Route path="/team" element={<TeamPage />} />
+                  <Route path="/facilities" element={<FacilitiesPage />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

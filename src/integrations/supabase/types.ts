@@ -101,6 +101,36 @@ export type Database = {
         }
         Relationships: []
       }
+      facilities: {
+        Row: {
+          id: string
+          name: string
+          logo_url: string | null
+          fax_number: string
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          logo_url?: string | null
+          fax_number: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          logo_url?: string | null
+          fax_number?: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           id: string

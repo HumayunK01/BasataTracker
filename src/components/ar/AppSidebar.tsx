@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, useReducedMotion, type Easing } from "motion/react";
-import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, BookOpen, Tags, ExternalLink, Send, KeyRound, Users, FileCheck2 } from "lucide-react";
+import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, BookOpen, Tags, ExternalLink, Send, KeyRound, Users, FileCheck2, Building2 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -31,6 +31,7 @@ function buildGroups(userId: string | undefined, isAdmin: boolean) {
       items: [
         { title: "Console", icon: LayoutDashboard, path: "/console" },
         { title: "Report", icon: FileBarChart, path: "/report" },
+        { title: "Facilities", icon: Building2, path: "/facilities" },
         ...(isAdmin ? [{ title: "Team", icon: Users, path: "/team" }] : []),
       ],
     },
