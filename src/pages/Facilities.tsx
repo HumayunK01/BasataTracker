@@ -140,7 +140,7 @@ function LogoImage({ f }: { f: Facility }) {
     <img
       src={logoSrc(f.logo_url)}
       alt={`${f.name} logo`}
-      className="size-full object-contain object-center p-4"
+      className="size-full object-cover object-center"
       onError={() => setFailed(true)}
     />
   );
