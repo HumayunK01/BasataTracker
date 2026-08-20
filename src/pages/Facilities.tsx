@@ -125,6 +125,13 @@ function FaxCopyControls({ f }: { f: Facility }) {
   );
 }
 
+// Mixed content: browsers block http:// images on https pages (localhost is
+// http, so it worked there). Upgrade to https when the page is secure.
+function logoSrc(url: string | null): string {
+  if (!url) return "";
+  return url.startsWith("http:") && window.location.protocol === "https:" ? url.replace(/^http:/i, "https:") : url;
+}
+
 function FacilityAvatar({ f }: { f: Facility }) {
   return (
     <div className="size-full grid place-items-center bg-gradient-to-br from-primary/10 via-transparent to-primary/5">
@@ -290,7 +297,7 @@ export default function FacilitiesPage() {
                 <div className="relative h-28 sm:h-32 bg-muted/10 overflow-hidden">
                   {f.logo_url ? (
                     <img
-                      src={f.logo_url}
+                      src={logoSrc(f.logo_url)}
                       alt={`${f.name} logo`}
                       className="size-full object-contain object-center p-4"
                     />
