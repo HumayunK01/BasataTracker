@@ -125,11 +125,25 @@ function FaxCopyControls({ f }: { f: Facility }) {
   );
 }
 
-// Mixed content: browsers block http:// images on https pages (localhost is
-// http, so it worked there). Upgrade to https when the page is secure.
-function logoSrc(url: string | null): string {
-  if (!url) return "";
-  return url.startsWith("http:") && window.location.protocol === "https:" ? url.replace(/^http:/i, "https:") : url;
+// Production is served with CSP img-src 'self' + COEP, which block remote
+// images — so logos go through the same-origin /api/logo proxy there (same
+// pattern as ServiceLogo). Local vite has no serverless fn, so use the URL
+// directly (http localhost loads remote images fine).
+function logoSrc(url: string): string {
+  return window.location.protocol === "https:" ? `/api/logo?url=${encodeURIComponent(url)}` : url;
+}
+
+function LogoImage({ f }: { f: Facility }) {
+  const [failed, setFailed] = useState(false);
+  if (failed || !f.logo_url) return <FacilityAvatar f={f} />;
+  return (
+    <img
+      src={logoSrc(f.logo_url)}
+      alt={`${f.name} logo`}
+      className="size-full object-contain object-center p-4"
+      onError={() => setFailed(true)}
+    />
+  );
 }
 
 function FacilityAvatar({ f }: { f: Facility }) {
@@ -295,15 +309,7 @@ export default function FacilitiesPage() {
             {filtered.map((f) => (
               <div key={f.id} className="group bg-card border border-border/50 rounded-lg overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200">
                 <div className="relative h-28 sm:h-32 bg-muted/10 overflow-hidden">
-                  {f.logo_url ? (
-                    <img
-                      src={logoSrc(f.logo_url)}
-                      alt={`${f.name} logo`}
-                      className="size-full object-contain object-center p-4"
-                    />
-                  ) : (
-                    <FacilityAvatar f={f} />
-                  )}
+                  <LogoImage f={f} />
                   {/* Fades the logo's bottom edge into the card so it looks
                       like the image dissolves into the surface. */}
                   <div className="absolute inset-x-0 bottom-0 h-24 sm:h-28 bg-gradient-to-t from-card via-card/45 to-transparent" />
