@@ -37,10 +37,27 @@ export function useFacilities() {
       const { data, error } = await supabase
         .from("facilities")
         .select("*")
+        .order("sort_order", { ascending: true })
         .order("name", { ascending: true });
       if (error) throw error;
       return data ?? [];
     },
+  });
+}
+
+export function useReorderFacilities() {
+  const qc = useQueryClient();
+  const { checkLimit } = useMutationRateLimit({ maxRequests: 20, windowMs: 60_000 });
+  return useMutation({
+    mutationFn: async (updates: { id: string; sort_order: number }[]) => {
+      if (!checkLimit()) throw new Error("Too many requests. Please wait a moment.");
+      const { error } = await supabase.from("facilities").upsert(updates, { onConflict: "id" });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["facilities"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 

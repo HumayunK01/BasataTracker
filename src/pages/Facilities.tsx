@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Building2, Check, Copy, Loader2, MoreVertical, Pencil, Plus, Printer, Search, Trash2 } from "lucide-react";
+import { Building2, Check, Copy, GripVertical, LayoutGrid, List, Loader2, MoreVertical, Pencil, Plus, Printer, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Skeleton from "react-loading-skeleton";
 import {
   useFacilities,
   useUpsertFacility,
   useDeleteFacility,
+  useReorderFacilities,
   type Facility,
   type FacilityInput,
 } from "@/hooks/useFacilities";
@@ -245,15 +246,209 @@ function FacilityDialog({
   );
 }
 
+function FacilityCard({
+  f,
+  isAdmin,
+  draggedId,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  setEditing,
+  setDialogOpen,
+  setDeleteTarget,
+  upsert,
+  deleteFacility,
+}: {
+  f: Facility;
+  isAdmin: boolean;
+  draggedId: string | null;
+  onDragStart: (e: React.DragEvent, id: string) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent, targetId: string) => void;
+  onDragEnd: () => void;
+  setEditing: (f: Facility | null) => void;
+  setDialogOpen: (open: boolean) => void;
+  setDeleteTarget: (f: Facility | null) => void;
+  upsert: ReturnType<typeof useUpsertFacility>;
+  deleteFacility: ReturnType<typeof useDeleteFacility>;
+}) {
+  const isDragging = draggedId === f.id;
+
+  return (
+    <div
+      key={f.id}
+      draggable={isAdmin}
+      onDragStart={(e) => onDragStart(e, f.id)}
+      onDragOver={onDragOver}
+      onDrop={(e) => onDrop(e, f.id)}
+      onDragEnd={onDragEnd}
+      className={`group bg-card border border-border/50 rounded-lg overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 ${
+        isDragging ? "opacity-50 ring-2 ring-primary" : ""
+      }`}
+    >
+      <div className="relative h-28 sm:h-32 bg-muted/10 overflow-hidden">
+        <LogoImage f={f} />
+        <div className="absolute inset-x-0 bottom-0 h-24 sm:h-28 bg-gradient-to-t from-card via-card/45 to-transparent" />
+        {isAdmin && (
+          <div className="absolute top-2 right-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="size-7 rounded-md grid place-items-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+                  aria-label={`Actions for ${f.name}`}
+                >
+                  <MoreVertical className="size-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem
+                  onClick={() => { setEditing(f); setDialogOpen(true); }}
+                  disabled={upsert.isPending}
+                  className="cursor-pointer"
+                >
+                  <Pencil className="size-4 mr-2" /> Edit
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setDeleteTarget(f)}
+                  disabled={deleteFacility.isPending}
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                >
+                  <Trash2 className="size-4 mr-2" /> Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+        {isAdmin && (
+          <button
+            type="button"
+            className="absolute top-2 left-2 size-7 rounded-md grid place-items-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-grab active:cursor-grabbing"
+            aria-label="Drag to reorder"
+            draggable={false}
+          >
+            <GripVertical className="size-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="relative px-4 pt-3 pb-4 flex items-center gap-2">
+        <span className="size-1.5 bg-primary shrink-0" />
+        <h3 className="min-w-0 flex-1 text-sm sm:text-base font-semibold tracking-tight text-foreground truncate">{f.name}</h3>
+        <FaxCopyControls f={f} />
+      </div>
+    </div>
+  );
+}
+
+function FacilityRow({
+  f,
+  isAdmin,
+  draggedId,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  setEditing,
+  setDialogOpen,
+  setDeleteTarget,
+  upsert,
+  deleteFacility,
+}: {
+  f: Facility;
+  isAdmin: boolean;
+  draggedId: string | null;
+  onDragStart: (e: React.DragEvent, id: string) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent, targetId: string) => void;
+  onDragEnd: () => void;
+  setEditing: (f: Facility | null) => void;
+  setDialogOpen: (open: boolean) => void;
+  setDeleteTarget: (f: Facility | null) => void;
+  upsert: ReturnType<typeof useUpsertFacility>;
+  deleteFacility: ReturnType<typeof useDeleteFacility>;
+}) {
+  const isDragging = draggedId === f.id;
+
+  return (
+    <div
+      key={f.id}
+      draggable={isAdmin}
+      onDragStart={(e) => onDragStart(e, f.id)}
+      onDragOver={onDragOver}
+      onDrop={(e) => onDrop(e, f.id)}
+      onDragEnd={onDragEnd}
+      className={`group flex items-center gap-4 bg-card border border-border/50 rounded-lg p-3 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 ${
+        isDragging ? "opacity-50 ring-2 ring-primary" : ""
+      }`}
+      role="listitem"
+    >
+      {isAdmin && (
+        <button
+          type="button"
+          className="size-8 shrink-0 grid place-items-center text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md cursor-grab active:cursor-grabbing transition-colors"
+          aria-label="Drag to reorder"
+          draggable={false}
+        >
+          <GripVertical className="size-4" />
+        </button>
+      )}
+      <div className="relative h-10 w-10 shrink-0 rounded bg-muted/10 overflow-hidden flex-shrink-0">
+        <LogoImage f={f} />
+      </div>
+      <div className="flex-1 min-w-0 space-y-1">
+        <h3 className="font-semibold tracking-tight text-foreground truncate">{f.name}</h3>
+        <span className="text-sm text-muted-foreground font-mono tabular-nums">{formatFax(f.fax_number)}</span>
+      </div>
+      <FaxCopyControls f={f} />
+      {isAdmin && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="size-8 shrink-0 grid place-items-center text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md transition-colors cursor-pointer"
+              aria-label={`Actions for ${f.name}`}
+            >
+              <MoreVertical className="size-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem
+              onClick={() => { setEditing(f); setDialogOpen(true); }}
+              disabled={upsert.isPending}
+              className="cursor-pointer"
+            >
+              <Pencil className="size-4 mr-2" /> Edit
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => setDeleteTarget(f)}
+              disabled={deleteFacility.isPending}
+              className="text-destructive focus:text-destructive cursor-pointer"
+            >
+              <Trash2 className="size-4 mr-2" /> Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+    </div>
+  );
+}
+
 export default function FacilitiesPage() {
   const isAdmin = useIsAdmin();
   const { data: facilities = [], isLoading } = useFacilities();
   const upsert = useUpsertFacility();
   const deleteFacility = useDeleteFacility();
+  const reorder = useReorderFacilities();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Facility | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Facility | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [draggedId, setDraggedId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -262,6 +457,45 @@ export default function FacilitiesPage() {
       (f) => f.name.toLowerCase().includes(q) || f.fax_number.toLowerCase().includes(q),
     );
   }, [facilities, search]);
+
+  const handleDragStart = useCallback((e: React.DragEvent, id: string) => {
+    if (!isAdmin) return;
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", id);
+    setDraggedId(id);
+  }, [isAdmin]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    if (!isAdmin || !draggedId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  }, [isAdmin, draggedId]);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent, targetId: string) => {
+      if (!isAdmin || !draggedId || draggedId === targetId) return;
+      e.preventDefault();
+      const draggedIndex = filtered.findIndex((f) => f.id === draggedId);
+      const targetIndex = filtered.findIndex((f) => f.id === targetId);
+      if (draggedIndex === -1 || targetIndex === -1) return;
+
+      const newOrder = [...filtered];
+      const [removed] = newOrder.splice(draggedIndex, 1);
+      newOrder.splice(targetIndex, 0, removed);
+
+      const updates = newOrder.map((f, i) => ({
+        id: f.id,
+        sort_order: i,
+      }));
+      reorder.mutate(updates);
+      setDraggedId(null);
+    },
+    [isAdmin, draggedId, filtered, reorder]
+  );
+
+  const handleDragEnd = useCallback(() => {
+    setDraggedId(null);
+  }, []);
 
   return (
     <main className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-5 sm:py-6 animate-fade-in">
@@ -278,23 +512,60 @@ export default function FacilitiesPage() {
               />
             </div>
           </div>
-          {isAdmin && (
-            <Button
-              onClick={() => { setEditing(null); setDialogOpen(true); }}
-              className="w-full sm:w-auto bg-primary hover:bg-primary/95 text-primary-foreground shadow-sm shadow-primary/20"
-            >
-              <Plus className="size-4 mr-1.5" /> Add Facility
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setViewMode("grid")}
+                className={viewMode === "grid" ? "bg-primary text-primary-foreground" : ""}
+                aria-label="Grid view"
+              >
+                <LayoutGrid className="size-4" />
+              </Button>
+            )}
+            {isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setViewMode("list")}
+                className={viewMode === "list" ? "bg-primary text-primary-foreground" : ""}
+                aria-label="List view"
+              >
+                <List className="size-4" />
+              </Button>
+            )}
+            {isAdmin && (
+              <Button
+                onClick={() => { setEditing(null); setDialogOpen(true); }}
+                className="w-full sm:w-auto bg-primary hover:bg-primary/95 text-primary-foreground shadow-sm shadow-primary/20"
+              >
+                <Plus className="size-4 mr-1.5" /> Add Facility
+              </Button>
+            )}
+          </div>
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-2"}>
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="bg-card border border-border/50 rounded-lg p-4 space-y-3">
-                <Skeleton width={120} height={16} />
-                <Skeleton width={80} height={12} />
-                <Skeleton height={36} />
+              <div key={i} className={viewMode === "grid" ? "bg-card border border-border/50 rounded-lg p-4 space-y-3" : "bg-card border border-border/50 rounded-lg p-3"}>
+                {viewMode === "grid" ? (
+                  <>
+                    <Skeleton className="h-28 sm:h-32 w-full rounded" />
+                    <Skeleton width={120} height={16} />
+                    <Skeleton height={44} />
+                  </>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-10 w-10 rounded" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton width="60%" height={16} />
+                      <Skeleton width="40%" height={12} />
+                    </div>
+                    <Skeleton className="h-8 w-24" />
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -304,57 +575,66 @@ export default function FacilitiesPage() {
             title={facilities.length === 0 ? "No facilities yet" : "No matches"}
             hint={facilities.length === 0 ? "Admins can add the facilities you fax to." : "Try a different search."}
           />
+        ) : viewMode === "grid" ? (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="grid"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+            >
+              {filtered.map((f) => (
+                <FacilityCard
+                  key={f.id}
+                  f={f}
+                  isAdmin={isAdmin}
+                  draggedId={draggedId}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  onDragEnd={handleDragEnd}
+                  setEditing={setEditing}
+                  setDialogOpen={setDialogOpen}
+                  setDeleteTarget={setDeleteTarget}
+                  upsert={upsert}
+                  deleteFacility={deleteFacility}
+                />
+              ))}
+            </motion.div>
+          </AnimatePresence>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered.map((f) => (
-              <div key={f.id} className="group bg-card border border-border/50 rounded-lg overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200">
-                <div className="relative h-28 sm:h-32 bg-muted/10 overflow-hidden">
-                  <LogoImage f={f} />
-                  {/* Fades the logo's bottom edge into the card so it looks
-                      like the image dissolves into the surface. */}
-                  <div className="absolute inset-x-0 bottom-0 h-24 sm:h-28 bg-gradient-to-t from-card via-card/45 to-transparent" />
-                  {isAdmin && (
-                    <div className="absolute top-2 right-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            type="button"
-                            className="size-7 rounded-md grid place-items-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
-                            aria-label={`Actions for ${f.name}`}
-                          >
-                            <MoreVertical className="size-4" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem
-                            onClick={() => { setEditing(f); setDialogOpen(true); }}
-                            disabled={upsert.isPending}
-                            className="cursor-pointer"
-                          >
-                            <Pencil className="size-4 mr-2" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => setDeleteTarget(f)}
-                            disabled={deleteFacility.isPending}
-                            className="text-destructive focus:text-destructive cursor-pointer"
-                          >
-                            <Trash2 className="size-4 mr-2" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  )}
-                </div>
-
-                <div className="relative px-4 pt-3 pb-4 flex items-center gap-2">
-                  <span className="size-1.5 bg-primary shrink-0" />
-                  <h3 className="min-w-0 flex-1 text-sm sm:text-base font-semibold tracking-tight text-foreground truncate">{f.name}</h3>
-                  <FaxCopyControls f={f} />
-                </div>
-              </div>
-            ))}
-          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="list"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="space-y-2"
+              role="list"
+              aria-label="Facilities list"
+            >
+              {filtered.map((f) => (
+                <FacilityRow
+                  key={f.id}
+                  f={f}
+                  isAdmin={isAdmin}
+                  draggedId={draggedId}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  onDragEnd={handleDragEnd}
+                  setEditing={setEditing}
+                  setDialogOpen={setDialogOpen}
+                  setDeleteTarget={setDeleteTarget}
+                  upsert={upsert}
+                  deleteFacility={deleteFacility}
+                />
+              ))}
+            </motion.div>
+          </AnimatePresence>
         )}
       </div>
 
