@@ -14,7 +14,7 @@ import { useCategories, type Category } from "@/hooks/useCategories";
 import { useUpsertLog, useDailyLogs } from "@/hooks/useDailyLogs";
 import { isoDate, totalForLog, isWeekend } from "@/types/log";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
-import { RotateCcw, Save, CheckCircle2, Hash, Plus, Tag, ChevronRight, Loader2 } from "lucide-react";
+import { RotateCcw, CheckCircle2, Hash, Plus, Tag, ChevronRight, Loader2, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
@@ -286,28 +286,51 @@ export default function CounterPage() {
     try {
       await flush(counts, keys);
       cDispatch({ type: "set_saved", v: true });
+      toast.success("Synced to database");
     } catch {
-      toast.error("Couldn't save counts", {
+      toast.error("Couldn't sync counts", {
         description: "Check your connection and try again.",
       });
     }
   };
 
-  // ponytail: 5-min autosave — balances responsiveness with reasonable load.
-  // Ref keeps the interval stable instead of recreating it on every tap.
-  const autoSaveRef = useRef({ counts, activeCategories, saved, isPending: upsert.isPending });
-  autoSaveRef.current = { counts, activeCategories, saved, isPending: upsert.isPending };
-  useEffect(() => {
-    const id = setInterval(async () => {
-      const { counts: c, activeCategories: cats, saved: s, isPending } = autoSaveRef.current;
-      if (s || isPending || cats.length === 0) return;
+  // Auto-save: debounced flush on changes, plus periodic backup.
+  // localStorage is the instant source of truth; server sync is best-effort.
+  const autoSaveRef = useRef({ counts, activeCategories, isPending: upsert.isPending });
+  autoSaveRef.current = { counts, activeCategories, isPending: upsert.isPending };
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const scheduleAutoSave = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      const { counts: c, activeCategories: cats, isPending } = autoSaveRef.current;
+      if (isPending || cats.length === 0) return;
       try {
         await flush(c, cats.map((cat) => cat.key));
         cDispatch({ type: "set_saved", v: true });
       } catch {
-        // Silent — retries next tick; localStorage still holds the counts.
+        // Silent retry next change; localStorage persists counts.
       }
-    }, 5 * 60 * 1000);
+    }, 2000); // 2s debounce after last tap
+  }, [flush]);
+
+  useEffect(() => {
+    if (hydratedRef.current && activeCategories.length > 0) {
+      scheduleAutoSave();
+    }
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [counts, activeCategories, scheduleAutoSave]);
+
+  // Periodic backup every 30s (catches any missed debounced saves)
+  useEffect(() => {
+    const id = setInterval(async () => {
+      const { counts: c, activeCategories: cats, isPending } = autoSaveRef.current;
+      if (isPending || cats.length === 0) return;
+      try {
+        await flush(c, cats.map((cat) => cat.key));
+        cDispatch({ type: "set_saved", v: true });
+      } catch {}
+    }, 30 * 1000);
     return () => clearInterval(id);
   }, [flush]);
 
@@ -331,56 +354,47 @@ export default function CounterPage() {
                   <RotateCcw className="size-4" />
                   <span className="hidden xs:inline ml-1 font-semibold">Reset</span>
                 </Button>
-                <Button
-                  size="sm"
-                  className={`h-9 px-3 shadow-sm ${
-                    saved
-                      ? "bg-success hover:bg-success/90 text-success-foreground shadow-success/10"
-                      : "bg-primary hover:bg-primary/95 text-primary-foreground shadow-primary/10"
-                  }`}
-                  onClick={handleSave}
-                  disabled={upsert.isPending || total === 0 || saved}
-                >
-                  {saved ? (
-                    <>
-                      <CheckCircle2 className="size-4" />
-                      <span className="hidden xs:inline ml-1 font-semibold">Saved</span>
-                    </>
-                  ) : upsert.isPending ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" />
-                      <span className="hidden xs:inline ml-1 font-semibold">Saving…</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save className="size-4" />
-                      <span className="hidden xs:inline ml-1 font-semibold">Save</span>
-                    </>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`text-2xs font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-md border ${
+                      saved
+                        ? "bg-success/15 text-success border-success/30"
+                        : upsert.isPending
+                        ? "bg-info/15 text-info border-info/30"
+                        : total > 0
+                        ? "bg-warning/15 text-warning border-warning/30"
+                        : "bg-muted text-foreground border-border/40"
+                    }`}
+                  >
+                    {saved ? "Synced" : upsert.isPending ? "Syncing…" : total > 0 ? "Unsaved" : "Empty"}
+                  </span>
+                  {!saved && total > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSave}
+                      disabled={upsert.isPending}
+                      aria-label="Force sync now"
+                      className="h-7 px-2"
+                    >
+                      <RefreshCw className={`size-3.5 ${upsert.isPending ? "animate-spin" : ""}`} />
+                    </Button>
                   )}
-                </Button>
+                </div>
               </div>
             </div>
             <div className="mt-2 flex items-center gap-4 flex-wrap">
               <p className="text-8xl sm:text-9xl font-bold tabular-nums text-primary leading-none tracking-tight">
                 {animatedTotal}
               </p>
-              <span
-                className={`text-2xs font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-md border ${
-                  saved
-                    ? "bg-success/15 text-success border-success/30"
-                    : total > 0
-                    ? "bg-warning/15 text-warning border-warning/30"
-                    : "bg-muted text-foreground border-border/40"
-                }`}
-              >
-                {saved ? "Synced" : total > 0 ? "Unsaved" : "Empty"}
-              </span>
             </div>
             <p className="text-xs text-foreground/60 mt-3">
               {saved
                 ? "All counts synchronized to database"
+                : upsert.isPending
+                ? "Syncing…"
                 : todayLog
-                ? `Last saved value: ${todayTotal} documents`
+                ? `Last synced value: ${todayTotal} documents`
                 : "No documents saved yet today"}
             </p>
           </section>
