@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence, useReducedMotion, type Easing } from "motion/react";
 import { format, parseISO } from "date-fns";
 import { isoDate } from "@/types/log";
-import { useFaxedBackDocs, useUpsertFaxedBackDoc, useDeleteFaxedBackDoc, useDeleteFaxedBackSection, useUpdateFaxedBackStatus, FAXED_BACK_STATUSES, type FaxedBackDoc, type FaxedBackInput, type FaxedBackStatus } from "@/hooks/useFaxedBackDocs";
+import { useFaxedBackDocs, useUpsertFaxedBackDoc, useDeleteFaxedBackDoc, useDeleteFaxedBackSection, useUpdateFaxedBackStatus, FAXED_BACK_STATUSES, type FaxedBackDoc, type FaxedBackInput, type FaxedBackStatus, type FaxedBackPageResult } from "@/hooks/useFaxedBackDocs";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,11 +45,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, X, Pencil, Trash2, FileText, Info, Loader2, CalendarDays, Copy, Check, CheckCheck, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Search, X, Pencil, Trash2, FileText, Info, Loader2, CalendarDays, Copy, Check, CheckCheck, ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { SortHeader, type SortKey } from "@/components/ar/tracker/SortHeader";
 import { copyName, formatDobInput } from "@/components/ar/tracker/tracker-helpers";
 import Skeleton from "react-loading-skeleton";
 import { cn } from "@/lib/utils";
+
+const sectionEase: Easing = [0.23, 1, 0.32, 1];
+const rowEase: Easing = [0.23, 1, 0.32, 1];
+
+const MotionButton = motion(Button);
 
 const STATUS_CLASSES: Record<string, string> = {
   Pending: "text-foreground",
@@ -70,11 +76,33 @@ const CopyValue = ({ value, children, title }: { value: string; children: React.
     type="button"
     onClick={() => copyName(value)}
     title={title ?? "Copy"}
-    className="truncate text-left cursor-pointer underline decoration-transparent underline-offset-2 hover:decoration-current hover:text-foreground transition-colors"
+    className="text-left cursor-pointer underline decoration-transparent underline-offset-2 hover:decoration-current hover:text-foreground transition-colors break-all whitespace-normal min-w-0"
   >
     {children}
   </button>
 );
+
+const Highlight = ({ text, query }: { text: string; query: string }) => {
+  const q = query.trim();
+  if (!q || !text) return <>{text}</>;
+  const esc = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`(${esc})`, "gi");
+  const parts = text.split(re);
+  const lowerQ = q.toLowerCase();
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === lowerQ ? (
+          <mark key={i} className="bg-amber-400/30 text-foreground rounded-[2px] px-0.5">
+            {part}
+          </mark>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+};
 
 const today = () => isoDate();
 
@@ -98,7 +126,13 @@ const titleCase = (v: string) =>
   v.trim().toLowerCase().replace(/(^|[\s-])([a-z])/g, (_, sep, ch) => sep + ch.toUpperCase());
 
 const FaxedBackPage = () => {
-  const { data: rows = [], isLoading } = useFaxedBackDocs();
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const { data, isLoading } = useFaxedBackDocs(page, pageSize);
+  const rows = data?.rows ?? [];
+  const totalDays = data?.totalDays ?? 0;
+  const totalDocs = data?.totalDocs ?? 0;
+  const totalPages = data?.totalPages ?? 0;
   const upsert = useUpsertFaxedBackDoc();
   const deleteDoc = useDeleteFaxedBackDoc();
   const deleteSection = useDeleteFaxedBackSection();
@@ -107,7 +141,7 @@ const FaxedBackPage = () => {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" } | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const expandedDefaulted = useRef(false);
+  const prevSearchRef = useRef(search);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<FaxedBackDoc | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FaxedBackDoc | null>(null);
@@ -137,12 +171,40 @@ const FaxedBackPage = () => {
 
   const total = useMemo(() => groups.reduce((n, [, l]) => n + l.length, 0), [groups]);
 
+  // ponytail: auto open/close groups — when searching, expand all matches so old days aren't hidden collapsed; when cleared, snap back to first.
   useEffect(() => {
-    if (!expandedDefaulted.current && groups.length > 0) {
-      expandedDefaulted.current = true;
+    const q = search.trim();
+    const prevQ = prevSearchRef.current.trim();
+    const justCleared = !q && !!prevQ;
+    prevSearchRef.current = search;
+    if (justCleared && groups.length) {
       setExpanded(new Set([groups[0][0]]));
+      return;
     }
-  }, [groups]);
+    if (q && groups.length) {
+      setExpanded((prev) => {
+        const all = new Set(groups.map(([d]) => d));
+        if (all.size === prev.size && [...all].every((d) => prev.has(d))) return prev;
+        return all;
+      });
+      return;
+    }
+    if (!q && groups.length) {
+      setExpanded((prev) => {
+        if (prev.size === 0) return new Set([groups[0][0]]);
+        const hasValid = [...prev].some((d) => groups.some(([gd]) => gd === d));
+        if (!hasValid) return new Set([groups[0][0]]);
+        const filtered = new Set([...prev].filter((d) => groups.some(([gd]) => gd === d)));
+        if (filtered.size !== prev.size) return filtered;
+        return prev;
+      });
+    }
+  }, [groups, search]);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   const toggleGroup = (date: string) => {
     setExpanded((prev) => {
@@ -184,11 +246,26 @@ const FaxedBackPage = () => {
     <>
       <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
         <div className="w-full space-y-4 animate-fade-in">
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: sectionEase, delay: 0.05 }}
+          >
+            <FigHeader title="Faxed Back to Clinics" sub={`${totalDays} day${totalDays === 1 ? "" : "s"} · ${totalDocs} document${totalDocs === 1 ? "" : "s"}`} />
+          </motion.div>
 
-          <FigHeader title="Faxed Back to Clinics" sub={`${total} document${total === 1 ? "" : "s"}`} />
-
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <div className="relative flex-1 min-w-48">
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: sectionEase, delay: 0.1 }}
+            className="flex flex-wrap items-center gap-2 sm:gap-3"
+          >
+            <motion.div
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, ease: sectionEase }}
+              className="relative flex-1 min-w-48"
+            >
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground" />
               <Input
                 placeholder="Search file, patient or message…"
@@ -197,68 +274,172 @@ const FaxedBackPage = () => {
                 className="pl-9 pr-9 h-10"
               />
               {search && (
-                <button
+                <motion.button
                   type="button"
                   onClick={() => setSearch("")}
                   title="Clear search"
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-foreground hover:text-foreground"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                 >
                   <X className="size-4" />
-                </button>
+                </motion.button>
               )}
-            </div>
-            <Button
+            </motion.div>
+            <MotionButton
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, ease: sectionEase, delay: 0.15 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               size="sm"
               className="h-10 shrink-0 bg-primary hover:bg-primary/95 text-primary-foreground"
               onClick={openAdd}
             >
               <Plus className="size-4 mr-1" /> Add Document
-            </Button>
-          </div>
+            </MotionButton>
+          </motion.div>
 
-          <div className="bg-card border border-border rounded-lg overflow-hidden">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: sectionEase, delay: 0.15 }}
+            className="bg-card border border-border rounded-lg overflow-hidden"
+          >
             <div className="overflow-x-auto">
               <table className="w-full text-xs border-collapse">
-                <tbody>
-                  {isLoading ? (
-                    Array.from({ length: 6 }).map((_, i) => (
-                      <tr key={i} className="border-t border-border">
+                {isLoading ? (
+                  <tbody>
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <motion.tr
+                        key={i}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, ease: rowEase, delay: i * 0.05 }}
+                        className="border-t border-border"
+                      >
                         <td colSpan={6} className="px-3 py-2.5"><Skeleton height={28} borderRadius={4} /></td>
-                      </tr>
-                    ))
-                  ) : groups.length === 0 ? (
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                ) : groups.length === 0 ? (
+                  <tbody>
                     <tr>
-                      <td colSpan={6} className="px-3 animate-fade-in">
-                        <EmptyState
-                          className="py-12"
-                          icon={FileText}
-                          title="No Documents"
-                          hint={rows.length === 0 ? "Add the first document you faxed back to a clinic." : "No documents match your search."}
-                        />
+                      <td colSpan={6} className="px-3">
+                        <motion.div
+                          initial={{ opacity: 0, y: 16 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.4, ease: sectionEase }}
+                        >
+                          <EmptyState
+                            className="py-12"
+                            icon={FileText}
+                            title="No Documents"
+                            hint={rows.length === 0 ? "Add the first document you faxed back to a clinic." : "No documents match your search."}
+                          />
+                        </motion.div>
                       </td>
                     </tr>
-                  ) : (
-                    groups.map(([date, list]) => (
-                      <GroupRows
-                        key={date}
-                        date={date}
-                        rows={list}
-                        sort={sort}
-                        expanded={expanded.has(date)}
-                        onToggle={toggleGroup}
-                        onToggleSort={toggleSort}
-                        onEdit={openEdit}
-                        onDelete={setDeleteTarget}
-                        onDeleteSection={setDeleteSectionTarget}
-                        onSaveNotes={saveNotes}
-                        updateStatus={updateStatus}
-                      />
-                    ))
-                  )}
-                </tbody>
+                  </tbody>
+                ) : (
+                  <AnimatePresence mode="wait">
+                    <motion.tbody
+                      key={page}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.2, ease: sectionEase }}
+                    >
+                      {groups.map(([date, list], index) => (
+                        <GroupRows
+                          key={date}
+                          date={date}
+                          rows={list}
+                          sort={sort}
+                          expanded={expanded.has(date)}
+                          onToggle={toggleGroup}
+                          onToggleSort={toggleSort}
+                          onEdit={openEdit}
+                          onDelete={setDeleteTarget}
+                          onDeleteSection={setDeleteSectionTarget}
+                          onSaveNotes={saveNotes}
+                          updateStatus={updateStatus}
+                          index={index}
+                          search={search}
+                        />
+                      ))}
+                    </motion.tbody>
+                  </AnimatePresence>
+                )}
               </table>
             </div>
-          </div>
+            {totalPages > 1 && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, ease: sectionEase, delay: 0.2 }}
+                className="flex items-center justify-between px-3 py-2 border-t border-border bg-muted/30"
+              >
+                <span className="text-xs text-muted-foreground">
+                  Page {page} of {totalPages}
+                </span>
+                <div className="flex items-center gap-1">
+                  <MotionButton
+                    type="button"
+                    onClick={() => setPage(1)}
+                    disabled={page === 1}
+                    title="First page"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <ChevronsLeft className="size-4" />
+                  </MotionButton>
+                  <MotionButton
+                    type="button"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    title="Previous page"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft className="size-4" />
+                  </MotionButton>
+                  <MotionButton
+                    type="button"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    title="Next page"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight className="size-4" />
+                  </MotionButton>
+                  <MotionButton
+                    type="button"
+                    onClick={() => setPage(totalPages)}
+                    disabled={page === totalPages}
+                    title="Last page"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <ChevronsRight className="size-4" />
+                  </MotionButton>
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
         </div>
       </main>
 
@@ -334,6 +515,8 @@ function GroupRows({
   onDeleteSection,
   onSaveNotes,
   updateStatus,
+  index,
+  search,
 }: {
   date: string;
   rows: FaxedBackDoc[];
@@ -346,8 +529,13 @@ function GroupRows({
   onDeleteSection: (target: { date: string; count: number }) => void;
   onSaveNotes: (row: FaxedBackDoc, notes: string) => void;
   updateStatus: { isPending: boolean; mutate: (vars: { id: string; status: FaxedBackStatus }) => void };
+  index: number;
+  search: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const reduce = useReducedMotion();
+  const t = reduce ? 0 : 0.25;
+  const staggerDelay = reduce ? 0 : index * 0.05;
 
   const copySection = async () => {
     const fmt = (d: string | null) => (d ? format(parseISO(d), "MM/dd/yyyy") : "");
@@ -384,9 +572,15 @@ function GroupRows({
     onCopied();
   };
 
-  return (
+return (
     <>
-      <tr className="bg-muted/40">
+      <motion.tr
+        initial={false}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0, height: 0 }}
+        transition={{ duration: t, ease: sectionEase }}
+        className="bg-muted/40"
+      >
         <td colSpan={6} className="px-3 py-2">
           <div className="flex items-center gap-2">
             <button
@@ -395,104 +589,137 @@ function GroupRows({
               className="flex items-center gap-2 flex-1 min-w-0 text-left cursor-pointer"
               title={expanded ? "Collapse this day" : "Expand this day"}
             >
-              {expanded ? <ChevronDown className="size-4 shrink-0 text-foreground/60" /> : <ChevronRight className="size-4 shrink-0 text-foreground/60" />}
+              <motion.span
+                initial={false}
+                animate={{ rotate: expanded ? 90 : 0 }}
+                transition={{ duration: 0.2, ease: sectionEase }}
+              >
+                <ChevronRight className="size-4 shrink-0 text-foreground/60" />
+              </motion.span>
               <CalendarDays className="size-4 text-primary shrink-0" />
               <span className="text-xs text-foreground">{format(parseISO(date), "MMMM d, yyyy")}</span>
               <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wide">{format(parseISO(date), "EEEE")}</span>
               <span className="text-xs text-foreground">({rows.length})</span>
             </button>
-            <button
+            <motion.button
               type="button"
               onClick={copySection}
               title="Copy this section as a table"
               className="ml-auto press-scale p-1.5 rounded text-foreground hover:bg-foreground/10 transition-colors"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
             >
               {copied ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
               onClick={() => onDeleteSection({ date, count: rows.length })}
               title="Delete this whole section"
               className="press-scale p-1.5 rounded text-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
             >
               <Trash2 className="size-3.5" />
-            </button>
+            </motion.button>
           </div>
         </td>
-      </tr>
-      {expanded && (
-        <>
-          <tr className="bg-muted/50 text-xs uppercase tracking-wide text-foreground">
-        <th className="px-3 py-2.5 text-left"><SortHeader label="File Name" sortKey="file_name" sort={sort} onSort={onToggleSort} align="left" /></th>
-        <th className="px-3 pl-8 py-2.5 text-left"><SortHeader label="Patient Name" sortKey="patient_name" sort={sort} onSort={onToggleSort} align="left" /></th>
-        <th className="px-3 py-2.5 text-left"><SortHeader label="Patient DOB" sortKey="patient_dob" sort={sort} onSort={onToggleSort} align="left" /></th>
-        <th className="px-3 py-2.5 text-left">Status</th>
-        <th className="px-3 py-2.5 text-left">Fax Back Message</th>
-        <th className="px-3 py-2.5 text-right w-12" aria-label="Actions" />
-      </tr>
-      {rows.map((row) => (
-        <tr key={row.id} className="border-t border-border transition-colors hover:bg-foreground/[0.03]">
-          <td className="px-3 py-2 w-64 max-w-64 font-medium text-foreground">
-            <span className="inline-flex items-center gap-1 min-w-0">
-              <img src="/pdf.png" alt="" className="size-4 shrink-0 object-contain" />
-              <CopyValue value={withPdf(row.file_name)} title={withPdf(row.file_name)}>
-                <span className="truncate block">{withPdf(row.file_name)}</span>
-              </CopyValue>
-            </span>
-          </td>
-          <td className="px-3 pl-8 py-2 w-56 max-w-56 truncate text-foreground" title={row.patient_name}>
-            {row.patient_name ? (
-              <CopyValue value={row.patient_name} title={row.patient_name}>
-                <span className="truncate block">{row.patient_name}</span>
-              </CopyValue>
-            ) : (
-              <span className="text-muted-foreground">—</span>
-            )}
-          </td>
-          <td className="px-3 py-2 w-36 text-foreground tabular-nums truncate" title={row.patient_dob ?? ""}>
-            {row.patient_dob ? (
-              <CopyValue value={format(parseISO(row.patient_dob), "MM/dd/yyyy")} title={format(parseISO(row.patient_dob), "MM/dd/yyyy")}>
-                <span className="truncate block">{format(parseISO(row.patient_dob), "MM/dd/yyyy")}</span>
-              </CopyValue>
-            ) : (
-              <span className="text-muted-foreground">—</span>
-            )}
-          </td>
-          <td className={cn("px-3 py-2 w-32 text-xs", STATUS_CLASSES[row.status] ?? "text-foreground")}>
-            <StatusPicker row={row} status={row.status as FaxedBackStatus} onPick={updateStatus} />
-          </td>
-          <td className="px-3 py-2 text-foreground w-72 max-w-72">
-            <NotesPopover row={row} onSave={onSaveNotes} />
-          </td>
-          <td className="px-3 py-2 text-center">
-            <div className="inline-flex items-center gap-1">
-              <button
-                type="button"
-                title={`Edit ${row.file_name}`}
-                onClick={() => onEdit(row)}
-                className="press-scale p-1.5 rounded text-foreground hover:text-foreground hover:bg-foreground/10 transition-colors"
-              >
-                <Pencil className="size-4" />
-              </button>
-              <button
-                type="button"
-                title={`Delete ${row.file_name}`}
-                onClick={() => onDelete(row)}
-                className="press-scale p-1.5 rounded text-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-              >
-                <Trash2 className="size-4" />
-              </button>
-            </div>
-          </td>
-        </tr>
-      ))}
-        </>
-      )}
+      </motion.tr>
+      <AnimatePresence>
+        {expanded && (
+          <>
+            <motion.tr
+              key="header"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: t, ease: sectionEase }}
+              className="bg-muted/50 text-xs uppercase tracking-wide text-foreground"
+            >
+              <th className="px-3 py-2.5 text-left min-w-[300px]"><SortHeader label="File Name" sortKey="file_name" sort={sort} onSort={onToggleSort} align="left" /></th>
+              <th className="px-3 pl-8 py-2.5 text-left w-56"><SortHeader label="Patient Name" sortKey="patient_name" sort={sort} onSort={onToggleSort} align="left" /></th>
+              <th className="px-3 py-2.5 text-left w-36"><SortHeader label="Patient DOB" sortKey="patient_dob" sort={sort} onSort={onToggleSort} align="left" /></th>
+              <th className="px-3 py-2.5 text-left w-32">Status</th>
+              <th className="px-3 py-2.5 text-left min-w-[260px]">Fax Back Message</th>
+              <th className="px-3 py-2.5 text-right w-20" aria-label="Actions" />
+            </motion.tr>
+            <AnimatePresence>
+              {rows.map((row, rowIndex) => (
+                <motion.tr
+                  key={row.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12, height: 0 }}
+                  transition={{ duration: t, ease: rowEase, delay: staggerDelay + rowIndex * 0.02 }}
+                  whileHover={{ backgroundColor: "hsl(var(--foreground) / 0.03)" }}
+                  className="border-t border-border transition-colors"
+                >
+                  <td className="px-3 py-2 font-medium text-foreground min-w-[300px] max-w-[360px] break-all">
+                    <span className="inline-flex items-start gap-1.5 min-w-0">
+                      <img src="/pdf.png" alt="" className="size-4 shrink-0 object-contain mt-0.5" />
+                      <CopyValue value={withPdf(row.file_name)} title={withPdf(row.file_name)}>
+                        <span className="break-all whitespace-normal"><Highlight text={withPdf(row.file_name)} query={search} /></span>
+                      </CopyValue>
+                    </span>
+                  </td>
+                  <td className="px-3 pl-8 py-2 w-56 max-w-[240px] text-foreground break-all" title={row.patient_name}>
+                    {row.patient_name ? (
+                      <CopyValue value={row.patient_name} title={row.patient_name}>
+                        <span className="break-all whitespace-normal"><Highlight text={row.patient_name} query={search} /></span>
+                      </CopyValue>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 w-36 text-foreground tabular-nums" title={row.patient_dob ?? ""}>
+                    {row.patient_dob ? (
+                      <CopyValue value={format(parseISO(row.patient_dob), "MM/dd/yyyy")} title={format(parseISO(row.patient_dob), "MM/dd/yyyy")}>
+                        <span className="break-all whitespace-normal"><Highlight text={format(parseISO(row.patient_dob), "MM/dd/yyyy")} query={search} /></span>
+                      </CopyValue>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </td>
+                  <td className={cn("px-3 py-2 w-32 text-xs", STATUS_CLASSES[row.status] ?? "text-foreground")}>
+                    <StatusPicker row={row} status={row.status as FaxedBackStatus} onPick={updateStatus} />
+                  </td>
+                  <td className="px-3 py-2 text-foreground">
+                    <NotesPopover row={row} onSave={onSaveNotes} search={search} />
+                  </td>
+                  <td className="px-3 py-2 text-center w-20">
+                    <div className="inline-flex items-center justify-end gap-1 w-full">
+                      <motion.button
+                        type="button"
+                        title={`Edit ${row.file_name}`}
+                        onClick={() => onEdit(row)}
+                        className="press-scale p-1.5 rounded text-foreground hover:text-foreground hover:bg-foreground/10 transition-colors"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Pencil className="size-4" />
+                      </motion.button>
+                      <motion.button
+                        type="button"
+                        title={`Delete ${row.file_name}`}
+                        onClick={() => onDelete(row)}
+                        className="press-scale p-1.5 rounded text-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Trash2 className="size-4" />
+                      </motion.button>
+                    </div>
+                  </td>
+                </motion.tr>
+              ))}
+            </AnimatePresence>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 }
 
-function NotesPopover({ row, onSave }: { row: FaxedBackDoc; onSave: (row: FaxedBackDoc, notes: string) => void }) {
+function NotesPopover({ row, onSave, search }: { row: FaxedBackDoc; onSave: (row: FaxedBackDoc, notes: string) => void; search: string }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(row.notes ?? "");
   return (
@@ -500,10 +727,10 @@ function NotesPopover({ row, onSave }: { row: FaxedBackDoc; onSave: (row: FaxedB
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="w-full text-left truncate hover:underline hover:text-foreground transition-colors cursor-pointer"
+          className="w-full text-left break-all whitespace-normal hover:underline hover:text-foreground transition-colors cursor-pointer"
           title={row.notes ? "Click to edit notes" : "Click to add notes"}
         >
-          {row.notes || <span className="text-muted-foreground">—</span>}
+          {row.notes ? <Highlight text={row.notes} query={search} /> : <span className="text-muted-foreground">—</span>}
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80 p-2.5">

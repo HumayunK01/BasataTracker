@@ -24,21 +24,65 @@ const DocSchema = z.object({
 
 export type FaxedBackInput = z.infer<typeof DocSchema>;
 
-export function useFaxedBackDocs() {
+export interface FaxedBackPageResult {
+  rows: FaxedBackDoc[];
+  totalDays: number;
+  totalDocs: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export function useFaxedBackDocs(page = 1, pageSize = 10) {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ["faxed_back_docs", user?.id],
+    queryKey: ["faxed_back_docs", user?.id, page, pageSize],
     enabled: !!user,
     staleTime: 60_000,
     refetchOnWindowFocus: true,
-    queryFn: async (): Promise<FaxedBackDoc[]> => {
-      const { data, error } = await supabase
+    queryFn: async (): Promise<FaxedBackPageResult> => {
+      const created_by = await getUserId();
+      
+      // Get distinct dates with counts for pagination
+      const { data: dateCounts, error: countError } = await supabase
+        .from("faxed_back_docs")
+        .select("worked_on", { count: "exact", head: false })
+        .eq("created_by", created_by);
+      
+      if (countError) throw countError;
+      
+      // Group by date and count
+      const dateMap = new Map<string, number>();
+      for (const row of dateCounts ?? []) {
+        const date = row.worked_on;
+        dateMap.set(date, (dateMap.get(date) ?? 0) + 1);
+      }
+      
+      const sortedDates = [...dateMap.entries()].sort((a, b) => b[0].localeCompare(a[0]));
+      const totalDays = sortedDates.length;
+      const totalDocs = dateCounts?.length ?? 0;
+      const totalPages = Math.ceil(totalDays / pageSize);
+      
+      // Get dates for current page
+      const startIdx = (page - 1) * pageSize;
+      const pageDates = sortedDates.slice(startIdx, startIdx + pageSize).map(([d]) => d);
+      
+      if (pageDates.length === 0) {
+        return { rows: [], totalDays, totalDocs, page, pageSize, totalPages };
+      }
+      
+      // Fetch documents for these dates
+      const { data: rows, error } = await supabase
         .from("faxed_back_docs")
         .select("*")
+        .eq("created_by", created_by)
+        .in("worked_on", pageDates)
         .order("worked_on", { ascending: false })
         .order("created_at", { ascending: false });
+      
       if (error) throw error;
-      return data ?? [];
+      
+      return { rows: rows ?? [], totalDays, totalDocs, page, pageSize, totalPages };
     },
   });
 }
