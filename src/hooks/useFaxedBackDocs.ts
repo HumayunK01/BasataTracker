@@ -126,8 +126,15 @@ export function useUpdateFaxedBackStatus() {
     mutationFn: async ({ id, status }: { id: string; status: FaxedBackStatus }) => {
       if (!checkLimit()) throw new Error("Too many updates. Please wait a moment.");
       const created_by = await getUserId();
-      const snaps = qc.getQueriesData<FaxedBackDoc[]>({ queryKey: ["faxed_back_docs"] });
-      const prev = snaps.flatMap(([, d]) => d ?? []).find((r) => r.id === id)?.status;
+      // ponytail: cache is paginated FaxedBackPageResult now, but handle legacy array shape too
+      const snaps = qc.getQueriesData({ queryKey: ["faxed_back_docs"] });
+      let prev: string | undefined;
+      for (const [, d] of snaps) {
+        if (!d) continue;
+        const rows: FaxedBackDoc[] = Array.isArray(d) ? (d as FaxedBackDoc[]) : ((d as FaxedBackPageResult).rows ?? []);
+        const found = rows.find((r) => r.id === id);
+        if (found) { prev = found.status; break; }
+      }
       const { error } = await supabase
         .from("faxed_back_docs")
         .update({ status })
@@ -138,11 +145,15 @@ export function useUpdateFaxedBackStatus() {
     },
     onMutate: async ({ id, status }) => {
       await qc.cancelQueries({ queryKey: ["faxed_back_docs"] });
-      const key = ["faxed_back_docs"];
-      const snapshots = qc.getQueriesData<FaxedBackDoc[]>({ queryKey: key });
+      const snapshots = qc.getQueriesData({ queryKey: ["faxed_back_docs"] });
       for (const [qKey, data] of snapshots) {
         if (!data) continue;
-        qc.setQueryData<FaxedBackDoc[]>(qKey, data.map((r) => (r.id === id ? { ...r, status } : r)));
+        if (Array.isArray(data)) {
+          qc.setQueryData(qKey, (data as FaxedBackDoc[]).map((r) => (r.id === id ? { ...r, status } : r)));
+        } else if (data && typeof data === "object" && "rows" in (data as Record<string, unknown>) && Array.isArray((data as FaxedBackPageResult).rows)) {
+          const page = data as FaxedBackPageResult;
+          qc.setQueryData(qKey, { ...page, rows: page.rows.map((r) => (r.id === id ? { ...r, status } : r)) });
+        }
       }
       return { snapshots };
     },
