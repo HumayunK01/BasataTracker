@@ -15,11 +15,14 @@ import { useUpsertLog, useDailyLogs } from "@/hooks/useDailyLogs";
 import { isoDate, totalForLog, isWeekend } from "@/types/log";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
 import { RotateCcw, CheckCircle2, Hash, Plus, Tag, ChevronRight, Loader2, RefreshCw } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getUserId } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import { toast } from "sonner";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useQueryClient } from "@tanstack/react-query";
+import { useMutationRateLimit } from "@/hooks/useMutationRateLimit";
+import { logAuditEvent } from "@/hooks/useAuditLog";
 
 // Import modular components
 import { CounterCard } from "@/components/ar/counter/CounterCard";
@@ -97,6 +100,8 @@ export default function CounterPage() {
   const upsert = useUpsertLog();
   const { user } = useAuth();
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const qc = useQueryClient();
+  const { checkLimit: checkSilentLimit } = useMutationRateLimit({ maxRequests: 20, windowMs: 60_000 });
 
   const [{ counts, selectedKeys, saved }, cDispatch] = useReducer(counterReducer, undefined, () => ({
     counts: load<Record<string, number>>(COUNTS_KEY, {}),
@@ -197,23 +202,6 @@ export default function CounterPage() {
   const todayLog = logs.find((l) => l.log_date === todayIso);
   const todayTotal = todayLog ? totalForLog(todayLog) : 0;
 
-  // Shared write path for both debounced auto-save and the manual Save button.
-  // Merges into today's row so categories tracked on other devices are kept.
-  const flush = useCallback(
-    async (current: Record<string, number>, keys: string[]) => {
-      const existingLog = logs.find((l) => l.log_date === todayIso);
-      const mergedCounts: Record<string, number> = { ...(existingLog?.counts ?? {}) };
-      for (const key of keys) mergedCounts[key] = current[key] ?? 0;
-      await upsert.mutateAsync({
-        log_date: todayIso,
-        is_off_day: isWeekend(todayIso),
-        notes: existingLog?.notes ?? null,
-        counts: mergedCounts,
-      });
-    },
-    [logs, todayIso, upsert]
-  );
-
   // Hydrate from the server once, when today's row first arrives. Only seed if
   // this device has no local progress, so we never clobber in-progress taps.
   useEffect(() => {
@@ -282,10 +270,10 @@ export default function CounterPage() {
   };
 
   const handleSave = async () => {
+    if (saved) return;
     const keys = activeCategories.map((c) => c.key);
     try {
-      await flush(counts, keys);
-      cDispatch({ type: "set_saved", v: true });
+      await silentFlush(counts, keys);
       toast.success("Synced to database");
     } catch {
       toast.error("Couldn't sync counts", {
@@ -294,45 +282,54 @@ export default function CounterPage() {
     }
   };
 
-  // Auto-save: debounced flush on changes, plus periodic backup.
-  // localStorage is the instant source of truth; server sync is best-effort.
-  const autoSaveRef = useRef({ counts, activeCategories, isPending: upsert.isPending });
-  autoSaveRef.current = { counts, activeCategories, isPending: upsert.isPending };
+  // ponytail: silent auto-save — only when not already saved, no toasts.
+  const silentFlush = useCallback(async (current: Record<string, number>, keys: string[]) => {
+    if (keys.length === 0) return;
+    const existingLog = logs.find((l) => l.log_date === todayIso);
+    let same = true;
+    for (const k of keys) if ((current[k] ?? 0) !== (existingLog?.counts?.[k] ?? 0)) { same = false; break; }
+    if (same) { cDispatch({ type: "set_saved", v: true }); return; }
+    if (!checkSilentLimit()) throw new Error("Too many saves");
+    const mergedCounts: Record<string, number> = { ...(existingLog?.counts ?? {}) };
+    for (const k of keys) mergedCounts[k] = current[k] ?? 0;
+    const user_id = await getUserId();
+    const { error } = await supabase.from("daily_logs").upsert({ log_date: todayIso, is_off_day: isWeekend(todayIso), notes: existingLog?.notes ?? null, counts: mergedCounts, user_id }, { onConflict: "user_id,log_date" });
+    if (error) throw error;
+    await logAuditEvent("log_updated", { log_date: todayIso });
+    qc.invalidateQueries({ queryKey: ["daily_logs"] });
+    cDispatch({ type: "set_saved", v: true });
+  }, [logs, todayIso, qc, checkSilentLimit]);
+
+  // Auto-save: debounced silent flush, plus periodic backup — only if not saved.
+  const autoSaveRef = useRef({ counts, activeCategories, isPending: upsert.isPending, saved });
+  autoSaveRef.current = { counts, activeCategories, isPending: upsert.isPending, saved };
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const scheduleAutoSave = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
-      const { counts: c, activeCategories: cats, isPending } = autoSaveRef.current;
-      if (isPending || cats.length === 0) return;
-      try {
-        await flush(c, cats.map((cat) => cat.key));
-        cDispatch({ type: "set_saved", v: true });
-      } catch {
-        // Silent retry next change; localStorage persists counts.
-      }
-    }, 2000); // 2s debounce after last tap
-  }, [flush]);
+      const { counts: c, activeCategories: cats, isPending, saved: isSaved } = autoSaveRef.current;
+      if (isPending || cats.length === 0 || isSaved) return;
+      try { await silentFlush(c, cats.map((cat) => cat.key)); } catch { /* silent retry */ }
+    }, 2000);
+  }, [silentFlush]);
 
   useEffect(() => {
-    if (hydratedRef.current && activeCategories.length > 0) {
+    if (hydratedRef.current && activeCategories.length > 0 && !saved) {
       scheduleAutoSave();
     }
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [counts, activeCategories, scheduleAutoSave]);
+  }, [counts, activeCategories, saved, scheduleAutoSave]);
 
-  // Periodic backup every 30s (catches any missed debounced saves)
+  // Periodic backup every 30s — only if unsaved (catches missed debounced saves)
   useEffect(() => {
     const id = setInterval(async () => {
-      const { counts: c, activeCategories: cats, isPending } = autoSaveRef.current;
-      if (isPending || cats.length === 0) return;
-      try {
-        await flush(c, cats.map((cat) => cat.key));
-        cDispatch({ type: "set_saved", v: true });
-      } catch {}
+      const { counts: c, activeCategories: cats, isPending, saved: isSaved } = autoSaveRef.current;
+      if (isPending || cats.length === 0 || isSaved) return;
+      try { await silentFlush(c, cats.map((cat) => cat.key)); } catch {}
     }, 30 * 1000);
     return () => clearInterval(id);
-  }, [flush]);
+  }, [silentFlush]);
 
   return (
     <>
