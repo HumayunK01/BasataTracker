@@ -57,7 +57,7 @@ function CategoryPickerList({
           className="pl-9 bg-background/60"
         />
       </div>
-      <div className="max-h-[55vh] overflow-y-auto -mx-1 px-1 space-y-0.5 no-scrollbar">
+      <div className="max-h-[55vh] overflow-y-auto -mx-1 px-1 space-y-1.5 no-scrollbar">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-14 text-foreground">
             <div className="size-12 rounded-xl border border-border/50 grid place-items-center">
@@ -66,34 +66,62 @@ function CategoryPickerList({
             <p className="text-sm">No categories match &ldquo;{q}&rdquo;.</p>
           </div>
         ) : (
-          filtered.map((cat) => {
-            const clr = colorForKey(cat.key);
-            return (
-              <button
-                key={cat.key}
-                type="button"
-                onClick={() => onPick(cat)}
-                className="w-full flex items-center gap-3 p-3 rounded-lg border border-transparent hover:border-border/60 hover:bg-muted/40 active:bg-muted/60 active:scale-[0.99] transition-all duration-150 text-left touch-manipulation group"
-              >
-                <span
-                  className="size-9 rounded-lg flex items-center justify-center text-xs font-mono font-bold shrink-0 group-hover:scale-105 transition-transform"
+          <>
+            {q.trim() && (
+              <p className="font-mono text-2xs uppercase tracking-[0.2em] text-foreground px-1 pb-0.5">
+                {filtered.length} match{filtered.length === 1 ? "" : "es"}
+              </p>
+            )}
+            {filtered.map((cat) => {
+              const clr = colorForKey(cat.key);
+              return (
+                <button
+                  key={cat.key}
+                  type="button"
+                  onClick={() => onPick(cat)}
+                  className="relative w-full group flex items-center gap-3 p-2.5 rounded-lg border text-left overflow-hidden active:scale-[0.99] transition-transform duration-150 touch-manipulation"
                   style={{
-                    color: clr,
-                    backgroundColor: withAlpha(clr, 0.13),
-                    border: `1px solid ${withAlpha(clr, 0.25)}`,
+                    borderColor: withAlpha(clr, 0.18),
+                    backgroundColor: withAlpha(clr, 0.04),
                   }}
                 >
-                  {cat.short.slice(0, 3)}
-                </span>
-                <span className="text-sm flex-1 font-medium truncate">{cat.label}</span>
-                <span className="size-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 text-foreground bg-primary group-hover:text-primary-foreground transition-all duration-150 shrink-0">
-                  <Plus className="size-3.5" />
-                </span>
-              </button>
-            );
-          })
+                  <span
+                    aria-hidden
+                    className="absolute inset-0 pointer-events-none transition-colors duration-150 group-hover:bg-foreground/[0.035]"
+                  />
+                  <span
+                    className="relative size-9 rounded-md flex items-center justify-center text-xs font-mono font-bold shrink-0 group-hover:scale-105 transition-transform duration-150"
+                    style={{
+                      color: clr,
+                      backgroundColor: withAlpha(clr, 0.13),
+                      border: `1px solid ${withAlpha(clr, 0.28)}`,
+                    }}
+                  >
+                    {cat.short.slice(0, 3)}
+                  </span>
+                  <span className="relative text-sm flex-1 font-medium truncate">{cat.label}</span>
+                  <span
+                    className="relative size-7 rounded-md flex items-center justify-center shrink-0 opacity-60 group-hover:opacity-100 transition-opacity duration-150"
+                    style={{
+                      color: clr,
+                      border: `1px solid ${withAlpha(clr, 0.22)}`,
+                      backgroundColor: withAlpha(clr, 0.08),
+                    }}
+                  >
+                    <Plus className="size-3.5" />
+                  </span>
+                </button>
+              );
+            })}
+          </>
         )}
       </div>
+      {autoFocusSearch && (
+        <p className="flex items-center justify-end gap-1.5 pt-1 text-2xs text-foreground">
+          <kbd className="font-mono font-semibold px-1.5 py-0.5 rounded border border-border/40 bg-background/60">Enter</kbd>
+          adds first match
+        </p>
+      )}
     </div>
   );
 }

@@ -132,13 +132,21 @@ export function CounterCard({
             onDecrement();
           }
         }}
-        className="relative flex-1 flex items-center justify-center py-6 sm:py-7 mx-2 rounded-none active:opacity-70 transition-opacity duration-100 touch-manipulation select-none outline-none cursor-pointer"
+        className="relative flex-1 flex items-center justify-center py-6 sm:py-7 mx-2 rounded-lg active:opacity-70 transition-opacity duration-100 touch-manipulation select-none outline-none cursor-pointer overflow-hidden"
         title="Tap to count (or press ↑ / +)"
         aria-label={`${cat.label}: ${count}. Tap to add one.`}
       >
+        {/* Category code watermark */}
+        <span
+          aria-hidden
+          className="absolute inset-0 flex items-center justify-center font-mono font-bold text-[4.5rem] sm:text-[6.5rem] leading-none select-none pointer-events-none"
+          style={{ color: withAlpha(clr, 0.055) }}
+        >
+          {cat.short}
+        </span>
         <span
           key={bump}
-          className="counter-pop text-5xl sm:text-7xl font-bold font-mono tabular-nums leading-none select-none"
+          className="counter-pop relative text-5xl sm:text-7xl font-bold font-mono tabular-nums leading-none select-none"
           style={{ color: count > 0 ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground) / 0.3)" }}
         >
           {count}

@@ -335,72 +335,76 @@ export default function CounterPage() {
     <>
       <main className="flex-1 overflow-y-auto">
         <div className="w-full px-4 sm:px-6 py-5 sm:py-6 flex flex-col gap-4">
-          {/* Hero — session total monument */}
-          <section className="relative pt-2 pb-3 sm:pb-4">
-            <div className="flex items-center justify-between gap-4">
-              <p className="font-mono text-2xs uppercase tracking-[0.2em] text-foreground">Session Total</p>
+          {/* Hero — session total command center */}
+          <section className="relative bg-card border border-border/80 rounded-lg overflow-hidden animate-fade-in">
+            <header className="flex flex-wrap items-center justify-between gap-y-2 px-4 py-2 border-b border-border/50">
+              <span className="font-mono text-[11px] font-medium tracking-wide text-foreground uppercase">Session Total</span>
               <div className="flex items-center gap-2">
+                <span
+                  className={`text-2xs font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-md border ${
+                    saved
+                      ? "bg-success/15 text-success border-success/30"
+                      : upsert.isPending
+                      ? "bg-info/15 text-info border-info/30"
+                      : total > 0
+                      ? "bg-warning/15 text-warning border-warning/30"
+                      : "bg-muted text-foreground border-border/40"
+                  }`}
+                >
+                  {saved ? "Synced" : upsert.isPending ? "Syncing…" : total > 0 ? "Unsaved" : "Empty"}
+                </span>
+                {!saved && total > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={upsert.isPending}
+                    aria-label="Force sync now"
+                    className="h-7 px-2"
+                  >
+                    <RefreshCw className={`size-3.5 ${upsert.isPending ? "animate-spin" : ""}`} />
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
                   aria-label="Reset counter"
-                  className="h-9 px-3 border-border/60 hover:bg-muted/80"
+                  className="h-7 px-2.5 border-border/60 hover:bg-muted/80"
                   onClick={() => setResetOpen(true)}
                   disabled={total === 0 && activeCategories.length === 0}
                 >
-                  <RotateCcw className="size-4" />
-                  <span className="hidden xs:inline ml-1 font-semibold">Reset</span>
+                  <RotateCcw className="size-3.5" />
+                  <span className="hidden xs:inline ml-1 font-semibold text-xs">Reset</span>
                 </Button>
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className={`text-2xs font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-md border ${
-                      saved
-                        ? "bg-success/15 text-success border-success/30"
-                        : upsert.isPending
-                        ? "bg-info/15 text-info border-info/30"
-                        : total > 0
-                        ? "bg-warning/15 text-warning border-warning/30"
-                        : "bg-muted text-foreground border-border/40"
-                    }`}
-                  >
-                    {saved ? "Synced" : upsert.isPending ? "Syncing…" : total > 0 ? "Unsaved" : "Empty"}
-                  </span>
-                  {!saved && total > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleSave}
-                      disabled={upsert.isPending}
-                      aria-label="Force sync now"
-                      className="h-7 px-2"
-                    >
-                      <RefreshCw className={`size-3.5 ${upsert.isPending ? "animate-spin" : ""}`} />
-                    </Button>
-                  )}
-                </div>
               </div>
-            </div>
-            <div className="mt-2 flex items-center gap-4 flex-wrap">
-              <p className="text-8xl sm:text-9xl font-bold tabular-nums text-primary leading-none tracking-tight">
+            </header>
+
+            <div className="px-4 sm:px-5 py-5 sm:py-6 flex flex-wrap items-end gap-x-10 gap-y-5">
+              <p className="text-7xl sm:text-8xl xl:text-9xl font-bold tabular-nums text-foreground leading-none tracking-tight">
                 {animatedTotal}
               </p>
+              <dl className="ml-auto flex flex-wrap gap-x-8 gap-y-3 items-end">
+                {[
+                  { label: "Active", value: String(activeCategories.length) },
+                  { label: "Logged today", value: String(todayTotal) },
+                  ...(total > 0
+                    ? [{ label: "Pending", value: saved ? "0" : `${todayTotal > total ? "−" : "+"}${Math.abs(total - todayTotal)}` }]
+                    : []),
+                ].map((stat) => (
+                  <div key={stat.label}>
+                    <dt className="font-mono text-2xs uppercase tracking-[0.2em] text-foreground">{stat.label}</dt>
+                    <dd className="mt-1 text-xl font-bold tabular-nums leading-none">{stat.value}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
-            <p className="text-xs text-foreground/60 mt-3">
-              {saved
-                ? "All counts synchronized to database"
-                : upsert.isPending
-                ? "Syncing…"
-                : todayLog
-                ? `Last synced value: ${todayTotal} documents`
-                : "No documents saved yet today"}
-            </p>
           </section>
 
           {/* Counter cards grid */}
           {activeCategories.length > 0 && (
             <>
               <FigHeader title="Active Counters" />
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 animate-fade-in">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 stagger-children">
               {activeCategories.map((cat, idx) => (
                 <CounterCard
                   key={cat.key}
@@ -426,24 +430,17 @@ export default function CounterPage() {
               disabled={catsLoading || availableToAdd.length === 0}
               className="flex-1 flex items-center gap-3 rounded-md border border-border bg-card px-4 py-3 text-left hover:bg-muted/40 hover:border-foreground/20 active:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40 transition-[background-color,border-color,opacity] duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:border-border touch-manipulation cursor-pointer"
             >
-              <span className="size-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <Plus className="size-5 text-primary" />
+              <span className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Plus className="size-4 text-primary" />
               </span>
-              <span className="flex-1 min-w-0">
-                <span className="block text-xs font-semibold text-foreground">
-                  {catsLoading
-                    ? "Loading categories…"
-                    : availableToAdd.length === 0 && activeCategories.length === 0
-                    ? "No categories yet"
-                    : availableToAdd.length === 0
-                    ? "All active categories added"
-                    : "Add category to counter"}
-                </span>
-                <span className="block text-xs text-foreground mt-0.5 truncate">
-                  {availableToAdd.length > 0
-                    ? `Pick from ${availableToAdd.length} available categor${availableToAdd.length === 1 ? "y" : "ies"}`
-                    : "Create a new category to keep counting"}
-                </span>
+              <span className="flex-1 min-w-0 text-xs font-semibold text-foreground truncate">
+                {catsLoading
+                  ? "Loading categories…"
+                  : availableToAdd.length === 0 && activeCategories.length === 0
+                  ? "No categories yet"
+                  : availableToAdd.length === 0
+                  ? "All categories added"
+                  : `Add category · ${availableToAdd.length} available`}
               </span>
               {availableToAdd.length > 0 && !catsLoading && (
                 <ChevronRight className="size-4 text-foreground shrink-0" />
@@ -455,13 +452,10 @@ export default function CounterPage() {
               disabled={catsLoading}
               className="sm:w-64 flex items-center gap-3 rounded-md border border-primary/30 bg-card px-4 py-3 text-left hover:bg-primary/5 hover:border-primary/60 active:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40 transition-[background-color,border-color,opacity] duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:border-primary/30 touch-manipulation cursor-pointer"
             >
-              <span className="size-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <Tag className="size-5 text-primary" />
+              <span className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Tag className="size-4 text-primary" />
               </span>
-              <span className="flex-1 min-w-0">
-                <span className="block text-xs font-semibold text-primary">New category</span>
-                <span className="block text-xs text-foreground mt-0.5 truncate">Create your own from scratch</span>
-              </span>
+              <span className="flex-1 min-w-0 text-xs font-semibold text-primary truncate">New category</span>
             </button>
           </div>
 

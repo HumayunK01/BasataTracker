@@ -415,6 +415,9 @@
   .animate-row-in {
     animation: fadeOnly 0.2s ease forwards;
   }
+  .stagger-children > * {
+    animation: fadeOnly 0.2s ease forwards;
+  }
   .press-scale:active {
     transform: none;
   }
