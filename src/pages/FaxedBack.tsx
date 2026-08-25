@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion, type Easing } from "motion/react";
 import { format, parseISO } from "date-fns";
 import { isoDate } from "@/types/log";
-import { useFaxedBackDocs, useUpsertFaxedBackDoc, useDeleteFaxedBackDoc, useDeleteFaxedBackSection, useUpdateFaxedBackStatus, FAXED_BACK_STATUSES, type FaxedBackDoc, type FaxedBackInput, type FaxedBackStatus, type FaxedBackPageResult } from "@/hooks/useFaxedBackDocs";
+import { useFaxedBackDocs, useUpsertFaxedBackDoc, useDeleteFaxedBackDoc, useDeleteFaxedBackSection, useUpdateFaxedBackStatus, FAXED_BACK_STATUSES, type FaxedBackDoc, type FaxedBackInput, type FaxedBackStatus } from "@/hooks/useFaxedBackDocs";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -168,8 +168,6 @@ const FaxedBackPage = () => {
         return av.localeCompare(bv, undefined, { sensitivity: "base" }) * dir;
       })] as const);
   }, [rows, search, sort]);
-
-  const total = useMemo(() => groups.reduce((n, [, l]) => n + l.length, 0), [groups]);
 
   // ponytail: auto open/close groups — when searching, expand all matches so old days aren't hidden collapsed; when cleared, snap back to first.
   useEffect(() => {

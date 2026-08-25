@@ -41,7 +41,6 @@ export function CredentialCardItem({
   revealed,
   copiedLogin,
   copiedPassword,
-  copiedFull,
   otherFolders,
   canManage,
   onToggleSelect,

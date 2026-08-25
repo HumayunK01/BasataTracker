@@ -50,7 +50,7 @@ function Stepper({
   return (
     <div className="flex items-center gap-3 px-5 py-3 border-b border-border/40 last:border-0">
       <div className="flex items-center gap-3 flex-1 min-w-0">
-        <span className="size-3 rounded-full shrink-0 ring-2 ring-offset-2 ring-offset-background" style={{ backgroundColor: color, ringColor: color }} />
+        <span className="size-3 rounded-full shrink-0 ring-2 ring-offset-2 ring-offset-background" style={{ backgroundColor: color, "--tw-ring-color": color } as React.CSSProperties} />
         <span className="text-sm font-medium text-foreground truncate">{label}</span>
         <span
           className="text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wider font-heading"

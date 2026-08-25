@@ -15,7 +15,6 @@ import { useFaxResolvedByDay, FAX_CATEGORY_KEY, FAX_CATEGORY_LABEL, FAX_CATEGORY
 import { useIndexableResolvedByDay, INDEXABLE_CATEGORY_KEY, INDEXABLE_CATEGORY_LABEL, INDEXABLE_CATEGORY_SHORT } from "@/hooks/useIndexableTracker";
 import { useProfile } from "@/hooks/useProfile";
 import { isoDate, formatTableDate, isWeekend, totalForLog } from "@/types/log";
-import { PageHeader } from "@/components/ar/PageHeader";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
 import { downloadCSV, downloadJSON, downloadPDF, formatUSDate } from "@/lib/log-utils";
 import { Download, FileJson, FileText, FileType, ChevronDown, CalendarRange } from "lucide-react";

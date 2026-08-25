@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
-import { labelFor, displayStatus, overallClasses, formatDateTime, pageNumbersArr } from "@/components/ar/tracker/tracker-helpers";
+import { labelFor, formatDateTime, pageNumbersArr } from "@/components/ar/tracker/tracker-helpers";
 import { Pagination } from "@/components/Pagination";
 import Skeleton from "react-loading-skeleton";
 import { cn } from "@/lib/utils";

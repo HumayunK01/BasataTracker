@@ -15,7 +15,7 @@ import { SortHeader } from "@/components/ar/tracker/SortHeader";
 import type { SortKey } from "@/components/ar/tracker/SortHeader";
 import { StatCard } from "@/components/ar/tracker/StatCard";
 import { Pagination } from "@/components/Pagination";
-import { copyName, displayStatus, formatDateTime, dateKey, statusGroup,
+import { copyName, displayStatus, statusGroup,
   stepLabels, pageNumbersArr, STATUS_GROUPS, type TrackerMode,
 } from "@/components/ar/tracker/tracker-helpers";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,

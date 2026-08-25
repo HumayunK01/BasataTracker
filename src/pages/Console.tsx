@@ -52,7 +52,7 @@ const Console = () => {
                       <Skeleton width={56} height={12} /><Skeleton width={40} height={24} />
                     </div>
                   ))
-                  : [...stats.categoryTotals].sort((a, b) => b.value - a.value).map((c, i) => (
+                  : [...stats.categoryTotals].sort((a, b) => b.value - a.value).map((c) => (
                     <CategoryStatCard key={c.key} label={c.label} value={c.value} color={colorForKey(c.key)} />
                   ))}
               </div>

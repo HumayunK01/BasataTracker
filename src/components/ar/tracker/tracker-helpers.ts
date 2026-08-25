@@ -108,7 +108,8 @@ export function stepIsSkipped(row: { step1: FaxStepStatus; step2: FaxStepStatus 
     .some((f) => row[f] === "Successfully Sent");
 }
 
-export function stepLabels(mode: TrackerMode): [string, string, string] {
+// ponytail: labels are static today; take a mode param again if fax/indexable diverge
+export function stepLabels(_mode: TrackerMode): [string, string, string] {
   return [
     "Step 1",
     "Step 2",

@@ -14,7 +14,7 @@ import { useCategories, type Category } from "@/hooks/useCategories";
 import { useUpsertLog, useDailyLogs } from "@/hooks/useDailyLogs";
 import { isoDate, totalForLog, isWeekend } from "@/types/log";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
-import { RotateCcw, CheckCircle2, Hash, Plus, Tag, ChevronRight, Loader2, RefreshCw } from "lucide-react";
+import { RotateCcw, Hash, Plus, Tag, ChevronRight, RefreshCw } from "lucide-react";
 import { supabase, getUserId } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
@@ -326,7 +326,7 @@ export default function CounterPage() {
     const id = setInterval(async () => {
       const { counts: c, activeCategories: cats, isPending, saved: isSaved } = autoSaveRef.current;
       if (isPending || cats.length === 0 || isSaved) return;
-      try { await silentFlush(c, cats.map((cat) => cat.key)); } catch {}
+      try { await silentFlush(c, cats.map((cat) => cat.key)); } catch { /* best-effort backup; next debounced save retries */ }
     }, 30 * 1000);
     return () => clearInterval(id);
   }, [silentFlush]);

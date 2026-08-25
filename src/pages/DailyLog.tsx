@@ -14,7 +14,7 @@ import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
 import { useProfile } from "@/hooks/useProfile";
 import { downloadCSV, downloadJSON, downloadPDF } from "@/lib/log-utils";
-import { isoDate, type DailyLog } from "@/types/log";
+import { type DailyLog } from "@/types/log";
 import { CalendarDays, Download, FileJson, FileText, FileType, Plus, ChevronDown } from "lucide-react";
 import { EmptyState } from "@/components/ar/industrial";
 import Skeleton from "react-loading-skeleton";

@@ -14,7 +14,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useProfile";
 import { AppLogo } from "@/components/ar/AppLogo";
 import { AppFavicon } from "@/components/ar/AppFavicon";
@@ -24,7 +23,7 @@ import { APP_VERSION } from "@/lib/version";
 
 const ease: Easing = [0.23, 1, 0.32, 1];
 
-function buildGroups(userId: string | undefined, isAdmin: boolean) {
+function buildGroups(isAdmin: boolean) {
   return [
     {
       label: "Dashboards",
@@ -66,7 +65,6 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const reduce = useReducedMotion();
-  const { user } = useAuth();
   const isAdmin = useIsAdmin();
 
   const go = (path: string) => {
@@ -96,7 +94,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="py-2">
-        {buildGroups(user?.id, isAdmin).map((group) => (
+        {buildGroups(isAdmin).map((group) => (
           <div key={group.label} className="mb-2 group-data-[collapsible=icon]:mb-0">
             <div className="flex items-center gap-1.5 px-3 py-1.5 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:h-0 group-data-[collapsible=icon]:py-0 group-data-[collapsible=icon]:overflow-hidden">
               <span className="size-1.5 bg-primary shrink-0" />

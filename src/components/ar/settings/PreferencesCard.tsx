@@ -1,7 +1,6 @@
 import { Sun, Moon, Target, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useTheme } from "@/hooks/useTheme";
 import { useState } from "react";
 import { useUpdateDailyGoal } from "@/hooks/useProfile";

@@ -9,7 +9,7 @@ export interface DailyLog {
   updated_at: string;
 }
 
-export type DailyLogInsert = Omit<DailyLog, "id" | "created_at" | "updated_at">;
+export type DailyLogInsert = Omit<DailyLog, "id" | "user_id" | "created_at" | "updated_at">;
 
 export function totalForLog(log: Pick<DailyLog, "counts">): number {
   return Object.values(log.counts ?? {}).reduce((sum, v) => sum + (v || 0), 0);

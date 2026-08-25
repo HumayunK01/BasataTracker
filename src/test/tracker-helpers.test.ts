@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { formatDobInput, stepIsSkipped } from "@/components/ar/tracker/tracker-helpers";
-import type { FaxRow, StepField } from "@/hooks/useFaxTracker";
+import type { FaxRow } from "@/hooks/useFaxTracker";
 
 const row = (step1: FaxRow["step1"], step2: FaxRow["step2"], step3: FaxRow["step3"]) =>
   ({ step1, step2, step3 }) as FaxRow;

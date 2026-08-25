@@ -14,9 +14,20 @@ dist-ssr
 
 # ponytail plugin checkout
 .opencode/
+opencode.json
+
+# vendored agent skills (re-install per-machine, don't ship)
+.agents/
+.impeccable/
 
 # understand-anything knowledge graph (local analysis artifact)
 .ua/
+
+# incremental compiler caches
+*.tsbuildinfo
+
+# supabase CLI local state (project refs, pooler URLs)
+supabase/.temp/
 
 # Environment variables
 .env
