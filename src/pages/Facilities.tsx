@@ -12,6 +12,7 @@ import {
   type FacilityInput,
 } from "@/hooks/useFacilities";
 import { useIsAdmin } from "@/hooks/useProfile";
+import { useAccessToken } from "@/hooks/useAccessToken";
 import { EmptyState } from "@/components/ar/industrial";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -129,17 +130,20 @@ function FaxCopyControls({ f }: { f: Facility }) {
 // Production is served with CSP img-src 'self' + COEP, which block remote
 // images — so logos go through the same-origin /api/logo proxy there (same
 // pattern as ServiceLogo). Local vite has no serverless fn, so use the URL
-// directly (http localhost loads remote images fine).
-function logoSrc(url: string): string {
-  return window.location.protocol === "https:" ? `/api/logo?url=${encodeURIComponent(url)}` : url;
+// directly (http localhost loads remote images fine). The proxy is
+// auth-gated, so append the session token (img tags can't send headers).
+function logoSrc(url: string, token: string | null): string {
+  const t = token ? `&t=${encodeURIComponent(token)}` : "";
+  return window.location.protocol === "https:" ? `/api/logo?url=${encodeURIComponent(url)}${t}` : url;
 }
 
 function LogoImage({ f }: { f: Facility }) {
   const [failed, setFailed] = useState(false);
+  const token = useAccessToken();
   if (failed || !f.logo_url) return <FacilityAvatar f={f} />;
   return (
     <img
-      src={logoSrc(f.logo_url)}
+      src={logoSrc(f.logo_url, token)}
       alt={`${f.name} logo`}
       className="size-full object-cover object-center"
       onError={() => setFailed(true)}

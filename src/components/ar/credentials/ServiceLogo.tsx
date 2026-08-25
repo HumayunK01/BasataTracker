@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAccessToken } from "@/hooks/useAccessToken";
 
 // ponytail: favicon is fetched via the same-origin /api/favicon proxy (which
 // itself calls DuckDuckGo server-side), so the production CSP/COEP don't block it.
@@ -22,13 +23,13 @@ export function ServiceLogo({ service, website, className }: { service: string; 
   const [failed, setFailed] = useState(false);
   const domain = resolveDomain(service, website);
   const letter = service.trim().charAt(0).toUpperCase() || "?";
+  const token = useAccessToken();
 
-  const proxy = `/api/favicon?domain=${encodeURIComponent(domain ?? "")}`;
-  const direct = `https://icons.duckduckgo.com/ip3/${domain}.ico`;
-  // Try the same-origin proxy first (works in prod under CSP). If it's missing
-  // (local vite has no serverless fn) or fails, fall back to the direct URL
-  // (works in local dev, blocked in prod) before giving up on the letter tile.
-  const [src, setSrc] = useState(proxy);
+  // Derived (not useState) so the proxy URL updates when the async token
+  // arrives or refreshes.
+  const [stage, setStage] = useState<"proxy" | "direct">("proxy");
+  const proxy = domain ? `/api/favicon?domain=${encodeURIComponent(domain)}${token ? `&t=${encodeURIComponent(token)}` : ""}` : null;
+  const direct = domain ? `https://icons.duckduckgo.com/ip3/${domain}.ico` : null;
 
   if (!domain || failed) {
     return (
@@ -41,6 +42,10 @@ export function ServiceLogo({ service, website, className }: { service: string; 
     );
   }
 
+  const src = stage === "proxy" && proxy ? proxy : direct!;
+  // Try the same-origin proxy first (works in prod under CSP). If it's missing
+  // (local vite has no serverless fn), unauthorized, or fails, fall back to the
+  // direct URL (works in local dev, blocked in prod) before the letter tile.
   return (
     <img
       src={src}
@@ -48,7 +53,7 @@ export function ServiceLogo({ service, website, className }: { service: string; 
       width={24}
       height={24}
       loading="lazy"
-      onError={() => (src !== direct ? setSrc(direct) : setFailed(true))}
+      onError={() => (stage === "proxy" ? setStage("direct") : setFailed(true))}
       className={`object-contain rounded-md shrink-0 ${className ?? "size-6"}`}
     />
   );

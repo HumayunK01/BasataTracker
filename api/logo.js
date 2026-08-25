@@ -5,6 +5,7 @@
 // https/http only, no private/loopback/link-local hosts (checked again after
 // redirects), image content-type only, and a response-size cap.
 import dns from "node:dns/promises";
+import authorized from "./_auth.js";
 
 const PRIVATE_V4 = [
   /^0\./,
@@ -38,6 +39,10 @@ async function isBlockedHost(host) {
 }
 
 export default async function handler(req, res) {
+  if (!(await authorized(req))) {
+    res.status(401).end();
+    return;
+  }
   const raw = req.query.url;
   if (typeof raw !== "string" || raw.length > 2048) {
     res.status(400).end();
@@ -83,7 +88,9 @@ export default async function handler(req, res) {
       return;
     }
     res.setHeader("Content-Type", type);
-    res.setHeader("Cache-Control", "public, max-age=86400");
+    // private: the response was auth-gated, so never let a shared cache
+    // serve it to another user. Browsers may still cache it.
+    res.setHeader("Cache-Control", "private, max-age=86400");
     res.status(200).end(buf);
   } catch {
     res.status(502).end();
