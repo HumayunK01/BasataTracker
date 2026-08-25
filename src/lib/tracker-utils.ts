@@ -39,7 +39,7 @@ export async function downloadTrackerPDF(
 
   try {
     const img = new Image();
-    img.src = "/lightlogo.png?v=2";
+    img.src = "/lightlogo.png";
     await img.decode();
     const canvas = document.createElement("canvas");
     canvas.width = img.naturalWidth;
