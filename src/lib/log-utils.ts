@@ -166,7 +166,7 @@ export async function downloadPDF(
   // Non-fatal if it can't be loaded; the export still completes.
   try {
     const img = new Image();
-    img.src = "/lightlogo.png";
+    img.src = "/lightlogo.png?v=2";
     await img.decode();
     const canvas = document.createElement("canvas");
     canvas.width = img.naturalWidth;

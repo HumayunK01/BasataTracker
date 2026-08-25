@@ -7,6 +7,6 @@ interface AppLogoProps {
 
 export function AppLogo({ className, style }: AppLogoProps) {
   const { theme } = useTheme();
-  const src = theme === "light" ? "/lightlogo.png" : "/logo.png";
+  const src = theme === "light" ? "/lightlogo.png?v=2" : "/logo.png?v=2";
   return <img src={src} alt="Basata.ai Tracker" className={className} style={style} />;
 }
