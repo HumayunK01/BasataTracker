@@ -1,5 +1,5 @@
 import type { Category } from "@/hooks/useCategories";
-import { type DailyLog, totalForLog, isoDate, isWeekend } from "@/types/log";
+import { type DailyLog, type DailyLogInsert, totalForLog, isoDate, isWeekend } from "@/types/log";
 
 const DAY_MS = 86_400_000;
 
@@ -280,4 +280,20 @@ export async function downloadPDF(
   });
 
   doc.save(filename);
+}
+
+/**
+ * Canonical fingerprint of a draft log for dirty-checking: zeros are ignored
+ * (touching a counter back to 0 isn't a change), count keys are sorted so
+ * entry order can't produce false positives.
+ */
+export function canonEntry(d: DailyLogInsert): string {
+  return JSON.stringify([
+    d.log_date,
+    d.is_off_day,
+    d.notes?.trim() || null,
+    Object.entries(d.counts ?? {})
+      .filter(([, v]) => v !== 0)
+      .sort(([a], [b]) => a.localeCompare(b)),
+  ]);
 }

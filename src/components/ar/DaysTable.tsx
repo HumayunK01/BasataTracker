@@ -1,10 +1,11 @@
 import { useMemo, useReducer } from "react";
-import { colorForKey, withAlpha } from "@/lib/cat-colors";
+import { colorForKey } from "@/lib/cat-colors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
+  TableFooter,
   TableCell,
   TableHead,
   TableHeader,
@@ -25,165 +26,56 @@ import { Pagination } from "@/components/Pagination";
 import { formatTableDate, formatDayName, isWeekend, type DailyLog } from "@/types/log";
 import { useDeleteLog } from "@/hooks/useDailyLogs";
 import { useCategories, type Category } from "@/hooks/useCategories";
-import { Trash2, Pencil, Search, BedDouble, Copy, Check, CalendarDays } from "lucide-react";
+import { Trash2, Pencil, Search, BedDouble, Copy, Check, CalendarDays, StickyNote } from "lucide-react";
 import { EmptyState } from "@/components/ar/industrial";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function getVal(l: DailyLog, key: string): number { return (l.counts ?? {})[key] ?? 0; }
 
-function DateDay({ iso }: { iso: string }) {
+function DateDay({ iso, notes }: { iso: string; notes?: string | null }) {
   return (
-    <div className="flex flex-col leading-tight">
-      <span>{formatTableDate(iso)}</span>
-      <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-heading">{formatDayName(iso)}</span>
-    </div>
-  );
-}
-
-function CategoryBadge({ catKey, value }: { catKey: string; value: number }) {
-  const clr = colorForKey(catKey);
-  return (
-    <span
-      className="text-xs font-medium px-2 py-0.5 rounded-full tabular-nums"
-      style={{ color: clr, backgroundColor: withAlpha(clr, 0.13), border: `1px solid ${withAlpha(clr, 0.2)}` }}
-    >
-      {catKey} · {value}
-    </span>
-  );
-}
-
-// ── Mobile card list ───────────────────────────────────────────────────────
-interface MobileCardListProps {
-  paginated: DailyLog[];
-  categories: Category[];
-  search: string;
-  copiedId: string | null;
-  onEdit: (l: DailyLog) => void;
-  onDelete: (l: DailyLog) => void;
-  onCopy: (l: DailyLog) => void;
-}
-
-function MobileCardList({ paginated, categories, search, copiedId, onEdit, onDelete, onCopy }: MobileCardListProps) {
-  return (
-    <div className="flex flex-col flex-1 min-h-0 sm:hidden">
-      {paginated.length === 0 && (
-        <EmptyState
-          className="py-12"
-          icon={CalendarDays}
-          title={search ? "No Matches" : "No Days Yet"}
-          hint={search ? "Nothing matches your search." : "Log a day to start your history."}
-        />
-      )}
-      <div className="space-y-2">
-        {paginated.map((l, idx) => {
-          const isOff = l.is_off_day;
-          const weekend = isWeekend(l.log_date);
-          const total = categories.reduce((s, c) => s + getVal(l, c.key), 0);
-          const activeCats = categories.filter((c) => getVal(l, c.key) > 0);
-          // ponytail: latest category with non-zero count used for accent strip
-          const accentKey = activeCats.length > 0 ? activeCats[activeCats.length - 1].key : null;
-          const accentColor = accentKey ? colorForKey(accentKey) : undefined;
-
-          if (isOff) {
-            return (
-              <div
-                key={l.id}
-                className="flex items-center gap-3 px-4 py-2.5 bg-muted/20 border border-border/40 rounded-md animate-row-in"
-                style={{ animationDelay: `${idx * 30}ms` }}
-              >
-                <BedDouble className="size-4 text-muted-foreground/50 shrink-0" />
-                <div className="flex-1">
-                  <DateDay iso={l.log_date} />
-                </div>
-                <span className="text-xs text-muted-foreground/60 uppercase tracking-wide font-medium font-heading">
-                  {weekend ? "Weekend" : "Off day"}
-                </span>
-                <div className="flex items-center gap-0.5 ml-1">
-                  <Button variant="ghost" size="icon" className="size-9" onClick={() => onEdit(l)}>
-                    <Pencil className="size-4 text-muted-foreground" />
-                  </Button>
-                  <Button variant="outline" size="icon" className="size-9 border-destructive/30 text-destructive/80" onClick={() => onDelete(l)}>
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              </div>
-            );
-          }
-
-          return (
-            <div
-              key={l.id}
-              className="bg-card border border-border/60 rounded-md overflow-hidden animate-row-in"
-              style={{ animationDelay: `${idx * 30}ms` }}
-            >
-              <div className="flex">
-                {accentColor && (
-                  <div className="w-1 shrink-0" style={{ backgroundColor: accentColor }} />
-                )}
-                <div className="flex-1 px-4 py-3 space-y-2">
-                  {/* Top row: date + total */}
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1">
-                      <DateDay iso={l.log_date} />
-                    </div>
-                    <span className="text-2xl font-bold tabular-nums text-primary leading-none">{total}</span>
-                  </div>
-                  {/* Category badges */}
-                  {activeCats.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {activeCats.map((c) => (
-                        <CategoryBadge key={c.key} catKey={c.short} value={getVal(l, c.key)} />
-                      ))}
-                    </div>
-                  )}
-                  {/* Actions */}
-                  <div className="flex items-center gap-0.5 pt-0.5 border-t border-border/30">
-                    <Button variant="outline" size="icon" className="size-8 border-success/30 text-success" onClick={() => onCopy(l)}>
-                      {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-                    </Button>
-                    <Button variant="outline" size="icon" className="size-8" onClick={() => onEdit(l)}>
-                      <Pencil className="size-3.5" />
-                    </Button>
-                    <Button variant="outline" size="icon" className="size-8 border-destructive/30 text-destructive/80" onClick={() => onDelete(l)}>
-                      <Trash2 className="size-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+    <div className="flex items-center justify-center gap-1.5">
+      <div className="flex flex-col leading-tight">
+        <span>{formatTableDate(iso)}</span>
+        <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-heading">{formatDayName(iso)}</span>
       </div>
+      {notes && (
+        <span title={notes} className="text-info/70 shrink-0" aria-label="Has notes">
+          <StickyNote className="size-3" />
+        </span>
+      )}
     </div>
   );
 }
 
-// ── Desktop table ──────────────────────────────────────────────────────────
+// ── Table (all screen sizes — scrolls horizontally on mobile) ─────────────
 interface DesktopTableProps {
   paginated: DailyLog[];
   categories: Category[];
   search: string;
   copiedId: string | null;
+  colTotals: Record<string, number>;
+  grandTotal: number;
   onEdit: (l: DailyLog) => void;
   onDelete: (l: DailyLog) => void;
   onCopy: (l: DailyLog) => void;
 }
 
-function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelete, onCopy }: DesktopTableProps) {
+function DesktopTable({ paginated, categories, search, copiedId, colTotals, grandTotal, onEdit, onDelete, onCopy }: DesktopTableProps) {
   return (
-    <div className="hidden sm:flex flex-col bg-card border border-border rounded-md overflow-hidden">
+    <div className="flex flex-col bg-card border border-border rounded-md overflow-hidden">
       <div className="overflow-auto no-scrollbar">
-        <Table className="[&_th]:border-r [&_th]:border-border [&_th:last-child]:border-r-0 [&_td]:border-r [&_td]:border-border/40 [&_td:last-child]:border-r-0">
+        <Table className="min-w-[600px] [&_th]:border-r [&_th]:border-border [&_th:last-child]:border-r-0 [&_td]:border-r [&_td]:border-border/40 [&_td:last-child]:border-r-0">
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
               <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center py-3 font-heading">Date / Day</TableHead>
               {categories.map((c) => (
-                <TableHead key={c.key} className="font-bold text-xs uppercase tracking-wider text-center text-foreground font-heading">
+                <TableHead key={c.key} title={c.label} style={{ color: colorForKey(c.key) }} className="font-bold text-xs uppercase tracking-wider text-center font-heading">
                   {c.short}
                 </TableHead>
               ))}
               <TableHead className="font-bold text-xs uppercase tracking-wider text-center text-foreground font-heading">Total</TableHead>
-              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center font-heading w-28">Actions</TableHead>
+              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center font-heading w-32">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -205,9 +97,9 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
               const weekend = isWeekend(l.log_date);
 
               return isOff ? (
-                <TableRow key={l.id} className="border-b border-border/40 last:border-0 bg-muted/10 even:bg-muted/[0.08]">
+                <TableRow key={l.id} className="border-b border-border/40 last:border-0 bg-muted/20 hover:bg-muted/25 transition-colors animate-row-in" style={{ animationDelay: `${idx * 20}ms` }}>
                   <TableCell className="text-xs font-medium py-3 text-muted-foreground/80 text-center">
-                    <DateDay iso={l.log_date} />
+                    <DateDay iso={l.log_date} notes={l.notes} />
                   </TableCell>
                   <TableCell colSpan={categories.length + 1} className="py-3">
                     <div className="flex items-center gap-1.5">
@@ -219,22 +111,22 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
                   </TableCell>
                   <TableCell className="py-3">
                     <div className="flex gap-1 justify-center">
-                      <Button size="icon" className="size-7 border-success/30 text-success hover:bg-success/10" variant="outline" onClick={() => onCopy(l)} title="Copy">
+                      <Button variant="ghost" size="icon" className="size-9 sm:size-7 text-muted-foreground hover:text-success hover:bg-success/10" onClick={() => onCopy(l)} title="Copy">
                         {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                       </Button>
-                      <Button size="icon" className="size-7" variant="outline" onClick={() => onEdit(l)} title="Edit">
+                      <Button variant="ghost" size="icon" className="size-9 sm:size-7 text-muted-foreground hover:text-foreground hover:bg-muted" onClick={() => onEdit(l)} title="Edit">
                         <Pencil className="size-3.5" />
                       </Button>
-                      <Button size="icon" className="size-7 border-destructive/30 text-destructive/80 hover:bg-destructive/10 hover:text-destructive" variant="outline" onClick={() => onDelete(l)} title="Delete">
+                      <Button variant="ghost" size="icon" className="size-9 sm:size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(l)} title="Delete">
                         <Trash2 className="size-3.5" />
                       </Button>
                     </div>
                   </TableCell>
                 </TableRow>
               ) : (
-                <TableRow key={l.id} className="border-b border-border/40 last:border-0 hover:bg-muted/30 transition-colors even:bg-muted/[0.04] animate-row-in" style={{ animationDelay: `${idx * 20}ms` }}>
+                <TableRow key={l.id} className="border-b border-border/40 last:border-0 bg-card hover:bg-muted/30 transition-colors animate-row-in" style={{ animationDelay: `${idx * 20}ms` }}>
                   <TableCell className="text-xs font-medium py-3 text-foreground text-center">
-                    <DateDay iso={l.log_date} />
+                    <DateDay iso={l.log_date} notes={l.notes} />
                   </TableCell>
                   {categories.map((c) => {
                     const v = getVal(l, c.key);
@@ -250,17 +142,17 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
                     );
                   })}
                   <TableCell className="text-center tabular-nums py-3">
-                    <span className="font-bold text-xs text-primary">{total}</span>
+                    <span className="font-bold text-xs text-foreground">{total}</span>
                   </TableCell>
                   <TableCell className="py-3">
                     <div className="flex gap-1 justify-center">
-                      <Button size="icon" className="size-7 border-success/30 text-success hover:bg-success/10" variant="outline" onClick={() => onCopy(l)} title="Copy">
+                      <Button variant="ghost" size="icon" className="size-9 sm:size-7 text-muted-foreground hover:text-success hover:bg-success/10" onClick={() => onCopy(l)} title="Copy">
                         {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                       </Button>
-                      <Button size="icon" className="size-7" variant="outline" onClick={() => onEdit(l)} title="Edit">
+                      <Button variant="ghost" size="icon" className="size-9 sm:size-7 text-muted-foreground hover:text-foreground hover:bg-muted" onClick={() => onEdit(l)} title="Edit">
                         <Pencil className="size-3.5" />
                       </Button>
-                      <Button size="icon" className="size-7 border-destructive/30 text-destructive/80 hover:bg-destructive/10 hover:text-destructive" variant="outline" onClick={() => onDelete(l)} title="Delete">
+                      <Button variant="ghost" size="icon" className="size-9 sm:size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(l)} title="Delete">
                         <Trash2 className="size-3.5" />
                       </Button>
                     </div>
@@ -269,11 +161,22 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
               );
             })}
           </TableBody>
+          {paginated.length > 0 && (
+            <TableFooter>
+              <TableRow className="bg-muted/40 hover:bg-transparent border-t border-border">
+                <TableHead className="font-mono text-2xs uppercase tracking-wider text-muted-foreground text-center py-2.5">Σ Page</TableHead>
+                {categories.map((c) => (
+                  <TableHead key={c.key} className="text-center tabular-nums text-xs font-bold" style={{ color: colorForKey(c.key) }}>
+                    {colTotals[c.key] || <span className="text-muted-foreground/30">—</span>}
+                  </TableHead>
+                ))}
+                <TableHead className="text-center tabular-nums text-xs font-bold text-foreground">{grandTotal}</TableHead>
+                <TableHead aria-hidden />
+              </TableRow>
+            </TableFooter>
+          )}
         </Table>
       </div>
-      {categories.length > 6 && (
-        <p className="hidden sm:block text-center text-2xs text-foreground/50 -mt-px select-none py-1">← scroll horizontally →</p>
-      )}
     </div>
   );
 }
@@ -321,7 +224,11 @@ export function DaysTable({ logs, onEdit, actions }: Props) {
     const q = search.trim().toLowerCase();
     if (!q) return allSorted;
     return allSorted.filter(
-      (l) => l.log_date.includes(q) || formatTableDate(l.log_date).toLowerCase().includes(q),
+      (l) =>
+        l.log_date.includes(q) ||
+        formatTableDate(l.log_date).toLowerCase().includes(q) ||
+        formatDayName(l.log_date).toLowerCase().includes(q) ||
+        (l.notes ?? "").toLowerCase().includes(q),
     );
   }, [allSorted, search]);
 
@@ -337,6 +244,19 @@ export function DaysTable({ logs, onEdit, actions }: Props) {
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginated = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
   const goTo = (p: number) => tDispatch({ type: "set_page", p: Math.max(1, Math.min(totalPages, p)) });
+
+  // ponytail: footer sums the visible page (what the user sees), not the whole filter
+  const colTotals = useMemo(
+    () =>
+      Object.fromEntries(
+        categories.map((c) => [
+          c.key,
+          paginated.reduce((s, l) => s + (l.is_off_day ? 0 : getVal(l, c.key)), 0),
+        ]),
+      ) as Record<string, number>,
+    [paginated, categories],
+  );
+  const grandTotal = useMemo(() => Object.values(colTotals).reduce((a, b) => a + b, 0), [colTotals]);
 
   const copyLog = (l: DailyLog) => {
     const rows = l.is_off_day
@@ -372,7 +292,7 @@ export function DaysTable({ logs, onEdit, actions }: Props) {
 
   const pageNumbers = useMemo(() => sharedPageNumbers(totalPages, page), [totalPages, page]);
 
-  const sharedProps = { paginated, categories, search, copiedId, onEdit, onDelete: (l: DailyLog) => tDispatch({ type: "set_delete", log: l }), onCopy: copyLog };
+  const sharedProps = { paginated, categories, search, copiedId, colTotals, grandTotal, onEdit, onDelete: (l: DailyLog) => tDispatch({ type: "set_delete", log: l }), onCopy: copyLog };
 
   return (
     <>
@@ -384,24 +304,23 @@ export function DaysTable({ logs, onEdit, actions }: Props) {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground pointer-events-none" />
             <Input
               className="pl-9 h-10 text-sm w-full bg-card border-border"
-              placeholder="Search by date…"
-              aria-label="Search days by date"
+              placeholder="Search date, day, or notes…"
+              aria-label="Search days by date, day name, or notes"
               value={search}
               onChange={(e) => tDispatch({ type: "set_search", q: e.target.value })}
             />
           </div>
-          <div className="flex items-center gap-3 sm:ml-auto">
-            <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs text-foreground">
+            <div className="flex items-center gap-3 sm:ml-auto">
+            <div className="hidden sm:flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs text-foreground">
               <span><span className="font-semibold text-foreground">{workingLogs.length}</span> working days</span>
               <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && isWeekend(l.log_date)).length}</span> weekends</span>
               <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && !isWeekend(l.log_date)).length}</span> off days</span>
               <span>Avg <span className="font-semibold text-foreground">{avgTotal}</span> docs/day</span>
             </div>
-            {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+            {actions && <div className="flex w-full items-center gap-2 sm:w-auto">{actions}</div>}
           </div>
         </div>
 
-        <MobileCardList {...sharedProps} />
         <DesktopTable {...sharedProps} />
 
         <Pagination

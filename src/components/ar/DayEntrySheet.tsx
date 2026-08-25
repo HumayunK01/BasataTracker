@@ -5,6 +5,16 @@ import { Switch } from "@/components/ui/switch";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -13,7 +23,8 @@ import {
 import { isoDate, isWeekend, type DailyLog, type DailyLogInsert } from "@/types/log";
 import { useUpsertLog } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
-import { Minus, Plus, CalendarCheck, BedDouble, CalendarIcon, TriangleAlert } from "lucide-react";
+import { canonEntry } from "@/lib/log-utils";
+import { Minus, Plus, CalendarCheck, BedDouble, CalendarIcon, TriangleAlert, PenLine } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { colorForKey, withAlpha } from "@/lib/cat-colors";
 
@@ -108,23 +119,36 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Props) {
   const [draft, setDraft] = useState<DailyLogInsert>(() => emptyDraft());
+  const [baseline, setBaseline] = useState("");
   const [calOpen, setCalOpen] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
   const upsert = useUpsertLog();
   const { data: categories = [] } = useCategories();
 
   useEffect(() => {
     if (!open) return;
-    if (editing) {
-      setDraft({
-        log_date: editing.log_date,
-        counts: { ...editing.counts },
-        is_off_day: editing.is_off_day,
-        notes: editing.notes,
-      });
-    } else {
-      setDraft(emptyDraft());
-    }
+    const next = editing
+      ? {
+          log_date: editing.log_date,
+          counts: { ...editing.counts },
+          is_off_day: editing.is_off_day,
+          notes: editing.notes,
+        }
+      : emptyDraft();
+    setDraft(next);
+    setBaseline(canonEntry(next));
   }, [open, editing]);
+
+  const dirty = canonEntry(draft) !== baseline;
+
+  /** UI-dismiss path — intercepted when there are unsaved changes. */
+  const requestClose = (o: boolean) => {
+    if (!o && dirty && !upsert.isPending) {
+      setConfirmClose(true);
+      return;
+    }
+    onOpenChange(o);
+  };
 
   const update = <K extends keyof DailyLogInsert>(k: K, v: DailyLogInsert[K]) =>
     setDraft((d) => ({ ...d, [k]: v }));
@@ -146,6 +170,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
   const save = async () => {
     try {
       await upsert.mutateAsync({ ...draft, notes: draft.notes?.trim() || null });
+      setConfirmClose(false);
       onOpenChange(false);
     } catch {
       // The mutation hook surfaces the error toast; keep the sheet open to retry.
@@ -153,12 +178,36 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0 gap-0 bg-sidebar font-sans">
+    <Sheet open={open} onOpenChange={requestClose}>
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-md flex flex-col p-0 gap-0 bg-sidebar font-sans"
+        onKeyDown={(e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && !upsert.isPending) {
+            e.preventDefault();
+            void save();
+          }
+        }}
+      >
 
         {/* ── Header ── */}
-        <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b border-border/60">
-          <div className="flex items-start justify-between gap-4">
+        <SheetHeader className="shrink-0 p-0 border-b border-border/60">
+          <div className="flex items-center justify-between px-5 py-2 border-b border-border/40">
+            <span className="font-mono text-[11px] font-medium tracking-wide text-foreground uppercase">Log Entry</span>
+            <span
+              className={`text-2xs font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-md border ${
+                conflict
+                  ? "bg-warning/15 text-warning border-warning/30"
+                  : editing
+                  ? "bg-muted text-muted-foreground border-border/40"
+                  : "bg-info/15 text-info border-info/30"
+              }`}
+            >
+              {conflict ? "Conflict" : editing ? "Editing" : "New entry"}
+            </span>
+          </div>
+
+          <div className="flex items-start justify-between gap-4 px-5 pt-4 pb-4">
             <div className="space-y-1">
               <SheetTitle className="text-base font-bold">
                 {editing ? "Edit log" : "Log a day"}
@@ -169,7 +218,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
             </div>
             {!draft.is_off_day && total > 0 && (
               <div className="shrink-0 text-right -mt-0.5">
-                <div className="text-2xl font-bold tabular-nums text-primary leading-none">{total}</div>
+                <div className="text-2xl font-bold tabular-nums text-foreground leading-none">{total}</div>
                 <div className="text-[10px] text-foreground/40 uppercase tracking-[0.08em] mt-0.5 font-heading">total</div>
               </div>
             )}
@@ -249,11 +298,16 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
           {/* Document counts */}
           {!draft.is_off_day && (
             <div className="space-y-2.5">
-              <div className="px-5">
+              <div className="px-5 flex items-center justify-between">
                 <SectionLabel>
                   <span className="size-2 rounded-sm bg-primary/60" />
                   Document Counts
                 </SectionLabel>
+                {total > 0 && (
+                  <span className="font-mono text-2xs uppercase tracking-[0.15em] text-muted-foreground tabular-nums">
+                    {total} total
+                  </span>
+                )}
               </div>
               <div className="bg-card border-y border-border/60">
                 {categories.length === 0 ? (
@@ -288,9 +342,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
           {/* Notes */}
           <div className="px-5 space-y-2.5">
             <SectionLabel>
-              <svg className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-              </svg>
+              <PenLine className="size-3" />
               Notes <span className="font-normal normal-case text-foreground/40">(optional)</span>
             </SectionLabel>
             <Textarea
@@ -307,7 +359,7 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
 
         {/* ── Footer ── */}
         <div className="shrink-0 px-5 py-4 border-t border-border/60 flex gap-3">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 h-10">
+          <Button variant="outline" onClick={() => requestClose(false)} className="flex-1 h-10">
             Cancel
           </Button>
           <Button onClick={save} disabled={upsert.isPending} className="flex-1 h-10 gap-2">
@@ -319,10 +371,35 @@ export function DayEntrySheet({ open, onOpenChange, editing, existingDates }: Pr
               : total > 0
               ? `Save · ${total} docs`
               : "Save day"}
+            <kbd className="ml-1 text-2xs border border-primary-foreground/30 rounded px-1 hidden sm:inline">Ctrl ↵</kbd>
           </Button>
         </div>
 
       </SheetContent>
+
+      {/* Unsaved-changes guard */}
+      <AlertDialog open={confirmClose} onOpenChange={setConfirmClose}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard unsaved changes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The counts and notes you entered for this day haven't been saved yet.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep editing</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                setConfirmClose(false);
+                onOpenChange(false);
+              }}
+            >
+              Discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
   );
 }

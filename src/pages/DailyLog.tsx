@@ -15,7 +15,15 @@ import { useCategories } from "@/hooks/useCategories";
 import { useProfile } from "@/hooks/useProfile";
 import { downloadCSV, downloadJSON, downloadPDF } from "@/lib/log-utils";
 import { type DailyLog } from "@/types/log";
-import { CalendarDays, Download, FileJson, FileText, FileType, Plus, ChevronDown } from "lucide-react";
+import {
+  CalendarDays,
+  Download,
+  FileJson,
+  FileText,
+  FileType,
+  Plus,
+  ChevronDown,
+} from "lucide-react";
 import { EmptyState } from "@/components/ar/industrial";
 import Skeleton from "react-loading-skeleton";
 
@@ -49,78 +57,82 @@ const DailyLogPage = () => {
   return (
     <>
       <main className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-5 sm:py-6 animate-fade-in">
-            {isLoading ? (
-              <div className="flex-1 flex flex-col gap-3 pt-2">
-                <div className="flex gap-3">
-                  <Skeleton width={192} height={32} borderRadius={0} />
-                  <Skeleton width={224} height={32} borderRadius={0} />
+        {isLoading ? (
+          <div className="flex flex-col gap-3 pt-2">
+            <div className="flex gap-3">
+              <Skeleton width={192} height={32} borderRadius={0} />
+              <Skeleton width={224} height={32} borderRadius={0} />
+            </div>
+            <div className="bg-card border border-border rounded-md overflow-hidden">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-border/50 last:border-0">
+                  <Skeleton width={96} height={16} borderRadius={0} />
+                  <Skeleton width={32} height={16} borderRadius={0} />
+                  <Skeleton width={32} height={16} borderRadius={0} />
+                  <Skeleton width={32} height={16} borderRadius={0} />
+                  <Skeleton width={32} height={16} borderRadius={0} />
                 </div>
-                <div className="bg-card border border-border rounded-md overflow-hidden">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-border/50 last:border-0">
-                      <Skeleton width={96} height={16} borderRadius={0} />
-                      <Skeleton width={32} height={16} borderRadius={0} />
-                      <Skeleton width={32} height={16} borderRadius={0} />
-                      <Skeleton width={32} height={16} borderRadius={0} />
-                      <Skeleton width={32} height={16} borderRadius={0} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : logs.length === 0 ? (
-              <div className="flex-1 flex items-center justify-center">
-                <EmptyState
-                  icon={CalendarDays}
-                  title="No Logs Yet"
-                  hint="Start by logging your first day of work."
-                  action={
-                    <Button size="sm" onClick={openNew}>
-                      <Plus className="size-4 mr-1" /> Log your first day
+              ))}
+            </div>
+          </div>
+        ) : logs.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center py-10">
+            <EmptyState
+              icon={CalendarDays}
+              title="No Logs Yet"
+              hint="Start by logging your first day of work."
+              action={
+                <Button size="sm" onClick={openNew}>
+                  <Plus className="size-4 mr-1" /> Log your first day
+                </Button>
+              }
+            />
+          </div>
+        ) : (
+          <DaysTable
+            logs={logs}
+            onEdit={openEdit}
+            actions={
+              <div className="flex w-full items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-11 flex-1 sm:h-9 sm:flex-none text-sm sm:text-xs" disabled={logs.length === 0} aria-label="Export logs">
+                      <Download className="size-4 mr-1.5" />
+                      Export
+                      <ChevronDown className="size-3 ml-1 opacity-60" />
                     </Button>
-                  }
-                />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuLabel className="text-xs text-foreground font-normal">Export all logs</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => downloadCSV(logs, categories, "daily-log.csv")}>
+                      <FileText className="size-4 mr-2" /> CSV (.csv)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => downloadJSON(logs, categories, "daily-log.json")}>
+                      <FileJson className="size-4 mr-2" /> JSON (.json)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => downloadPDF(logs, categories, "daily-log.pdf", { title: "", userName })}>
+                      <FileType className="size-4 mr-2" /> PDF (.pdf)
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button size="sm" className="h-11 flex-1 sm:h-9 sm:flex-none text-sm sm:text-xs" onClick={openNew}>
+                  <Plus className="size-4 mr-1.5" />
+                  Log day
+                  <kbd className="ml-2 text-xs border border-primary-foreground/30 rounded px-1 hidden sm:inline">N</kbd>
+                </Button>
               </div>
-            ) : (
-              <DaysTable logs={logs} onEdit={openEdit} actions={
-                <div className="flex items-center gap-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-10 sm:h-9" disabled={logs.length === 0} aria-label="Export logs">
-                        <Download className="size-4 mr-1.5" />
-                        Export
-                        <ChevronDown className="size-3 ml-1 opacity-60" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                      <DropdownMenuLabel className="text-xs text-foreground font-normal">Export all logs</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => downloadCSV(logs, categories, "daily-log.csv")}>
-                        <FileText className="size-4 mr-2" /> CSV (.csv)
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => downloadJSON(logs, categories, "daily-log.json")}>
-                        <FileJson className="size-4 mr-2" /> JSON (.json)
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => downloadPDF(logs, categories, "daily-log.pdf", { title: "", userName })}>
-                        <FileType className="size-4 mr-2" /> PDF (.pdf)
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Button size="sm" className="h-10 sm:h-9" onClick={openNew}>
-                    <Plus className="size-4 mr-1.5" />
-                    Log day
-                    <kbd className="ml-2 text-xs border border-primary-foreground/30 rounded px-1">N</kbd>
-                  </Button>
-                </div>
-              } />
-            )}
-          </main>
+            }
+          />
+        )}
+      </main>
 
-        <DayEntrySheet
-          open={open}
-          onOpenChange={setOpen}
-          editing={editing}
-          existingDates={existingDates}
-        />
+      <DayEntrySheet
+        open={open}
+        onOpenChange={setOpen}
+        editing={editing}
+        existingDates={existingDates}
+      />
     </>
   );
 };
