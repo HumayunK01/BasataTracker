@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion, useReducedMotion } from "motion/react";
 import { CalendarDays, LayoutDashboard, FileBarChart, Hash, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,6 @@ const tabs = [
 ];
 
 export function MobileTabBar() {
-  const navigate = useNavigate();
   const location = useLocation();
   const reduce = useReducedMotion();
 
@@ -26,10 +25,9 @@ export function MobileTabBar() {
         {tabs.map((tab) => {
           const active = location.pathname === tab.path;
           return (
-            <button
+            <Link
               key={tab.path}
-              type="button"
-              onClick={() => navigate(tab.path)}
+              to={tab.path}
               onPointerDown={() => prefetchRoute(tab.path)}
               aria-current={active ? "page" : undefined}
               className={cn(
@@ -52,7 +50,7 @@ export function MobileTabBar() {
               <span className={cn("text-[10px] leading-none mt-0.5", active ? "font-semibold" : "font-medium")}>
                 {tab.title}
               </span>
-            </button>
+            </Link>
           );
         })}
       </div>

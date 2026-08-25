@@ -1,6 +1,6 @@
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { SkeletonTheme } from "react-loading-skeleton";
 import { toast } from "sonner";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -43,6 +43,29 @@ const queryClient = new QueryClient({
   }),
 });
 
+const TITLES: Record<string, string> = {
+  "/console": "Console",
+  "/log": "Daily Log",
+  "/settings": "Settings",
+  "/report": "Report",
+  "/counter": "Counter",
+  "/tracker": "Fax Tracker",
+  "/fax-tracker": "Fax Tracker",
+  "/vault": "Vault",
+  "/faxed-back": "Faxed Back",
+  "/team": "Team",
+  "/facilities": "Facilities",
+};
+
+// ponytail: title map keyed by route; new pages must add an entry here
+const TitleSync = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    document.title = `${TITLES[pathname] ?? "Page Not Found"} · Basata.ai Tracker`;
+  }, [pathname]);
+  return null;
+};
+
 const App = () => (
   <ThemeProvider>
   <SkeletonTheme baseColor="hsl(var(--skeleton-base))" highlightColor="hsl(var(--skeleton-highlight))">
@@ -50,6 +73,7 @@ const App = () => (
     <TooltipProvider>
       <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <TitleSync />
         <SidebarProvider>
           <AuthGuard>
             <Suspense

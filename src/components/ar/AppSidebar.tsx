@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion, useReducedMotion, type Easing } from "motion/react";
 import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, BookOpen, Tags, ExternalLink, Send, KeyRound, Users, FileCheck2, Building2 } from "lucide-react";
 import {
@@ -62,15 +62,9 @@ const externalLinks = [
 
 export function AppSidebar() {
   const { isMobile, setOpenMobile } = useSidebar();
-  const navigate = useNavigate();
   const location = useLocation();
   const reduce = useReducedMotion();
   const isAdmin = useIsAdmin();
-
-  const go = (path: string) => {
-    navigate(path);
-    if (isMobile) setOpenMobile(false);
-  };
 
   return (
     <Sidebar collapsible="icon">
@@ -114,19 +108,24 @@ export function AppSidebar() {
                       />
                     )}
                     <SidebarMenuButton
+                      asChild
                       isActive={active}
                       tooltip={item.title}
-                      onClick={() => go(item.path)}
-                      onMouseEnter={() => prefetchRoute(item.path)}
-                      onFocus={() => prefetchRoute(item.path)}
                       className={cn(
                         "relative z-10 rounded-md border border-transparent h-9 text-xs font-medium [&>svg]:size-4",
                         "data-[active=true]:!border-primary/40 data-[active=true]:!bg-primary/10 data-[active=true]:!text-primary",
                         "group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:[&>svg]:size-5",
                       )}
                     >
-                      <item.icon />
-                      <span>{item.title}</span>
+                      <Link
+                        to={item.path}
+                        onClick={() => isMobile && setOpenMobile(false)}
+                        onMouseEnter={() => prefetchRoute(item.path)}
+                        onFocus={() => prefetchRoute(item.path)}
+                      >
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
