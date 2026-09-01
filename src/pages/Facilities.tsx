@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Building2, Check, Copy, GripVertical, LayoutGrid, List, Loader2, MoreVertical, Pencil, Plus, Printer, Search, Trash2 } from "lucide-react";
+import { Building2, Check, GripVertical, LayoutGrid, List, Loader2, MoreVertical, Pencil, Plus, Printer, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Skeleton from "react-loading-skeleton";
 import {
@@ -16,6 +16,7 @@ import { useAccessToken } from "@/hooks/useAccessToken";
 import { EmptyState } from "@/components/ar/industrial";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -84,46 +85,27 @@ function FaxCopyControls({ f }: { f: Facility }) {
     timerRef.current = window.setTimeout(() => setCopied(false), 1500);
   };
 
-  const icon = (
-    <AnimatePresence mode="wait" initial={false}>
-      <motion.span
-        key={copied ? "check" : "copy"}
-        initial={{ scale: 0.4, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.4, opacity: 0 }}
-        transition={{ duration: 0.15 }}
-        className="grid place-items-center"
-      >
-        {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-      </motion.span>
-    </AnimatePresence>
-  );
-
   return (
-    <div className="flex items-center gap-1.5 min-w-0">
-      <button
-        type="button"
-        onClick={onCopy}
-        title="Copy fax number"
-        className="min-w-0 inline-flex items-center gap-1.5 rounded-md px-1.5 -mx-1.5 py-1.5 hover:bg-muted/40 transition-colors cursor-pointer text-left"
-      >
-        <Printer className="size-4 shrink-0 text-primary" />
-        <span className="text-sm font-semibold tabular-nums tracking-tight text-foreground truncate">{formatFax(f.fax_number)}</span>
-      </button>
-      <button
-        type="button"
-        onClick={onCopy}
-        aria-label={`Copy ${f.name} fax number`}
-        title="Copy fax number"
-        className={`size-7 shrink-0 rounded-md grid place-items-center transition-colors cursor-pointer ${
-          copied
-            ? "text-success"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-        }`}
-      >
-        {icon}
-      </button>
-    </div>
+    <button
+      type="button"
+      onClick={onCopy}
+      title="Copy fax number"
+      className="shrink-0 inline-flex items-center gap-1.5 rounded-md px-1.5 -mx-1.5 py-1.5 hover:bg-muted/40 transition-colors cursor-pointer group/fax"
+    >
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span
+          key={copied ? "check" : "printer"}
+          initial={{ scale: 0.4, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.4, opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="grid place-items-center"
+        >
+          {copied ? <Check className="size-4 text-success" /> : <Printer className="size-4 text-primary" />}
+        </motion.span>
+      </AnimatePresence>
+      <span className="text-sm font-semibold tabular-nums tracking-tight text-foreground truncate underline-offset-2 group-hover/fax:underline">{formatFax(f.fax_number)}</span>
+    </button>
   );
 }
 
@@ -174,6 +156,7 @@ function FacilityDialog({
   const [faxNumber, setFaxNumber] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [address, setAddress] = useState("");
+  const [verified, setVerified] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -181,6 +164,7 @@ function FacilityDialog({
     setFaxNumber(row?.fax_number ?? "");
     setLogoUrl(row?.logo_url ?? "");
     setAddress(row?.address ?? "");
+    setVerified(row?.verified ?? false);
   }, [open, row]);
 
   return (
@@ -227,6 +211,15 @@ function FacilityDialog({
             />
           </div>
 
+          <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2.5">
+            <Label htmlFor="fac-verified" className="text-xs font-semibold text-foreground cursor-pointer">Verified</Label>
+            <Switch
+              id="fac-verified"
+              checked={verified}
+              onCheckedChange={setVerified}
+            />
+          </div>
+
           <div className="space-y-1.5">
             <Label htmlFor="fac-logo" className="text-xs font-semibold text-foreground">Logo URL (optional)</Label>
             <Input
@@ -246,8 +239,8 @@ function FacilityDialog({
           </Button>
           <Button
             onClick={() =>
-              upsert.mutate(
-                { row, values: { name, fax_number: faxNumber, logo_url: logoUrl, address } },
+                           upsert.mutate(
+                { row, values: { name, fax_number: faxNumber, logo_url: logoUrl, address, verified } },
                 { onSuccess: () => onOpenChange(false) },
               )
             }
@@ -260,6 +253,19 @@ function FacilityDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function VerifiedTick({ f }: { f: Facility }) {
+  if (!f.verified) return null;
+  return (
+    <span
+      title="Verified"
+      aria-label="Verified"
+      className="grid size-5 shrink-0 place-items-center rounded-full bg-success text-white shadow-sm"
+    >
+      <Check className="size-3" strokeWidth={3} />
+    </span>
   );
 }
 
@@ -307,13 +313,32 @@ function FacilityCard({
       <div className="relative h-28 sm:h-32 bg-muted/10 overflow-hidden">
         <LogoImage f={f} />
         <div className="absolute inset-x-0 bottom-0 h-24 sm:h-28 bg-gradient-to-t from-card via-card/45 to-transparent" />
+        <div className="absolute top-2 right-2">
+          <VerifiedTick f={f} />
+        </div>
         {isAdmin && (
-          <div className="absolute top-2 right-2">
+          <button
+            type="button"
+            className="absolute top-2 left-2 size-7 rounded-md grid place-items-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-grab active:cursor-grabbing"
+            aria-label="Drag to reorder"
+            draggable={false}
+          >
+            <GripVertical className="size-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="relative px-4 pt-3 pb-4 space-y-1.5">
+        <div className="flex items-center gap-2">
+          <span className="size-1.5 bg-primary shrink-0" />
+          <h3 className="min-w-0 flex-1 text-sm sm:text-base font-semibold tracking-tight text-foreground truncate">{f.name}</h3>
+          <FaxCopyControls f={f} />
+          {isAdmin && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="size-7 rounded-md grid place-items-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+                  className="size-7 shrink-0 rounded-md grid place-items-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
                   aria-label={`Actions for ${f.name}`}
                 >
                   <MoreVertical className="size-4" />
@@ -337,25 +362,7 @@ function FacilityCard({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-        )}
-        {isAdmin && (
-          <button
-            type="button"
-            className="absolute top-2 left-2 size-7 rounded-md grid place-items-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-grab active:cursor-grabbing"
-            aria-label="Drag to reorder"
-            draggable={false}
-          >
-            <GripVertical className="size-4" />
-          </button>
-        )}
-      </div>
-
-      <div className="relative px-4 pt-3 pb-4 space-y-1.5">
-        <div className="flex items-center gap-2">
-          <span className="size-1.5 bg-primary shrink-0" />
-          <h3 className="min-w-0 flex-1 text-sm sm:text-base font-semibold tracking-tight text-foreground truncate">{f.name}</h3>
-          <FaxCopyControls f={f} />
+          )}
         </div>
         {f.address && (
           <p className="flex items-start gap-2 text-xs text-muted-foreground">
@@ -424,7 +431,10 @@ function FacilityRow({
         <LogoImage f={f} />
       </div>
       <div className="flex-1 min-w-0 space-y-1">
-        <h3 className="font-semibold tracking-tight text-foreground truncate">{f.name}</h3>
+        <div className="flex items-center gap-1.5">
+          <h3 className="min-w-0 flex-1 font-semibold tracking-tight text-foreground truncate">{f.name}</h3>
+          <VerifiedTick f={f} />
+        </div>
         <span className="text-sm text-muted-foreground font-mono tabular-nums">{formatFax(f.fax_number)}</span>
         {f.address && (
           <p className="flex items-start gap-2 text-xs text-muted-foreground">

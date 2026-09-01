@@ -20,6 +20,7 @@ const FacilitySchema = z.object({
     .optional()
     .or(z.literal("")),
   address: z.string().trim().max(500, "Address too long").optional().or(z.literal("")),
+  verified: z.boolean().optional(),
 });
 
 export type FacilityInput = z.infer<typeof FacilitySchema>;

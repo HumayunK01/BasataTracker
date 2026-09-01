@@ -108,6 +108,7 @@ export type Database = {
           logo_url: string | null
           fax_number: string
           address: string | null
+          verified: boolean
           created_by: string | null
           created_at: string
           updated_at: string
@@ -118,6 +119,7 @@ export type Database = {
           logo_url?: string | null
           fax_number: string
           address?: string | null
+          verified?: boolean
           created_by?: string | null
           created_at?: string
           updated_at?: string
@@ -128,6 +130,7 @@ export type Database = {
           logo_url?: string | null
           fax_number?: string
           address?: string | null
+          verified?: boolean
           created_by?: string | null
           created_at?: string
           updated_at?: string
