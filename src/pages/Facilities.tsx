@@ -173,12 +173,14 @@ function FacilityDialog({
   const [name, setName] = useState("");
   const [faxNumber, setFaxNumber] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
+  const [address, setAddress] = useState("");
 
   useEffect(() => {
     if (!open) return;
     setName(row?.name ?? "");
     setFaxNumber(row?.fax_number ?? "");
     setLogoUrl(row?.logo_url ?? "");
+    setAddress(row?.address ?? "");
   }, [open, row]);
 
   return (
@@ -215,6 +217,17 @@ function FacilityDialog({
           </div>
 
           <div className="space-y-1.5">
+            <Label htmlFor="fac-address" className="text-xs font-semibold text-foreground">Address (optional)</Label>
+            <Input
+              id="fac-address"
+              placeholder="e.g. 1234 W McDowell Rd, Phoenix, AZ"
+              value={address}
+              className="font-medium"
+              onChange={(e) => setAddress(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1.5">
             <Label htmlFor="fac-logo" className="text-xs font-semibold text-foreground">Logo URL (optional)</Label>
             <Input
               id="fac-logo"
@@ -234,7 +247,7 @@ function FacilityDialog({
           <Button
             onClick={() =>
               upsert.mutate(
-                { row, values: { name, fax_number: faxNumber, logo_url: logoUrl } },
+                { row, values: { name, fax_number: faxNumber, logo_url: logoUrl, address } },
                 { onSuccess: () => onOpenChange(false) },
               )
             }
@@ -338,10 +351,18 @@ function FacilityCard({
         )}
       </div>
 
-      <div className="relative px-4 pt-3 pb-4 flex items-center gap-2">
-        <span className="size-1.5 bg-primary shrink-0" />
-        <h3 className="min-w-0 flex-1 text-sm sm:text-base font-semibold tracking-tight text-foreground truncate">{f.name}</h3>
-        <FaxCopyControls f={f} />
+      <div className="relative px-4 pt-3 pb-4 space-y-1.5">
+        <div className="flex items-center gap-2">
+          <span className="size-1.5 bg-primary shrink-0" />
+          <h3 className="min-w-0 flex-1 text-sm sm:text-base font-semibold tracking-tight text-foreground truncate">{f.name}</h3>
+          <FaxCopyControls f={f} />
+        </div>
+        {f.address && (
+          <p className="flex items-start gap-2 text-xs text-muted-foreground">
+            <span className="size-1.5 bg-primary shrink-0 mt-[5px]" />
+            <span className="min-w-0 flex-1">{f.address}</span>
+          </p>
+        )}
       </div>
     </div>
   );
@@ -405,6 +426,12 @@ function FacilityRow({
       <div className="flex-1 min-w-0 space-y-1">
         <h3 className="font-semibold tracking-tight text-foreground truncate">{f.name}</h3>
         <span className="text-sm text-muted-foreground font-mono tabular-nums">{formatFax(f.fax_number)}</span>
+        {f.address && (
+          <p className="flex items-start gap-2 text-xs text-muted-foreground">
+            <span className="size-1.5 bg-primary shrink-0 mt-[5px]" />
+            <span className="min-w-0 flex-1">{f.address}</span>
+          </p>
+        )}
       </div>
       <FaxCopyControls f={f} />
       {isAdmin && (
@@ -458,7 +485,7 @@ export default function FacilitiesPage() {
     const q = search.trim().toLowerCase();
     if (!q) return facilities;
     return facilities.filter(
-      (f) => f.name.toLowerCase().includes(q) || f.fax_number.toLowerCase().includes(q),
+      (f) => f.name.toLowerCase().includes(q) || f.fax_number.toLowerCase().includes(q) || (f.address ?? "").toLowerCase().includes(q),
     );
   }, [facilities, search]);
 
@@ -510,7 +537,7 @@ export default function FacilitiesPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground pointer-events-none" />
               <Input
                 className="pl-9 h-9 text-xs w-full bg-card border-border"
-                placeholder="Search by name or fax…"
+                placeholder="Search by name, fax, or address…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />

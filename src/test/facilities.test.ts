@@ -8,7 +8,7 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
 
-// Mirrors src/hooks/useFacilities.ts:14-23
+// Mirrors src/hooks/useFacilities.ts:14-28
 const FacilitySchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(200, "Name too long"),
   fax_number: z.string().trim().min(1, "Fax number is required").max(50, "Fax number too long"),
@@ -19,11 +19,41 @@ const FacilitySchema = z.object({
     .regex(/^https?:\/\//i, "Logo must be a valid http(s) URL")
     .optional()
     .or(z.literal("")),
+  address: z.string().trim().max(500, "Address too long").optional().or(z.literal("")),
 });
 
-// Mirrors src/hooks/useFacilities.ts:26-28
+const KEEP_UPPER = new Set(
+  "N S E W NE NW SE SW US PO USA II III IV DC AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY".split(
+    " ",
+  ),
+);
+
+// Mirrors src/hooks/useFacilities.ts formatAddress
+export function formatAddress(raw: string): string {
+  let s = raw
+    .split(/\r?\n/)
+    .map((l) => l.replace(/\s+/g, " ").trim().replace(/,+$/, ""))
+    .filter(Boolean)
+    .join(", ")
+    .replace(/\s*,\s*/g, ", ")
+    .trim();
+  s = s.replace(/(\p{L})(?=\d)/gu, "$1 ");
+  s = s.replace(/\p{L}+/gu, (w) => {
+    if (KEEP_UPPER.has(w.toUpperCase())) return w.toUpperCase();
+    let t = w[0].toUpperCase() + w.slice(1).toLowerCase();
+    if (t.length > 2 && t.startsWith("Mc")) t = "Mc" + t[2].toUpperCase() + t.slice(3);
+    return t;
+  });
+  return s.trim();
+}
+
+// Mirrors src/hooks/useFacilities.ts cleanLogo
 function cleanLogo(input: z.infer<typeof FacilitySchema>) {
-  return { ...input, logo_url: input.logo_url ? input.logo_url : null };
+  return {
+    ...input,
+    logo_url: input.logo_url ? input.logo_url : null,
+    address: input.address ? formatAddress(input.address) || null : null,
+  };
 }
 
 // Mirrors src/pages/Facilities.tsx:48-59
@@ -96,5 +126,44 @@ describe("Facilities input validation", () => {
     const r = FacilitySchema.safeParse({ name: "Phoenix Heart", fax_number: "(602) 555-0134", logo_url: "" });
     expect(r.success).toBe(true);
     if (r.success) expect(cleanLogo(r.data).logo_url).toBeNull();
+  });
+});
+
+describe("Facilities address formatting", () => {
+  it("formats the exact pasted example: glue fix, newline join, title case, nothing stripped", () => {
+    const raw = "BANNER ESTRELLA MEDICAL CENTER9201 W Thoms Rd\nPhoenix, AZ 85037-3332";
+    expect(formatAddress(raw)).toBe(
+      "Banner Estrella Medical Center 9201 W Thoms Rd, Phoenix, AZ 85037-3332",
+    );
+  });
+
+  it("title-cases an all-caps address and keeps state/directional abbrevs", () => {
+    expect(formatAddress("9201 W THOMS RD, PHOENIX, AZ 85037")).toBe(
+      "9201 W Thoms Rd, Phoenix, AZ 85037",
+    );
+  });
+
+  it("keeps PO uppercase but titles the rest", () => {
+    expect(formatAddress("PO BOX 1234")).toBe("PO Box 1234");
+  });
+
+  it("splits letter-digit paste glue and joins newline lines with commas", () => {
+    expect(formatAddress("Suite 200B\nChandler, AZ")).toBe("Suite 200B, Chandler, AZ");
+    expect(formatAddress("Rd9201")).toBe("Rd 9201");
+  });
+
+  it("keeps McX capitalized", () => {
+    expect(formatAddress("MCDOWELL RD")).toBe("McDowell Rd");
+  });
+
+  it("returns empty string for whitespace-only address", () => {
+    expect(formatAddress("   \n  ")).toBe("");
+  });
+
+  it("cleanLogo normalizes empty address to null and formats a present one", () => {
+    const empty = FacilitySchema.safeParse({ name: "X", fax_number: "5", logo_url: "", address: "   " });
+    if (empty.success) expect(cleanLogo(empty.data).address).toBeNull();
+    const filled = FacilitySchema.safeParse({ name: "PHX", fax_number: "5", logo_url: "", address: "9201 W THOMS RD" });
+    if (filled.success) expect(cleanLogo(filled.data).address).toBe("9201 W Thoms Rd");
   });
 });
