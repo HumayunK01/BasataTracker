@@ -1,13 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Building2, Check, GripVertical, LayoutGrid, List, Loader2, MoreVertical, Pencil, Plus, Printer, Search, Trash2 } from "lucide-react";
+import { Building2, Check, LayoutGrid, List, Loader2, MoreVertical, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Skeleton from "react-loading-skeleton";
 import {
   useFacilities,
   useUpsertFacility,
   useDeleteFacility,
-  useReorderFacilities,
   type Facility,
   type FacilityInput,
 } from "@/hooks/useFacilities";
@@ -94,17 +93,17 @@ function FaxCopyControls({ f }: { f: Facility }) {
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
-          key={copied ? "check" : "printer"}
+          key={copied ? "copied" : "label"}
           initial={{ scale: 0.4, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.4, opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="grid place-items-center"
+          className="text-xs font-medium text-foreground"
         >
-          {copied ? <Check className="size-4 text-success" /> : <Printer className="size-4 text-primary" />}
+          {copied ? "Copied!" : "Fax:"}
         </motion.span>
       </AnimatePresence>
-      <span className="text-sm font-semibold tabular-nums tracking-tight text-foreground truncate underline-offset-2 group-hover/fax:underline">{formatFax(f.fax_number)}</span>
+      <span className="text-xs tabular-nums tracking-tight text-foreground truncate underline-offset-2 group-hover/fax:underline">{formatFax(f.fax_number)}</span>
     </button>
   );
 }
@@ -272,11 +271,6 @@ function VerifiedTick({ f }: { f: Facility }) {
 function FacilityCard({
   f,
   isAdmin,
-  draggedId,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  onDragEnd,
   setEditing,
   setDialogOpen,
   setDeleteTarget,
@@ -285,30 +279,16 @@ function FacilityCard({
 }: {
   f: Facility;
   isAdmin: boolean;
-  draggedId: string | null;
-  onDragStart: (e: React.DragEvent, id: string) => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDrop: (e: React.DragEvent, targetId: string) => void;
-  onDragEnd: () => void;
   setEditing: (f: Facility | null) => void;
   setDialogOpen: (open: boolean) => void;
   setDeleteTarget: (f: Facility | null) => void;
   upsert: ReturnType<typeof useUpsertFacility>;
   deleteFacility: ReturnType<typeof useDeleteFacility>;
 }) {
-  const isDragging = draggedId === f.id;
-
   return (
     <div
       key={f.id}
-      draggable={isAdmin}
-      onDragStart={(e) => onDragStart(e, f.id)}
-      onDragOver={onDragOver}
-      onDrop={(e) => onDrop(e, f.id)}
-      onDragEnd={onDragEnd}
-      className={`group bg-card border border-border/50 rounded-lg overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 ${
-        isDragging ? "opacity-50 ring-2 ring-primary" : ""
-      }`}
+      className="group bg-card border border-border/50 rounded-lg overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200"
     >
       <div className="relative h-28 sm:h-32 bg-muted/10 overflow-hidden">
         <LogoImage f={f} />
@@ -316,23 +296,12 @@ function FacilityCard({
         <div className="absolute top-2 right-2">
           <VerifiedTick f={f} />
         </div>
-        {isAdmin && (
-          <button
-            type="button"
-            className="absolute top-2 left-2 size-7 rounded-md grid place-items-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-grab active:cursor-grabbing"
-            aria-label="Drag to reorder"
-            draggable={false}
-          >
-            <GripVertical className="size-4" />
-          </button>
-        )}
       </div>
 
-      <div className="relative px-4 pt-3 pb-4 space-y-1.5">
-        <div className="flex items-center gap-2">
-          <span className="size-1.5 bg-primary shrink-0" />
+      <div className="relative px-4 pt-3 pb-4 space-y-1">
+        <div className="flex items-start gap-2">
+          <span className="size-1.5 bg-primary shrink-0 mt-[7px]" />
           <h3 className="min-w-0 flex-1 text-sm sm:text-base font-semibold tracking-tight text-foreground truncate">{f.name}</h3>
-          <FaxCopyControls f={f} />
           {isAdmin && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -365,11 +334,15 @@ function FacilityCard({
           )}
         </div>
         {f.address && (
-          <p className="flex items-start gap-2 text-xs text-muted-foreground">
-            <span className="size-1.5 bg-primary shrink-0 mt-[5px]" />
+          <p className="flex items-start gap-2 text-xs text-foreground">
+            <span className="size-1.5 bg-primary/50 shrink-0 mt-[5px]" />
             <span className="min-w-0 flex-1">{f.address}</span>
           </p>
         )}
+        <div className="flex items-center gap-2">
+          <span className="size-1.5 bg-primary/50 shrink-0" />
+          <FaxCopyControls f={f} />
+        </div>
       </div>
     </div>
   );
@@ -378,11 +351,6 @@ function FacilityCard({
 function FacilityRow({
   f,
   isAdmin,
-  draggedId,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  onDragEnd,
   setEditing,
   setDialogOpen,
   setDeleteTarget,
@@ -391,59 +359,31 @@ function FacilityRow({
 }: {
   f: Facility;
   isAdmin: boolean;
-  draggedId: string | null;
-  onDragStart: (e: React.DragEvent, id: string) => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDrop: (e: React.DragEvent, targetId: string) => void;
-  onDragEnd: () => void;
   setEditing: (f: Facility | null) => void;
   setDialogOpen: (open: boolean) => void;
   setDeleteTarget: (f: Facility | null) => void;
   upsert: ReturnType<typeof useUpsertFacility>;
   deleteFacility: ReturnType<typeof useDeleteFacility>;
 }) {
-  const isDragging = draggedId === f.id;
-
   return (
     <div
       key={f.id}
-      draggable={isAdmin}
-      onDragStart={(e) => onDragStart(e, f.id)}
-      onDragOver={onDragOver}
-      onDrop={(e) => onDrop(e, f.id)}
-      onDragEnd={onDragEnd}
-      className={`group flex items-center gap-4 bg-card border border-border/50 rounded-lg p-3 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 ${
-        isDragging ? "opacity-50 ring-2 ring-primary" : ""
-      }`}
+      className="group flex items-center gap-4 bg-card border border-border/50 rounded-lg p-3 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200"
       role="listitem"
     >
-      {isAdmin && (
-        <button
-          type="button"
-          className="size-8 shrink-0 grid place-items-center text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md cursor-grab active:cursor-grabbing transition-colors"
-          aria-label="Drag to reorder"
-          draggable={false}
-        >
-          <GripVertical className="size-4" />
-        </button>
-      )}
       <div className="relative h-10 w-10 shrink-0 rounded bg-muted/10 overflow-hidden flex-shrink-0">
         <LogoImage f={f} />
       </div>
-      <div className="flex-1 min-w-0 space-y-1">
+      <div className="flex-1 min-w-0 space-y-0.5">
         <div className="flex items-center gap-1.5">
           <h3 className="min-w-0 flex-1 font-semibold tracking-tight text-foreground truncate">{f.name}</h3>
           <VerifiedTick f={f} />
         </div>
-        <span className="text-sm text-muted-foreground font-mono tabular-nums">{formatFax(f.fax_number)}</span>
         {f.address && (
-          <p className="flex items-start gap-2 text-xs text-muted-foreground">
-            <span className="size-1.5 bg-primary shrink-0 mt-[5px]" />
-            <span className="min-w-0 flex-1">{f.address}</span>
-          </p>
+          <p className="text-xs text-foreground">{f.address}</p>
         )}
+        <FaxCopyControls f={f} />
       </div>
-      <FaxCopyControls f={f} />
       {isAdmin && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -483,60 +423,22 @@ export default function FacilitiesPage() {
   const { data: facilities = [], isLoading } = useFacilities();
   const upsert = useUpsertFacility();
   const deleteFacility = useDeleteFacility();
-  const reorder = useReorderFacilities();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Facility | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Facility | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [draggedId, setDraggedId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return facilities;
-    return facilities.filter(
-      (f) => f.name.toLowerCase().includes(q) || f.fax_number.toLowerCase().includes(q) || (f.address ?? "").toLowerCase().includes(q),
-    );
+    const matches = (f: Facility) =>
+      !q ||
+      f.name.toLowerCase().includes(q) ||
+      f.fax_number.toLowerCase().includes(q) ||
+      (f.address ?? "").toLowerCase().includes(q);
+    // Verified facilities lead; keep DB (sort_order) order within each group.
+    return facilities.filter(matches).sort((a, b) => Number(b.verified) - Number(a.verified));
   }, [facilities, search]);
-
-  const handleDragStart = useCallback((e: React.DragEvent, id: string) => {
-    if (!isAdmin) return;
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", id);
-    setDraggedId(id);
-  }, [isAdmin]);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    if (!isAdmin || !draggedId) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  }, [isAdmin, draggedId]);
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent, targetId: string) => {
-      if (!isAdmin || !draggedId || draggedId === targetId) return;
-      e.preventDefault();
-      const draggedIndex = filtered.findIndex((f) => f.id === draggedId);
-      const targetIndex = filtered.findIndex((f) => f.id === targetId);
-      if (draggedIndex === -1 || targetIndex === -1) return;
-
-      const newOrder = [...filtered];
-      const [removed] = newOrder.splice(draggedIndex, 1);
-      newOrder.splice(targetIndex, 0, removed);
-
-      const updates = newOrder.map((f, i) => ({
-        id: f.id,
-        sort_order: i,
-      }));
-      reorder.mutate(updates);
-      setDraggedId(null);
-    },
-    [isAdmin, draggedId, filtered, reorder]
-  );
-
-  const handleDragEnd = useCallback(() => {
-    setDraggedId(null);
-  }, []);
 
   return (
     <main className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-5 sm:py-6 animate-fade-in">
@@ -631,11 +533,6 @@ export default function FacilitiesPage() {
                   key={f.id}
                   f={f}
                   isAdmin={isAdmin}
-                  draggedId={draggedId}
-                  onDragStart={handleDragStart}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  onDragEnd={handleDragEnd}
                   setEditing={setEditing}
                   setDialogOpen={setDialogOpen}
                   setDeleteTarget={setDeleteTarget}
@@ -662,11 +559,6 @@ export default function FacilitiesPage() {
                   key={f.id}
                   f={f}
                   isAdmin={isAdmin}
-                  draggedId={draggedId}
-                  onDragStart={handleDragStart}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  onDragEnd={handleDragEnd}
                   setEditing={setEditing}
                   setDialogOpen={setDialogOpen}
                   setDeleteTarget={setDeleteTarget}
