@@ -20,6 +20,8 @@ const pageTitles: Record<string, string> = {
   "/team": "Team",
   "/facilities": "Facilities",
   "/faxed-back": "Faxed Back",
+  "/resources/cheat-sheet": "Resources",
+  "/resources/test-patients": "Resources",
 };
 
 const INACTIVITY_WARNING_MS = 22 * 60 * 1000;

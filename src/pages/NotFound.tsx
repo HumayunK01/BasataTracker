@@ -21,7 +21,7 @@ const NotFound = () => {
         </p>
 
         <Link
-          to="/log"
+          to="/console"
           className="inline-flex items-center justify-center h-9 px-5 text-xs font-semibold tracking-wider uppercase bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
         >
           Back to Daily Log

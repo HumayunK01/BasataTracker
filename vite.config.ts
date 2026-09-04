@@ -26,6 +26,7 @@ export default defineConfig(() => ({
         "font-src 'self' https://fonts.gstatic.com",
         "img-src 'self' data: blob: https:",
         "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://fonts.googleapis.com https://fonts.gstatic.com",
+        "frame-src 'self' https://docs.google.com",
         "frame-ancestors 'none'",
         "base-uri 'self'",
         "form-action 'self'",

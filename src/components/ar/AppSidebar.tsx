@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion, useReducedMotion, type Easing } from "motion/react";
-import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, BookOpen, Tags, ExternalLink, Send, KeyRound, Users, FileCheck2, Building2 } from "lucide-react";
+import { CalendarDays, LayoutDashboard, FileBarChart, Hash, X, BookOpen, Tags, Send, KeyRound, Users, FileCheck2, Building2 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -51,12 +51,12 @@ const externalLinks = [
   {
     title: "Phoenix Heart Cheat Sheet",
     icon: BookOpen,
-    href: "https://docs.google.com/document/d/1y7xmLogt9vMhUKO-ADUEtZgqXp39q9Ts_V8TTiKlgUg/edit?tab=t.0",
+    path: "/resources/cheat-sheet",
   },
   {
     title: "Test Patients & Labeling",
     icon: Tags,
-    href: "https://docs.google.com/document/d/1C0aKOgsXKyU0XzDUB2oPnxaW0QUhUDSppSiL81JEvr8/edit?pli=1&tab=t.0",
+    path: "/resources/test-patients",
   },
 ];
 
@@ -141,21 +141,40 @@ export function AppSidebar() {
           </div>
 
           <SidebarMenu className="px-2 group-data-[collapsible=icon]:px-1 space-y-0.5">
-            {externalLinks.map((link) => (
-              <SidebarMenuItem key={link.href}>
-                <SidebarMenuButton
-                  asChild
-                  tooltip={link.title}
-                  className="relative z-10 rounded-md border border-transparent h-9 text-xs font-medium [&>svg]:size-4 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:[&>svg]:size-5"
-                >
-                  <a href={link.href} target="_blank" rel="noopener noreferrer">
-                    <link.icon />
-                    <span className="flex-1 truncate">{link.title}</span>
-                    <ExternalLink className="size-4 shrink-0 text-foreground group-data-[collapsible=icon]:hidden" />
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            {externalLinks.map((link) => {
+              const active = location.pathname === link.path;
+              return (
+                <SidebarMenuItem key={link.path} className="relative">
+                  {active && (
+                    <motion.div
+                      layoutId="sidebar-active"
+                      className="absolute left-0 top-1 bottom-1 w-0.5 bg-primary"
+                      transition={reduce ? { duration: 0 } : { duration: 0.25, ease }}
+                    />
+                  )}
+                  <SidebarMenuButton
+                    asChild
+                    isActive={active}
+                    tooltip={link.title}
+                    className={cn(
+                      "relative z-10 rounded-md border border-transparent h-9 text-xs font-medium [&>svg]:size-4",
+                      "data-[active=true]:!border-primary/40 data-[active=true]:!bg-primary/10 data-[active=true]:!text-primary",
+                      "group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:[&>svg]:size-5",
+                    )}
+                  >
+                    <Link
+                      to={link.path}
+                      onClick={() => isMobile && setOpenMobile(false)}
+                      onMouseEnter={() => prefetchRoute(link.path)}
+                      onFocus={() => prefetchRoute(link.path)}
+                    >
+                      <link.icon />
+                      <span className="flex-1 truncate">{link.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
         </div>
       </SidebarContent>

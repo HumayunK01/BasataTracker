@@ -20,6 +20,7 @@ import {
   TeamPage,
   FacilitiesPage,
   FaxedBackPage,
+  ResourcePage,
   NotFound,
 } from "@/lib/routePreload";
 
@@ -55,6 +56,8 @@ const TITLES: Record<string, string> = {
   "/faxed-back": "Faxed Back",
   "/team": "Team",
   "/facilities": "Facilities",
+  "/resources/cheat-sheet": "Resources",
+  "/resources/test-patients": "Resources",
 };
 
 // ponytail: title map keyed by route; new pages must add an entry here
@@ -85,7 +88,7 @@ const App = () => (
             >
               <Routes>
                 <Route element={<AppLayout><Outlet /></AppLayout>}>
-                  <Route path="/" element={<Navigate to="/log" replace />} />
+                  <Route path="/" element={<Navigate to="/console" replace />} />
                   <Route path="/console" element={<ConsolePage />} />
                   <Route path="/log" element={<DailyLogPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
@@ -98,6 +101,7 @@ const App = () => (
                   <Route path="/faxed-back" element={<FaxedBackPage />} />
                   <Route path="/team" element={<TeamPage />} />
                   <Route path="/facilities" element={<FacilitiesPage />} />
+                  <Route path="/resources/:docId" element={<ResourcePage />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
