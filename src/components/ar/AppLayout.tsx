@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import { AppSidebar } from "@/components/ar/AppSidebar";
 import { MobileTabBar } from "@/components/ar/MobileTabBar";
 import { PageHeader } from "@/components/ar/PageHeader";
+import { HrmsReminder } from "@/components/ar/HrmsReminder";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 
@@ -101,6 +102,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </AnimatePresence>
         <MobileTabBar />
       </div>
+      <HrmsReminder />
       <div id="kudos-animation-container" className="fixed inset-0 pointer-events-none z-50 overflow-hidden" />
 
       {showWarning && (
