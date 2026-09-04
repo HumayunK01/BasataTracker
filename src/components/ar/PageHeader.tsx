@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Settings, Sun, Moon, LogOut, User } from "lucide-react";
+import { WhatsNewButton } from "@/components/ar/whats-new";
 
 interface PageHeaderProps {
   subtitle?: React.ReactNode;
@@ -74,6 +75,7 @@ export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
             <span className="text-xs font-semibold tracking-wider text-foreground">Phoenix Heart</span>
           </div>
           <div className="flex items-center gap-1 ml-2 pl-2 border-l border-border/40">
+            <WhatsNewButton />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
