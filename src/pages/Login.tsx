@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Loader2, Eye, EyeOff, Sun, Moon, Check, X, ChevronLeft } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { AppLogo } from "@/components/ar/AppLogo";
+import { AppFavicon } from "@/components/ar/AppFavicon";
 
 const PASSWORD_RULES = [
   { label: "Lowercase letter", test: (p: string) => /[a-z]/.test(p) },
@@ -56,7 +57,8 @@ const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 60_000;
 
 export default function LoginPage() {
-  const { theme, toggle } = useTheme();
+  const { theme, toggle, variant } = useTheme();
+  const isClassic = variant === "classic";
   const [s, dispatch] = useReducer(loginReducer, loginInit);
   const { mode, email, password, firstName, lastName, showPassword, loading, confirmEmail } = s;
   const attemptTimestamps = useRef<number[]>([]);
@@ -100,6 +102,110 @@ export default function LoginPage() {
       dispatch({ type: "done" });
     }
   };
+
+  if (!isClassic) {
+    return (
+      <div className="relative flex min-h-dvh w-full items-center justify-center bg-slate-100 dark:bg-[#0f172a] px-4 py-6 transition-colors">
+        <div className="relative w-full max-w-[260px] bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-0 rounded-md px-5 pt-7 pb-8 shadow-xl dark:shadow-2xl transition-colors">
+          {/* Top-right theme toggle inside card */}
+          <button
+            type="button"
+            onClick={toggle}
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            className="absolute top-3.5 right-3.5 size-7 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-white dark:hover:text-white/80 transition-colors cursor-pointer"
+          >
+            {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
+          </button>
+
+          {confirmEmail ? (
+            <div className="space-y-3.5 text-center">
+              <AppFavicon className="size-12 object-contain mx-auto" />
+              <h1 className="text-base font-bold text-slate-900 dark:text-white">Check your email</h1>
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                We sent a confirmation link to <span className="font-medium text-slate-900 dark:text-white break-all">{confirmEmail}</span>.
+              </p>
+              <Button
+                className="w-full h-10 bg-[#3b82f6] hover:bg-[#2563eb] text-white text-xs font-medium rounded"
+                onClick={() => dispatch({ type: "back_to_login" })}
+              >
+                Back to sign in
+              </Button>
+            </div>
+          ) : (
+            <>
+              {/* Centered green B icon */}
+              <div className="flex justify-center pt-2">
+                <AppFavicon className="size-13 sm:size-14 object-contain" />
+              </div>
+
+              {/* Login title */}
+              <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white text-center mt-3 mb-5 font-heading">
+                {mode === "login" ? "Login" : "Sign Up"}
+              </h1>
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-3">
+                {mode === "signup" && (
+                  <>
+                    <Input
+                      type="text"
+                      placeholder="First name"
+                      value={firstName}
+                      onChange={(e) => dispatch({ type: "set_first", v: e.target.value })}
+                      required
+                      className="h-10 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 dark:bg-[#334155] dark:border-0 dark:text-white dark:placeholder:text-slate-400 rounded text-xs px-3 focus-visible:ring-1 focus-visible:ring-blue-500"
+                    />
+                    <Input
+                      type="text"
+                      placeholder="Last name"
+                      value={lastName}
+                      onChange={(e) => dispatch({ type: "set_last", v: e.target.value })}
+                      required
+                      className="h-10 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 dark:bg-[#334155] dark:border-0 dark:text-white dark:placeholder:text-slate-400 rounded text-xs px-3 focus-visible:ring-1 focus-visible:ring-blue-500"
+                    />
+                  </>
+                )}
+
+                <Input
+                  type="text"
+                  placeholder="Username"
+                  aria-label="Username"
+                  value={email}
+                  onChange={(e) => dispatch({ type: "set_email", v: e.target.value })}
+                  required
+                  autoComplete="username"
+                  className="h-10 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 dark:bg-[#334155] dark:border-0 dark:text-white dark:placeholder:text-slate-400 rounded text-xs px-3 focus-visible:ring-1 focus-visible:ring-blue-500"
+                />
+
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  aria-label="Password"
+                  value={password}
+                  onChange={(e) => dispatch({ type: "set_password", v: e.target.value })}
+                  required
+                  autoComplete={mode === "login" ? "current-password" : "new-password"}
+                  className="h-10 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 dark:bg-[#334155] dark:border-0 dark:text-white dark:placeholder:text-slate-400 rounded text-xs px-3 focus-visible:ring-1 focus-visible:ring-blue-500"
+                />
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-10 bg-[#3b82f6] hover:bg-[#2563eb] text-white font-medium text-xs rounded shadow-none mt-4 transition-colors"
+                >
+                  {loading && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
+                  {mode === "login" ? "Login" : "Create Account"}
+                </Button>
+              </form>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+
 
   return (
     <div className="relative flex min-h-dvh w-full items-center justify-center bg-background px-5 py-8 overflow-hidden">

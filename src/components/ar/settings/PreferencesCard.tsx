@@ -1,4 +1,4 @@
-import { Sun, Moon, Target, Loader2 } from "lucide-react";
+import { Sun, Moon, Target, Loader2, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/hooks/useTheme";
@@ -11,7 +11,7 @@ interface PreferencesCardProps {
 }
 
 export function PreferencesCard({ dailyGoal }: PreferencesCardProps) {
-  const { theme, toggle } = useTheme();
+  const { theme, toggle, variant, toggleVariant } = useTheme();
   const [goal, setGoal] = useState(dailyGoal ?? 50);
   const updateGoal = useUpdateDailyGoal();
 
@@ -75,6 +75,29 @@ export function PreferencesCard({ dailyGoal }: PreferencesCardProps) {
             >
               {theme === "dark" ? <Sun className="size-4 mr-1.5" /> : <Moon className="size-4 mr-1.5" />}
               {theme === "dark" ? "Light mode" : "Dark mode"}
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between px-5 py-4 gap-3 xs:gap-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Palette className="size-4.5 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold">Theme Style</p>
+              <p className="text-xs text-foreground mt-0.5">Toggle between Modern Theme and Legacy Theme</p>
+            </div>
+          </div>
+          <div className="shrink-0 xs:ml-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 min-w-32"
+              onClick={toggleVariant}
+            >
+              <Palette className="size-4 mr-1.5" />
+              {variant === "classic" ? "Modern Theme" : "Legacy Theme"}
             </Button>
           </div>
         </div>

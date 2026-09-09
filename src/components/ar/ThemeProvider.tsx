@@ -1,8 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
 import { flushSync } from "react-dom";
-import { ThemeContext, type Theme } from "@/hooks/useTheme";
+import { ThemeContext, type Theme, type ThemeVariant } from "@/hooks/useTheme";
 
 const STORAGE_KEY = "basata-theme";
+const VARIANT_STORAGE_KEY = "basata-theme-variant";
 
 function getInitialTheme(): Theme {
   try {
@@ -14,16 +15,33 @@ function getInitialTheme(): Theme {
   return "dark";
 }
 
+function getInitialVariant(): ThemeVariant {
+  try {
+    const stored = localStorage.getItem(VARIANT_STORAGE_KEY);
+    if (stored === "classic" || stored === "modern") return stored;
+  } catch {
+    // Ignore localStorage access failures
+  }
+  return "modern";
+}
+
 function applyTheme(theme: Theme) {
   if (theme === "light") {
     document.documentElement.classList.add("light");
+    document.documentElement.classList.remove("dark");
   } else {
     document.documentElement.classList.remove("light");
+    document.documentElement.classList.add("dark");
   }
+}
+
+function applyVariant(variant: ThemeVariant) {
+  document.documentElement.setAttribute("data-theme-variant", variant);
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [variant, setVariant] = useState<ThemeVariant>(getInitialVariant);
 
   useEffect(() => {
     applyTheme(theme);
@@ -31,6 +49,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       // Ignore localStorage access failures
     }
   }, [theme]);
+
+  useEffect(() => {
+    applyVariant(variant);
+    try { localStorage.setItem(VARIANT_STORAGE_KEY, variant); } catch {
+      // Ignore localStorage access failures
+    }
+  }, [variant]);
 
   const toggle = useCallback(() => {
     const next: Theme = document.documentElement.classList.contains("light")
@@ -56,8 +81,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const toggleVariant = useCallback(() => {
+    setVariant((prev) => (prev === "modern" ? "classic" : "modern"));
+  }, []);
+
   return (
-    <ThemeContext.Provider value={{ theme, toggle }}>
+    <ThemeContext.Provider value={{ theme, toggle, variant, setVariant, toggleVariant }}>
       {children}
     </ThemeContext.Provider>
   );

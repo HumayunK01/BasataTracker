@@ -56,7 +56,7 @@ const DailyLogPage = () => {
 
   return (
     <>
-      <main className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-5 sm:py-6 animate-fade-in">
+      <main className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-3 sm:py-4 animate-fade-in">
         {isLoading ? (
           <div className="flex flex-col gap-3 pt-2">
             <div className="flex gap-3">

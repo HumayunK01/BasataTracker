@@ -20,7 +20,6 @@ const pageTitles: Record<string, string> = {
   "/settings": "Settings",
   "/team": "Team",
   "/facilities": "Facilities",
-  "/faxed-back": "Faxed Back",
   "/resources/cheat-sheet": "Resources",
   "/resources/test-patients": "Resources",
 };

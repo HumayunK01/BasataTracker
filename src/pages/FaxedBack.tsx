@@ -577,7 +577,7 @@ return (
         animate={{ opacity: 1 }}
         exit={{ opacity: 0, height: 0 }}
         transition={{ duration: t, ease: sectionEase }}
-        className="bg-muted/40"
+        className="bg-muted/40 border-b border-border"
       >
         <td colSpan={6} className="px-3 py-2">
           <div className="flex items-center gap-2">
@@ -631,7 +631,7 @@ return (
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: t, ease: sectionEase }}
-              className="bg-muted/50 text-xs uppercase tracking-wide text-foreground"
+              className="bg-muted/50 text-xs uppercase tracking-wide text-foreground border-b border-border"
             >
               <th className="px-3 py-2.5 text-left min-w-[300px]"><SortHeader label="File Name" sortKey="file_name" sort={sort} onSort={onToggleSort} align="left" /></th>
               <th className="px-3 pl-8 py-2.5 text-left w-56"><SortHeader label="Patient Name" sortKey="patient_name" sort={sort} onSort={onToggleSort} align="left" /></th>

@@ -28,16 +28,23 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        heading: ["Inter", "system-ui", "sans-serif"],
-        mono: ["Inter", "ui-monospace", "monospace"],
+        sans: ["var(--font-sans, system-ui)", "-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "Roboto", "sans-serif"],
+        heading: ["var(--font-heading, 'Hubot Sans Variable')", "'Hubot Sans'", "sans-serif"],
+        hubot: ["var(--font-hubot, 'Hubot Sans Variable')", "'Hubot Sans'", "sans-serif"],
+        mono: ["var(--font-mono, 'Hubot Sans Variable')", "monospace"],
       },
       fontSize: {
-        "2xs": ["0.625rem", { lineHeight: "1rem" }],
+        "2xs": ["var(--text-2xs, 0.6875rem)", { lineHeight: "1rem" }],
+        xs: ["var(--text-xs, 0.8125rem)", { lineHeight: "1.2rem" }],
+        sm: ["var(--text-sm, 0.9375rem)", { lineHeight: "1.375rem" }],
+        base: ["var(--text-base, 1.0625rem)", { lineHeight: "1.625rem" }],
+        lg: ["var(--text-lg, 1.1875rem)", { lineHeight: "1.75rem" }],
+        xl: ["var(--text-xl, 1.375rem)", { lineHeight: "1.875rem" }],
+        "2xl": ["var(--text-2xl, 1.625rem)", { lineHeight: "2.125rem" }],
       },
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
+        border: "hsl(var(--border) / <alpha-value>)",
+        input: "hsl(var(--input) / <alpha-value>)",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
@@ -88,7 +95,7 @@ export default {
           "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
           accent: "hsl(var(--sidebar-accent))",
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          border: "hsl(var(--sidebar-border))",
+          border: "var(--app-border, rgba(255, 255, 255, 0.15))",
           ring: "hsl(var(--sidebar-ring))",
         },
         cat: {

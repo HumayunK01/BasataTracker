@@ -552,7 +552,7 @@ const CredentialsPage = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-xs border-collapse">
                 <thead>
-                  <tr className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground/70">
+                  <tr className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground/70 border-b border-border">
                     <th className="w-8 px-3 py-3">
                       <SelectCheckbox
                         ariaLabel="Select all"

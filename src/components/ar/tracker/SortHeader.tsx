@@ -23,14 +23,14 @@ export function SortHeader({
       type="button"
       onClick={() => onSort(sortKey)}
       className={cn(
-        "press-scale inline-flex items-center gap-1 hover:text-foreground transition-colors uppercase tracking-wide",
+        "press-scale inline-flex items-center gap-1 transition-colors uppercase tracking-wider text-xs",
         align === "center" ? "mx-auto" : "",
-        active && "text-foreground",
+        active ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground",
       )}
       title={`Sort by ${label.toLowerCase()}`}
     >
       {label}
-      <Icon key={active ? sort.dir : "idle"} className={cn("size-3 animate-fade-in", active ? "opacity-100" : "opacity-40")} />
+      <Icon key={active ? sort.dir : "idle"} className={cn("size-3 animate-fade-in", active ? "opacity-100 text-primary" : "opacity-40")} />
     </button>
   );
 }

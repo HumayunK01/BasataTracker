@@ -1,12 +1,11 @@
 import { useMemo, useReducer } from "react";
-import { colorForKey } from "@/lib/cat-colors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
-  TableFooter,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -26,25 +25,18 @@ import { Pagination } from "@/components/Pagination";
 import { formatTableDate, formatDayName, isWeekend, type DailyLog } from "@/types/log";
 import { useDeleteLog } from "@/hooks/useDailyLogs";
 import { useCategories, type Category } from "@/hooks/useCategories";
-import { Trash2, Pencil, Search, BedDouble, Copy, Check, CalendarDays, StickyNote } from "lucide-react";
+import { colorForKey } from "@/lib/cat-colors";
+import { Trash2, Pencil, Search, BedDouble, Copy, Check, CalendarDays } from "lucide-react";
 import { EmptyState } from "@/components/ar/industrial";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function getVal(l: DailyLog, key: string): number { return (l.counts ?? {})[key] ?? 0; }
 
-function DateDay({ iso, notes }: { iso: string; notes?: string | null }) {
+function DateDay({ iso, isOff }: { iso: string; isOff?: boolean }) {
   return (
-    <div className="flex items-center justify-center gap-1.5">
-      <div className="flex flex-col leading-tight">
-        <span>{formatTableDate(iso)}</span>
-        <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-heading">{formatDayName(iso)}</span>
-      </div>
-      {notes && (
-        <span title={notes} className="text-info/70 shrink-0" aria-label="Has notes">
-          <StickyNote className="size-3" />
-        </span>
-      )}
-    </div>
+    <span className={`tabular-nums font-normal ${isOff ? "text-muted-foreground/60" : "text-foreground"}`}>
+      {formatTableDate(iso)}
+    </span>
   );
 }
 
@@ -54,28 +46,55 @@ interface DesktopTableProps {
   categories: Category[];
   search: string;
   copiedId: string | null;
-  colTotals: Record<string, number>;
-  grandTotal: number;
   onEdit: (l: DailyLog) => void;
   onDelete: (l: DailyLog) => void;
   onCopy: (l: DailyLog) => void;
 }
 
-function DesktopTable({ paginated, categories, search, copiedId, colTotals, grandTotal, onEdit, onDelete, onCopy }: DesktopTableProps) {
+function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelete, onCopy }: DesktopTableProps) {
+  const thCls = "relative z-10 font-bold text-xs uppercase tracking-wider text-white text-center py-2 sm:py-2.5 px-2 sm:px-3 font-hubot whitespace-nowrap";
+  const Sep = () => <span className="theme-header-sep absolute right-0 top-1/2 -translate-y-1/2 h-3.5 w-px bg-border pointer-events-none" aria-hidden="true" />;
+  const BottomLine = () => <span className="theme-header-bottom-line absolute bottom-0 left-0 right-0 h-px bg-white pointer-events-none z-10" aria-hidden="true" />;
+
+  const colTotals = useMemo(
+    () =>
+      Object.fromEntries(
+        categories.map((c) => [
+          c.key,
+          paginated.reduce((s, l) => s + (l.is_off_day ? 0 : getVal(l, c.key)), 0),
+        ]),
+      ) as Record<string, number>,
+    [paginated, categories],
+  );
+  const grandTotal = useMemo(() => Object.values(colTotals).reduce((a, b) => a + b, 0), [colTotals]);
+
   return (
     <div className="flex flex-col bg-card border border-border rounded-md overflow-hidden">
-      <div className="overflow-auto no-scrollbar">
-        <Table className="min-w-[600px] [&_th]:border-r [&_th]:border-border [&_th:last-child]:border-r-0 [&_td]:border-r [&_td]:border-border/40 [&_td:last-child]:border-r-0">
-          <TableHeader>
-            <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
-              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center py-3 font-heading">Date / Day</TableHead>
+      <div className="overflow-x-auto no-scrollbar">
+        <Table className="min-w-[600px] [&_tbody_tr]:border-0">
+          <TableHeader className="relative z-10">
+            <TableRow className="hover:bg-transparent bg-muted/40 relative z-10">
+              <TableHead className={thCls}>
+                <span className="block truncate">Date</span>
+                <Sep />
+                <BottomLine />
+              </TableHead>
               {categories.map((c) => (
-                <TableHead key={c.key} title={c.label} style={{ color: colorForKey(c.key) }} className="font-bold text-xs uppercase tracking-wider text-center font-heading">
-                  {c.short}
+                <TableHead key={c.key} title={c.label} className={thCls}>
+                  <span className="block truncate">{c.short}</span>
+                  <Sep />
+                  <BottomLine />
                 </TableHead>
               ))}
-              <TableHead className="font-bold text-xs uppercase tracking-wider text-center text-foreground font-heading">Total</TableHead>
-              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center font-heading w-32">Actions</TableHead>
+              <TableHead className={thCls}>
+                <span className="block truncate">Total</span>
+                <Sep />
+                <BottomLine />
+              </TableHead>
+              <TableHead className={`${thCls} w-32`}>
+                <span className="block truncate">Actions</span>
+                <BottomLine />
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -97,62 +116,66 @@ function DesktopTable({ paginated, categories, search, copiedId, colTotals, gran
               const weekend = isWeekend(l.log_date);
 
               return isOff ? (
-                <TableRow key={l.id} className="border-b border-border/40 last:border-0 bg-muted/20 hover:bg-muted/25 transition-colors animate-row-in" style={{ animationDelay: `${idx * 20}ms` }}>
-                  <TableCell className="text-xs font-medium py-3 text-muted-foreground/80 text-center">
-                    <DateDay iso={l.log_date} notes={l.notes} />
+                <TableRow key={l.id} className="border-0 bg-muted/20 hover:bg-muted/25 transition-colors animate-row-in" style={{ animationDelay: `${idx * 20}ms` }}>
+                  <TableCell className="text-xs font-normal py-2 sm:py-2.5 text-center">
+                    <DateDay iso={l.log_date} isOff />
                   </TableCell>
-                  <TableCell colSpan={categories.length + 1} className="py-3">
-                    <div className="flex items-center gap-1.5">
-                      <BedDouble className="size-3.5 text-muted-foreground/50" />
-                      <span className="text-xs font-medium text-muted-foreground/60 tracking-wide uppercase">
+                  <TableCell colSpan={categories.length + 1} className="py-2 sm:py-2.5">
+                    <div className="flex items-center gap-2">
+                      <BedDouble className="size-3.5 text-muted-foreground/50 shrink-0" />
+                      <span className="text-xs font-normal text-muted-foreground/60 tracking-wide uppercase shrink-0">
                         {weekend ? "Weekend" : "Off Day"}
                       </span>
+                      {l.notes && (
+                        <span className="text-xs text-muted-foreground/80 italic font-normal truncate max-w-md" title={l.notes}>
+                          &ldquo;{l.notes}&rdquo;
+                        </span>
+                      )}
                     </div>
                   </TableCell>
-                  <TableCell className="py-3">
+                  <TableCell className="py-2 sm:py-2.5">
                     <div className="flex gap-1 justify-center">
-                      <Button variant="ghost" size="icon" className="size-9 sm:size-7 text-muted-foreground hover:text-success hover:bg-success/10" onClick={() => onCopy(l)} title="Copy">
+                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-success hover:bg-success/10" onClick={() => onCopy(l)} title="Copy">
                         {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                       </Button>
-                      <Button variant="ghost" size="icon" className="size-9 sm:size-7 text-muted-foreground hover:text-foreground hover:bg-muted" onClick={() => onEdit(l)} title="Edit">
+                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-foreground hover:bg-muted" onClick={() => onEdit(l)} title="Edit">
                         <Pencil className="size-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="size-9 sm:size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(l)} title="Delete">
+                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(l)} title="Delete">
                         <Trash2 className="size-3.5" />
                       </Button>
                     </div>
                   </TableCell>
                 </TableRow>
               ) : (
-                <TableRow key={l.id} className="border-b border-border/40 last:border-0 bg-card hover:bg-muted/30 transition-colors animate-row-in" style={{ animationDelay: `${idx * 20}ms` }}>
-                  <TableCell className="text-xs font-medium py-3 text-foreground text-center">
-                    <DateDay iso={l.log_date} notes={l.notes} />
+                <TableRow key={l.id} title={l.notes ?? undefined} className="border-0 bg-card hover:bg-muted/30 transition-colors animate-row-in" style={{ animationDelay: `${idx * 20}ms` }}>
+                  <TableCell className="text-xs font-normal py-2 sm:py-2.5 text-center">
+                    <DateDay iso={l.log_date} />
                   </TableCell>
                   {categories.map((c) => {
                     const v = getVal(l, c.key);
-                    const clr = colorForKey(c.key);
                     return (
-                      <TableCell key={c.key} className="text-center tabular-nums text-xs py-3">
+                      <TableCell key={c.key} className="text-center tabular-nums text-xs py-2 sm:py-2.5">
                         {v > 0 ? (
-                          <span className="font-medium" style={{ color: clr }}>{v}</span>
+                          <span className="font-normal text-foreground">{v}</span>
                         ) : (
                           <span className="text-muted-foreground/40" aria-hidden="true">{"—"}</span>
                         )}
                       </TableCell>
                     );
                   })}
-                  <TableCell className="text-center tabular-nums py-3">
-                    <span className="font-bold text-xs text-foreground">{total}</span>
+                  <TableCell className="text-center tabular-nums py-2 sm:py-2.5">
+                    <span className="font-normal text-xs text-foreground">{total}</span>
                   </TableCell>
-                  <TableCell className="py-3">
+                  <TableCell className="py-2 sm:py-2.5">
                     <div className="flex gap-1 justify-center">
-                      <Button variant="ghost" size="icon" className="size-9 sm:size-7 text-muted-foreground hover:text-success hover:bg-success/10" onClick={() => onCopy(l)} title="Copy">
+                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-success hover:bg-success/10" onClick={() => onCopy(l)} title="Copy">
                         {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                       </Button>
-                      <Button variant="ghost" size="icon" className="size-9 sm:size-7 text-muted-foreground hover:text-foreground hover:bg-muted" onClick={() => onEdit(l)} title="Edit">
+                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-foreground hover:bg-muted" onClick={() => onEdit(l)} title="Edit">
                         <Pencil className="size-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="size-9 sm:size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(l)} title="Delete">
+                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(l)} title="Delete">
                         <Trash2 className="size-3.5" />
                       </Button>
                     </div>
@@ -162,7 +185,7 @@ function DesktopTable({ paginated, categories, search, copiedId, colTotals, gran
             })}
           </TableBody>
           {paginated.length > 0 && (
-            <TableFooter>
+            <TableFooter className="hidden [html[data-theme-variant=classic]_&]:table-footer-group">
               <TableRow className="bg-muted/40 hover:bg-transparent border-t border-border">
                 <TableHead className="font-mono text-2xs uppercase tracking-wider text-muted-foreground text-center py-2.5">Σ Page</TableHead>
                 {categories.map((c) => (
@@ -245,19 +268,6 @@ export function DaysTable({ logs, onEdit, actions }: Props) {
   const paginated = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
   const goTo = (p: number) => tDispatch({ type: "set_page", p: Math.max(1, Math.min(totalPages, p)) });
 
-  // ponytail: footer sums the visible page (what the user sees), not the whole filter
-  const colTotals = useMemo(
-    () =>
-      Object.fromEntries(
-        categories.map((c) => [
-          c.key,
-          paginated.reduce((s, l) => s + (l.is_off_day ? 0 : getVal(l, c.key)), 0),
-        ]),
-      ) as Record<string, number>,
-    [paginated, categories],
-  );
-  const grandTotal = useMemo(() => Object.values(colTotals).reduce((a, b) => a + b, 0), [colTotals]);
-
   const copyLog = (l: DailyLog) => {
     const rows = l.is_off_day
       ? [["Date", formatTableDate(l.log_date)], ["Status", isWeekend(l.log_date) ? "Weekend" : "Off Day"]]
@@ -292,11 +302,11 @@ export function DaysTable({ logs, onEdit, actions }: Props) {
 
   const pageNumbers = useMemo(() => sharedPageNumbers(totalPages, page), [totalPages, page]);
 
-  const sharedProps = { paginated, categories, search, copiedId, colTotals, grandTotal, onEdit, onDelete: (l: DailyLog) => tDispatch({ type: "set_delete", log: l }), onCopy: copyLog };
+  const sharedProps = { paginated, categories, search, copiedId, onEdit, onDelete: (l: DailyLog) => tDispatch({ type: "set_delete", log: l }), onCopy: copyLog };
 
   return (
     <>
-      <div className="flex flex-col h-full min-h-0 gap-4">
+      <div className="flex flex-col min-h-0 gap-3">
 
         {/* Search + summary + actions */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 shrink-0">

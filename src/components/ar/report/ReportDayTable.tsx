@@ -45,7 +45,7 @@ export function ReportDayTable({
         <h2 className="text-sm font-semibold font-heading">Day-by-Day Breakdown</h2>
       </div>
       <div className="overflow-x-auto no-scrollbar">
-        <Table className="[&_th]:border-r [&_th]:border-border [&_th:last-child]:border-r-0 [&_td]:border-r [&_td]:border-border/40 [&_td:last-child]:border-r-0 [&_td]:py-2.5 [&_th]:py-2">
+        <Table className="[&_td]:py-2.5 [&_th]:py-2">
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
               <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center font-heading">Date</TableHead>

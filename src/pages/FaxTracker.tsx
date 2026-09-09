@@ -417,7 +417,7 @@ const FaxTrackerPage = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-xs border-collapse table-fixed">
                 <thead>
-                  <tr className="bg-muted/50 text-xs uppercase tracking-wide text-foreground">
+                  <tr className="bg-muted/50 text-xs uppercase tracking-wide text-foreground border-b border-border">
                     <th className="px-3 py-2.5 text-left font-semibold w-[20%]">
                       <SortHeader label="Patient" sortKey="patient_name" sort={sort} onSort={toggleSort} align="left" />
                     </th>

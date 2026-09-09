@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { formatHeaderDate } from "@/types/log";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
@@ -24,8 +23,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Settings, Sun, Moon, LogOut, User } from "lucide-react";
+import { Settings, Sun, Moon, LogOut, User, Search, Palette } from "lucide-react";
 import { WhatsNewButton } from "@/components/ar/whats-new";
+import { formatHeaderDate } from "@/types/log";
 
 interface PageHeaderProps {
   subtitle?: React.ReactNode;
@@ -37,7 +37,7 @@ interface PageHeaderProps {
 export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
   const date = now ?? new Date();
   const navigate = useNavigate();
-  const { theme, toggle } = useTheme();
+  const { theme, toggle, variant, toggleVariant } = useTheme();
   const { user, signOut } = useAuth();
   const { data: profile } = useProfile();
   const [showSignOut, setShowSignOut] = useState(false);
@@ -47,85 +47,118 @@ export function PageHeader({ subtitle, title, actions, now }: PageHeaderProps) {
 
   return (
     <>
-    <header className="sticky top-0 z-10 border-b border-border/60 bg-sidebar backdrop-blur-xl shrink-0">
-      <div className="px-4 sm:px-6 py-2 flex items-center justify-between gap-2 min-h-11">
-        <div className="flex items-center gap-3 min-w-0 -ml-2">
-          <SidebarTrigger className="shrink-0 size-9 md:size-8 [&>svg]:h-[18px] [&>svg]:w-[18px]" />
-          <div className="min-w-0">
-            {title && (
-              <>
-                <h1 className="text-sm font-semibold text-foreground truncate leading-tight">{title}</h1>
-                {subtitle && (
-                  <p className="text-xs text-foreground/70 truncate leading-tight">{subtitle}</p>
-                )}
-              </>
-            )}
-            <p className="text-[10px] font-medium text-muted-foreground truncate leading-tight mt-px">
-              {formatHeaderDate(date)}
-            </p>
-            {!title && subtitle && (
-              <h1 className="text-sm font-semibold text-foreground truncate leading-tight">{subtitle}</h1>
-            )}
-          </div>
+    <header className="sticky top-0 z-10 h-14 border-b border-border bg-sidebar shrink-0">
+      <div className="h-full px-2 sm:px-4 flex items-center justify-between gap-2 sm:gap-4">
+        <div className="flex items-center gap-3 shrink-0 min-w-0">
+          <SidebarTrigger className="shrink-0 size-8 text-foreground hover:text-foreground/80 hover:bg-slate-100 dark:hover:bg-[#384152]/60 rounded-md [&_svg]:!size-5" />
+          {variant === "classic" ? (
+            <div className="min-w-0">
+              {title && (
+                <>
+                  <h1 className="text-sm font-semibold text-foreground truncate leading-tight">{title}</h1>
+                  {subtitle && (
+                    <p className="text-xs text-foreground/70 truncate leading-tight">{subtitle}</p>
+                  )}
+                </>
+              )}
+              <p className="text-[10px] font-medium text-muted-foreground truncate leading-tight mt-px">
+                {formatHeaderDate(date)}
+              </p>
+              {!title && subtitle && (
+                <h1 className="text-sm font-semibold text-foreground truncate leading-tight">{subtitle}</h1>
+              )}
+            </div>
+          ) : (
+            title && (
+              <div className="sm:hidden min-w-0">
+                <h1 className="text-sm font-semibold text-foreground truncate">{title}</h1>
+              </div>
+            )
+          )}
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        {/* Search bar for Modern theme */}
+        {variant === "modern" && (
+          <div className="flex-1 max-w-xl mx-2 sm:mx-6 relative hidden sm:block">
+            <input
+              type="text"
+              placeholder="Search..."
+              className="w-full bg-white hover:bg-slate-50/50 focus:bg-white dark:bg-[#384152]/70 dark:hover:bg-[#384152] dark:focus:bg-[#384152] text-sm text-foreground placeholder:text-muted-foreground rounded-lg pl-4 pr-10 py-1.5 border border-slate-200 dark:border-white/15 focus:border-blue-500/50 dark:focus:border-white/35 outline-none transition-colors"
+            />
+            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-500 dark:text-foreground pointer-events-none" />
+          </div>
+        )}
+
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           {actions}
-          <div className="hidden md:flex items-center gap-2 ml-2 pl-2 border-l border-border/40">
-            <span className="text-xs font-semibold tracking-wider text-foreground">Phoenix Heart</span>
-          </div>
-          <div className="flex items-center gap-1 ml-2 pl-2 border-l border-border/40">
-            <WhatsNewButton />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-9 md:size-8 text-foreground hover:text-foreground/80 rounded-md [&_svg]:!size-[18px] md:[&_svg]:!size-5"
-                  title={name}
-                  aria-label="Profile"
-                >
-                  <User />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-semibold text-foreground">{name}</span>
-                    <span className="text-xs text-muted-foreground">{email}</span>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                  onClick={() => setShowSignOut(true)}
-                >
-                  <LogOut className="size-4 mr-2" />
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-9 md:size-8 text-foreground hover:text-foreground/80 rounded-md [&_svg]:!size-[18px] md:[&_svg]:!size-5"
-              onClick={toggle}
-              title={theme === "dark" ? "Light mode" : "Dark mode"}
-              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              {theme === "dark" ? <Sun /> : <Moon />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-9 md:size-8 text-foreground hover:text-foreground/80 rounded-md [&_svg]:!size-[18px] md:[&_svg]:!size-5"
-              onClick={() => navigate("/settings")}
-              title="Settings"
-              aria-label="Settings"
-            >
-              <Settings />
-            </Button>
-          </div>
+          <span className="hidden md:inline-block text-sm font-bold text-foreground mr-2 select-none tracking-tight">
+            Phoenix Heart
+          </span>
+          <WhatsNewButton />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8 text-foreground hover:text-foreground/80 hover:bg-slate-100 dark:hover:bg-[#384152]/60 rounded-md [&_svg]:!size-5"
+                title={name}
+                aria-label="Profile"
+              >
+                <User />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-semibold text-foreground">{name}</span>
+                  <span className="text-xs text-muted-foreground">{email}</span>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                onClick={() => setShowSignOut(true)}
+              >
+                <LogOut className="size-4 mr-2" />
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Theme Variant Switcher Button (Modern vs Legacy) */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 text-foreground hover:text-foreground/80 hover:bg-slate-100 dark:hover:bg-[#384152]/60 rounded-md [&_svg]:!size-5"
+            onClick={toggleVariant}
+            title={variant === "classic" ? "Switch to Legacy Theme" : "Switch to Modern Theme"}
+            aria-label="Switch between Modern and Legacy themes"
+          >
+            <Palette className="size-4" />
+          </Button>
+
+          {/* Dark / Light Toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 text-foreground hover:text-foreground/80 hover:bg-slate-100 dark:hover:bg-[#384152]/60 rounded-md [&_svg]:!size-5"
+            onClick={toggle}
+            title={theme === "dark" ? "Light mode" : "Dark mode"}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? <Sun /> : <Moon />}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 text-foreground hover:text-foreground/80 hover:bg-slate-100 dark:hover:bg-[#384152]/60 rounded-md [&_svg]:!size-5"
+            onClick={() => navigate("/settings")}
+            title="Settings"
+            aria-label="Settings"
+          >
+            <Settings />
+          </Button>
         </div>
       </div>
     </header>
