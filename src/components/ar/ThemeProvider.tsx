@@ -17,12 +17,11 @@ function getInitialTheme(): Theme {
 
 function getInitialVariant(): ThemeVariant {
   try {
-    const stored = localStorage.getItem(VARIANT_STORAGE_KEY);
-    if (stored === "classic" || stored === "modern") return stored;
+    localStorage.removeItem(VARIANT_STORAGE_KEY);
   } catch {
     // Ignore localStorage access failures
   }
-  return "modern";
+  return "classic";
 }
 
 function applyTheme(theme: Theme) {

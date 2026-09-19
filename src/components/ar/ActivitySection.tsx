@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { FileText, CalendarCheck, ChevronRight, TrendingUp } from "lucide-react";
+import { FileText, CalendarCheck, ChevronRight, TrendingUp } from "@/components/ui/icons";
 import { isoDate, totalForLog, type DailyLog } from "@/types/log";
 import { FigHeader } from "@/components/ar/industrial";
 

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, type Easing, useReducedMotion } from "motion/react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { motion, type Easing, useReducedMotion } from "motion/react";
 import { useLocation } from "react-router-dom";
 import { AppSidebar } from "@/components/ar/AppSidebar";
 import { MobileTabBar } from "@/components/ar/MobileTabBar";
@@ -8,7 +8,7 @@ import { HrmsReminder } from "@/components/ar/HrmsReminder";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 
-const pageEase: Easing = [0.23, 1, 0.32, 1];
+const pageEase: Easing = [0.16, 1, 0.3, 1];
 
 const pageTitles: Record<string, string> = {
   "/log": "Daily Log",
@@ -20,8 +20,8 @@ const pageTitles: Record<string, string> = {
   "/settings": "Settings",
   "/team": "Team",
   "/facilities": "Facilities",
-  "/resources/cheat-sheet": "Resources",
-  "/resources/test-patients": "Resources",
+  "/resources/cheat-sheet": "Cheat Sheet",
+  "/resources/test-patients": "Labeling Guide",
 };
 
 const INACTIVITY_WARNING_MS = 22 * 60 * 1000;
@@ -31,11 +31,10 @@ export function AnimatedPage({ children }: { children: React.ReactNode }) {
   const reduce = useReducedMotion();
   return (
     <motion.div
-      initial={reduce ? { opacity: 0 } : { opacity: 0, y: 8 }}
+      initial={reduce ? { opacity: 1 } : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
-      transition={reduce ? { duration: 0 } : { duration: 0.25, ease: pageEase }}
-      className="flex-1 flex flex-col min-w-0 overflow-hidden"
+      transition={reduce ? { duration: 0 } : { duration: 0.22, ease: pageEase }}
+      className="flex-1 flex flex-col min-w-0 overflow-hidden will-change-transform"
     >
       {children}
     </motion.div>
@@ -94,11 +93,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <AppSidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <PageHeader now={now} title={title} />
-        <AnimatePresence mode="wait">
+        <Suspense
+          fallback={
+            <div className="flex-1 flex items-center justify-center text-xs font-mono uppercase tracking-widest text-muted-foreground">
+              <div className="size-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin mr-2.5" />
+              <span>Loading...</span>
+            </div>
+          }
+        >
           <AnimatedPage key={location.pathname}>
             {children}
           </AnimatedPage>
-        </AnimatePresence>
+        </Suspense>
         <MobileTabBar />
       </div>
       <HrmsReminder />

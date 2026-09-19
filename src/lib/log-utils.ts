@@ -152,7 +152,8 @@ export async function downloadPDF(
   const orientation = activeCategories.length > 6 ? "landscape" : "portrait";
   const doc = new JsPDF({ orientation, unit: "pt", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 40;
+  const margin = 36;
+  const usableWidth = pageWidth - margin * 2;
 
   const totalDocs = working.reduce((s, l) => s + totalForLog(l), 0);
   const avg = working.length ? Math.round(totalDocs / working.length) : 0;
@@ -161,9 +162,7 @@ export async function downloadPDF(
     ? `${formatUSDate(sorted[0].log_date)} to ${formatUSDate(sorted[sorted.length - 1].log_date)}`
     : "No data";
 
-  // ── Header ──
-  // App logo, top-right (the light-theme logo — PDF pages are white).
-  // Non-fatal if it can't be loaded; the export still completes.
+  // ── Header Logo ──
   try {
     const img = new Image();
     img.src = "/lightlogo.png";
@@ -172,48 +171,83 @@ export async function downloadPDF(
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
     canvas.getContext("2d")!.drawImage(img, 0, 0);
-    const logoH = 28;
+    const logoH = 26;
     const logoW = (img.naturalWidth / img.naturalHeight) * logoH;
-    doc.addImage(canvas.toDataURL("image/png"), "PNG", pageWidth - margin - logoW, 24, logoW, logoH);
+    doc.addImage(canvas.toDataURL("image/png"), "PNG", pageWidth - margin - logoW, 30, logoW, logoH);
   } catch {
     // logo unavailable — skip it
   }
 
+  // ── Header Titles ──
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.setTextColor(30);
-  doc.text(opts.title ?? "Basata Tracker Daily Log", margin, 44);
+  doc.setFontSize(18);
+  doc.setTextColor(17, 24, 39); // gray-900
+  doc.text(opts.title ?? "Basata Tracker Report", margin, 46);
 
-  let y = 60;
+  let metaY = 62;
   if (opts.userName) {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
-    doc.setTextColor(60);
-    doc.text(opts.userName, margin, y);
-    y += 14;
+    doc.setTextColor(55, 65, 81); // gray-700
+    doc.text(opts.userName, margin, metaY);
+    metaY += 13;
   }
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(110);
-  doc.text(opts.subtitle ?? rangeLabel, margin, y);
+  doc.setFontSize(8.5);
+  doc.setTextColor(107, 114, 128); // gray-500
+  doc.text(`Date Range: ${opts.subtitle ?? rangeLabel}`, margin, metaY);
   doc.text(
-    `Exported ${new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}`,
+    `Generated: ${new Date().toLocaleString("en-US", { timeZone: APP_TZ, dateStyle: "medium", timeStyle: "short" })}`,
     pageWidth - margin,
-    y,
+    metaY,
     { align: "right" },
   );
-  y += 20;
 
-  // ── Summary line ──
-  doc.setFontSize(10);
-  doc.setTextColor(60);
-  doc.text(
-    `${totalDocs} documents  ·  ${working.length} working days  ·  ${logs.length - working.length} weekend/off days  ·  avg ${avg} docs/day`,
-    margin,
-    y,
-  );
-  y += 16;
+  let y = metaY + 16;
+
+  // ── Summary Bar ──
+  const offCount = logs.length - working.length;
+  const metrics = [
+    { label: "TOTAL DOCUMENTS", value: totalDocs.toLocaleString() },
+    { label: "DAYS WORKED", value: `${working.length} ${working.length === 1 ? "day" : "days"}` },
+    { label: "DAILY AVERAGE", value: `${avg} docs / day` },
+    { label: "DAYS OFF", value: `${offCount} ${offCount === 1 ? "day" : "days"}` },
+  ];
+
+  const barH = 38;
+  const colW = usableWidth / metrics.length;
+
+  // Single unified neutral container
+  doc.setFillColor(249, 250, 251); // gray-50
+  doc.setDrawColor(229, 231, 235); // gray-200
+  doc.setLineWidth(0.75);
+  doc.roundedRect(margin, y, usableWidth, barH, 4, 4, "FD");
+
+  metrics.forEach((m, idx) => {
+    const colX = margin + idx * colW;
+
+    // Subtle divider between metric columns
+    if (idx > 0) {
+      doc.setDrawColor(229, 231, 235);
+      doc.setLineWidth(0.5);
+      doc.line(colX, y + 6, colX, y + barH - 6);
+    }
+
+    // Micro Label
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(107, 114, 128); // gray-500
+    doc.text(m.label, colX + 12, y + 13);
+
+    // Metric Value
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(17, 24, 39); // gray-900
+    doc.text(m.value, colX + 12, y + 28);
+  });
+
+  y += barH + 16;
 
   // ── Table ──
   const dayName = (iso: string) => weekday(iso);
@@ -224,14 +258,17 @@ export async function downloadPDF(
         formatUSDate(l.log_date),
         dayName(l.log_date),
         ...activeCategories.map(() => "—"),
-        isWeekend(l.log_date) ? "Weekend" : "Off day",
+        isWeekend(l.log_date) ? "Weekend" : "Off Day",
       ];
     }
     return [
       formatUSDate(l.log_date),
       dayName(l.log_date),
-      ...activeCategories.map((c) => String((l.counts ?? {})[c.key] ?? 0)),
-      String(totalForLog(l)),
+      ...activeCategories.map((c) => {
+        const val = (l.counts ?? {})[c.key] ?? 0;
+        return val ? val.toLocaleString() : "0";
+      }),
+      totalForLog(l).toLocaleString(),
     ];
   });
 
@@ -244,36 +281,81 @@ export async function downloadPDF(
     margin: { left: margin, right: margin },
     head: [["Date", "Day", ...activeCategories.map((c) => c.short), "Total"]],
     body,
-    foot: [["Total", "", ...catTotals.map(String), String(totalDocs)]],
-    theme: "grid",
-    styles: { font: "helvetica", fontSize: 8, cellPadding: 4, textColor: 40, lineColor: [220, 220, 225], lineWidth: 0.5 },
-    headStyles: { fillColor: [37, 42, 60], textColor: 255, fontStyle: "bold", halign: "center" },
-    footStyles: { fillColor: [240, 241, 245], textColor: 30, fontStyle: "bold" },
+    foot: [["Total", "", ...catTotals.map((n) => n.toLocaleString()), totalDocs.toLocaleString()]],
+    theme: "plain",
+    styles: {
+      font: "helvetica",
+      fontSize: 8.5,
+      cellPadding: { top: 5.5, bottom: 5.5, left: 8, right: 8 },
+      textColor: [31, 41, 55], // gray-800
+      lineColor: [229, 231, 235], // gray-200
+      lineWidth: { bottom: 0.5 },
+    },
+    headStyles: {
+      fillColor: [243, 244, 246], // gray-100
+      textColor: [17, 24, 39], // gray-900
+      fontStyle: "bold",
+      fontSize: 8.5,
+      cellPadding: { top: 6.5, bottom: 6.5, left: 8, right: 8 },
+      lineColor: [209, 213, 219], // gray-300
+      lineWidth: { top: 1, bottom: 1.5 },
+    },
+    alternateRowStyles: {
+      fillColor: [250, 250, 250], // subtle gray-50
+    },
+    bodyStyles: {
+      fillColor: [255, 255, 255],
+    },
+    footStyles: {
+      fillColor: [243, 244, 246], // gray-100
+      textColor: [17, 24, 39],
+      fontStyle: "bold",
+      fontSize: 9,
+      lineColor: [156, 163, 175], // gray-400
+      lineWidth: { top: 1.5, bottom: 1 },
+      cellPadding: { top: 6.5, bottom: 6.5, left: 8, right: 8 },
+    },
     columnStyles: {
-      0: { cellWidth: 64 },
-      1: { cellWidth: 64 },
-      ...Object.fromEntries(activeCategories.map((_, i) => [i + 2, { halign: "center" as const }])),
-      [activeCategories.length + 2]: { halign: "center" as const, fontStyle: "bold" as const },
+      0: { cellWidth: 70, halign: "left" },
+      1: { cellWidth: 70, halign: "left" },
+      ...Object.fromEntries(activeCategories.map((_, i) => [i + 2, { halign: "right" as const }])),
+      [activeCategories.length + 2]: { halign: "right" as const, fontStyle: "bold" as const },
     },
     didParseCell: (data) => {
-      // Mute weekend/off-day rows so working days stand out
-      if (data.section === "body" && sorted[data.row.index]?.is_off_day) {
-        data.cell.styles.textColor = 150;
-        data.cell.styles.fillColor = [248, 248, 250];
+      // Right align numeric headers
+      if (data.section === "head" && data.column.index >= 2) {
+        data.cell.styles.halign = "right";
       }
-      // columnStyles only apply to the body, so center the foot totals here
+      // Style weekend/off-day rows
+      if (data.section === "body" && sorted[data.row.index]?.is_off_day) {
+        data.cell.styles.textColor = [156, 163, 175];
+        data.cell.styles.fillColor = [248, 249, 250];
+        data.cell.styles.fontStyle = "italic";
+        if (data.column.index >= 2 && data.column.index < activeCategories.length + 2) {
+          data.cell.styles.halign = "center";
+        }
+      }
+      // Right align foot totals
       if (data.section === "foot" && data.column.index >= 2) {
-        data.cell.styles.halign = "center";
+        data.cell.styles.halign = "right";
       }
     },
     didDrawPage: () => {
       const pageHeight = doc.internal.pageSize.getHeight();
+      // Clean footer divider line
+      doc.setDrawColor(229, 231, 235);
+      doc.setLineWidth(0.5);
+      doc.line(margin, pageHeight - 26, pageWidth - margin, pageHeight - 26);
+
+      // Running footer text
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
-      doc.setTextColor(150);
+      doc.setTextColor(156, 163, 175);
+      doc.text("Basata Tracker · Activity Report", margin, pageHeight - 14);
       doc.text(
         `Page ${doc.getCurrentPageInfo().pageNumber}`,
         pageWidth - margin,
-        pageHeight - 20,
+        pageHeight - 14,
         { align: "right" },
       );
     },

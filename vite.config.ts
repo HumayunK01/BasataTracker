@@ -13,6 +13,9 @@ export default defineConfig(() => ({
     hmr: {
       overlay: false,
     },
+    watch: {
+      ignored: ["**/*.mp4", "**/*.mov"],
+    },
     headers: {
       "X-Content-Type-Options": "nosniff",
       "X-Frame-Options": "DENY",

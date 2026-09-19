@@ -1,9 +1,18 @@
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import Skeleton from "react-loading-skeleton";
 import LoginPage from "@/pages/Login";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!user && !loading) {
+      queryClient.clear();
+    }
+  }, [user, loading, queryClient]);
 
   if (loading) {
     return (

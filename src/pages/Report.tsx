@@ -1,11 +1,10 @@
-import { useLayoutEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useMemo, useReducer } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -17,11 +16,13 @@ import { useProfile } from "@/hooks/useProfile";
 import { isoDate, formatTableDate, isWeekend, totalForLog } from "@/types/log";
 import { FigHeader, EmptyState } from "@/components/ar/industrial";
 import { downloadCSV, downloadJSON, downloadPDF, formatUSDate } from "@/lib/log-utils";
-import { Download, FileJson, FileText, FileType, ChevronDown, CalendarRange } from "lucide-react";
+import { Download, FileJson, FileText, FileType, ChevronDown, CalendarRange, CalendarDays } from "@/components/ui/icons";
 import Skeleton from "react-loading-skeleton";
 import { colorForKey } from "@/lib/cat-colors";
+import { cn } from "@/lib/utils";
 
 // Import modular components
+import { ProgressMetricCard } from "@/components/ui/progress-metric-card";
 import { ReportStatsGrid } from "@/components/ar/report/ReportStatsGrid";
 import { CategoryBreakdown } from "@/components/ar/report/CategoryBreakdown";
 import { ReportDayTable } from "@/components/ar/report/ReportDayTable";
@@ -123,7 +124,6 @@ const ReportPage = () => {
   const applyPreset = (id: string) => {
     const range = id === "all_time"
       ? {
-          // Span from the earliest log to today
           start: logs.length
             ? logs.reduce((min, l) => (l.log_date < min ? l.log_date : min), logs[0].log_date)
             : isoDate(),
@@ -133,26 +133,7 @@ const ReportPage = () => {
     filterDispatch({ type: "preset", id, start: range.start, end: range.end });
   };
 
-  // Sliding indicator for the preset segmented control
-  const presetRefs = useRef(new Map<string, HTMLElement>());
-  const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
-  const activeSegment = activePreset || "custom";
-
-  useLayoutEffect(() => {
-    const measure = () => {
-      const el = presetRefs.current.get(activeSegment);
-      if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
-    };
-    measure();
-    // Re-measure when the responsive root font-size changes segment widths
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, [activeSegment]);
-
-  const registerSegment = (id: string) => (el: HTMLElement | null) => {
-    if (el) presetRefs.current.set(id, el);
-    else presetRefs.current.delete(id);
-  };
+  const reduce = useReducedMotion();
 
   const filtered = useMemo(() => {
     if (!startDate || !endDate) return [];
@@ -162,6 +143,10 @@ const ReportPage = () => {
   }, [logs, startDate, endDate]);
 
   const workingLogs = useMemo(() => filtered.filter((l) => !l.is_off_day), [filtered]);
+  const sortedWorkingAsc = useMemo(
+    () => [...workingLogs].sort((a, b) => a.log_date.localeCompare(b.log_date)),
+    [workingLogs]
+  );
   const weekendDays = useMemo(() => filtered.filter((l) => l.is_off_day && isWeekend(l.log_date)).length, [filtered]);
   const offDays = filtered.filter((l) => l.is_off_day && !isWeekend(l.log_date)).length;
   const totalDocs = useMemo(() => workingLogs.reduce((s, l) => s + totalForLog(l), 0), [workingLogs]);
@@ -172,23 +157,29 @@ const ReportPage = () => {
   }, [workingLogs]);
 
   const categoryBreakdown = useMemo(() => {
-    const breakdown = categories.reduce<{ key: string; label: string; short: string; value: number; color: string }[]>(
-      (acc, c) => {
-        const value = workingLogs.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0);
-        if (value > 0) {
-          acc.push({
-            key: c.key,
-            label: c.label,
-            short: c.short,
-            value,
-            color: c.key.startsWith("#") ? c.key : colorForKey(c.key),
-          });
-        }
-        return acc;
-      },
-      []
-    );
-    // Derived "Fax Resolved" — resolved patients whose day falls in the range.
+    const recent14 = sortedWorkingAsc.slice(-14);
+    const breakdown = categories.reduce<{
+      key: string;
+      label: string;
+      short: string;
+      value: number;
+      color: string;
+      sparkline: number[];
+    }[]>((acc, c) => {
+      const value = workingLogs.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0);
+      if (value > 0) {
+        acc.push({
+          key: c.key,
+          label: c.label,
+          short: c.short,
+          value,
+          color: c.key.startsWith("#") ? c.key : colorForKey(c.key),
+          sparkline: recent14.map((l) => (l.counts ?? {})[c.key] ?? 0),
+        });
+      }
+      return acc;
+    }, []);
+
     const faxValue = Object.entries(faxByDay).reduce(
       (s, [day, n]) => (day >= startDate && day <= endDate ? s + n : s),
       0,
@@ -200,9 +191,10 @@ const ReportPage = () => {
         short: FAX_CATEGORY_SHORT,
         value: faxValue,
         color: colorForKey(FAX_CATEGORY_KEY),
+        sparkline: recent14.map((l) => faxByDay[l.log_date] ?? 0),
       });
     }
-    // Derived "Indexable Resolved" — resolved patients whose day falls in the range.
+
     const indexableValue = Object.entries(indexableByDay).reduce(
       (s, [day, n]) => (day >= startDate && day <= endDate ? s + n : s),
       0,
@@ -214,16 +206,34 @@ const ReportPage = () => {
         short: INDEXABLE_CATEGORY_SHORT,
         value: indexableValue,
         color: colorForKey(INDEXABLE_CATEGORY_KEY),
+        sparkline: recent14.map((l) => indexableByDay[l.log_date] ?? 0),
       });
     }
     return breakdown;
-  }, [categories, workingLogs, faxByDay, indexableByDay, startDate, endDate]);
+  }, [categories, workingLogs, sortedWorkingAsc, faxByDay, indexableByDay, startDate, endDate]);
 
-  const chartData = useMemo(() =>
-    [...workingLogs]
-      .sort((a, b) => a.log_date.localeCompare(b.log_date))
-      .map((l) => ({ date: formatTableDate(l.log_date), docs: totalForLog(l) })),
-    [workingLogs]
+  const dailySeries = useMemo(() =>
+    sortedWorkingAsc.map((l) => ({
+      date: formatTableDate(l.log_date),
+      value: totalForLog(l),
+    })),
+    [sortedWorkingAsc]
+  );
+
+  const categorySeries = useMemo(() =>
+    categoryBreakdown.slice(0, 6).map((c) => ({
+      name: c.short,
+      color: c.color,
+      data: sortedWorkingAsc.map((l) => ({
+        date: formatTableDate(l.log_date),
+        value: c.key === FAX_CATEGORY_KEY
+          ? (faxByDay[l.log_date] ?? 0)
+          : c.key === INDEXABLE_CATEGORY_KEY
+          ? (indexableByDay[l.log_date] ?? 0)
+          : ((l.counts ?? {})[c.key] ?? 0),
+      })),
+    })),
+    [categoryBreakdown, sortedWorkingAsc, faxByDay, indexableByDay]
   );
 
   const totalTablePages = Math.ceil(filtered.length / TABLE_PAGE_SIZE);
@@ -252,201 +262,273 @@ const ReportPage = () => {
       userName,
     });
 
-  const rangeDays = useMemo(() => {
-    if (!startDate || !endDate) return 0;
-    const ms = new Date(`${endDate}T12:00:00`).getTime() - new Date(`${startDate}T12:00:00`).getTime();
-    return ms >= 0 ? Math.round(ms / 86_400_000) + 1 : 0;
-  }, [startDate, endDate]);
-
   return (
-    <>
-      <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 sm:py-6 animate-fade-in">
-        <div className="w-full space-y-4">
-        {/* Date range controls */}
-        <div className="-mx-4 sm:-mx-6 bg-muted/10 px-4 sm:px-6 py-4 sm:py-5 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
-          <div className="overflow-x-auto no-scrollbar -mx-1 px-1 max-w-full">
-            <div className="relative inline-flex items-center gap-1 rounded-lg border border-border/60 bg-muted/20 p-1 snap-x snap-mandatory">
-              {/* Sliding active-segment highlight */}
-              {indicator && (
-                <span
-                  aria-hidden
-                  className="absolute left-0 top-1 bottom-1 rounded-md bg-primary shadow-sm transition-transform duration-300 ease-out motion-reduce:transition-none"
-                  style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }}
-                />
-              )}
-              {PRESETS.map((p) => {
-                const active = activePreset === p.id;
-                return (
-                  <button
-                    key={p.id}
-                    ref={registerSegment(p.id)}
-                    onClick={() => applyPreset(p.id)}
-                    aria-pressed={active}
-                    className={[
-                      "relative z-10 snap-start shrink-0 rounded-md px-3 py-2.5 sm:py-1.5 text-xs font-medium whitespace-nowrap",
-                      "transition-[color,background-color,opacity] duration-300 active:opacity-70",
-                      active
-                        ? "text-primary-foreground"
-                        : "text-foreground hover:bg-muted/70 hover:text-foreground",
-                    ].join(" ")}
-                  >
-                    {p.label}
-                  </button>
-                );
-              })}
-              {activePreset === "" && (
-                <span
-                  ref={registerSegment("custom")}
-                  className="relative z-10 snap-start shrink-0 rounded-md px-3 py-2.5 sm:py-1.5 text-xs font-medium whitespace-nowrap text-primary-foreground select-none animate-fade-in"
-                >
-                  Custom
-                </span>
-              )}
+    <div className="flex flex-col min-h-full">
+      <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 sm:py-6 relative z-[1]">
+        <div className="w-full space-y-6 sm:space-y-8">
+          {/* ── Elevated Date Range & Filter Toolbar ── */}
+          <div className="rounded-2xl border border-border bg-card/70 backdrop-blur-sm p-3.5 sm:p-4 shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3.5">
+            {/* Presets Segmented Capsule */}
+            <div className="overflow-x-auto no-scrollbar -mx-1 px-1">
+              <div className="relative inline-flex items-center gap-1 rounded-xl border border-border/70 bg-muted/30 p-1">
+                {PRESETS.map((p) => {
+                  const active = activePreset === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => applyPreset(p.id)}
+                      aria-pressed={active}
+                      className={cn(
+                        "relative z-10 shrink-0 rounded-lg px-3 py-1.5 text-xs font-mono font-medium transition-colors duration-150 select-none",
+                        active
+                          ? "text-foreground font-semibold"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
+                      )}
+                    >
+                      {active && (
+                        <motion.div
+                          layoutId="report-preset-active-pill"
+                          className="absolute inset-0 rounded-lg bg-background dark:bg-white/[0.12] border border-border/80 dark:border-white/15 shadow-xs -z-10"
+                          transition={
+                            reduce
+                              ? { duration: 0 }
+                              : { type: "spring", stiffness: 420, damping: 32 }
+                          }
+                        />
+                      )}
+                      <span>{p.label}</span>
+                    </button>
+                  );
+                })}
+                {activePreset === "" && (
+                  <span className="relative z-10 shrink-0 rounded-lg px-3 py-1.5 text-xs font-mono font-semibold text-foreground select-none">
+                    <motion.div
+                      layoutId="report-preset-active-pill"
+                      className="absolute inset-0 rounded-lg bg-background dark:bg-white/[0.12] border border-border/80 dark:border-white/15 shadow-xs -z-10"
+                      transition={
+                        reduce
+                          ? { duration: 0 }
+                          : { type: "spring", stiffness: 420, damping: 32 }
+                      }
+                    />
+                    Custom
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-          <div className="grid grid-cols-1 xs:grid-cols-2 lg:flex gap-2 sm:gap-3 max-w-full grow lg:grow-0">
-              <div
-                className={[
-                  "flex items-center h-10 rounded-lg border bg-background/50 overflow-hidden cursor-pointer transition-colors",
-                  rangeDays === 0
-                    ? "border-destructive/70 focus-within:border-destructive"
-                    : "border-input hover:border-primary/40 focus-within:border-primary",
-                ].join(" ")}
-                title={rangeDays === 0 ? "Invalid range: end date is before start date" : undefined}
-                onClick={(e) => {
-                  const input = e.currentTarget.querySelector("input");
-                  try { input?.showPicker(); } catch { input?.focus(); }
-                }}
-              >
-                <span className="h-full flex items-center px-3 text-xs font-medium text-foreground bg-muted/30 border-r border-input select-none shrink-0">
-                  From
-                </span>
-                <Input
-                  type="date"
-                  aria-label="Start date"
-                  value={startDate}
-                  onChange={(e) => filterDispatch({ type: "set_start", v: e.target.value })}
-                  className="h-full w-full lg:w-40 tabular-nums border-0 bg-transparent shadow-none cursor-pointer focus-visible:ring-0 focus-visible:ring-offset-0"
-                />
-              </div>
-              <div
-                className={[
-                  "flex items-center h-10 rounded-lg border bg-background/50 overflow-hidden cursor-pointer transition-colors",
-                  rangeDays === 0
-                    ? "border-destructive/70 focus-within:border-destructive"
-                    : "border-input hover:border-primary/40 focus-within:border-primary",
-                ].join(" ")}
-                title={rangeDays === 0 ? "Invalid range: end date is before start date" : undefined}
-                onClick={(e) => {
-                  const input = e.currentTarget.querySelector("input");
-                  try { input?.showPicker(); } catch { input?.focus(); }
-                }}
-              >
-                <span className="h-full flex items-center px-3 text-xs font-medium text-foreground bg-muted/30 border-r border-input select-none shrink-0">
-                  To
-                </span>
-                <Input
-                  type="date"
-                  aria-label="End date"
-                  value={endDate}
-                  onChange={(e) => filterDispatch({ type: "set_end", v: e.target.value })}
-                  className="h-full w-full lg:w-40 tabular-nums border-0 bg-transparent shadow-none cursor-pointer focus-visible:ring-0 focus-visible:ring-offset-0"
-                />
-              </div>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-10 shrink-0" disabled={filtered.length === 0}>
-                <Download className="size-4 mr-1" /> Export <ChevronDown className="size-3 ml-1 opacity-60" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 font-sans">
-              <DropdownMenuLabel className="text-xs text-foreground font-normal">Export filtered range</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleExportCSV}>
-                <FileText className="size-4 mr-2" /> CSV (.csv)
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleExportJSON}>
-                <FileJson className="size-4 mr-2" /> JSON (.json)
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleExportPDF}>
-                <FileType className="size-4 mr-2" /> PDF (.pdf)
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
 
-        {isLoading ? (
-          <>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-card border border-border rounded-md p-4 space-y-2">
-                  <Skeleton width={80} height={12} />
-                  <div className="flex items-end justify-between">
-                    <Skeleton width={i === 0 ? 72 : 48} height={32} />
-                    <Skeleton width={36} height={36} borderRadius={999} />
-                  </div>
-                  <Skeleton width={i === 0 ? 120 : 88} height={12} />
+            {/* Date Range Inputs & Export Dropdown */}
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+              <div className="flex items-center gap-2 bg-muted/20 border border-border/60 rounded-xl px-3 py-1.5 focus-within:border-primary transition-colors">
+                <CalendarDays className="size-4 text-muted-foreground shrink-0" />
+                <div className="flex items-center gap-1.5 text-xs font-mono">
+                  <span className="text-muted-foreground/70">From</span>
+                  <input
+                    type="date"
+                    aria-label="Start date"
+                    value={startDate}
+                    onChange={(e) => filterDispatch({ type: "set_start", v: e.target.value })}
+                    className="bg-transparent border-0 text-foreground text-xs font-mono tabular-nums focus:outline-none cursor-pointer w-[125px]"
+                  />
+                  <span className="text-muted-foreground/50">—</span>
+                  <span className="text-muted-foreground/70">To</span>
+                  <input
+                    type="date"
+                    aria-label="End date"
+                    value={endDate}
+                    onChange={(e) => filterDispatch({ type: "set_end", v: e.target.value })}
+                    className="bg-transparent border-0 text-foreground text-xs font-mono tabular-nums focus:outline-none cursor-pointer w-[125px]"
+                  />
                 </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-card border border-border rounded-md p-5 space-y-4">
-                <Skeleton width={144} height={16} />
-                {Array.from({ length: 3 }).map((_, j) => (
-                  <div key={j} className="space-y-1.5">
-                    <div className="flex justify-between">
-                      <Skeleton width={100} height={12} />
-                      <Skeleton width={48} height={12} />
+              </div>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="group h-9 px-3.5 rounded-xl font-medium border-border/80 bg-card/60 hover:bg-muted/80 data-[state=open]:bg-muted data-[state=open]:border-primary/40 shrink-0 text-xs flex items-center gap-1.5 transition-all shadow-sm"
+                    disabled={filtered.length === 0}
+                  >
+                    <Download className="size-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    <span>Export</span>
+                    <ChevronDown className="size-3.5 opacity-70 ml-0.5 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-72 p-1.5 rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-xl shadow-2xl shadow-black/40 font-sans select-none space-y-1"
+                >
+                  <div className="px-2.5 py-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-semibold tracking-wider text-muted-foreground/80 uppercase">
+                        Download Report
+                      </span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 font-medium">
+                        {exportedLogs.length} {exportedLogs.length === 1 ? "day" : "days"}
+                      </span>
                     </div>
-                    <Skeleton height={8} />
+                    <p className="text-[11px] text-muted-foreground/70 mt-1 truncate">
+                      {formatUSDate(startDate)} — {formatUSDate(endDate)} · {totalDocs.toLocaleString()} documents
+                    </p>
                   </div>
-                ))}
-              </div>
-              <div className="bg-card border border-border rounded-md p-5 space-y-3">
-                <Skeleton width={144} height={16} />
-                <Skeleton height={200} />
-              </div>
+                  <DropdownMenuSeparator className="bg-border/60 -mx-1" />
+                  <DropdownMenuItem
+                    onClick={handleExportCSV}
+                    className="group flex items-center justify-between gap-3 p-2 rounded-xl cursor-pointer hover:bg-muted/80 focus:bg-muted/80 transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="size-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                        <FileText className="size-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-semibold text-foreground tracking-tight">CSV Spreadsheet</div>
+                        <div className="text-[10px] text-muted-foreground truncate">Open in Excel or Google Sheets</div>
+                      </div>
+                    </div>
+                    <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground/90 border border-border/50 shrink-0">
+                      .csv
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleExportJSON}
+                    className="group flex items-center justify-between gap-3 p-2 rounded-xl cursor-pointer hover:bg-muted/80 focus:bg-muted/80 transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="size-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                        <FileJson className="size-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-semibold text-foreground tracking-tight">JSON File</div>
+                        <div className="text-[10px] text-muted-foreground truncate">Full backup with all details</div>
+                      </div>
+                    </div>
+                    <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground/90 border border-border/50 shrink-0">
+                      .json
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleExportPDF}
+                    className="group flex items-center justify-between gap-3 p-2 rounded-xl cursor-pointer hover:bg-muted/80 focus:bg-muted/80 transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="size-8 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                        <FileType className="size-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-semibold text-foreground tracking-tight">PDF Document</div>
+                        <div className="text-[10px] text-muted-foreground truncate">Easy to print or share</div>
+                      </div>
+                    </div>
+                    <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground/90 border border-border/50 shrink-0">
+                      .pdf
+                    </span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          </>
+          </div>
+
+          {/* ── Content Sections ── */}
+          {isLoading ? (
+            <div className="space-y-6 sm:space-y-8">
+              <section>
+                <FigHeader title="Overview Summary" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="rounded-2xl border border-border bg-card p-4 sm:p-4.5 space-y-3">
+                      <Skeleton width={80} height={12} />
+                      <Skeleton width={60} height={28} />
+                      <Skeleton width={110} height={12} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+              <section>
+                <FigHeader title="Category Breakdown" />
+                <div className="grid gap-3.5 [grid-template-columns:repeat(auto-fill,minmax(168px,1fr))] sm:[grid-template-columns:repeat(auto-fill,minmax(192px,1fr))]">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="rounded-2xl border border-border bg-card p-4 sm:p-4.5 space-y-3">
+                      <Skeleton width={72} height={12} />
+                      <Skeleton width={56} height={28} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
           ) : filtered.length === 0 ? (
-            <EmptyState
-              icon={CalendarRange}
-              title="No Logs Found"
-              hint={`No logs between ${formatUSDate(startDate)} and ${formatUSDate(endDate)}. Try a different date range.`}
-            />
+            <div className="rounded-2xl border border-border bg-card p-8">
+              <EmptyState
+                icon={CalendarRange}
+                title="No Records Found"
+                hint={`No activity was logged between ${formatUSDate(startDate)} and ${formatUSDate(endDate)}. Try selecting a different date range.`}
+              />
+            </div>
           ) : (
-          <>
-            <FigHeader title="Summary" sub={`${workingLogs.length} working days · ${totalDocs} docs`} />
-            <ReportStatsGrid
-              totalDocs={totalDocs}
-              filteredCount={filtered.length}
-              workingCount={workingLogs.length}
-              weekendDays={weekendDays}
-              offDays={offDays}
-              avgPerDay={avgPerDay}
-              bestDay={bestDay}
-            />
-            <FigHeader title="Category Breakdown" sub={`${categoryBreakdown.length} categories`} />
-            <CategoryBreakdown breakdown={categoryBreakdown} totalDocs={totalDocs} chartData={chartData} />
-            <FigHeader title="Day Records" sub={`${filtered.length} days`} />
-            <ReportDayTable
-              filtered={filtered}
-              categories={categories}
-              workingLogs={workingLogs}
-              totalDocs={totalDocs}
-              avgPerDay={avgPerDay}
-              tablePage={tablePage}
-              totalTablePages={totalTablePages}
-              tablePageNumbers={tablePageNumbers}
-              paginatedRows={paginatedRows}
-              onPageChange={(p) => filterDispatch({ type: "set_page", p })}
-            />
-          </>
-        )}
+            <>
+              {/* 1. Overview Summary KPIs */}
+              <section>
+                <FigHeader title="Overview Summary" sub={`${workingLogs.length} working days · ${totalDocs.toLocaleString()} documents`} />
+                <ReportStatsGrid
+                  totalDocs={totalDocs}
+                  filteredCount={filtered.length}
+                  workingCount={workingLogs.length}
+                  weekendDays={weekendDays}
+                  offDays={offDays}
+                  avgPerDay={avgPerDay}
+                  bestDay={bestDay}
+                />
+              </section>
+
+              {/* 2. Category Breakdown Grid */}
+              <section>
+                <FigHeader title="Category Breakdown" sub={`${categoryBreakdown.length} active categories`} />
+                <CategoryBreakdown breakdown={categoryBreakdown} totalDocs={totalDocs} />
+              </section>
+
+              {/* 3. Trends & Breakdown */}
+              {dailySeries.length >= 2 && (
+                <section>
+                  <FigHeader title="Trends & Daily Output" sub={`${dailySeries.length} days with activity`} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    <ProgressMetricCard
+                      title="Daily Document Output"
+                      unit="docs"
+                      accent="emerald"
+                      data={dailySeries}
+                      deltaLabel="volume"
+                    />
+                    <ProgressMetricCard
+                      title="Category Distribution"
+                      accent="blue"
+                      series={categorySeries}
+                      stacked={true}
+                    />
+                  </div>
+                </section>
+              )}
+
+              {/* 4. Daily Activity Log */}
+              <section>
+                <FigHeader title="Daily Activity Log" sub={`${filtered.length} total days`} />
+                <ReportDayTable
+                  filtered={filtered}
+                  categories={categories}
+                  workingLogs={workingLogs}
+                  totalDocs={totalDocs}
+                  avgPerDay={avgPerDay}
+                  tablePage={tablePage}
+                  totalTablePages={totalTablePages}
+                  tablePageNumbers={tablePageNumbers}
+                  paginatedRows={paginatedRows}
+                  onPageChange={(p) => filterDispatch({ type: "set_page", p })}
+                />
+              </section>
+            </>
+          )}
         </div>
       </main>
-    </>
+    </div>
   );
 };
 

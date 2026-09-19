@@ -201,3 +201,39 @@ export function useSetUserRole() {
     },
   });
 }
+
+export interface CreateUserInput {
+  email: string;
+  password: string;
+  first_name?: string;
+  last_name?: string;
+  role?: "user" | "admin";
+}
+
+export function useCreateUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateUserInput) => {
+      const { data, error } = await supabase.rpc("admin_create_user", {
+        new_email: input.email.trim(),
+        new_password: input.password,
+        new_first_name: input.first_name?.trim() || "",
+        new_last_name: input.last_name?.trim() || "",
+        new_role: input.role || "user",
+      });
+      if (error) throw error;
+      await logAuditEvent("account_created", {
+        created_user_id: data,
+        email: input.email.trim(),
+        role: input.role || "user",
+      });
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["team_profiles"] });
+      toast.success("Team member created successfully");
+    },
+    onError: (e: Error) => toast.error(e.message || "Failed to create user"),
+  });
+}
+

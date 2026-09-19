@@ -1,8 +1,7 @@
 import { lazy, Suspense, useMemo } from "react";
 import { motion, type Easing } from "motion/react";
-import { LineChart } from "lucide-react";
+import { LineChart } from "@/components/ui/icons";
 import Skeleton from "react-loading-skeleton";
-import { ActivitySection } from "@/components/ar/ActivitySection";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
 import { useCategories } from "@/hooks/useCategories";
 import { useFaxResolvedByDay, FAX_CATEGORY_KEY, FAX_CATEGORY_LABEL } from "@/hooks/useFaxTracker";
@@ -24,15 +23,58 @@ const Console = () => {
   const stats = useMemo(() => {
     const today = isoDate();
     const working = logs.filter((l) => !l.is_off_day);
+    const sortedWorking = [...working].sort((a, b) => a.log_date.localeCompare(b.log_date));
+    const recent14 = sortedWorking.slice(-14);
     const todayLog = logs.find((l) => l.log_date === today);
-    const categoryTotals = categories.map((c) => ({
-      key: c.key, label: c.label, value: working.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0),
-    }));
+
+    const categoryTotals = categories.map((c) => {
+      const val = working.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0);
+      const sparkline = recent14.map((l) => (l.counts ?? {})[c.key] ?? 0);
+      const todayCount = todayLog ? (todayLog.counts ?? {})[c.key] ?? 0 : 0;
+      return {
+        key: c.key,
+        label: c.label,
+        value: val,
+        sparkline,
+        todayCount,
+      };
+    });
+
     const faxTotal = Object.values(faxByDay).reduce((s, n) => s + n, 0);
-    if (faxTotal > 0) categoryTotals.push({ key: FAX_CATEGORY_KEY, label: FAX_CATEGORY_LABEL, value: faxTotal });
+    if (faxTotal > 0) {
+      categoryTotals.push({
+        key: FAX_CATEGORY_KEY,
+        label: FAX_CATEGORY_LABEL,
+        value: faxTotal,
+        sparkline: recent14.map((l) => faxByDay[l.log_date] ?? 0),
+        todayCount: faxByDay[today] ?? 0,
+      });
+    }
+
     const indexableTotal = Object.values(indexableByDay).reduce((s, n) => s + n, 0);
-    if (indexableTotal > 0) categoryTotals.push({ key: INDEXABLE_CATEGORY_KEY, label: INDEXABLE_CATEGORY_LABEL, value: indexableTotal });
-    return { todayLog, todayTotal: todayLog ? totalForLog(todayLog) : 0, categoryTotals, workingCount: working.length };
+    if (indexableTotal > 0) {
+      categoryTotals.push({
+        key: INDEXABLE_CATEGORY_KEY,
+        label: INDEXABLE_CATEGORY_LABEL,
+        value: indexableTotal,
+        sparkline: recent14.map((l) => indexableByDay[l.log_date] ?? 0),
+        todayCount: indexableByDay[today] ?? 0,
+      });
+    }
+
+    const grandTotal = categoryTotals.reduce((s, c) => s + c.value, 0);
+    const maxVal = Math.max(...categoryTotals.map((c) => c.value), 1);
+
+    return {
+      todayLog,
+      todayTotal: todayLog ? totalForLog(todayLog) : 0,
+      categoryTotals: categoryTotals.map((c) => ({
+        ...c,
+        share: grandTotal > 0 ? (c.value / grandTotal) * 100 : 0,
+        relativeShare: (c.value / maxVal) * 100,
+      })),
+      workingCount: working.length,
+    };
   }, [logs, categories, faxByDay, indexableByDay]);
 
   const isEmpty = !isLoading && logs.length === 0;
@@ -45,27 +87,33 @@ const Console = () => {
           {/* ── Category breakdown ── */}
           <section>
             <FigHeader title="Cumulative by Category" />
-            <div className="grid gap-2 sm:gap-3 [grid-template-columns:repeat(auto-fill,minmax(124px,1fr))] sm:[grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">
+            <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(168px,1fr))] sm:[grid-template-columns:repeat(auto-fill,minmax(188px,1fr))]">
                 {isLoading
                   ? Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="bg-card border border-border p-3 space-y-2">
-                      <Skeleton width={56} height={12} /><Skeleton width={40} height={24} />
+                    <div key={i} className="rounded-2xl border border-border bg-card p-4 sm:p-4.5 shadow-sm space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Skeleton width={72} height={12} />
+                        <Skeleton width={32} height={14} />
+                      </div>
+                      <div className="flex items-end justify-between pt-1">
+                        <Skeleton width={56} height={28} />
+                        <Skeleton width={54} height={24} />
+                      </div>
                     </div>
                   ))
                   : [...stats.categoryTotals].sort((a, b) => b.value - a.value).map((c) => (
-                    <CategoryStatCard key={c.key} label={c.label} value={c.value} color={colorForKey(c.key)} />
+                    <CategoryStatCard
+                      key={c.key}
+                      label={c.label}
+                      value={c.value}
+                      color={colorForKey(c.key)}
+                      share={c.share}
+                      sparkline={c.sparkline}
+                      todayCount={c.todayCount}
+                    />
                   ))}
               </div>
           </section>
-
-          {/* ── Activity ── */}
-          <motion.section
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, ease: sectionEase }}
-          >
-            <ActivitySection logs={logs} isLoading={isLoading} />
-          </motion.section>
 
           {/* ── Charts ── */}
           <motion.section
@@ -102,3 +150,4 @@ const Console = () => {
 };
 
 export default Console;
+

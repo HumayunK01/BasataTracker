@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Info, Loader2, User } from "lucide-react";
+import { Info, Loader2, User } from "@/components/ui/icons";
 import { STEP_STATUSES, type StepStatus, type TrackerRow, type TrackerInput } from "@/hooks/useTracker";
 
 // Radix Select can't bind a real null, so steps 2/3 use this sentinel for
@@ -103,9 +103,9 @@ export function StepEntryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-lg">
+      <DialogContent className="sm:max-w-md rounded-2xl border border-border/70 bg-background/95 backdrop-blur-xl shadow-xl">
         <DialogHeader>
-          <DialogTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+          <DialogTitle className="text-base font-bold text-foreground flex items-center gap-2">
             <User className="size-4 text-primary" />
             {row ? "Edit Patient" : "Add Patient"}
           </DialogTitle>
@@ -118,7 +118,7 @@ export function StepEntryDialog({
               id={`${idPrefix}-name`}
               placeholder="e.g. John Doe"
               value={patientName}
-              className="font-medium"
+              className="h-10 rounded-xl bg-muted/30 border-border/60 font-medium"
               onChange={(e) => { setPatientName(e.target.value); setError(""); }}
             />
           </div>
@@ -156,33 +156,34 @@ export function StepEntryDialog({
               value={notes}
               maxLength={1000}
               rows={3}
+              className="rounded-xl bg-muted/30 border-border/60 font-medium"
               onChange={(e) => setNotes(e.target.value)}
             />
           </div>
 
-          <p className="text-xs text-foreground">
+          <p className="text-xs text-muted-foreground">
             Overall status is calculated automatically from the three steps.
           </p>
 
           {error && (
-            <div className="flex items-center gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-2.5 py-1.5 animate-fade-in font-medium">
+            <div className="flex items-center gap-2 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-xl px-3 py-2 animate-fade-in font-medium">
               <Info className="size-3.5 shrink-0" />
               <span>{error}</span>
             </div>
           )}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" className="border-border/60" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="gap-2 sm:gap-0 mt-2">
+          <Button variant="outline" className="rounded-xl border-border/60" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button
             onClick={save}
             disabled={upsert.isPending}
-            className="bg-primary hover:bg-primary/95 text-primary-foreground shadow-sm shadow-primary/20"
+            className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground shadow-sm shadow-primary/20 font-semibold"
           >
             {upsert.isPending && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
-            {row ? "Save" : "Add"}
+            {row ? "Save" : "Add Patient"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -209,17 +210,17 @@ function StepSelect({
     <div className="space-y-1.5">
       <Label className="text-xs font-semibold text-foreground">{label}</Label>
       <Select value={value} onValueChange={onChange} disabled={disabled}>
-        <SelectTrigger>
+        <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-border/60 font-medium">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
-          {allowNone && <SelectItem value={NONE}>Not attempted</SelectItem>}
+        <SelectContent className="rounded-2xl border border-border/70 bg-background/95 backdrop-blur-xl shadow-xl p-1.5">
+          {allowNone && <SelectItem value={NONE} className="rounded-xl">Not attempted</SelectItem>}
           {STEP_STATUSES.map((s) => (
-            <SelectItem key={s} value={s}>{s}</SelectItem>
+            <SelectItem key={s} value={s} className="rounded-xl">{s}</SelectItem>
           ))}
         </SelectContent>
       </Select>
-      {disabled && hint && <p className="text-xs text-foreground italic">{hint}</p>}
+      {disabled && hint && <p className="text-xs text-muted-foreground italic">{hint}</p>}
     </div>
   );
 }

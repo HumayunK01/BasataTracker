@@ -19,7 +19,6 @@ import {
   VaultPage,
   TeamPage,
   FacilitiesPage,
-  FaxedBackPage,
   ResourcePage,
   NotFound,
 } from "@/lib/routePreload";
@@ -45,6 +44,7 @@ const queryClient = new QueryClient({
 });
 
 const TITLES: Record<string, string> = {
+  "/": "Console",
   "/console": "Console",
   "/log": "Daily Log",
   "/settings": "Settings",
@@ -53,11 +53,10 @@ const TITLES: Record<string, string> = {
   "/tracker": "Fax Tracker",
   "/fax-tracker": "Fax Tracker",
   "/vault": "Vault",
-  "/faxed-back": "Faxed Back",
   "/team": "Team",
   "/facilities": "Facilities",
-  "/resources/cheat-sheet": "Resources",
-  "/resources/test-patients": "Resources",
+  "/resources/cheat-sheet": "Cheat Sheet",
+  "/resources/test-patients": "Labeling Guide",
 };
 
 // ponytail: title map keyed by route; new pages must add an entry here
@@ -76,9 +75,9 @@ const App = () => (
     <TooltipProvider>
       <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <TitleSync />
         <SidebarProvider>
           <AuthGuard>
+            <TitleSync />
             <Suspense
               fallback={
                 <div className="flex-1 flex items-center justify-center text-sm text-foreground font-mono uppercase tracking-[0.2em]">
@@ -98,7 +97,6 @@ const App = () => (
                   {/* Legacy path — the page now hosts both Fax and Indexable */}
                   <Route path="/fax-tracker" element={<FaxTrackerPage />} />
                   <Route path="/vault" element={<VaultPage />} />
-                  <Route path="/faxed-back" element={<FaxedBackPage />} />
                   <Route path="/team" element={<TeamPage />} />
                   <Route path="/facilities" element={<FacilitiesPage />} />
                   <Route path="/resources/:docId" element={<ResourcePage />} />

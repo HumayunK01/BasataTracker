@@ -1,4 +1,4 @@
-import { Sun, Moon, Target, Loader2, Palette } from "lucide-react";
+import { Sun, Moon, Target, Loader2 } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/hooks/useTheme";
@@ -11,7 +11,7 @@ interface PreferencesCardProps {
 }
 
 export function PreferencesCard({ dailyGoal }: PreferencesCardProps) {
-  const { theme, toggle, variant, toggleVariant } = useTheme();
+  const { theme, toggle } = useTheme();
   const [goal, setGoal] = useState(dailyGoal ?? 50);
   const updateGoal = useUpdateDailyGoal();
 
@@ -23,81 +23,61 @@ export function PreferencesCard({ dailyGoal }: PreferencesCardProps) {
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg">
-      <div className="divide-y divide-border/50">
-        <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between px-5 py-4 gap-3 xs:gap-0">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <Target className="size-4.5 text-primary" />
+    <div className="bg-card/90 backdrop-blur-md border border-border/70 rounded-2xl shadow-sm overflow-hidden transition-all">
+      <div className="divide-y divide-border/60">
+        {/* Daily Goal */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 gap-4">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="size-9 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400">
+              <Target className="size-4.5" strokeWidth={1.75} />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold">Daily Goal</p>
-              <p className="text-xs text-foreground mt-0.5">Target document count shown on the console</p>
+              <p className="text-sm font-bold text-foreground">Daily Document Goal</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Target production count displayed on your daily console and progress indicators</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0 xs:ml-4">
+          <div className="flex items-center gap-2 shrink-0 sm:ml-4">
             <Input
               type="number"
               min={0}
               max={9999}
               value={goal}
               onChange={(e) => setGoal(Number(e.target.value))}
-              className="w-20 h-9 text-sm tabular-nums text-center"
+              onKeyDown={(e) => e.key === "Enter" && handleSaveGoal()}
+              className="w-24 h-9.5 text-sm font-semibold tabular-nums text-center rounded-xl bg-muted/40 border-border/60 focus-visible:ring-emerald-500/40 focus-visible:border-emerald-500/60"
             />
             <Button
               size="sm"
-              className="h-9"
+              className="h-9.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-xs shadow-emerald-600/20 active:scale-[0.98]"
               onClick={handleSaveGoal}
               disabled={updateGoal.isPending}
             >
-              {updateGoal.isPending && <Loader2 className="size-3.5 mr-1 animate-spin" />}
-              Set
+              {updateGoal.isPending && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
+              Set Goal
             </Button>
           </div>
         </div>
 
-        <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between px-5 py-4 gap-3 xs:gap-0">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="size-9 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
-              {theme === "dark" ? <Sun className="size-4.5 text-warning" /> : <Moon className="size-4.5 text-warning" />}
+        {/* Dark / Light Theme */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 gap-4">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="size-9 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0 text-amber-500">
+              {theme === "dark" ? <Sun className="size-4.5" strokeWidth={1.75} /> : <Moon className="size-4.5" strokeWidth={1.75} />}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold">Appearance</p>
-              <p className="text-xs text-foreground mt-0.5">Switch between dark and light mode</p>
+              <p className="text-sm font-bold text-foreground">Color Mode</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Switch between dark obsidian workspace and high-contrast light mode</p>
             </div>
           </div>
-          <div className="shrink-0 xs:ml-4">
+          <div className="shrink-0 sm:ml-4">
             <Button
               variant="outline"
               size="sm"
-              className="h-9 min-w-24"
+              className="h-9.5 min-w-32 rounded-xl border-border/60 hover:bg-muted/70 font-semibold"
               onClick={toggle}
             >
-              {theme === "dark" ? <Sun className="size-4 mr-1.5" /> : <Moon className="size-4 mr-1.5" />}
-              {theme === "dark" ? "Light mode" : "Dark mode"}
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between px-5 py-4 gap-3 xs:gap-0">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <Palette className="size-4.5 text-primary" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold">Theme Style</p>
-              <p className="text-xs text-foreground mt-0.5">Toggle between Modern Theme and Legacy Theme</p>
-            </div>
-          </div>
-          <div className="shrink-0 xs:ml-4">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 min-w-32"
-              onClick={toggleVariant}
-            >
-              <Palette className="size-4 mr-1.5" />
-              {variant === "classic" ? "Modern Theme" : "Legacy Theme"}
+              {theme === "dark" ? <Sun className="size-4 mr-1.5 text-amber-500" strokeWidth={1.75} /> : <Moon className="size-4 mr-1.5 text-amber-500" strokeWidth={1.75} />}
+              {theme === "dark" ? "Light Mode" : "Dark Mode"}
             </Button>
           </div>
         </div>

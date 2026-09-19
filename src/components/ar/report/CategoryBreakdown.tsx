@@ -1,16 +1,5 @@
-import { lazy, Suspense } from "react";
-import { TrendingUp, Trophy } from "lucide-react";
-import { withAlpha } from "@/lib/cat-colors";
-import { cn } from "@/lib/utils";
-
-// Medal styling for the top three leaderboard ranks (gold, silver, bronze)
-const medalStyles = [
-  "bg-amber-400/15 text-amber-500 border-amber-400/40",
-  "bg-slate-300/15 text-slate-400 border-slate-300/40",
-  "bg-orange-600/15 text-orange-500 border-orange-600/40",
-];
-
-const ReportBarChart = lazy(() => import("@/components/ar/ReportBarChart"));
+import { CategoryStatCard, EmptyState } from "@/components/ar/industrial";
+import { Tags } from "@/components/ui/icons";
 
 export interface CategoryBreakdownEntry {
   key: string;
@@ -18,89 +7,44 @@ export interface CategoryBreakdownEntry {
   short: string;
   value: number;
   color: string;
+  sparkline?: number[];
 }
 
 interface CategoryBreakdownProps {
   breakdown: CategoryBreakdownEntry[];
   totalDocs: number;
-  chartData: { date: string; docs: number }[];
 }
 
-export function CategoryBreakdown({ breakdown, totalDocs, chartData }: CategoryBreakdownProps) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* Category breakdown leaderboard */}
-      <div className="bg-card border border-border/60 rounded-lg p-4 sm:p-5 space-y-4">
-        <div className="flex items-center gap-2">
-          <Trophy className="size-4 text-primary shrink-0" />
-          <h2 className="text-sm font-semibold font-heading">Category Breakdown</h2>
-        </div>
-        <div className="space-y-3.5">
-          {breakdown.length === 0 ? (
-            <p className="text-xs text-foreground py-8 text-center">No categories recorded in this range.</p>
-          ) : (
-            [...breakdown].sort((a, b) => b.value - a.value).map((c, rank) => {
-              const pct = totalDocs > 0 ? Math.round((c.value / totalDocs) * 100) : 0;
-              return (
-                <div key={c.label} className="space-y-1.5 group">
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2 truncate">
-                      <span
-                        className={cn(
-                          "size-5 rounded-full border flex items-center justify-center text-xs font-bold tabular-nums shrink-0",
-                          medalStyles[rank] ?? "bg-muted/30 text-foreground border-border/40",
-                        )}
-                      >
-                        {rank + 1}
-                      </span>
-                      <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
-                      <span className="text-foreground group-hover:text-foreground font-medium transition-colors truncate">{c.label}</span>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="font-bold tabular-nums" style={{ color: c.color }}>
-                        {c.value}
-                      </span>
-                      <span className="text-foreground w-8 text-right font-mono">{pct}%</span>
-                    </div>
-                  </div>
-                  <div className="h-2 bg-muted/30 border border-border/40 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-[width] duration-500 ease-out"
-                      style={{
-                        width: `${pct}%`,
-                        backgroundColor: c.color,
-                        boxShadow: `0 0 4px ${withAlpha(c.color, 0.4)}`,
-                      }}
-                    />
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
+export function CategoryBreakdown({ breakdown, totalDocs }: CategoryBreakdownProps) {
+  if (breakdown.length === 0) {
+    return (
+      <div className="rounded-2xl border border-border bg-card p-6">
+        <EmptyState
+          icon={Tags}
+          title="No Category Activity"
+          hint="No category activity recorded in this date range."
+        />
       </div>
+    );
+  }
 
-      {/* Daily bar chart container */}
-      <div className="bg-card border border-border/60 rounded-lg p-4 sm:p-5 space-y-4 flex flex-col">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="size-4 text-info shrink-0" />
-          <h2 className="text-sm font-semibold font-heading">Daily Document Output</h2>
-        </div>
-        {/* flex-1 lets the chart match the leaderboard card height in the same grid row.
-            The chart itself is absolutely positioned so its rendered SVG never
-            contributes to layout height — otherwise the card can grow but never shrink. */}
-        <div className="flex-1 relative min-h-[180px]">
-          <Suspense fallback={
-            <div className="absolute inset-0 flex items-center justify-center text-xs text-foreground animate-pulse">
-              Generating active output trend...
-            </div>
-          }>
-            <div className="absolute inset-0">
-              <ReportBarChart data={chartData} />
-            </div>
-          </Suspense>
-        </div>
-      </div>
+  return (
+    <div className="grid gap-3.5 [grid-template-columns:repeat(auto-fill,minmax(168px,1fr))] sm:[grid-template-columns:repeat(auto-fill,minmax(192px,1fr))]">
+      {[...breakdown]
+        .sort((a, b) => b.value - a.value)
+        .map((c) => {
+          const share = totalDocs > 0 ? (c.value / totalDocs) * 100 : 0;
+          return (
+            <CategoryStatCard
+              key={c.key}
+              label={c.label}
+              value={c.value}
+              color={c.color}
+              share={share}
+              sparkline={c.sparkline}
+            />
+          );
+        })}
     </div>
   );
 }

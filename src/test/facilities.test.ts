@@ -167,3 +167,124 @@ describe("Facilities address formatting", () => {
     if (filled.success) expect(cleanLogo(filled.data).address).toBe("9201 W Thoms Rd");
   });
 });
+
+import {
+  filterAndRankFacilities,
+  scoreFacilityMatch,
+  normalizeSearchText,
+} from "@/components/ar/facilities/facility-utils";
+import type { Facility } from "@/hooks/useFacilities";
+
+const mockFacility = (overrides: Partial<Facility> = {}): Facility => ({
+  id: "fac-1",
+  name: "Banner Estrella Medical Center",
+  fax_number: "(623) 930-6060",
+  address: "9201 W Thomas Rd, Phoenix, AZ 85037",
+  logo_url: null,
+  verified: true,
+  created_by: null,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  ...overrides,
+});
+
+describe("Dynamic Facility Search & Ranking", () => {
+  it("normalizes text by stripping accents, apostrophes, and punctuation", () => {
+    expect(normalizeSearchText("St. Mary's Hospital!")).toBe("st marys hospital");
+    expect(normalizeSearchText("Café & Clinic")).toBe("cafe clinic");
+  });
+
+  it("matches across multiple fields simultaneously (name + city)", () => {
+    const f1 = mockFacility({ name: "Banner Health", address: "Phoenix, AZ" });
+    const f2 = mockFacility({ name: "Cedars Sinai", address: "Los Angeles, CA" });
+
+    const results = filterAndRankFacilities([f1, f2], "banner phoenix");
+    expect(results).toHaveLength(1);
+    expect(results[0].name).toBe("Banner Health");
+  });
+
+  it("matches unformatted digits against formatted fax numbers", () => {
+    const f = mockFacility({ name: "St. Jude", fax_number: "(901) 595-3300" });
+    // Pure digits
+    expect(scoreFacilityMatch(f, "9015953300")).toBeGreaterThan(0);
+    // Area code
+    expect(scoreFacilityMatch(f, "901")).toBeGreaterThan(0);
+    // Line number (last 4 digits)
+    expect(scoreFacilityMatch(f, "3300")).toBeGreaterThan(0);
+  });
+
+  it("handles minor typos via fuzzy matching", () => {
+    const f = mockFacility({ name: "Phoenix Children's Hospital", address: "Phoenix, AZ" });
+    // Typo: transposition "pheonix" -> "phoenix"
+    expect(scoreFacilityMatch(f, "pheonix")).toBeGreaterThan(0);
+    // Typo: deletion "childrn" -> "children"
+    expect(scoreFacilityMatch(f, "childrn")).toBeGreaterThan(0);
+  });
+
+  it("matches acronyms for multi-word clinic names", () => {
+    const f = mockFacility({ name: "Children's Hospital Los Angeles" });
+    expect(scoreFacilityMatch(f, "chla")).toBeGreaterThan(0);
+  });
+
+  it("ranks exact matches higher than partial or fuzzy matches", () => {
+    const exact = mockFacility({ id: "1", name: "Mayo Clinic", address: "Phoenix, AZ" });
+    const partial = mockFacility({ id: "2", name: "Mayo Clinic Specialty Pharmacy", address: "Phoenix, AZ" });
+    const other = mockFacility({ id: "3", name: "Phoenix Heart Clinic", address: "Mayo Blvd, Phoenix, AZ" });
+
+    const results = filterAndRankFacilities([other, partial, exact], "mayo clinic");
+    expect(results[0].id).toBe("1");
+    expect(results[1].id).toBe("2");
+  });
+
+  it("returns all facilities sorted alphabetically when query is empty", () => {
+    const fA = mockFacility({ id: "a", name: "Arrowhead Health" });
+    const fZ = mockFacility({ id: "z", name: "Zion Medical" });
+    const fM = mockFacility({ id: "m", name: "Mayo Clinic" });
+
+    const results = filterAndRankFacilities([fZ, fA, fM], "");
+    expect(results.map((f) => f.name)).toEqual(["Arrowhead Health", "Mayo Clinic", "Zion Medical"]);
+  });
+});
+
+import { render } from "@testing-library/react";
+import { HighlightText } from "@/components/ar/HighlightText";
+import React from "react";
+
+describe("HighlightText", () => {
+  it("wraps matched tokens in <mark> elements", () => {
+    const { container } = render(
+      React.createElement(HighlightText, {
+        text: "Banner Estrella Medical Center",
+        query: "banner center",
+      })
+    );
+    const marks = container.querySelectorAll("mark");
+    expect(marks).toHaveLength(2);
+    expect(marks[0].textContent).toBe("Banner");
+    expect(marks[1].textContent).toBe("Center");
+  });
+
+  it("highlights digits in formatted phone numbers", () => {
+    const { container } = render(
+      React.createElement(HighlightText, {
+        text: "(623) 930-6060",
+        query: "623 6060",
+      })
+    );
+    const marks = container.querySelectorAll("mark");
+    expect(marks).toHaveLength(2);
+    expect(marks[0].textContent).toBe("623");
+    expect(marks[1].textContent).toBe("6060");
+  });
+
+  it("renders plain text when query is empty", () => {
+    const { container } = render(
+      React.createElement(HighlightText, {
+        text: "Mayo Clinic",
+        query: "",
+      })
+    );
+    expect(container.querySelectorAll("mark")).toHaveLength(0);
+    expect(container.textContent).toBe("Mayo Clinic");
+  });
+});

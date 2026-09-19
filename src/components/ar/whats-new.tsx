@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { format } from "date-fns";
-import { Bell, ChevronDown, ChevronRight, Sparkles } from "lucide-react";
+import { Bell, Sparkles, Clock } from "@/components/ui/icons";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -10,7 +11,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useWhatsNewReads, useMarkWhatsNewRead } from "@/hooks/useWhatsNewReads";
-import { useTheme } from "@/hooks/useTheme";
+import { APP_VERSION } from "@/lib/version";
 import { cn } from "@/lib/utils";
 
 export interface WhatsNewEntry {
@@ -22,7 +23,36 @@ export interface WhatsNewEntry {
 }
 
 // ── Entries (newest first) ────────────────────────────────────────────────
-const WHATS_NEW_ENTRIES: WhatsNewEntry[] = [
+export const WHATS_NEW_ENTRIES: WhatsNewEntry[] = [
+  {
+    id: "version-2-0-0-major",
+    date: "2026-09-19",
+    title: "Basata Tracker 2.0",
+    description:
+      "A complete modernization of Basata Tracker featuring our unified emerald design system, redesigned workflows, streamlined settings, and improved navigation.",
+    body: [
+      (
+        <>
+          <strong className="text-foreground font-semibold">Unified Emerald Design:</strong> A streamlined, modern aesthetic with glassmorphism, refined typography, and brand-consistent emerald accents across all pages and dialogs.
+        </>
+      ),
+      (
+        <>
+          <strong className="text-foreground font-semibold">Redesigned Workstation:</strong> Upgraded Vault, Facility Management, Team views, and Login experience with responsive layouts and crisp vector iconography.
+        </>
+      ),
+      (
+        <>
+          <strong className="text-foreground font-semibold">Interactive Settings & Preferences:</strong> Reimagined settings workspace with spring-animated navigation tabs, quick timezone switching, and document category management.
+        </>
+      ),
+      (
+        <>
+          <strong className="text-foreground font-semibold">Performance & Polish:</strong> Faster page transitions, zero layout shift, seamless dark and light modes, and improved accessibility.
+        </>
+      ),
+    ],
+  },
   {
     id: "version-1-3-1-themes",
     date: "2026-09-10",
@@ -131,9 +161,6 @@ export function groupEntriesByDate(entries: WhatsNewEntry[]): [string, WhatsNewE
   return [...groups.entries()];
 }
 
-// Auto-open guard is per device: the panel opens on its own once per release
-// batch, even if the user closed it without reading. Read state itself is
-// server-side, so the badge stays accurate everywhere.
 const AUTO_OPEN_KEY = "whats_new_auto_opened";
 
 function readAutoOpened(): string {
@@ -148,7 +175,7 @@ function writeAutoOpened(id: string) {
   try {
     localStorage.setItem(AUTO_OPEN_KEY, id);
   } catch {
-    // storage blocked: the panel may reopen next visit, harmless
+    // storage blocked: harmless
   }
 }
 
@@ -166,84 +193,87 @@ function EntryCard({
   isNew,
   expanded,
   onToggle,
-  isClassic,
 }: {
   entry: WhatsNewEntry;
   unread: boolean;
   isNew: boolean;
   expanded: boolean;
   onToggle: () => void;
-  isClassic: boolean;
 }) {
-  if (isClassic) {
-    return (
-      <div className="border border-border/60 bg-card rounded-md p-4 space-y-2">
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-expanded={expanded}
-          className="flex w-full items-center gap-2 text-left cursor-pointer"
-        >
-          <Sparkles className="size-4 text-muted-foreground shrink-0" aria-hidden />
-          <span className="text-sm font-semibold text-foreground">{entry.title}</span>
-          {isNew ? (
-            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide bg-blue-500 text-white px-1.5 py-0.5 rounded">
-              New
-            </span>
-          ) : (
-            unread && <span className="shrink-0 size-2 rounded-full bg-blue-500" aria-label="Unread" />
-          )}
-          {expanded ? (
-            <ChevronDown className="ml-auto size-4 text-muted-foreground shrink-0" aria-hidden />
-          ) : (
-            <ChevronRight className="ml-auto size-4 text-muted-foreground shrink-0" aria-hidden />
-          )}
-        </button>
-        <p className="text-sm text-foreground/70 leading-relaxed">{entry.description}</p>
-        <p className="text-xs text-muted-foreground">{shortDate(entry.date)}</p>
-        {expanded && entry.body.length > 0 && (
-          <div className="space-y-3 pt-1 text-sm text-foreground/80 leading-relaxed">
-            {entry.body.map((paragraph, i) => (
-              <p key={i}>{paragraph}</p>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Modern Theme (Ditto to screenshot)
   return (
-    <div className="border border-border dark:border-white/10 bg-slate-50/70 dark:bg-[#1e2634]/60 rounded-lg p-3.5 sm:p-4 space-y-2.5 transition-colors hover:border-slate-300 dark:hover:border-white/15">
+    <div
+      className={cn(
+        "rounded-2xl border transition-all duration-200 p-4 space-y-3 shadow-2xs group",
+        expanded
+          ? "border-emerald-500/40 bg-card/90 shadow-xs"
+          : "border-border/60 bg-muted/20 hover:bg-muted/40 hover:border-border/80"
+      )}
+    >
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={expanded}
-        className="flex w-full items-center gap-2 text-left group cursor-pointer"
+        className="flex w-full items-start gap-3 text-left cursor-pointer"
       >
-        <Sparkles className="size-3.5 text-slate-400 shrink-0" aria-hidden />
-        <span className="text-xs sm:text-[13px] font-semibold text-slate-900 dark:text-white tracking-tight">{entry.title}</span>
-        {isNew ? (
-          <span className="shrink-0 text-[10px] font-medium bg-blue-100 text-blue-700 dark:bg-white/10 dark:text-slate-300 px-1.5 py-0.5 rounded">
-            New
-          </span>
-        ) : (
-          unread && <span className="shrink-0 size-1.5 rounded-full bg-primary" aria-label="Unread" />
-        )}
-        <ChevronDown
+        <div
           className={cn(
-            "ml-auto size-3.5 text-slate-400 shrink-0 transition-transform duration-200",
-            expanded ? "rotate-0" : "-rotate-90 opacity-70 group-hover:opacity-100"
+            "size-7 rounded-lg flex items-center justify-center shrink-0 transition-colors mt-0.5",
+            expanded
+              ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+              : "bg-muted text-muted-foreground group-hover:text-foreground"
           )}
-          aria-hidden
-        />
+        >
+          <Sparkles className="size-3.5" />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[13px] font-semibold text-foreground tracking-tight group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+              {entry.title}
+            </span>
+            {isNew ? (
+              <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide bg-emerald-600 text-white px-1.5 py-0.5 rounded-full shadow-xs shadow-emerald-600/20">
+                New
+              </span>
+            ) : (
+              unread && (
+                <span className="shrink-0 size-2 rounded-full bg-emerald-500 animate-pulse" aria-label="Unread" />
+              )
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70 font-medium mt-0.5">
+            <Clock className="size-3" />
+            <span>{shortDate(entry.date)}</span>
+          </div>
+        </div>
+
+        <div
+          className={cn(
+            "size-6 rounded-md flex items-center justify-center text-muted-foreground transition-all shrink-0 mt-0.5",
+            expanded ? "text-emerald-600 dark:text-emerald-400" : "group-hover:text-foreground"
+          )}
+        >
+          <ChevronDown
+            className={cn(
+              "size-4 transition-transform duration-200",
+              expanded ? "rotate-180" : "rotate-0"
+            )}
+            strokeWidth={1.75}
+          />
+        </div>
       </button>
-      <p className="text-xs text-slate-600 dark:text-slate-300/85 leading-relaxed">{entry.description}</p>
-      <p className="text-[11px] text-muted-foreground/70">{shortDate(entry.date)}</p>
+
+      <p className="text-xs text-muted-foreground leading-relaxed pl-10">
+        {entry.description}
+      </p>
+
       {expanded && entry.body.length > 0 && (
-        <div className="space-y-2.5 pt-0.5 text-xs text-slate-600 dark:text-slate-300/85 leading-relaxed">
+        <div className="ml-10 pt-2.5 border-t border-border/50 space-y-2.5 text-xs text-foreground/80 leading-relaxed">
           {entry.body.map((paragraph, i) => (
-            <p key={i}>{paragraph}</p>
+            <div key={i} className="flex items-start gap-2">
+              <span className="size-1 rounded-full bg-emerald-500 mt-2 shrink-0" />
+              <div className="flex-1">{paragraph}</div>
+            </div>
           ))}
         </div>
       )}
@@ -251,13 +281,11 @@ function EntryCard({
   );
 }
 
-export function WhatsNewButton() {
+export function WhatsNewButton({ className }: { className?: string } = {}) {
   const [open, setOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(WHATS_NEW_ENTRIES[0].id);
   const { data: reads = [], isSuccess: readsLoaded } = useWhatsNewReads();
   const markRead = useMarkWhatsNewRead();
-  const { variant } = useTheme();
-  const isClassic = variant === "classic";
 
   const unread = unreadIds(WHATS_NEW_ENTRIES, reads);
   const hasNew = unread.length > 0 && !open;
@@ -270,7 +298,7 @@ export function WhatsNewButton() {
     if (readAutoOpened() === newest) return;
     setOpen(true);
     writeAutoOpened(newest);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once reads first arrive
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readsLoaded, reads]);
 
   const toggleEntry = (id: string) => {
@@ -283,76 +311,87 @@ export function WhatsNewButton() {
       <Button
         variant="ghost"
         size="icon"
-        className="relative size-8 text-foreground hover:text-foreground/80 hover:bg-slate-100 dark:hover:bg-[#384152]/60 rounded-md [&_svg]:!size-5"
+        className={cn(
+          "relative h-7 w-7 text-foreground/85 hover:text-foreground hover:bg-background/80 dark:hover:bg-white/10 rounded-md transition-colors [&_svg]:!size-[18px]",
+          className
+        )}
         onClick={() => setOpen(true)}
         title="What's new"
         aria-label="What's new"
       >
-        <Bell />
+        <Bell className="size-[18px]" />
         {hasNew && (
-          <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" aria-hidden />
+          <span className="absolute top-1 right-1 size-1.5 rounded-full bg-emerald-500 ring-2 ring-background animate-pulse" aria-hidden />
         )}
       </Button>
+
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent
           side="right"
-          className={cn(
-            "p-0 gap-0 flex flex-col",
-            isClassic
-              ? "bg-card sm:max-w-sm"
-              : "bg-white border-l border-border dark:bg-[#18212f] dark:border-white/10 sm:max-w-[400px]"
-          )}
+          className="p-0 gap-0 flex flex-col w-full sm:max-w-[420px] bg-card/95 backdrop-blur-2xl border-l border-border/70 shadow-2xl"
         >
-          {isClassic ? (
-            <SheetHeader className="p-4 sm:p-5 pb-3 border-b border-border/60 space-y-1.5">
-              <SheetTitle className="text-sm font-semibold">What's new</SheetTitle>
-              <SheetDescription className="text-xs text-muted-foreground">
-                Here's what changed recently.
-              </SheetDescription>
-            </SheetHeader>
-          ) : (
-            <SheetHeader className="px-5 py-4 border-b border-border dark:border-white/10 space-y-1">
-              <SheetTitle className="text-base sm:text-lg font-bold font-heading text-slate-900 dark:text-white tracking-tight">
-                What's New
-              </SheetTitle>
-            </SheetHeader>
-          )}
+          {/* Header */}
+          <SheetHeader className="px-4 py-3 border-b border-border/60 text-left">
+            <div className="flex items-center gap-2.5 pr-8">
+              <div className="size-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <Sparkles className="size-3.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <SheetTitle className="text-sm font-bold font-heading text-foreground tracking-tight">
+                    What&apos;s new
+                  </SheetTitle>
+                  {unread.length > 0 && (
+                    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
+                      {unread.length} new
+                    </span>
+                  )}
+                </div>
+                <SheetDescription className="text-[11px] text-muted-foreground leading-none mt-0.5">
+                  Here&apos;s what changed recently.
+                </SheetDescription>
+              </div>
+            </div>
+          </SheetHeader>
 
+          {/* Timeline Feed */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
             {groupEntriesByDate(WHATS_NEW_ENTRIES).map(([date, entries]) => (
-              <section key={date} className="space-y-2.5">
-                {isClassic ? (
-                  <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border/60 pb-1.5">
+              <section key={date} className="space-y-3">
+                <div className="flex items-center gap-2.5 pt-1">
+                  <span className="size-1.5 rounded-full bg-emerald-500/80" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground font-mono">
                     {longDate(date)}
-                  </h3>
-                ) : (
-                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80 mb-2">
-                    {longDate(date)}
-                  </h3>
-                )}
-                {entries.map((entry) => (
-                  <EntryCard
-                    key={entry.id}
-                    entry={entry}
-                    unread={!reads.includes(entry.id)}
-                    isNew={entry.id === WHATS_NEW_ENTRIES[0].id && !reads.includes(entry.id)}
-                    expanded={expandedId === entry.id}
-                    onToggle={() => toggleEntry(entry.id)}
-                    isClassic={isClassic}
-                  />
-                ))}
+                  </span>
+                  <div className="h-px flex-1 bg-border/50" />
+                </div>
+
+                <div className="space-y-2.5">
+                  {entries.map((entry) => (
+                    <EntryCard
+                      key={entry.id}
+                      entry={entry}
+                      unread={!reads.includes(entry.id)}
+                      isNew={entry.id === WHATS_NEW_ENTRIES[0].id && !reads.includes(entry.id)}
+                      expanded={expandedId === entry.id}
+                      onToggle={() => toggleEntry(entry.id)}
+                    />
+                  ))}
+                </div>
               </section>
             ))}
           </div>
 
-          {!isClassic && (
-            <div className="border-t border-border dark:border-white/10 px-5 py-2.5 text-[11px] text-muted-foreground/60 shrink-0">
-              Showing the last 45 days
+          {/* Footer */}
+          <div className="p-4 border-t border-border/60 bg-muted/20 flex items-center justify-between text-[11px] text-muted-foreground shrink-0">
+            <div className="flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-emerald-500" />
+              <span>Basata Release Feed</span>
             </div>
-          )}
+            <span className="font-mono text-muted-foreground/70">{APP_VERSION}</span>
+          </div>
         </SheetContent>
       </Sheet>
     </>
   );
 }
-

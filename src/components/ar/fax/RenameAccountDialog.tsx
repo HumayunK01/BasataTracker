@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useRenameFaxAccount, type FaxAccount } from "@/hooks/useFaxAccounts";
-import { Info, Loader2, Pencil } from "lucide-react";
+import { Info, Loader2, Pencil } from "@/components/ui/icons";
 
 interface RenameAccountDialogProps {
   open: boolean;
@@ -44,9 +44,9 @@ export function RenameAccountDialog({ open, onOpenChange, account }: RenameAccou
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm bg-background/95 backdrop-blur-lg">
+      <DialogContent className="sm:max-w-sm rounded-2xl border border-border/70 bg-background/95 backdrop-blur-xl shadow-xl">
         <DialogHeader>
-          <DialogTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+          <DialogTitle className="text-base font-bold text-foreground flex items-center gap-2">
             <Pencil className="size-4 text-primary" />
             Rename Account
           </DialogTitle>
@@ -58,7 +58,7 @@ export function RenameAccountDialog({ open, onOpenChange, account }: RenameAccou
               id="fax-rename-name"
               placeholder="e.g. Ayush Rathi"
               value={name}
-              className="font-medium"
+              className="h-10 rounded-xl bg-muted/30 border-border/60 font-medium"
               autoFocus
               onChange={(e) => { setName(e.target.value); setError(""); }}
               onKeyDown={(e) => e.key === "Enter" && save()}
@@ -66,19 +66,19 @@ export function RenameAccountDialog({ open, onOpenChange, account }: RenameAccou
           </div>
 
           {error && (
-            <div className="flex items-center gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-2.5 py-1.5 animate-fade-in font-medium">
+            <div className="flex items-center gap-2 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-xl px-3 py-2 animate-fade-in font-medium">
               <Info className="size-3.5 shrink-0" />
               <span>{error}</span>
             </div>
           )}
         </div>
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" className="border-border/60" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="gap-2 sm:gap-0 mt-2">
+          <Button variant="outline" className="rounded-xl border-border/60" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={save} disabled={renameAccount.isPending} className="bg-primary hover:bg-primary/95 text-primary-foreground shadow-sm shadow-primary/20">
+          <Button onClick={save} disabled={renameAccount.isPending} className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground shadow-sm shadow-primary/20 font-semibold">
             {renameAccount.isPending && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
-            Save
+            Save Changes
           </Button>
         </DialogFooter>
       </DialogContent>

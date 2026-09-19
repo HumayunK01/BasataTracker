@@ -34,7 +34,7 @@ export function ServiceLogo({ service, website, className }: { service: string; 
   if (!domain || failed) {
     return (
       <span
-        className={`grid place-items-center rounded-md bg-primary/15 text-primary text-xs font-semibold shrink-0 ${className ?? "size-6"}`}
+        className={`grid place-items-center rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-xs font-semibold shrink-0 ${className ?? "size-6"}`}
         aria-hidden
       >
         {letter}

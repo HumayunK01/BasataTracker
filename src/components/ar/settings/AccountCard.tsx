@@ -1,4 +1,4 @@
-import { User } from "lucide-react";
+import { User } from "@/components/ui/icons";
 import { Separator } from "@/components/ui/separator";
 
 interface AccountCardProps {

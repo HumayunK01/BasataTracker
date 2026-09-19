@@ -1,6 +1,6 @@
 import { useReducer, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { FigHeader } from "@/components/ar/industrial";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { logAuditEvent } from "@/hooks/useAuditLog";
 import {
@@ -15,6 +15,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { APP_VERSION } from "@/lib/version";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import {
+  User,
+  SlidersHorizontal,
+  Tag,
+  AlertTriangle,
+  Globe,
+} from "@/components/ui/icons";
 
 import {
   ProfilePasswordCard,
@@ -104,9 +112,25 @@ function profileReducer(s: ProfileState, a: ProfileAction): ProfileState {
   }
 }
 
+type SettingsTab = "profile" | "preferences" | "categories" | "danger";
+
+const SETTINGS_TABS: { id: SettingsTab; label: string; icon: React.ComponentType<{ className?: string; strokeWidth?: number | string }> }[] = [
+  { id: "profile", label: "Profile & Security", icon: User },
+  { id: "preferences", label: "Preferences & Region", icon: SlidersHorizontal },
+  { id: "categories", label: "Document Categories", icon: Tag },
+  { id: "danger", label: "Danger Zone", icon: AlertTriangle },
+];
+
 export default function SettingsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = (searchParams.get("tab") as SettingsTab) || "profile";
+
+  const setActiveTab = (tab: SettingsTab) => {
+    setSearchParams({ tab }, { replace: true });
+  };
+
   const { data: profile } = useProfile();
   const updateProfile = useUpdateProfile();
   const { data: categories = [], isLoading } = useCategories();
@@ -240,91 +264,237 @@ export default function SettingsPage() {
   };
 
   return (
-    <>
-      <main className="flex-1 overflow-y-auto">
-        <div className="w-full px-4 sm:px-6 py-6 sm:py-8 space-y-8">
-
-          {/* ── Profile ── */}
-          <section>
-            <FigHeader title="Profile" />
-            <ProfilePasswordCard
-              profile={profile}
-              profileState={profileState}
-              pwState={pwState}
-              profileDispatch={profileDispatch}
-              pwDispatch={pwDispatch}
-              onUpdateProfile={handleUpdateProfile}
-              onChangePassword={handleChangePassword}
-              email={user?.email}
-              createdAt={user?.created_at}
-              categoriesCount={categories.length}
-              logsCount={logs.length}
-            />
-          </section>
-
-          {/* ── Preferences ── */}
-          <section>
-            <FigHeader title="Preferences" />
-            <PreferencesCard dailyGoal={profile?.daily_goal ?? null} />
-          </section>
-
-          {/* ── Time Zone ── */}
-          <section>
-            <FigHeader title="Time Zone" />
-            <div className="bg-card border border-border/80 rounded-lg p-5 space-y-4">
-              <p className="text-xs text-foreground">Choose how dates and times are displayed across the app.</p>
-              <div className="space-y-3">
-                <label className="flex items-center gap-3 p-3 rounded-md border border-border/60 cursor-pointer hover:bg-muted/20 transition-colors has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.04]">
-                  <input type="radio" name="tz" value="org" checked={tzPreference === "org"} onChange={() => handleTzChange("org")} className="size-4 accent-primary" />
-                  <div>
-                    <span className="text-xs font-medium text-foreground">Use organization time zone</span>
-                    <p className="text-xs text-muted-foreground mt-0.5">{ORG_TZ}</p>
-                  </div>
-                </label>
-                <label className="flex items-center gap-3 p-3 rounded-md border border-border/60 cursor-pointer hover:bg-muted/20 transition-colors has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.04]">
-                  <input type="radio" name="tz" value="local" checked={tzPreference === "local"} onChange={() => handleTzChange("local")} className="size-4 accent-primary" />
-                  <div>
-                    <span className="text-xs font-medium text-foreground">Use my local time zone</span>
-                    <p className="text-xs text-muted-foreground mt-0.5">{LOCAL_TZ}</p>
-                  </div>
-                </label>
-              </div>
+    <main className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-5 sm:py-6">
+      <div className="w-full space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Workspace Settings</h1>
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-card border border-border/50 rounded-full px-2.5 py-0.5 shadow-2xs">
+                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
+              </span>
             </div>
-          </section>
-
-          {/* ── Categories ── */}
-          <section>
-            <FigHeader title="Categories" />
-            <CategorySection
-              categories={categories}
-              isLoading={isLoading}
-              cat={cat}
-              catDispatch={catDispatch}
-              isBusy={isBusy}
-              onAdd={() => catDispatch({ type: "open_add" })}
-              onEdit={(c) => catDispatch({ type: "open_edit", cat: c })}
-              onSave={handleSave}
-              onDelete={handleDelete}
-              onDragStart={(key) => catDispatch({ type: "drag_start", key })}
-              onDragOver={(e, key) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = "move";
-                if (cat.dragOver !== key) catDispatch({ type: "drag_over", key });
-              }}
-              onDrop={handleDrop}
-              onMove={handleMove}
-            />
-          </section>
-
-          {/* ── Danger Zone ── */}
-          <section>
-            <DangerZone delState={delState} delDispatch={delDispatch} onDeleteAccount={handleDeleteAccount} />
-          </section>
-
-          <p className="text-center font-mono text-2xs text-foreground tracking-[0.2em] pt-4">{APP_VERSION}</p>
-
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Manage profile credentials, document categories, workspace appearance, and system region
+            </p>
+          </div>
         </div>
-      </main>
-    </>
+
+        {/* Tab Navigation Rail */}
+        <div className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1 bg-card/90 backdrop-blur-md border border-border/70 rounded-2xl p-1.5 w-fit max-w-full shadow-2xs">
+          {SETTINGS_TABS.map((t) => {
+            const active = activeTab === t.id;
+            const Icon = t.icon;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setActiveTab(t.id)}
+                className={cn(
+                  "relative shrink-0 inline-flex items-center gap-2 px-3.5 sm:px-4 h-9 rounded-xl text-xs font-medium transition-all cursor-pointer select-none",
+                  active
+                    ? "text-white font-semibold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+              >
+                {active && (
+                  <motion.div
+                    layoutId="settings-active-tab-pill"
+                    className="absolute inset-0 bg-emerald-600 rounded-xl shadow-xs shadow-emerald-600/25"
+                    transition={{ type: "spring", bounce: 0.18, duration: 0.35 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  <Icon className="size-4 shrink-0" strokeWidth={1.75} />
+                  <span>{t.label}</span>
+                  {t.id === "categories" && categories.length > 0 && (
+                    <span
+                      className={cn(
+                        "text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full",
+                        active ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {categories.length}
+                    </span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Tab Content Panels */}
+        <AnimatePresence mode="wait">
+          {activeTab === "profile" && (
+            <motion.div
+              key="profile"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              <ProfilePasswordCard
+                profile={profile}
+                profileState={profileState}
+                pwState={pwState}
+                profileDispatch={profileDispatch}
+                pwDispatch={pwDispatch}
+                onUpdateProfile={handleUpdateProfile}
+                onChangePassword={handleChangePassword}
+                email={user?.email}
+                createdAt={user?.created_at}
+                categoriesCount={categories.length}
+                logsCount={logs.length}
+              />
+            </motion.div>
+          )}
+
+          {activeTab === "preferences" && (
+            <motion.div
+              key="preferences"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              <PreferencesCard dailyGoal={profile?.daily_goal ?? null} />
+
+              {/* Time Zone Section */}
+              <div className="bg-card/90 backdrop-blur-md border border-border/70 rounded-2xl p-5 sm:p-6 space-y-4 shadow-sm transition-all">
+                <div className="flex items-center gap-3.5 pb-4 border-b border-border/60">
+                  <div className="size-9 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400">
+                    <Globe className="size-4.5" strokeWidth={1.75} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground">Time Zone & Regional Clock</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Choose how dates and times are interpreted and rendered across your tables and reports
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <label
+                    className={cn(
+                      "group flex items-start gap-3.5 p-4 rounded-xl border transition-all cursor-pointer",
+                      tzPreference === "org"
+                        ? "border-emerald-500/60 bg-emerald-500/[0.04] shadow-2xs ring-1 ring-emerald-500/20"
+                        : "border-border/60 bg-card hover:bg-muted/40"
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name="tz"
+                      value="org"
+                      checked={tzPreference === "org"}
+                      onChange={() => handleTzChange("org")}
+                      className="size-4 mt-0.5 accent-emerald-600 cursor-pointer"
+                    />
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-foreground">Organization Time Zone</span>
+                        {tzPreference === "org" && (
+                          <span className="text-[10px] font-semibold uppercase px-2 py-0.2 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono">
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs font-mono text-muted-foreground">{ORG_TZ}</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed pt-1">
+                        Standardizes all logs across team members and facilities. Recommended for consistent auditing and reports.
+                      </p>
+                    </div>
+                  </label>
+
+                  <label
+                    className={cn(
+                      "group flex items-start gap-3.5 p-4 rounded-xl border transition-all cursor-pointer",
+                      tzPreference === "local"
+                        ? "border-emerald-500/60 bg-emerald-500/[0.04] shadow-2xs ring-1 ring-emerald-500/20"
+                        : "border-border/60 bg-card hover:bg-muted/40"
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name="tz"
+                      value="local"
+                      checked={tzPreference === "local"}
+                      onChange={() => handleTzChange("local")}
+                      className="size-4 mt-0.5 accent-emerald-600 cursor-pointer"
+                    />
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-foreground">Local Device Time Zone</span>
+                        {tzPreference === "local" && (
+                          <span className="text-[10px] font-semibold uppercase px-2 py-0.2 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono">
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs font-mono text-muted-foreground">{LOCAL_TZ}</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed pt-1">
+                        Displays all timestamps converted to your workstation's local operating system clock.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === "categories" && (
+            <motion.div
+              key="categories"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              <CategorySection
+                categories={categories}
+                isLoading={isLoading}
+                cat={cat}
+                catDispatch={catDispatch}
+                isBusy={isBusy}
+                onAdd={() => catDispatch({ type: "open_add" })}
+                onEdit={(c) => catDispatch({ type: "open_edit", cat: c })}
+                onSave={handleSave}
+                onDelete={handleDelete}
+                onDragStart={(key) => catDispatch({ type: "drag_start", key })}
+                onDragOver={(e, key) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "move";
+                  if (cat.dragOver !== key) catDispatch({ type: "drag_over", key });
+                }}
+                onDrop={handleDrop}
+                onMove={handleMove}
+              />
+            </motion.div>
+          )}
+
+          {activeTab === "danger" && (
+            <motion.div
+              key="danger"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              <DangerZone delState={delState} delDispatch={delDispatch} onDeleteAccount={handleDeleteAccount} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Footer version indicator */}
+        <p className="text-center font-mono text-2xs text-muted-foreground/70 tracking-[0.2em] pt-4 select-none">
+          {APP_VERSION}
+        </p>
+      </div>
+    </main>
   );
 }

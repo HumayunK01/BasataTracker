@@ -10,31 +10,23 @@ describe("Theme Variant Switcher", () => {
     document.documentElement.removeAttribute("data-theme-variant");
   });
 
-  it("defaults to modern variant", () => {
+  it("defaults to classic variant", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       React.createElement(ThemeProvider, null, children)
     );
     const { result } = renderHook(() => useTheme(), { wrapper });
-
-    expect(result.current.variant).toBe("modern");
-    expect(document.documentElement.getAttribute("data-theme-variant")).toBe("modern");
-  });
-
-  it("toggles between modern and classic variants", () => {
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      React.createElement(ThemeProvider, null, children)
-    );
-    const { result } = renderHook(() => useTheme(), { wrapper });
-
-    expect(result.current.variant).toBe("modern");
-
-    act(() => {
-      result.current.toggleVariant();
-    });
 
     expect(result.current.variant).toBe("classic");
     expect(document.documentElement.getAttribute("data-theme-variant")).toBe("classic");
-    expect(localStorage.getItem("basata-theme-variant")).toBe("classic");
+  });
+
+  it("toggles between classic and modern variants", () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      React.createElement(ThemeProvider, null, children)
+    );
+    const { result } = renderHook(() => useTheme(), { wrapper });
+
+    expect(result.current.variant).toBe("classic");
 
     act(() => {
       result.current.toggleVariant();
@@ -43,6 +35,14 @@ describe("Theme Variant Switcher", () => {
     expect(result.current.variant).toBe("modern");
     expect(document.documentElement.getAttribute("data-theme-variant")).toBe("modern");
     expect(localStorage.getItem("basata-theme-variant")).toBe("modern");
+
+    act(() => {
+      result.current.toggleVariant();
+    });
+
+    expect(result.current.variant).toBe("classic");
+    expect(document.documentElement.getAttribute("data-theme-variant")).toBe("classic");
+    expect(localStorage.getItem("basata-theme-variant")).toBe("classic");
   });
 
   it("toggles between dark and light mode and sets classes", () => {

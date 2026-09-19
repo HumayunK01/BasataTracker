@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { FaxRow, FaxStepStatus, StepField } from "@/hooks/useFaxTracker";
 import { StepPicker, StatusIcon } from "./StepPicker";
-import { labelFor, stepClasses, stepIsActive, stepIsSkipped, type TrackerMode } from "./tracker-helpers";
+import { labelFor, stepIsActive, stepIsSkipped, type TrackerMode } from "./tracker-helpers";
 
 export function StepCell({
   row,
@@ -28,19 +28,36 @@ export function StepCell({
   }
 
   if (!editable) {
+    const getBadgeClasses = (s: FaxStepStatus | null) => {
+      switch (s) {
+        case "Successfully Sent":
+          return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25";
+        case "Failed":
+          return "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25";
+        case "Waiting":
+          return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25";
+        case "Pending":
+          return "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25";
+        default:
+          return "text-muted-foreground";
+      }
+    };
+
     return (
-      <td className={cn(
-        "px-3 py-1 w-28 text-center text-xs font-normal truncate rounded",
-        status === "Successfully Sent" ? "text-white bg-emerald-700"
-        : status === "Failed" ? "text-white bg-rose-700"
-        : (status ? stepClasses(status) : "text-muted-foreground"),
-      )}>
+      <td className="px-3 py-2 text-center w-28">
         {status ? (
-          <span className="inline-flex items-center gap-1">
-            <StatusIcon status={status} tickColor={status === "Successfully Sent" ? "text-emerald-500" : undefined} />
-            {labelFor(status)}
+          <span
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold border shadow-2xs",
+              getBadgeClasses(status),
+            )}
+          >
+            <StatusIcon status={status} />
+            <span>{labelFor(status)}</span>
           </span>
-        ) : "—"}
+        ) : (
+          <span className="text-muted-foreground font-mono">—</span>
+        )}
       </td>
     );
   }

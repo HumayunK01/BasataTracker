@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion, useReducedMotion } from "motion/react";
-import { CalendarDays, LayoutDashboard, FileBarChart, Hash, Send } from "lucide-react";
+import { CalendarDays, LayoutDashboard, FileBarChart, Hash, Send } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { prefetchRoute } from "@/lib/routePreload";
 

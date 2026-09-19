@@ -1,4 +1,4 @@
-import { useMemo, useReducer } from "react";
+import { useState, useMemo, useReducer } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,27 +20,61 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { pageNumbersArr as sharedPageNumbers } from "@/components/ar/tracker/tracker-helpers";
 import { Pagination } from "@/components/Pagination";
 import { formatTableDate, formatDayName, isWeekend, type DailyLog } from "@/types/log";
 import { useDeleteLog } from "@/hooks/useDailyLogs";
 import { useCategories, type Category } from "@/hooks/useCategories";
 import { colorForKey } from "@/lib/cat-colors";
-import { Trash2, Pencil, Search, BedDouble, Copy, Check, CalendarDays } from "lucide-react";
+import { downloadCSV, downloadJSON, downloadPDF } from "@/lib/log-utils";
+import {
+  Trash2,
+  Pencil,
+  Search,
+  BedDouble,
+  Copy,
+  Check,
+  CalendarDays,
+  X,
+  Download,
+  Plus,
+  ChevronDown,
+  FileText,
+  FileJson,
+  FileType,
+} from "@/components/ui/icons";
 import { EmptyState } from "@/components/ar/industrial";
+import { cn } from "@/lib/utils";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
-function getVal(l: DailyLog, key: string): number { return (l.counts ?? {})[key] ?? 0; }
+function getVal(l: DailyLog, key: string): number {
+  return (l.counts ?? {})[key] ?? 0;
+}
 
-function DateDay({ iso, isOff }: { iso: string; isOff?: boolean }) {
+function DateDayCell({ iso, isOff }: { iso: string; isOff?: boolean }) {
   return (
-    <span className={`tabular-nums font-normal ${isOff ? "text-muted-foreground/60" : "text-foreground"}`}>
-      {formatTableDate(iso)}
-    </span>
+    <div className="flex flex-col items-center justify-center leading-tight py-1">
+      <span className={`tabular-nums font-semibold text-xs tracking-tight ${isOff ? "text-muted-foreground/70" : "text-foreground"}`}>
+        {formatTableDate(iso)}
+      </span>
+      <span className="text-[10px] font-medium px-1.5 py-0.2 rounded mt-0.5 uppercase tracking-wider font-heading bg-muted/60 text-muted-foreground border border-border/40">
+        {formatDayName(iso)}
+      </span>
+    </div>
   );
 }
 
-// ── Table (all screen sizes — scrolls horizontally on mobile) ─────────────
+type FilterStatus = "all" | "working" | "weekends" | "off";
+
+// ── Table Component ────────────────────────────────────────────────────────
 interface DesktopTableProps {
   paginated: DailyLog[];
   categories: Category[];
@@ -49,12 +83,21 @@ interface DesktopTableProps {
   onEdit: (l: DailyLog) => void;
   onDelete: (l: DailyLog) => void;
   onCopy: (l: DailyLog) => void;
+  onClearSearch?: () => void;
 }
 
-function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelete, onCopy }: DesktopTableProps) {
-  const thCls = "relative z-10 font-bold text-xs uppercase tracking-wider text-white text-center py-2 sm:py-2.5 px-2 sm:px-3 font-hubot whitespace-nowrap";
-  const Sep = () => <span className="theme-header-sep absolute right-0 top-1/2 -translate-y-1/2 h-3.5 w-px bg-border pointer-events-none" aria-hidden="true" />;
-  const BottomLine = () => <span className="theme-header-bottom-line absolute bottom-0 left-0 right-0 h-px bg-white pointer-events-none z-10" aria-hidden="true" />;
+function DesktopTable({
+  paginated,
+  categories,
+  search,
+  copiedId,
+  onEdit,
+  onDelete,
+  onCopy,
+  onClearSearch,
+}: DesktopTableProps) {
+  const thCls =
+    "relative z-10 font-bold text-[11px] uppercase tracking-wider text-muted-foreground text-center py-2.5 px-3 whitespace-nowrap font-heading";
 
   const colTotals = useMemo(
     () =>
@@ -66,116 +109,184 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
       ) as Record<string, number>,
     [paginated, categories],
   );
-  const grandTotal = useMemo(() => Object.values(colTotals).reduce((a, b) => a + b, 0), [colTotals]);
+  const grandTotal = useMemo(
+    () => Object.values(colTotals).reduce((a, b) => a + b, 0),
+    [colTotals],
+  );
 
   return (
-    <div className="flex flex-col bg-card border border-border rounded-md overflow-hidden">
+    <div className="flex flex-col bg-card border border-border/60 rounded-xl overflow-hidden shadow-xs">
       <div className="overflow-x-auto no-scrollbar">
-        <Table className="min-w-[600px] [&_tbody_tr]:border-0">
-          <TableHeader className="relative z-10">
-            <TableRow className="hover:bg-transparent bg-muted/40 relative z-10">
-              <TableHead className={thCls}>
-                <span className="block truncate">Date</span>
-                <Sep />
-                <BottomLine />
+        <Table className="min-w-[600px] [&_tbody_tr]:border-0 text-xs">
+          <TableHeader className="relative z-10 bg-muted/25 border-b border-border/50">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className={`${thCls} w-28`}>
+                <span>Date</span>
               </TableHead>
               {categories.map((c) => (
                 <TableHead key={c.key} title={c.label} className={thCls}>
                   <span className="block truncate">{c.short}</span>
-                  <Sep />
-                  <BottomLine />
                 </TableHead>
               ))}
-              <TableHead className={thCls}>
-                <span className="block truncate">Total</span>
-                <Sep />
-                <BottomLine />
+              <TableHead className={`${thCls} w-20`}>
+                <span>Total</span>
               </TableHead>
-              <TableHead className={`${thCls} w-32`}>
-                <span className="block truncate">Actions</span>
-                <BottomLine />
+              <TableHead className={`${thCls} w-28`}>
+                <span>Actions</span>
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginated.length === 0 && (
               <TableRow>
-                <TableCell colSpan={categories.length + 3} className="text-center">
-                  <EmptyState
-                    className="py-12"
-                    icon={CalendarDays}
-                    title={search ? "No Matches" : "No Days Yet"}
-                    hint={search ? "Nothing matches your search." : "Log a day to start your history."}
-                  />
+                <TableCell colSpan={categories.length + 3} className="text-center py-12">
+                  {search ? (
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium text-foreground">No logs match "{search}"</p>
+                      <p className="text-xs text-muted-foreground">Try adjusting your date or search query.</p>
+                      {onClearSearch && (
+                        <Button variant="outline" size="sm" onClick={onClearSearch} className="h-8 text-xs cursor-pointer">
+                          Clear search filter
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <EmptyState
+                      className="py-10"
+                      icon={CalendarDays}
+                      title="No Days Logged Yet"
+                      hint="Click 'Log day' to record your document throughput."
+                    />
+                  )}
                 </TableCell>
               </TableRow>
             )}
-            {paginated.map((l, idx) => {
+            {paginated.map((l) => {
               const total = categories.reduce((s, c) => s + getVal(l, c.key), 0);
               const isOff = l.is_off_day;
               const weekend = isWeekend(l.log_date);
 
               return isOff ? (
-                <TableRow key={l.id} className="border-0 bg-muted/20 hover:bg-muted/25 transition-colors animate-row-in" style={{ animationDelay: `${idx * 20}ms` }}>
-                  <TableCell className="text-xs font-normal py-2 sm:py-2.5 text-center">
-                    <DateDay iso={l.log_date} isOff />
+                <TableRow
+                  key={l.id}
+                  className="border-b border-border/30 bg-muted/15 hover:bg-muted/25 transition-colors"
+                >
+                  <TableCell className="text-center py-2.5">
+                    <DateDayCell iso={l.log_date} isOff />
                   </TableCell>
-                  <TableCell colSpan={categories.length + 1} className="py-2 sm:py-2.5">
+                  <TableCell colSpan={categories.length + 1} className="py-2.5">
                     <div className="flex items-center gap-2">
-                      <BedDouble className="size-3.5 text-muted-foreground/50 shrink-0" />
-                      <span className="text-xs font-normal text-muted-foreground/60 tracking-wide uppercase shrink-0">
-                        {weekend ? "Weekend" : "Off Day"}
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium text-muted-foreground bg-muted/50 border border-border/50">
+                        <BedDouble className="size-3.5 text-muted-foreground/70" />
+                        <span>{weekend ? "Weekend Off" : "Scheduled Off Day"}</span>
                       </span>
                       {l.notes && (
-                        <span className="text-xs text-muted-foreground/80 italic font-normal truncate max-w-md" title={l.notes}>
+                        <span
+                          className="text-xs text-muted-foreground/80 italic font-normal truncate max-w-md"
+                          title={l.notes}
+                        >
                           &ldquo;{l.notes}&rdquo;
                         </span>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="py-2 sm:py-2.5">
-                    <div className="flex gap-1 justify-center">
-                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-success hover:bg-success/10" onClick={() => onCopy(l)} title="Copy">
-                        {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                  <TableCell className="py-2.5">
+                    <div className="flex items-center gap-1 justify-center">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7 rounded-lg text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/10 cursor-pointer"
+                        onClick={() => onCopy(l)}
+                        title="Copy to clipboard"
+                      >
+                        {copiedId === l.id ? (
+                          <Check className="size-3.5 text-emerald-600" />
+                        ) : (
+                          <Copy className="size-3.5" />
+                        )}
                       </Button>
-                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-foreground hover:bg-muted" onClick={() => onEdit(l)} title="Edit">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/70 cursor-pointer"
+                        onClick={() => onEdit(l)}
+                        title="Edit day"
+                      >
                         <Pencil className="size-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(l)} title="Delete">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                        onClick={() => onDelete(l)}
+                        title="Delete log"
+                      >
                         <Trash2 className="size-3.5" />
                       </Button>
                     </div>
                   </TableCell>
                 </TableRow>
               ) : (
-                <TableRow key={l.id} title={l.notes ?? undefined} className="border-0 bg-card hover:bg-muted/30 transition-colors animate-row-in" style={{ animationDelay: `${idx * 20}ms` }}>
-                  <TableCell className="text-xs font-normal py-2 sm:py-2.5 text-center">
-                    <DateDay iso={l.log_date} />
+                <TableRow
+                  key={l.id}
+                  title={l.notes ?? undefined}
+                  className="border-b border-border/30 bg-card hover:bg-muted/20 transition-colors"
+                >
+                  <TableCell className="text-center py-2.5">
+                    <DateDayCell iso={l.log_date} />
                   </TableCell>
                   {categories.map((c) => {
                     const v = getVal(l, c.key);
                     return (
-                      <TableCell key={c.key} className="text-center tabular-nums text-xs py-2 sm:py-2.5">
+                      <TableCell key={c.key} className="text-center tabular-nums text-xs py-2.5">
                         {v > 0 ? (
-                          <span className="font-normal text-foreground">{v}</span>
+                          <span className="inline-block px-2 py-0.5 rounded-md font-semibold text-foreground bg-muted/30 border border-border/30">
+                            {v}
+                          </span>
                         ) : (
-                          <span className="text-muted-foreground/40" aria-hidden="true">{"—"}</span>
+                          <span className="text-muted-foreground/30 font-mono select-none" aria-hidden="true">
+                            —
+                          </span>
                         )}
                       </TableCell>
                     );
                   })}
-                  <TableCell className="text-center tabular-nums py-2 sm:py-2.5">
-                    <span className="font-normal text-xs text-foreground">{total}</span>
+                  <TableCell className="text-center tabular-nums py-2.5">
+                    <span className="inline-block px-2 py-0.5 rounded-md font-bold text-xs text-primary bg-primary/10 border border-primary/20">
+                      {total}
+                    </span>
                   </TableCell>
-                  <TableCell className="py-2 sm:py-2.5">
-                    <div className="flex gap-1 justify-center">
-                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-success hover:bg-success/10" onClick={() => onCopy(l)} title="Copy">
-                        {copiedId === l.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                  <TableCell className="py-2.5">
+                    <div className="flex items-center gap-1 justify-center">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7 rounded-lg text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/10 cursor-pointer"
+                        onClick={() => onCopy(l)}
+                        title="Copy to clipboard"
+                      >
+                        {copiedId === l.id ? (
+                          <Check className="size-3.5 text-emerald-600" />
+                        ) : (
+                          <Copy className="size-3.5" />
+                        )}
                       </Button>
-                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-foreground hover:bg-muted" onClick={() => onEdit(l)} title="Edit">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/70 cursor-pointer"
+                        onClick={() => onEdit(l)}
+                        title="Edit day"
+                      >
                         <Pencil className="size-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(l)} title="Delete">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                        onClick={() => onDelete(l)}
+                        title="Delete log"
+                      >
                         <Trash2 className="size-3.5" />
                       </Button>
                     </div>
@@ -185,15 +296,23 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
             })}
           </TableBody>
           {paginated.length > 0 && (
-            <TableFooter className="hidden [html[data-theme-variant=classic]_&]:table-footer-group">
-              <TableRow className="bg-muted/40 hover:bg-transparent border-t border-border">
-                <TableHead className="font-mono text-2xs uppercase tracking-wider text-muted-foreground text-center py-2.5">Σ Page</TableHead>
+            <TableFooter className="bg-muted/20 border-t border-border/50">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground text-center py-2.5">
+                  Page Total
+                </TableHead>
                 {categories.map((c) => (
-                  <TableHead key={c.key} className="text-center tabular-nums text-xs font-bold" style={{ color: colorForKey(c.key) }}>
+                  <TableHead
+                    key={c.key}
+                    className="text-center tabular-nums text-xs font-bold"
+                    style={{ color: colorForKey(c.key) }}
+                  >
                     {colTotals[c.key] || <span className="text-muted-foreground/30">—</span>}
                   </TableHead>
                 ))}
-                <TableHead className="text-center tabular-nums text-xs font-bold text-foreground">{grandTotal}</TableHead>
+                <TableHead className="text-center tabular-nums text-xs font-bold text-primary">
+                  {grandTotal}
+                </TableHead>
                 <TableHead aria-hidden />
               </TableRow>
             </TableFooter>
@@ -205,7 +324,13 @@ function DesktopTable({ paginated, categories, search, copiedId, onEdit, onDelet
 }
 
 // ── Reducer ────────────────────────────────────────────────────────────────
-interface TableState { page: number; itemsPerPage: number; search: string; deleteTarget: DailyLog | null; copiedId: string | null; }
+interface TableState {
+  page: number;
+  itemsPerPage: number;
+  search: string;
+  deleteTarget: DailyLog | null;
+  copiedId: string | null;
+}
 type TableAction =
   | { type: "set_page"; p: number }
   | { type: "set_per_page"; n: number }
@@ -213,28 +338,45 @@ type TableAction =
   | { type: "set_delete"; log: DailyLog | null }
   | { type: "set_copied"; id: string | null };
 
-const tableInit: TableState = { page: 1, itemsPerPage: 10, search: "", deleteTarget: null, copiedId: null };
+const tableInit: TableState = {
+  page: 1,
+  itemsPerPage: 10,
+  search: "",
+  deleteTarget: null,
+  copiedId: null,
+};
 
 function tableReducer(s: TableState, a: TableAction): TableState {
   switch (a.type) {
-    case "set_page": return { ...s, page: a.p };
-    case "set_per_page": return { ...s, itemsPerPage: a.n, page: 1 };
-    case "set_search": return { ...s, search: a.q, page: 1 };
-    case "set_delete": return { ...s, deleteTarget: a.log };
-    case "set_copied": return { ...s, copiedId: a.id };
-    default: return s;
+    case "set_page":
+      return { ...s, page: a.p };
+    case "set_per_page":
+      return { ...s, itemsPerPage: a.n, page: 1 };
+    case "set_search":
+      return { ...s, search: a.q, page: 1 };
+    case "set_delete":
+      return { ...s, deleteTarget: a.log };
+    case "set_copied":
+      return { ...s, copiedId: a.id };
+    default:
+      return s;
   }
 }
 
-// ── Main component ─────────────────────────────────────────────────────────
+// ── Main Component ─────────────────────────────────────────────────────────
 interface Props {
   logs: DailyLog[];
   onEdit: (log: DailyLog) => void;
-  actions?: React.ReactNode;
+  onNew?: () => void;
+  userName?: string;
 }
 
-export function DaysTable({ logs, onEdit, actions }: Props) {
-  const [{ page, itemsPerPage, search, deleteTarget, copiedId }, tDispatch] = useReducer(tableReducer, tableInit);
+export function DaysTable({ logs, onEdit, onNew, userName }: Props) {
+  const [{ page, itemsPerPage, search, deleteTarget, copiedId }, tDispatch] = useReducer(
+    tableReducer,
+    tableInit,
+  );
+  const [statusFilter, setStatusFilter] = useState<FilterStatus>("all");
   const deleteLog = useDeleteLog();
   const { data: categories = [] } = useCategories();
 
@@ -243,42 +385,75 @@ export function DaysTable({ logs, onEdit, actions }: Props) {
     [logs],
   );
 
+  const counts = useMemo(() => {
+    const working = allSorted.filter((l) => !l.is_off_day).length;
+    const weekends = allSorted.filter((l) => l.is_off_day && isWeekend(l.log_date)).length;
+    const off = allSorted.filter((l) => l.is_off_day && !isWeekend(l.log_date)).length;
+    return { all: allSorted.length, working, weekends, off };
+  }, [allSorted]);
+
   const filtered = useMemo(() => {
+    let list = allSorted;
+
+    // Filter by status tab
+    if (statusFilter === "working") {
+      list = list.filter((l) => !l.is_off_day);
+    } else if (statusFilter === "weekends") {
+      list = list.filter((l) => l.is_off_day && isWeekend(l.log_date));
+    } else if (statusFilter === "off") {
+      list = list.filter((l) => l.is_off_day && !isWeekend(l.log_date));
+    }
+
+    // Filter by search query
     const q = search.trim().toLowerCase();
-    if (!q) return allSorted;
-    return allSorted.filter(
+    if (!q) return list;
+    return list.filter(
       (l) =>
         l.log_date.includes(q) ||
         formatTableDate(l.log_date).toLowerCase().includes(q) ||
         formatDayName(l.log_date).toLowerCase().includes(q) ||
         (l.notes ?? "").toLowerCase().includes(q),
     );
-  }, [allSorted, search]);
+  }, [allSorted, statusFilter, search]);
 
   const workingLogs = useMemo(() => filtered.filter((l) => !l.is_off_day), [filtered]);
   const avgTotal = useMemo(() => {
     if (!workingLogs.length) return 0;
     return Math.round(
-      workingLogs.reduce((s, l) => s + categories.reduce((cs, c) => cs + getVal(l, c.key), 0), 0) /
-        workingLogs.length,
+      workingLogs.reduce(
+        (s, l) => s + categories.reduce((cs, c) => cs + getVal(l, c.key), 0),
+        0,
+      ) / workingLogs.length,
     );
   }, [workingLogs, categories]);
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginated = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
-  const goTo = (p: number) => tDispatch({ type: "set_page", p: Math.max(1, Math.min(totalPages, p)) });
+  const goTo = (p: number) =>
+    tDispatch({ type: "set_page", p: Math.max(1, Math.min(totalPages, p)) });
 
   const copyLog = (l: DailyLog) => {
     const rows = l.is_off_day
-      ? [["Date", formatTableDate(l.log_date)], ["Status", isWeekend(l.log_date) ? "Weekend" : "Off Day"]]
+      ? [
+          ["Date", formatTableDate(l.log_date)],
+          ["Status", isWeekend(l.log_date) ? "Weekend" : "Off Day"],
+        ]
       : [
           ["Date", formatTableDate(l.log_date)],
-          ...categories.reduce<string[][]>((acc, c) => { if (getVal(l, c.key) > 0) acc.push([c.label, String(getVal(l, c.key))]); return acc; }, []),
+          ...categories.reduce<string[][]>((acc, c) => {
+            if (getVal(l, c.key) > 0) acc.push([c.label, String(getVal(l, c.key))]);
+            return acc;
+          }, []),
         ];
 
     const tdStyle = "border:1px solid #444;padding:4px 12px;text-align:left;";
     const thStyle = `${tdStyle}font-weight:600;background:#1e2130;color:#e2e8f0;`;
-    const html = `<table style="border-collapse:collapse;font-family:sans-serif;font-size:13px;">${rows.map(([k, v]) => `<tr><td style="${thStyle}">${k}</td><td style="${tdStyle}">${v}</td></tr>`).join("")}</table>`;
+    const html = `<table style="border-collapse:collapse;font-family:sans-serif;font-size:13px;">${rows
+      .map(
+        ([k, v]) =>
+          `<tr><td style="${thStyle}">${k}</td><td style="${tdStyle}">${v}</td></tr>`,
+      )
+      .join("")}</table>`;
     const plain = rows.map(([k, v]) => `${k}\t${v}`).join("\n");
 
     const onCopied = () => {
@@ -300,34 +475,185 @@ export function DaysTable({ logs, onEdit, actions }: Props) {
     }
   };
 
-  const pageNumbers = useMemo(() => sharedPageNumbers(totalPages, page), [totalPages, page]);
+  const pageNumbers = useMemo(
+    () => sharedPageNumbers(totalPages, page),
+    [totalPages, page],
+  );
 
-  const sharedProps = { paginated, categories, search, copiedId, onEdit, onDelete: (l: DailyLog) => tDispatch({ type: "set_delete", log: l }), onCopy: copyLog };
+  const sharedProps = {
+    paginated,
+    categories,
+    search,
+    copiedId,
+    onEdit,
+    onDelete: (l: DailyLog) => tDispatch({ type: "set_delete", log: l }),
+    onCopy: copyLog,
+    onClearSearch: () => tDispatch({ type: "set_search", q: "" }),
+  };
 
   return (
     <>
-      <div className="flex flex-col min-h-0 gap-3">
-
-        {/* Search + summary + actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 shrink-0">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground pointer-events-none" />
+      <div className="flex flex-col min-h-0 gap-3.5">
+        {/* Unified Command Toolbar: Search + Interactive Status Tabs + Actions */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card border border-border/70 rounded-2xl p-3 sm:p-3.5 shadow-2xs">
+          {/* Search input */}
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
             <Input
-              className="pl-9 h-10 text-sm w-full bg-card border-border"
-              placeholder="Search date, day, or notes…"
+              className="pl-9 pr-8 h-9 text-xs sm:text-sm w-full bg-background border-border/60 focus:border-primary/50"
+              placeholder="Search by date, weekday, or notes…"
               aria-label="Search days by date, day name, or notes"
               value={search}
               onChange={(e) => tDispatch({ type: "set_search", q: e.target.value })}
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => tDispatch({ type: "set_search", q: "" })}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 size-5 rounded-full hover:bg-muted text-muted-foreground flex items-center justify-center cursor-pointer"
+                aria-label="Clear search"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
           </div>
-            <div className="flex items-center gap-3 sm:ml-auto">
-            <div className="hidden sm:flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs text-foreground">
-              <span><span className="font-semibold text-foreground">{workingLogs.length}</span> working days</span>
-              <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && isWeekend(l.log_date)).length}</span> weekends</span>
-              <span><span className="font-semibold text-foreground">{filtered.filter((l) => l.is_off_day && !isWeekend(l.log_date)).length}</span> off days</span>
-              <span>Avg <span className="font-semibold text-foreground">{avgTotal}</span> docs/day</span>
+
+          {/* Controls: Segmented Status Filter Tabs + Export + Add Day */}
+          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap justify-between md:justify-end">
+            {/* Interactive Status Tabs */}
+            <div className="inline-flex items-center rounded-xl bg-muted/40 p-1 border border-border/50 text-xs">
+              <button
+                type="button"
+                onClick={() => { setStatusFilter("all"); tDispatch({ type: "set_page", p: 1 }); }}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1.5",
+                  statusFilter === "all"
+                    ? "bg-background text-foreground shadow-2xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <span>All</span>
+                <span className="text-[10px] opacity-70 font-mono">({counts.all})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setStatusFilter("working"); tDispatch({ type: "set_page", p: 1 }); }}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1.5",
+                  statusFilter === "working"
+                    ? "bg-background text-foreground shadow-2xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <span>Working</span>
+                <span className="text-[10px] opacity-70 font-mono">({counts.working})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setStatusFilter("weekends"); tDispatch({ type: "set_page", p: 1 }); }}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1.5",
+                  statusFilter === "weekends"
+                    ? "bg-background text-foreground shadow-2xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <span>Weekends</span>
+                <span className="text-[10px] opacity-70 font-mono">({counts.weekends})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setStatusFilter("off"); tDispatch({ type: "set_page", p: 1 }); }}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1.5",
+                  statusFilter === "off"
+                    ? "bg-background text-foreground shadow-2xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <span>Off Days</span>
+                <span className="text-[10px] opacity-70 font-mono">({counts.off})</span>
+              </button>
             </div>
-            {actions && <div className="flex w-full items-center gap-2 sm:w-auto">{actions}</div>}
+
+            {/* Average badge */}
+            <span className="hidden xl:inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted/30 border border-border/40 px-2.5 py-1 rounded-xl">
+              Avg <strong className="text-primary font-semibold">{avgTotal}</strong> / day
+            </span>
+
+            {/* Export Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 px-3 text-xs font-medium border-border/60 bg-background hover:bg-muted text-foreground rounded-xl shadow-2xs gap-1.5 cursor-pointer"
+                  disabled={logs.length === 0}
+                  aria-label="Export logs"
+                >
+                  <Download className="size-3.5" />
+                  <span>Export</span>
+                  <ChevronDown className="size-3.5 opacity-70 ml-0.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 p-1.5 rounded-xl border-border/60 shadow-lg">
+                <DropdownMenuLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1.5 font-heading">
+                  Export Records
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="my-1" />
+                <DropdownMenuItem
+                  onClick={() => downloadCSV(logs, categories, "daily-log.csv")}
+                  className="flex items-center gap-2.5 p-2 rounded-lg cursor-pointer text-xs focus:bg-muted/70"
+                >
+                  <div className="size-7 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 grid place-items-center shrink-0">
+                    <FileText className="size-3.5" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">CSV Spreadsheet</p>
+                    <p className="text-[10px] text-muted-foreground">Excel, Google Sheets (.csv)</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => downloadJSON(logs, categories, "daily-log.json")}
+                  className="flex items-center gap-2.5 p-2 rounded-lg cursor-pointer text-xs focus:bg-muted/70"
+                >
+                  <div className="size-7 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 grid place-items-center shrink-0">
+                    <FileJson className="size-3.5" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">JSON Backup</p>
+                    <p className="text-[10px] text-muted-foreground">Raw structured data (.json)</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => downloadPDF(logs, categories, "daily-log.pdf", { title: "Daily Log Export", userName })}
+                  className="flex items-center gap-2.5 p-2 rounded-lg cursor-pointer text-xs focus:bg-muted/70"
+                >
+                  <div className="size-7 rounded-md bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 grid place-items-center shrink-0">
+                    <FileType className="size-3.5" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">PDF Document</p>
+                    <p className="text-[10px] text-muted-foreground">Formatted report (.pdf)</p>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Add Log Button */}
+            {onNew && (
+              <Button
+                size="sm"
+                onClick={onNew}
+                className="h-9 px-3.5 text-xs font-semibold rounded-xl gap-1.5 shadow-xs cursor-pointer"
+              >
+                <Plus className="size-3.5" />
+                <span>Log day</span>
+                <kbd className="ml-1 text-[10px] font-mono border border-primary-foreground/30 bg-primary-foreground/10 rounded px-1.5 py-0.2 hidden sm:inline">
+                  N
+                </kbd>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -338,24 +664,35 @@ export function DaysTable({ logs, onEdit, actions }: Props) {
           totalPages={totalPages}
           pageNumbers={pageNumbers}
           onPageChange={goTo}
+          total={filtered.length}
+          pageSize={itemsPerPage}
+          entityLabel="days"
           showFirstLast
           itemsPerPage={itemsPerPage}
           onItemsPerPageChange={(n) => tDispatch({ type: "set_per_page", n })}
         />
-
       </div>
 
-      {/* Delete confirmation */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && tDispatch({ type: "set_delete", log: null })}>
-        <AlertDialogContent>
+      {/* Delete confirmation dialog */}
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(o) => !o && tDispatch({ type: "set_delete", log: null })}
+      >
+        <AlertDialogContent className="sm:max-w-md border-destructive/20">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this log?</AlertDialogTitle>
-            <AlertDialogDescription>
-              The log for <strong>{deleteTarget ? formatTableDate(deleteTarget.log_date) : ""}</strong> will be permanently deleted.
+            <AlertDialogDescription className="space-y-2">
+              <span>
+                The log for{" "}
+                <strong className="text-foreground">
+                  {deleteTarget ? formatTableDate(deleteTarget.log_date) : ""}
+                </strong>{" "}
+                will be permanently deleted from your records.
+              </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="border-border/60">Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {

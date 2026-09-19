@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ interface PaginationProps {
   /** When set, shows "Showing X–Y of Z" label */
   total?: number;
   pageSize?: number;
+  entityLabel?: string;
   showFirstLast?: boolean;
   itemsPerPage?: number;
   onItemsPerPageChange?: (n: number) => void;
@@ -23,6 +24,7 @@ export function Pagination({
   onPageChange,
   total,
   pageSize,
+  entityLabel = "patients",
   showFirstLast = false,
   itemsPerPage,
   onItemsPerPageChange,
@@ -41,7 +43,7 @@ export function Pagination({
     )}>
       {total != null && pageSize != null && (
         <span className="text-xs text-muted-foreground font-normal">
-          Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total} patients
+          Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total} {entityLabel}
         </span>
       )}
 

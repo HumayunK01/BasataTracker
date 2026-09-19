@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export type AuditEvent =
@@ -8,6 +9,7 @@ export type AuditEvent =
   | "category_updated"
   | "category_deleted"
   | "categories_reordered"
+  | "account_created"
   | "account_deleted"
   | "password_changed"
   | "data_exported"
@@ -37,4 +39,20 @@ export async function logAuditEvent(
   } catch {
     // Audit logging is best-effort — never block the main operation
   }
+}
+
+export function useAuditLogsQuery(limit = 50) {
+  return useQuery({
+    queryKey: ["audit_logs", limit],
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("audit_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (error) return [];
+      return data ?? [];
+    },
+  });
 }

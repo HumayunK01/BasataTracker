@@ -45,7 +45,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, X, Pencil, Trash2, FileText, Info, Loader2, CalendarDays, Copy, Check, CheckCheck, ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Plus, Search, X, Pencil, Trash2, FileText, Info, Loader2, CalendarDays, Copy, Check, CheckCheck, ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight } from "@/components/ui/icons";
 import { SortHeader, type SortKey } from "@/components/ar/tracker/SortHeader";
 import { copyName, formatDobInput } from "@/components/ar/tracker/tracker-helpers";
 import Skeleton from "react-loading-skeleton";
@@ -653,7 +653,7 @@ return (
                 >
                   <td className="px-3 py-2 font-medium text-foreground min-w-[300px] max-w-[360px] break-all">
                     <span className="inline-flex items-start gap-1.5 min-w-0">
-                      <img src="/pdf.png" alt="" className="size-4 shrink-0 object-contain mt-0.5" />
+                      <img src="/pdf.png" alt="" className="size-5 shrink-0 object-contain mt-0.5" />
                       <CopyValue value={withPdf(row.file_name)} title={withPdf(row.file_name)}>
                         <span className="break-all whitespace-normal"><Highlight text={withPdf(row.file_name)} query={search} /></span>
                       </CopyValue>
@@ -761,7 +761,7 @@ function StatusPicker({ row, status, onPick }: {
   onPick: { isPending: boolean; mutate: (vars: { id: string; status: FaxedBackStatus }) => void };
 }) {
   const iconFor = (s: FaxedBackStatus) => {
-    if (s === "Pending") return <Loader2 className="size-4 text-blue-500 animate-spin" />;
+    if (s === "Pending") return <Loader2 className="size-4 text-emerald-500 animate-spin" />;
     if (s === "Sent") return <CheckCheck className="size-4 text-emerald-500" />;
     if (s === "Failed") return <X className="size-4 text-rose-500" />;
     return null;
@@ -776,7 +776,7 @@ function StatusPicker({ row, status, onPick }: {
         >
           {iconFor(status)}
           <span>{STATUS_LABEL[status] ?? status}</span>
-          <ChevronDown className="size-3 opacity-50" />
+          <ChevronDown className="size-3 opacity-40 shrink-0 ml-0.5" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-44 font-sans text-xs">

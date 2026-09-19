@@ -13,8 +13,8 @@ import {
 import { useCategories, type Category } from "@/hooks/useCategories";
 import { useUpsertLog, useDailyLogs } from "@/hooks/useDailyLogs";
 import { isoDate, totalForLog, isWeekend } from "@/types/log";
-import { FigHeader, EmptyState } from "@/components/ar/industrial";
-import { RotateCcw, Hash, Plus, Tag, ChevronRight, RefreshCw } from "lucide-react";
+import { EmptyState } from "@/components/ar/industrial";
+import { RotateCcw, Hash, Plus, Tag, ChevronRight, RefreshCw } from "@/components/ui/icons";
 import { supabase, getUserId } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
@@ -333,43 +333,75 @@ export default function CounterPage() {
 
   return (
     <>
+      <div id="kudos-animation-container" className="fixed inset-0 pointer-events-none z-50 overflow-hidden" aria-hidden />
+
       <main className="flex-1 overflow-y-auto">
-        <div className="w-full px-4 sm:px-6 py-5 sm:py-6 flex flex-col gap-4">
-          {/* Hero — session total command center */}
-          <section className="relative bg-card border border-border/80 rounded-lg overflow-hidden animate-fade-in">
-            <header className="flex flex-wrap items-center justify-between gap-y-2 px-4 py-2 border-b border-border/50">
-              <span className="font-mono text-[11px] font-medium tracking-wide text-foreground uppercase">Session Total</span>
+        <div className="w-full px-4 sm:px-6 py-5 sm:py-6 flex flex-col gap-5 max-w-7xl mx-auto">
+          {/* Hero — Session Total Command Center */}
+          <section className="relative rounded-2xl border border-border/70 bg-gradient-to-b from-card to-card/60 backdrop-blur-md overflow-hidden shadow-xs animate-fade-in">
+            {/* Ambient accent top highlight */}
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+            <div className="absolute -top-20 left-1/3 -translate-x-1/2 w-96 h-32 bg-primary/5 blur-3xl pointer-events-none rounded-full" />
+
+            {/* Header bar */}
+            <header className="flex flex-wrap items-center justify-between gap-y-2 px-4 sm:px-5 py-3 border-b border-border/50 bg-muted/20">
               <div className="flex items-center gap-2">
-                <span
-                  className={`text-2xs font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-md border ${
+                <span className="size-2 rounded-full bg-primary shadow-2xs" />
+                <span className="font-mono text-xs font-semibold tracking-wider text-foreground uppercase">
+                  Session Total
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Sync status badge */}
+                <div
+                  className={`flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border shadow-2xs transition-colors duration-200 ${
                     saved
-                      ? "bg-success/15 text-success border-success/30"
+                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25"
                       : upsert.isPending
-                      ? "bg-info/15 text-info border-info/30"
+                      ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25"
                       : total > 0
-                      ? "bg-warning/15 text-warning border-warning/30"
-                      : "bg-muted text-foreground border-border/40"
+                      ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25"
+                      : "bg-muted text-muted-foreground border-border/40"
                   }`}
                 >
-                  {saved ? "Synced" : upsert.isPending ? "Syncing…" : total > 0 ? "Unsaved" : "Empty"}
-                </span>
+                  <span
+                    className={`size-1.5 rounded-full ${
+                      saved
+                        ? "bg-emerald-500"
+                        : upsert.isPending
+                        ? "bg-sky-500 animate-ping"
+                        : total > 0
+                        ? "bg-amber-500"
+                        : "bg-muted-foreground"
+                    }`}
+                  />
+                  <span>
+                    {saved ? "Synced" : upsert.isPending ? "Syncing…" : total > 0 ? "Unsaved" : "Ready"}
+                  </span>
+                </div>
+
+                {/* Force sync button */}
                 {!saved && total > 0 && (
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={handleSave}
                     disabled={upsert.isPending}
                     aria-label="Force sync now"
-                    className="h-7 px-2"
+                    className="h-7 px-2.5 rounded-xl border-border/60 hover:bg-muted/80 text-xs font-medium"
                   >
-                    <RefreshCw className={`size-3.5 ${upsert.isPending ? "animate-spin" : ""}`} />
+                    <RefreshCw className={`size-3 mr-1 ${upsert.isPending ? "animate-spin" : ""}`} />
+                    <span>Sync</span>
                   </Button>
                 )}
+
+                {/* Reset button */}
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   aria-label="Reset counter"
-                  className="h-7 px-2.5 border-border/60 hover:bg-muted/80"
+                  className="h-7 px-2.5 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                   onClick={() => setResetOpen(true)}
                   disabled={total === 0 && activeCategories.length === 0}
                 >
@@ -379,92 +411,153 @@ export default function CounterPage() {
               </div>
             </header>
 
-            <div className="px-4 sm:px-5 py-5 sm:py-6 flex flex-wrap items-end gap-x-10 gap-y-5">
-              <p className="text-7xl sm:text-8xl xl:text-9xl font-bold tabular-nums text-foreground leading-none tracking-tight">
-                {animatedTotal}
-              </p>
-              <dl className="ml-auto flex flex-wrap gap-x-8 gap-y-3 items-end">
-                {[
-                  { label: "Active", value: String(activeCategories.length) },
-                  { label: "Logged today", value: String(todayTotal) },
-                  ...(total > 0
-                    ? [{ label: "Pending", value: saved ? "0" : `${todayTotal > total ? "−" : "+"}${Math.abs(total - todayTotal)}` }]
-                    : []),
-                ].map((stat) => (
-                  <div key={stat.label}>
-                    <dt className="font-mono text-2xs uppercase tracking-[0.2em] text-foreground">{stat.label}</dt>
-                    <dd className="mt-1 text-xl font-bold tabular-nums leading-none">{stat.value}</dd>
+            {/* Main hero display */}
+            <div className="p-5 sm:p-7 flex flex-wrap items-end justify-between gap-6 relative z-10">
+              <div>
+                <p className="font-mono text-2xs uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
+                  Current Count
+                </p>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-7xl sm:text-8xl xl:text-9xl font-black font-mono tabular-nums text-foreground leading-none tracking-tight">
+                    {animatedTotal}
+                  </span>
+                  <span className="text-xs font-mono font-medium text-muted-foreground uppercase tracking-widest pb-2">
+                    docs
+                  </span>
+                </div>
+              </div>
+
+              {/* Quick stats cards */}
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                <div className="px-3.5 py-2.5 rounded-xl border border-border/60 bg-background/50 backdrop-blur-xs min-w-[100px] shadow-2xs">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground block">
+                    Active
+                  </span>
+                  <span className="text-xl font-bold font-mono tabular-nums text-foreground">
+                    {activeCategories.length}
+                  </span>
+                </div>
+
+                <div className="px-3.5 py-2.5 rounded-xl border border-border/60 bg-background/50 backdrop-blur-xs min-w-[110px] shadow-2xs">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground block">
+                    Logged Today
+                  </span>
+                  <span className="text-xl font-bold font-mono tabular-nums text-foreground">
+                    {todayTotal}
+                  </span>
+                </div>
+
+                {total > 0 && (
+                  <div className="px-3.5 py-2.5 rounded-xl border border-border/60 bg-background/50 backdrop-blur-xs min-w-[100px] shadow-2xs">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground block">
+                      Delta
+                    </span>
+                    <span
+                      className={`text-xl font-bold font-mono tabular-nums ${
+                        saved
+                          ? "text-emerald-500"
+                          : total > todayTotal
+                          ? "text-amber-500"
+                          : "text-foreground"
+                      }`}
+                    >
+                      {saved ? "±0" : `${total >= todayTotal ? "+" : ""}${total - todayTotal}`}
+                    </span>
                   </div>
-                ))}
-              </dl>
+                )}
+              </div>
             </div>
           </section>
 
-          {/* Counter cards grid */}
+          {/* Active counter cards */}
           {activeCategories.length > 0 && (
-            <>
-              <FigHeader title="Active Counters" />
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 stagger-children">
-              {activeCategories.map((cat, idx) => (
-                <CounterCard
-                  key={cat.key}
-                  cat={cat}
-                  count={getCount(cat.key)}
-                  maxCount={maxCount}
-                  onIncrement={() => increment(cat.key)}
-                  onDecrement={() => decrement(cat.key)}
-                  onRemove={() => removeCategory(cat.key)}
-                  hotkeyIndex={idx < 9 ? idx + 1 : undefined} // Only first 9 cards get shortcuts 1-9
-                />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between px-0.5">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold tracking-tight text-foreground">
+                    Active Counters
+                  </h3>
+                  <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                    {activeCategories.length}
+                  </span>
+                </div>
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-2xs text-muted-foreground font-mono">
+                  Keys <kbd className="px-1.5 py-0.5 rounded border border-border/60 bg-muted/50 font-bold">1</kbd>
+                  – <kbd className="px-1.5 py-0.5 rounded border border-border/60 bg-muted/50 font-bold">{Math.min(9, activeCategories.length)}</kbd> to quick count
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-4.5 stagger-children">
+                {activeCategories.map((cat, idx) => (
+                  <CounterCard
+                    key={cat.key}
+                    cat={cat}
+                    count={getCount(cat.key)}
+                    maxCount={maxCount}
+                    onIncrement={() => increment(cat.key)}
+                    onDecrement={() => decrement(cat.key)}
+                    onRemove={() => removeCategory(cat.key)}
+                    hotkeyIndex={idx < 9 ? idx + 1 : undefined}
+                  />
                 ))}
               </div>
-            </>
+            </div>
           )}
 
-          {/* Manage categories */}
-          <div className="h-px bg-border/40 my-3" />
-          <div className="flex flex-col sm:flex-row gap-3">
+          {/* Category action tray */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-1">
             <button
               type="button"
               onClick={() => setPickerOpen(true)}
               disabled={catsLoading || availableToAdd.length === 0}
-              className="flex-1 flex items-center gap-3 rounded-md border border-border bg-card px-4 py-3 text-left hover:bg-muted/40 hover:border-foreground/20 active:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40 transition-[background-color,border-color,opacity] duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:border-border touch-manipulation cursor-pointer"
+              className="flex-1 flex items-center gap-3.5 rounded-2xl border border-border/70 bg-card/70 backdrop-blur-sm px-4 py-3.5 text-left hover:bg-muted/40 hover:border-foreground/20 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation cursor-pointer shadow-2xs"
             >
-              <span className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <span className="size-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
                 <Plus className="size-4 text-primary" />
               </span>
-              <span className="flex-1 min-w-0 text-xs font-semibold text-foreground truncate">
-                {catsLoading
-                  ? "Loading categories…"
-                  : availableToAdd.length === 0 && activeCategories.length === 0
-                  ? "No categories yet"
-                  : availableToAdd.length === 0
-                  ? "All categories added"
-                  : `Add category · ${availableToAdd.length} available`}
-              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-foreground truncate">
+                  {catsLoading
+                    ? "Loading categories…"
+                    : availableToAdd.length === 0 && activeCategories.length === 0
+                    ? "No categories yet"
+                    : availableToAdd.length === 0
+                    ? "All categories in counter"
+                    : "Add Category from Tray"}
+                </p>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {availableToAdd.length > 0
+                    ? `${availableToAdd.length} available to track`
+                    : "All available categories are already added"}
+                </p>
+              </div>
               {availableToAdd.length > 0 && !catsLoading && (
-                <ChevronRight className="size-4 text-foreground shrink-0" />
+                <ChevronRight className="size-4 text-muted-foreground shrink-0" />
               )}
             </button>
+
             <button
               type="button"
               onClick={() => setNewCatOpen(true)}
               disabled={catsLoading}
-              className="sm:w-64 flex items-center gap-3 rounded-md border border-primary/30 bg-card px-4 py-3 text-left hover:bg-primary/5 hover:border-primary/60 active:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40 transition-[background-color,border-color,opacity] duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:border-primary/30 touch-manipulation cursor-pointer"
+              className="sm:w-60 flex items-center gap-3.5 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3.5 text-left hover:bg-primary/10 hover:border-primary/50 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation cursor-pointer shadow-2xs"
             >
-              <span className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <span className="size-9 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center shrink-0">
                 <Tag className="size-4 text-primary" />
               </span>
-              <span className="flex-1 min-w-0 text-xs font-semibold text-primary truncate">New category</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-primary truncate">Create Category</p>
+                <p className="text-[11px] text-primary/70 truncate">New document type</p>
+              </div>
             </button>
           </div>
 
-          {/* Empty state */}
+          {/* Empty state when no counters selected */}
           {activeCategories.length === 0 && !catsLoading && categories.length > 0 && (
             <EmptyState
               icon={Hash}
               title="No Active Counters"
-              hint="Add a category from the tray below to start tracking documents for today."
+              hint="Add categories from the tray above or press 'Add Category' to begin tracking document counts for today."
             />
           )}
         </div>
@@ -484,19 +577,19 @@ export default function CounterPage() {
       />
 
       <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-2xl border border-border/70 bg-background/95 backdrop-blur-xl shadow-xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Reset the counter?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will clear {total} unsaved count{total === 1 ? "" : "s"} and remove all{" "}
-              {activeCategories.length} categor{activeCategories.length === 1 ? "y" : "ies"} from the counter.
-              {todayLog ? " Counts already saved to today's log are not affected." : ""}
+            <AlertDialogTitle className="text-base font-bold">Reset the counter?</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-muted-foreground leading-relaxed">
+              This will clear {total} count{total === 1 ? "" : "s"} and remove all{" "}
+              {activeCategories.length} categor{activeCategories.length === 1 ? "y" : "ies"} from the active counter grid.
+              {todayLog ? " Counts already saved to today's log are preserved safely in the database." : ""}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="gap-2 sm:gap-0 mt-2">
+            <AlertDialogCancel className="rounded-xl border-border/60">Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm"
               onClick={handleReset}
             >
               Reset counter

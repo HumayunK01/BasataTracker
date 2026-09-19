@@ -20,8 +20,12 @@ opencode.json
 .agents/
 .impeccable/
 
-# understand-anything knowledge graph (local analysis artifact)
+# understand-anything & graphify knowledge graphs (local analysis artifacts)
 .ua/
+graphify-out/
+
+# editor & assistant caches / workspace state
+.zcode/
 
 # incremental compiler caches
 *.tsbuildinfo
@@ -46,3 +50,23 @@ supabase/.temp/
 *.njsproj
 *.sln
 *.sw?
+
+# Temporary, backup & OS files
+*.tmp
+*.bak
+*.old
+*.orig
+*~
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+
+# Test & coverage artifacts
+coverage/
+.nyc_output/
+
+# Deployment & tooling caches
+.vercel/
+.turbo/
+.eslintcache
+

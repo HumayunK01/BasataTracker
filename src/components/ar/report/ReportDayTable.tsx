@@ -10,7 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { BedDouble, ChevronLeft, ChevronRight } from "lucide-react";
+import { BedDouble, ChevronLeft, ChevronRight } from "@/components/ui/icons";
+import { cn } from "@/lib/utils";
 
 const TABLE_PAGE_SIZE = 20;
 
@@ -40,21 +41,33 @@ export function ReportDayTable({
   onPageChange,
 }: ReportDayTableProps) {
   return (
-    <div className="bg-card border border-border/60 rounded-lg overflow-hidden">
-      <div className="px-5 py-4 border-b border-border/40 bg-muted/[0.04]">
-        <h2 className="text-sm font-semibold font-heading">Day-by-Day Breakdown</h2>
+    <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
+      <div className="px-5 py-3.5 border-b border-border/50 flex items-center justify-between bg-muted/20">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold font-heading text-foreground">Day-by-Day Ledger</h2>
+          <span className="text-[11px] font-mono font-medium text-muted-foreground bg-muted/60 border border-border/40 px-2 py-0.5 rounded-md">
+            {filtered.length} days
+          </span>
+        </div>
       </div>
       <div className="overflow-x-auto no-scrollbar">
-        <Table className="[&_td]:py-2.5 [&_th]:py-2">
+        <Table className="[&_td]:py-3 [&_th]:py-2.5">
           <TableHeader>
-            <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
-              <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground text-center font-heading">Date</TableHead>
+            <TableRow className="hover:bg-transparent border-b border-border/60 bg-muted/30">
+              <TableHead className="font-mono font-semibold text-[11px] uppercase tracking-wider text-muted-foreground text-center">
+                Date
+              </TableHead>
               {categories.map((c) => (
-                <TableHead key={c.key} className="font-bold text-xs uppercase tracking-wider text-center text-foreground font-heading">
+                <TableHead
+                  key={c.key}
+                  className="font-mono font-semibold text-[11px] uppercase tracking-wider text-center text-muted-foreground"
+                >
                   {c.short}
                 </TableHead>
               ))}
-              <TableHead className="font-bold text-xs uppercase tracking-wider text-center text-foreground font-heading">Total</TableHead>
+              <TableHead className="font-mono font-semibold text-[11px] uppercase tracking-wider text-center text-foreground">
+                Total
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -64,17 +77,24 @@ export function ReportDayTable({
 
               return l.is_off_day ? (
                 <TableRow key={l.id} className="border-b border-border/40 last:border-0 bg-muted/10">
-                  <TableCell className="tabular-nums text-sm font-medium text-foreground text-center">
+                  <TableCell className="tabular-nums font-mono text-xs font-medium text-muted-foreground text-center">
                     {formatTableDate(l.log_date)}
                   </TableCell>
                   <TableCell colSpan={categories.length + 1}>
-                    <div className="flex items-center gap-1.5">
-                      <BedDouble className="size-3.5 text-foreground" />
-                      <span className="text-xs font-medium text-foreground tracking-wide uppercase">
-                        {isWeekendRow ? "Weekend" : "Off Day"}
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium border",
+                          isWeekendRow
+                            ? "bg-muted/40 text-muted-foreground border-border/50"
+                            : "bg-amber-500/10 text-amber-500 border-amber-500/20",
+                        )}
+                      >
+                        <BedDouble className="size-3" />
+                        <span>{isWeekendRow ? "Weekend" : "Off Day"}</span>
                       </span>
                       {l.notes && (
-                        <span className="text-xs text-foreground italic font-medium truncate max-w-[200px] sm:max-w-xs">
+                        <span className="text-xs text-muted-foreground italic truncate max-w-[200px] sm:max-w-xs">
                           &ldquo;{l.notes}&rdquo;
                         </span>
                       )}
@@ -82,24 +102,29 @@ export function ReportDayTable({
                   </TableCell>
                 </TableRow>
               ) : (
-                <TableRow key={l.id} className="border-b border-border/40 last:border-0 hover:bg-muted/20 transition-colors">
-                  <TableCell className="tabular-nums text-sm font-medium text-foreground text-center">
+                <TableRow
+                  key={l.id}
+                  className="border-b border-border/40 last:border-0 hover:bg-muted/20 transition-colors"
+                >
+                  <TableCell className="tabular-nums font-mono text-xs font-medium text-foreground text-center">
                     {formatTableDate(l.log_date)}
                   </TableCell>
                   {categories.map((c) => {
                     const v = (l.counts ?? {})[c.key] ?? 0;
                     return (
-                      <TableCell key={c.key} className="text-center tabular-nums text-sm">
+                      <TableCell key={c.key} className="text-center tabular-nums font-mono text-xs">
                         {v > 0 ? (
-                          <span className="font-medium text-foreground">{v}</span>
+                          <span className="font-semibold text-foreground">{v}</span>
                         ) : (
-                          <span className="text-muted-foreground" aria-hidden="true">{"—"}</span>
+                          <span className="text-muted-foreground/40" aria-hidden="true">
+                            {"—"}
+                          </span>
                         )}
                       </TableCell>
                     );
                   })}
                   <TableCell className="text-center tabular-nums">
-                    <span className="font-bold text-sm text-foreground">{rowTotal}</span>
+                    <span className="font-mono font-bold text-xs text-primary">{rowTotal}</span>
                   </TableCell>
                 </TableRow>
               );
@@ -109,16 +134,16 @@ export function ReportDayTable({
       </div>
 
       {totalTablePages > 1 && (
-        <div className="border-t border-border/40 px-4 sm:px-5 py-3 flex flex-wrap items-center justify-center sm:justify-between gap-2 bg-muted/[0.02]">
-          <span className="text-xs text-foreground font-medium">
-            Displaying {(tablePage - 1) * TABLE_PAGE_SIZE + 1}–{Math.min(tablePage * TABLE_PAGE_SIZE, filtered.length)} of{" "}
-            {filtered.length} log rows
+        <div className="border-t border-border/40 px-4 sm:px-5 py-3 flex flex-wrap items-center justify-center sm:justify-between gap-2 bg-muted/[0.04]">
+          <span className="text-xs text-muted-foreground font-mono font-medium">
+            Showing {(tablePage - 1) * TABLE_PAGE_SIZE + 1}–{Math.min(tablePage * TABLE_PAGE_SIZE, filtered.length)} of{" "}
+            {filtered.length} records
           </span>
           <div className="flex items-center gap-1.5">
             <Button
               variant="ghost"
               size="icon"
-              className="size-9 sm:size-8 hover:bg-muted/80 text-foreground hover:text-foreground border border-border/40 rounded-md active:scale-95 transition-[color,background-color,transform] duration-150"
+              className="size-8 hover:bg-muted text-foreground border border-border/40 rounded-lg active:scale-95 transition-all"
               onClick={() => onPageChange(Math.max(1, tablePage - 1))}
               disabled={tablePage === 1}
             >
@@ -126,7 +151,10 @@ export function ReportDayTable({
             </Button>
             {tablePageNumbers.map((p, i) =>
               p === "…" ? (
-                <span key={`ellipsis-${tablePageNumbers[i + 1] ?? i}`} className="w-8 text-center text-xs text-foreground select-none">
+                <span
+                  key={`ellipsis-${tablePageNumbers[i + 1] ?? i}`}
+                  className="w-8 text-center text-xs text-muted-foreground select-none"
+                >
                   …
                 </span>
               ) : (
@@ -134,22 +162,22 @@ export function ReportDayTable({
                   key={p}
                   variant={tablePage === p ? "default" : "ghost"}
                   size="icon"
-                  className={[
-                    "size-9 sm:size-8 text-xs font-semibold rounded-md active:scale-95 transition-[color,background-color,border-color,transform] duration-150 border",
-                    tablePage === p 
-                      ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/10" 
-                      : "border-border/40 text-foreground hover:text-foreground hover:bg-muted/80"
-                  ].join(" ")}
+                  className={cn(
+                    "size-8 text-xs font-mono font-semibold rounded-lg active:scale-95 transition-all border",
+                    tablePage === p
+                      ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                      : "border-border/40 text-muted-foreground hover:text-foreground hover:bg-muted",
+                  )}
                   onClick={() => onPageChange(p as number)}
                 >
                   {p}
                 </Button>
-              )
+              ),
             )}
             <Button
               variant="ghost"
               size="icon"
-              className="size-9 sm:size-8 hover:bg-muted/80 text-foreground hover:text-foreground border border-border/40 rounded-md active:scale-95 transition-[color,background-color,transform] duration-150"
+              className="size-8 hover:bg-muted text-foreground border border-border/40 rounded-lg active:scale-95 transition-all"
               onClick={() => onPageChange(Math.min(totalTablePages, tablePage + 1))}
               disabled={tablePage === totalTablePages}
             >
@@ -160,25 +188,27 @@ export function ReportDayTable({
       )}
 
       {workingLogs.length > 0 && (
-        <div className="border-t border-border/40 px-5 py-3.5 flex flex-wrap gap-x-6 gap-y-2 text-xs text-foreground bg-muted/[0.06]">
+        <div className="border-t border-border/40 px-5 py-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-mono text-muted-foreground bg-muted/20">
           <span>
-            Total Docs Processed: <span className="font-bold text-foreground">{totalDocs}</span>
+            Total: <span className="font-bold text-foreground">{totalDocs}</span> docs
           </span>
-          <span className="hidden sm:inline text-border/80">|</span>
+          <span className="hidden sm:inline text-border">|</span>
           <span>
-            Working Shifts: <span className="font-bold text-foreground">{workingLogs.length}</span>
+            Shifts: <span className="font-bold text-foreground">{workingLogs.length}</span>
           </span>
-          <span className="hidden sm:inline text-border/80">|</span>
+          <span className="hidden sm:inline text-border">|</span>
           <span>
-            Average document processing speed: <span className="font-bold text-foreground">{avgPerDay}</span> docs/day
+            Speed: <span className="font-bold text-foreground">{avgPerDay}</span> docs/day
           </span>
-          <span className="hidden sm:inline text-border/80">|</span>
+          <span className="hidden sm:inline text-border">|</span>
           {categories.map((c) => {
             const val = workingLogs.reduce((s, l) => s + ((l.counts ?? {})[c.key] ?? 0), 0);
             return val > 0 ? (
               <span key={c.key} className="inline-flex items-center gap-1.5">
                 <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: colorForKey(c.key) }} />
-                <span>{c.short}: <span className="font-bold text-foreground">{val}</span></span>
+                <span>
+                  {c.short}: <span className="font-bold text-foreground">{val}</span>
+                </span>
               </span>
             ) : null;
           })}

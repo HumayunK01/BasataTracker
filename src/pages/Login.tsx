@@ -1,10 +1,10 @@
-import { useReducer, useRef } from "react";
+import { useReducer, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
-import { Loader2, Eye, EyeOff, Sun, Moon, Check, X, ChevronLeft } from "lucide-react";
+import { Loader2, Eye, EyeOff, Sun, Moon, Check, X } from "@/components/ui/icons";
 import { useTheme } from "@/hooks/useTheme";
 import { AppLogo } from "@/components/ar/AppLogo";
 import { AppFavicon } from "@/components/ar/AppFavicon";
@@ -19,10 +19,16 @@ const PASSWORD_RULES = [
 type Mode = "login" | "signup";
 
 interface LoginState {
-  mode: Mode; email: string; password: string;
-  firstName: string; lastName: string; showPassword: boolean; loading: boolean;
+  mode: Mode;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  showPassword: boolean;
+  loading: boolean;
   confirmEmail: string | null;
 }
+
 type LoginAction =
   | { type: "set_mode"; mode: Mode }
   | { type: "set_email"; v: string }
@@ -35,7 +41,16 @@ type LoginAction =
   | { type: "signup_success"; email: string }
   | { type: "back_to_login" };
 
-const loginInit: LoginState = { mode: "login", email: "", password: "", firstName: "", lastName: "", showPassword: false, loading: false, confirmEmail: null };
+const loginInit: LoginState = {
+  mode: "login",
+  email: "",
+  password: "",
+  firstName: "",
+  lastName: "",
+  showPassword: false,
+  loading: false,
+  confirmEmail: null,
+};
 
 function loginReducer(s: LoginState, a: LoginAction): LoginState {
   switch (a.type) {
@@ -57,11 +72,14 @@ const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 60_000;
 
 export default function LoginPage() {
-  const { theme, toggle, variant } = useTheme();
-  const isClassic = variant === "classic";
+  const { theme, toggle } = useTheme();
   const [s, dispatch] = useReducer(loginReducer, loginInit);
   const { mode, email, password, firstName, lastName, showPassword, loading, confirmEmail } = s;
   const attemptTimestamps = useRef<number[]>([]);
+
+  useEffect(() => {
+    document.title = mode === "signup" ? "Sign Up · Basata Tracker" : "Sign In · Basata Tracker";
+  }, [mode]);
 
   const checkRateLimit = (): boolean => {
     const now = Date.now();
@@ -103,209 +121,96 @@ export default function LoginPage() {
     }
   };
 
-  if (!isClassic) {
-    return (
-      <div className="relative flex min-h-dvh w-full items-center justify-center bg-slate-100 dark:bg-[#0f172a] px-4 py-6 transition-colors">
-        <div className="relative w-full max-w-[260px] bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-0 rounded-md px-5 pt-7 pb-8 shadow-xl dark:shadow-2xl transition-colors">
-          {/* Top-right theme toggle inside card */}
-          <button
-            type="button"
-            onClick={toggle}
-            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            className="absolute top-3.5 right-3.5 size-7 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-white dark:hover:text-white/80 transition-colors cursor-pointer"
-          >
-            {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
-          </button>
-
-          {confirmEmail ? (
-            <div className="space-y-3.5 text-center">
-              <AppFavicon className="size-12 object-contain mx-auto" />
-              <h1 className="text-base font-bold text-slate-900 dark:text-white">Check your email</h1>
-              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                We sent a confirmation link to <span className="font-medium text-slate-900 dark:text-white break-all">{confirmEmail}</span>.
-              </p>
-              <Button
-                className="w-full h-10 bg-[#3b82f6] hover:bg-[#2563eb] text-white text-xs font-medium rounded"
-                onClick={() => dispatch({ type: "back_to_login" })}
-              >
-                Back to sign in
-              </Button>
-            </div>
-          ) : (
-            <>
-              {/* Centered green B icon */}
-              <div className="flex justify-center pt-2">
-                <AppFavicon className="size-13 sm:size-14 object-contain" />
-              </div>
-
-              {/* Login title */}
-              <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white text-center mt-3 mb-5 font-heading">
-                {mode === "login" ? "Login" : "Sign Up"}
-              </h1>
-
-              {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-3">
-                {mode === "signup" && (
-                  <>
-                    <Input
-                      type="text"
-                      placeholder="First name"
-                      value={firstName}
-                      onChange={(e) => dispatch({ type: "set_first", v: e.target.value })}
-                      required
-                      className="h-10 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 dark:bg-[#334155] dark:border-0 dark:text-white dark:placeholder:text-slate-400 rounded text-xs px-3 focus-visible:ring-1 focus-visible:ring-blue-500"
-                    />
-                    <Input
-                      type="text"
-                      placeholder="Last name"
-                      value={lastName}
-                      onChange={(e) => dispatch({ type: "set_last", v: e.target.value })}
-                      required
-                      className="h-10 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 dark:bg-[#334155] dark:border-0 dark:text-white dark:placeholder:text-slate-400 rounded text-xs px-3 focus-visible:ring-1 focus-visible:ring-blue-500"
-                    />
-                  </>
-                )}
-
-                <Input
-                  type="text"
-                  placeholder="Username"
-                  aria-label="Username"
-                  value={email}
-                  onChange={(e) => dispatch({ type: "set_email", v: e.target.value })}
-                  required
-                  autoComplete="username"
-                  className="h-10 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 dark:bg-[#334155] dark:border-0 dark:text-white dark:placeholder:text-slate-400 rounded text-xs px-3 focus-visible:ring-1 focus-visible:ring-blue-500"
-                />
-
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  aria-label="Password"
-                  value={password}
-                  onChange={(e) => dispatch({ type: "set_password", v: e.target.value })}
-                  required
-                  autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  className="h-10 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 dark:bg-[#334155] dark:border-0 dark:text-white dark:placeholder:text-slate-400 rounded text-xs px-3 focus-visible:ring-1 focus-visible:ring-blue-500"
-                />
-
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full h-10 bg-[#3b82f6] hover:bg-[#2563eb] text-white font-medium text-xs rounded shadow-none mt-4 transition-colors"
-                >
-                  {loading && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
-                  {mode === "login" ? "Login" : "Create Account"}
-                </Button>
-              </form>
-            </>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-
-
   return (
-    <div className="relative flex min-h-dvh w-full items-center justify-center bg-background px-5 py-8 overflow-hidden">
+    <div className="relative flex min-h-dvh w-full items-center justify-center bg-background px-4 py-8 sm:px-6 overflow-hidden select-none">
 
-      {/* Ambient grid glow */}
-      <div className="pointer-events-none fixed inset-0 z-0" aria-hidden>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.06)_0%,transparent_70%)]" />
+      {/* Atmospheric radial glow and ambient gradient */}
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[680px] h-[400px] bg-emerald-500/[0.08] dark:bg-emerald-500/[0.14] blur-[130px] rounded-full" />
+        <div className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-emerald-500/[0.04] dark:bg-emerald-500/[0.08] blur-[140px] rounded-full" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.2)_100%)] dark:bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.6)_100%)]" />
       </div>
 
-      {/* Theme toggle — top right */}
-      <motion.button
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-        onClick={toggle}
-        title={theme === "dark" ? "Light mode" : "Dark mode"}
-        aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-        className="fixed top-4 right-4 z-20 size-10 rounded-lg flex items-center justify-center text-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-      >
-        {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
-      </motion.button>
+      {/* Theme toggle */}
+      <div className="fixed top-4 right-4 z-20">
+        <button
+          type="button"
+          onClick={toggle}
+          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          className="size-9 rounded-xl border border-border/60 bg-card/80 backdrop-blur-md hover:bg-muted/70 flex items-center justify-center text-muted-foreground hover:text-foreground shadow-2xs transition-all cursor-pointer"
+        >
+          {theme === "dark" ? <Sun className="size-4.5" strokeWidth={1.75} /> : <Moon className="size-4.5" strokeWidth={1.75} />}
+        </button>
+      </div>
 
+      {/* Main card */}
       <AnimatePresence mode="wait">
         {confirmEmail ? (
           <motion.div
             key="confirm"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-            className="relative z-10 w-full max-w-sm"
+            initial={{ opacity: 0, y: 14, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -14, scale: 0.98 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="relative z-10 w-full max-w-[400px]"
           >
-            <div className="bg-card border border-border/80 rounded-xl p-6 space-y-5">
-              <div className="space-y-3 text-center">
-          <div className="flex justify-center">
-            <AppLogo className="h-10 object-contain" />
-          </div>
-                <div className="space-y-1.5">
-                  <h1 className="text-xl font-bold tracking-tight text-foreground">Account created!</h1>
-                  <p className="text-xs text-foreground leading-relaxed">
-                    We sent a confirmation link to{" "}
-                    <span className="font-medium text-foreground break-all">{confirmEmail}</span>.
-                    Please check your inbox to activate your account.
-                  </p>
-                </div>
+            <div className="bg-card/95 backdrop-blur-2xl border border-border/70 rounded-3xl p-7 sm:p-9 shadow-2xl space-y-6 text-center">
+              <div className="size-14 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center shadow-2xs">
+                <AppFavicon className="size-8 object-contain" />
               </div>
+              <div className="space-y-2">
+                <h1 className="text-xl font-bold tracking-tight text-foreground font-heading">
+                  Check your email
+                </h1>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  We sent a confirmation link to{" "}
+                  <span className="font-semibold text-foreground break-all">{confirmEmail}</span>.
+                  Please click the link in your email to activate your account.
+                </p>
+              </div>
+
               <Button
-                className="w-full h-12 text-sm font-semibold tracking-wide"
+                className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-xs shadow-emerald-600/25 active:scale-[0.98]"
                 onClick={() => dispatch({ type: "back_to_login" })}
               >
                 Back to sign in
               </Button>
-              <p className="text-center text-xs text-foreground">
-                Didn&apos;t get it? Check your spam folder.
+              <p className="text-[11px] text-muted-foreground">
+                Didn&apos;t receive it? Check your spam folder or wait a few minutes.
               </p>
             </div>
           </motion.div>
         ) : (
           <motion.div
             key={mode}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
-            className="relative z-10 w-full max-w-sm"
+            initial={{ opacity: 0, y: 16, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -16, scale: 0.98 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="relative z-10 w-full max-w-[400px]"
           >
-            <div className="bg-card border border-border/80 rounded-xl p-6 sm:p-7 space-y-6">
+            <div className="bg-card/95 backdrop-blur-2xl border border-border/70 rounded-3xl p-7 sm:p-9 shadow-2xl space-y-6">
 
-              {/* Logo + Title */}
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.05, duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                className="space-y-4"
-              >
+              {/* Logo & Subtitle */}
+              <div className="space-y-3 text-center">
                 <div className="flex justify-center">
-                  <AppLogo className="h-9 object-contain" />
+                  <AppLogo className="h-10 object-contain drop-shadow-xs" />
                 </div>
-                <div className="space-y-1 text-center">
-                  <h1 className="text-xl font-bold tracking-tight text-foreground">
-                    {mode === "login" ? "" : "Create your account"}
-                  </h1>
-                  <p className="text-xs text-foreground">
-                    {mode === "login"
-                      ? "Sign in to continue to Basata Tracker"
-                      : "Start tracking your daily document work"}
-                  </p>
-                </div>
-              </motion.div>
+                <p className="text-xs text-muted-foreground">
+                  Sign in to continue to Basata Tracker
+                </p>
+              </div>
 
               {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-3.5">
-
-                {/* Name fields — signup only */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* First and last name for signup */}
                 {mode === "signup" && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="flex flex-col xs:flex-row gap-2.5 overflow-hidden"
+                    className="grid grid-cols-2 gap-2.5 overflow-hidden"
                   >
                     <Input
                       type="text"
@@ -315,7 +220,7 @@ export default function LoginPage() {
                       onChange={(e) => dispatch({ type: "set_first", v: e.target.value })}
                       required
                       autoComplete="given-name"
-                      className="h-12 text-sm"
+                      className="h-11 rounded-xl bg-muted/40 border-border/60 text-sm focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/60"
                     />
                     <Input
                       type="text"
@@ -325,23 +230,27 @@ export default function LoginPage() {
                       onChange={(e) => dispatch({ type: "set_last", v: e.target.value })}
                       required
                       autoComplete="family-name"
-                      className="h-12 text-sm"
+                      className="h-11 rounded-xl bg-muted/40 border-border/60 text-sm focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/60"
                     />
                   </motion.div>
                 )}
 
-                <div className="space-y-2.5">
+                {/* Email input */}
+                <div className="space-y-1.5">
                   <Input
                     type="email"
-                    placeholder="Email"
-                    aria-label="Email"
+                    placeholder="Email address"
+                    aria-label="Email address"
                     value={email}
                     onChange={(e) => dispatch({ type: "set_email", v: e.target.value })}
                     required
                     autoComplete="email"
-                    className="h-12 text-sm"
+                    className="h-11 rounded-xl bg-muted/40 border-border/60 text-sm focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/60"
                   />
+                </div>
 
+                {/* Password input */}
+                <div className="space-y-1.5">
                   <div className="relative">
                     <Input
                       type={showPassword ? "text" : "password"}
@@ -352,7 +261,7 @@ export default function LoginPage() {
                       required
                       minLength={6}
                       autoComplete={mode === "login" ? "current-password" : "new-password"}
-                      className="h-12 text-sm pr-12"
+                      className="h-11 rounded-xl bg-muted/40 border-border/60 text-sm pr-11 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/60"
                     />
                     <button
                       type="button"
@@ -360,9 +269,9 @@ export default function LoginPage() {
                       tabIndex={-1}
                       title={showPassword ? "Hide password" : "Show password"}
                       aria-label={showPassword ? "Hide password" : "Show password"}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 size-9 flex items-center justify-center rounded-md text-foreground hover:text-foreground transition-colors active:scale-90"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 size-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     >
-                      {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                      {showPassword ? <EyeOff className="size-4" strokeWidth={1.75} /> : <Eye className="size-4" strokeWidth={1.75} />}
                     </button>
                   </div>
                 </div>
@@ -372,52 +281,38 @@ export default function LoginPage() {
                   <motion.div
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="grid grid-cols-2 gap-x-4 gap-y-1.5"
+                    className="grid grid-cols-2 gap-x-2 gap-y-1 pt-1"
                   >
                     {PASSWORD_RULES.map(({ label, test }) => {
                       const passed = password.length > 0 && test(password);
                       const untouched = password.length === 0;
                       return (
-                        <div key={label} className={`flex items-center gap-1.5 text-xs transition-colors ${
-                          untouched ? "text-foreground" : passed ? "text-success" : "text-destructive"
-                        }`}>
+                        <div
+                          key={label}
+                          className={`flex items-center gap-1.5 text-[11px] transition-colors ${
+                            untouched ? "text-muted-foreground" : passed ? "text-emerald-500 font-medium" : "text-destructive font-medium"
+                          }`}
+                        >
                           {untouched || passed
-                            ? <Check className="size-3 shrink-0" />
-                            : <X className="size-3 shrink-0" />}
-                          {label}
+                            ? <Check className="size-3 shrink-0" strokeWidth={2} />
+                            : <X className="size-3 shrink-0" strokeWidth={2} />}
+                          <span className="truncate">{label}</span>
                         </div>
                       );
                     })}
                   </motion.div>
                 )}
 
-                <Button type="submit" className="w-full h-12 text-sm font-semibold tracking-wide" disabled={loading}>
-                  {loading && <Loader2 className="size-4 mr-2 animate-spin" />}
-                  {mode === "login" ? "Login" : "Create Account"}
+                {/* Submit button */}
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-xs shadow-emerald-600/25 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+                >
+                  {loading && <Loader2 className="size-4 mr-1.5 animate-spin" />}
+                  Login
                 </Button>
               </form>
-
-              {/* Mode switcher */}
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.1 }}
-                className="text-center text-xs text-foreground"
-              >
-                {mode === "login" ? (
-                  <>Don't have an account?{" "}
-                    <button type="button" onClick={() => dispatch({ type: "set_mode", mode: "signup" })} className="text-primary hover:underline font-medium">
-                      Sign up
-                    </button>
-                  </>
-                ) : (
-                  <button type="button" onClick={() => dispatch({ type: "set_mode", mode: "login" })} className="inline-flex items-center gap-1 text-primary hover:underline font-medium">
-                    <ChevronLeft className="size-3.5" />
-                    Sign in
-                  </button>
-                )}
-              </motion.p>
-
             </div>
           </motion.div>
         )}

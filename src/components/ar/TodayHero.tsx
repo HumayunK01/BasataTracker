@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion, type Easing } from "motion/react";
-import { Flame, TrendingUp, TrendingDown, Minus, Plus, Pencil } from "lucide-react";
+import { Flame, TrendingUp, TrendingDown, Minus, Plus, Pencil } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ActivityRing } from "@/components/ar/ActivityRing";

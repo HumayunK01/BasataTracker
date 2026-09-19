@@ -1,4 +1,4 @@
-import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { ArrowUp, ArrowDown, ArrowUpDown } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 
 export type SortKey = "patient_name" | "overall_status" | "updated_at" | "file_name" | "patient_dob";
@@ -23,14 +23,14 @@ export function SortHeader({
       type="button"
       onClick={() => onSort(sortKey)}
       className={cn(
-        "press-scale inline-flex items-center gap-1 transition-colors uppercase tracking-wider text-xs",
+        "inline-flex items-center gap-1.5 transition-colors uppercase tracking-wider font-mono text-2xs cursor-pointer select-none",
         align === "center" ? "mx-auto" : "",
-        active ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground",
+        active ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground",
       )}
       title={`Sort by ${label.toLowerCase()}`}
     >
-      {label}
-      <Icon key={active ? sort.dir : "idle"} className={cn("size-3 animate-fade-in", active ? "opacity-100 text-primary" : "opacity-40")} />
+      <span>{label}</span>
+      <Icon key={active ? sort.dir : "idle"} className={cn("size-3.5 shrink-0 animate-fade-in", active ? "opacity-100 text-primary" : "opacity-50")} />
     </button>
   );
 }

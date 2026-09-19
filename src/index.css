@@ -7,6 +7,38 @@
     font-family: var(--font-sans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
   }
 
+  /* ── Refined Icon System: Precision stroke & hardware rendering ── */
+  svg.lucide,
+  svg[data-slot="icon"] {
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    shape-rendering: geometricPrecision;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.15s ease, color 0.15s ease;
+  }
+
+  /* Crisp definition for directional chevrons & sort arrows across all sizes */
+  svg.lucide-chevron-down,
+  svg.lucide-chevron-up,
+  svg.lucide-chevron-left,
+  svg.lucide-chevron-right,
+  svg.lucide-chevrons-left,
+  svg.lucide-chevrons-right,
+  svg.lucide-chevrons-up-down,
+  svg.lucide-arrow-down,
+  svg.lucide-arrow-up,
+  svg.lucide-arrow-left,
+  svg.lucide-arrow-right,
+  svg.lucide-arrow-up-down {
+    stroke-width: 2;
+  }
+
+  /* Subtle ambient aura for active navigation icons */
+  [data-active="true"] > svg.lucide:not(.animate-spin),
+  [data-active="true"] > svg[data-slot="icon"]:not(.animate-spin) {
+    filter: drop-shadow(0 0 4px hsl(var(--primary) / 0.45));
+  }
+
   :root {
     --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-heading: 'Hubot Sans Variable', 'Hubot Sans', 'Hublot Sans', sans-serif;
@@ -30,7 +62,7 @@
     --popover: 218 27% 17%;              /* #202938 */
     --popover-foreground: 210 40% 98%;
 
-    --primary: 221 83% 53%;              /* #3B82F6 — Vibrant blue */
+    --primary: 160 84% 39%;              /* #10B981 / #059669 — Brand emerald green */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 219 19% 27%;            /* #384152 — Dark slate secondary/pill */
@@ -56,7 +88,7 @@
 
     --border: 219 19% 27%;               /* #384152 — Subtle slate border in Modern theme */
     --input: 219 19% 27%;
-    --ring: 221 83% 53%;                 /* #3B82F6 */
+    --ring: 160 84% 39%;
 
     --radius: 6px;
 
@@ -93,12 +125,12 @@
 
     --sidebar-background: 218 27% 17%;   /* #202938 / #1F2937 — Dark slate navy */
     --sidebar-foreground: 215 20% 75%;   /* #CBD5E1 */
-    --sidebar-primary: 221 83% 53%;      /* #3B82F6 */
+    --sidebar-primary: 160 84% 39%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 219 19% 27%;       /* #384152 */
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 219 19% 27%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-ring: 160 84% 39%;
   }
 
   /* ── Classic Theme Overrides (Original Published Theme) ── */
@@ -116,7 +148,7 @@
     --text-xl: 1.25rem;
     --text-2xl: 1.5rem;
 
-    --background: 240 3% 6%;            /* #0f0f10 Deep minimal near-black */
+    --background: 240 4% 8%;            /* Softer dark background (not pitch black) */
     --foreground: 0 0% 96%;             /* #F5F5F5 */
 
     --card: 0 0% 10%;                   /* #1A1A1A */
@@ -125,7 +157,7 @@
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 96%;
 
-    --primary: 221 78% 56%;             /* #3474F0 — refined blue */
+    --primary: 160 84% 39%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 14%;              /* #242424 */
@@ -151,7 +183,7 @@
 
     --border: 0 0% 16%;                 /* #292929 */
     --input: 0 0% 16%;
-    --ring: 221 78% 56%;
+    --ring: 160 84% 39%;
 
     --skeleton-base: 0 0% 13%;
     --skeleton-highlight: 0 0% 18%;
@@ -159,12 +191,12 @@
     --popover-border: 0 0% 18%;
     --sidebar-background: 0 0% 8%;      /* #141414 */
     --sidebar-foreground: 0 0% 96%;
-    --sidebar-primary: 221 78% 56%;
+    --sidebar-primary: 160 84% 39%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 13%;
     --sidebar-accent-foreground: 0 0% 96%;
     --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 221 78% 56%;
+    --sidebar-ring: 160 84% 39%;
   }
 
   html[data-theme-variant="classic"].light {
@@ -174,7 +206,7 @@
     --card-foreground: 240 8% 12%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 8% 12%;
-    --primary: 221 78% 56%;
+    --primary: 160 84% 39%;
     --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 92%;
     --secondary-foreground: 240 8% 12%;
@@ -192,13 +224,13 @@
     --info-foreground: 0 0% 100%;
     --border: 0 0% 88%;
     --input: 0 0% 88%;
-    --ring: 221 78% 56%;
+    --ring: 160 84% 39%;
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 240 8% 12%;
     --sidebar-accent: 0 0% 92%;
     --sidebar-accent-foreground: 240 8% 12%;
     --sidebar-border: 0 0% 88%;
-    --sidebar-ring: 221 78% 56%;
+    --sidebar-ring: 160 84% 39%;
   }
 
   .light {
@@ -211,7 +243,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 221 83% 53%;             /* #3B82F6 — Vibrant modern blue */
+    --primary: 160 84% 39%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96%;           /* #F1F5F9 — Slate 100 */
@@ -220,8 +252,8 @@
     --muted: 210 40% 96%;               /* #F1F5F9 */
     --muted-foreground: 215 16% 47%;     /* #64748B — Slate 500 */
 
-    --accent: 214 95% 93%;              /* #DBEAFE — Soft light-blue */
-    --accent-foreground: 221 83% 53%;   /* #2563EB */
+    --accent: 152 76% 93%;              /* Soft light-emerald */
+    --accent-foreground: 160 84% 30%;   /* Deep emerald */
 
     --destructive: 0 84% 60%;          /* #EF4444 */
     --destructive-foreground: 0 0% 100%;
@@ -237,7 +269,7 @@
 
     --border: 214 32% 91%;              /* #E2E8F0 — Subtle slate border */
     --input: 214 32% 91%;
-    --ring: 221 83% 53%;
+    --ring: 160 84% 39%;
 
     --cat-0: 0 82% 56%;
     --cat-1: 221 78% 56%;
@@ -266,12 +298,12 @@
 
     --sidebar-background: 0 0% 100%;    /* #FFFFFF — Pure white sidebar */
     --sidebar-foreground: 215 25% 27%;   /* #334155 — Slate 700 */
-    --sidebar-primary: 221 83% 53%;     /* #3B82F6 */
+    --sidebar-primary: 160 84% 39%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 214 95% 93%;      /* #DBEAFE */
-    --sidebar-accent-foreground: 221 83% 53%;
+    --sidebar-accent: 152 76% 93%;
+    --sidebar-accent-foreground: 160 84% 30%;
     --sidebar-border: 214 32% 91%;      /* #E2E8F0 */
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-ring: 160 84% 39%;
   }
 }
 
@@ -574,10 +606,33 @@
     .day-cell:hover {
       transform: scale(1.06);
     }
+    button:not(:disabled):hover > svg.lucide:not(.animate-spin),
+    button:not(:disabled):hover > svg[data-slot="icon"]:not(.animate-spin),
+    a:hover > svg.lucide:not(.animate-spin),
+    a:hover > svg[data-slot="icon"]:not(.animate-spin),
+    [role="button"]:not([aria-disabled="true"]):hover > svg.lucide:not(.animate-spin),
+    [role="button"]:not([aria-disabled="true"]):hover > svg[data-slot="icon"]:not(.animate-spin) {
+      transform: scale(1.06);
+    }
+    button:not(:disabled):active > svg.lucide:not(.animate-spin),
+    button:not(:disabled):active > svg[data-slot="icon"]:not(.animate-spin),
+    a:active > svg.lucide:not(.animate-spin),
+    a:active > svg[data-slot="icon"]:not(.animate-spin) {
+      transform: scale(0.95);
+    }
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  svg.lucide,
+  svg[data-slot="icon"],
+  button:hover > svg.lucide,
+  button:hover > svg[data-slot="icon"],
+  a:hover > svg.lucide,
+  a:hover > svg[data-slot="icon"] {
+    transform: none !important;
+    transition: none !important;
+  }
   .animate-fade-in,
   .page-transition,
   .animate-row-in {

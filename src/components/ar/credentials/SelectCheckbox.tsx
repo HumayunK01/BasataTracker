@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 
 interface SelectCheckboxProps {
@@ -18,9 +18,9 @@ export function SelectCheckbox({ checked, onChange, ariaLabel, disabled, classNa
         checked={checked}
         disabled={disabled}
         onChange={onChange}
-        className="peer absolute inset-0 size-4 cursor-pointer appearance-none rounded border border-border bg-background checked:border-primary checked:bg-primary disabled:cursor-not-allowed transition-[border-color,background-color]"
+        className="peer absolute inset-0 size-4 cursor-pointer appearance-none rounded border border-border bg-background checked:border-emerald-600 checked:bg-emerald-600 disabled:cursor-not-allowed transition-[border-color,background-color]"
       />
-      <Check className="size-3 text-primary-foreground opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} />
+      <Check className="size-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} />
     </label>
   );
 }

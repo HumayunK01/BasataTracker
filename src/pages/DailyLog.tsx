@@ -1,35 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { DayEntrySheet } from "@/components/ar/DayEntrySheet";
 import { DaysTable } from "@/components/ar/DaysTable";
 import { useDailyLogs } from "@/hooks/useDailyLogs";
-import { useCategories } from "@/hooks/useCategories";
 import { useProfile } from "@/hooks/useProfile";
-import { downloadCSV, downloadJSON, downloadPDF } from "@/lib/log-utils";
-import { type DailyLog } from "@/types/log";
-import {
-  CalendarDays,
-  Download,
-  FileJson,
-  FileText,
-  FileType,
-  Plus,
-  ChevronDown,
-} from "lucide-react";
+import { CalendarDays, Plus } from "@/components/ui/icons";
 import { EmptyState } from "@/components/ar/industrial";
 import Skeleton from "react-loading-skeleton";
+import type { DailyLog } from "@/types/log";
 
 const DailyLogPage = () => {
   const { data: logs = [], isLoading } = useDailyLogs();
-  const { data: categories = [] } = useCategories();
   const { data: profile } = useProfile();
   const userName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || undefined;
   const [open, setOpen] = useState(false);
@@ -51,80 +32,48 @@ const DailyLogPage = () => {
 
   const existingDates = useMemo(() => logs.map((l) => l.log_date), [logs]);
 
-  const openNew = () => { setEditing(null); setOpen(true); };
-  const openEdit = (log: DailyLog) => { setEditing(log); setOpen(true); };
+  const openNew = () => {
+    setEditing(null);
+    setOpen(true);
+  };
+  const openEdit = (log: DailyLog) => {
+    setEditing(log);
+    setOpen(true);
+  };
 
   return (
     <>
-      <main className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-3 sm:py-4 animate-fade-in">
-        {isLoading ? (
-          <div className="flex flex-col gap-3 pt-2">
-            <div className="flex gap-3">
-              <Skeleton width={192} height={32} borderRadius={0} />
-              <Skeleton width={224} height={32} borderRadius={0} />
-            </div>
-            <div className="bg-card border border-border rounded-md overflow-hidden">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-border/50 last:border-0">
-                  <Skeleton width={96} height={16} borderRadius={0} />
-                  <Skeleton width={32} height={16} borderRadius={0} />
-                  <Skeleton width={32} height={16} borderRadius={0} />
-                  <Skeleton width={32} height={16} borderRadius={0} />
-                  <Skeleton width={32} height={16} borderRadius={0} />
-                </div>
+      <main className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-5 sm:py-6">
+        <div className="w-full space-y-4">
+          {isLoading ? (
+            <div className="bg-card border border-border/50 rounded-xl p-4 space-y-3 shadow-xs">
+              <Skeleton height={44} className="rounded-xl" />
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} height={44} className="rounded-md" />
               ))}
             </div>
-          </div>
-        ) : logs.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center py-10">
-            <EmptyState
-              icon={CalendarDays}
-              title="No Logs Yet"
-              hint="Start by logging your first day of work."
-              action={
-                <Button size="sm" onClick={openNew}>
-                  <Plus className="size-4 mr-1" /> Log your first day
-                </Button>
-              }
+          ) : logs.length === 0 ? (
+            <div className="bg-card border border-border/60 rounded-xl p-12 text-center shadow-xs">
+              <EmptyState
+                icon={CalendarDays}
+                title="No Logs Recorded Yet"
+                hint="Start logging your daily document counts to build your tracking history."
+                action={
+                  <Button size="sm" onClick={openNew} className="h-9 gap-1.5 cursor-pointer">
+                    <Plus className="size-4" /> Log your first day
+                  </Button>
+                }
+              />
+            </div>
+          ) : (
+            <DaysTable
+              logs={logs}
+              onEdit={openEdit}
+              onNew={openNew}
+              userName={userName}
             />
-          </div>
-        ) : (
-          <DaysTable
-            logs={logs}
-            onEdit={openEdit}
-            actions={
-              <div className="flex w-full items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-11 flex-1 sm:h-9 sm:flex-none text-sm sm:text-xs" disabled={logs.length === 0} aria-label="Export logs">
-                      <Download className="size-4 mr-1.5" />
-                      Export
-                      <ChevronDown className="size-3 ml-1 opacity-60" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44">
-                    <DropdownMenuLabel className="text-xs text-foreground font-normal">Export all logs</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => downloadCSV(logs, categories, "daily-log.csv")}>
-                      <FileText className="size-4 mr-2" /> CSV (.csv)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => downloadJSON(logs, categories, "daily-log.json")}>
-                      <FileJson className="size-4 mr-2" /> JSON (.json)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => downloadPDF(logs, categories, "daily-log.pdf", { title: "", userName })}>
-                      <FileType className="size-4 mr-2" /> PDF (.pdf)
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button size="sm" className="h-11 flex-1 sm:h-9 sm:flex-none text-sm sm:text-xs" onClick={openNew}>
-                  <Plus className="size-4 mr-1.5" />
-                  Log day
-                  <kbd className="ml-2 text-xs border border-primary-foreground/30 rounded px-1 hidden sm:inline">N</kbd>
-                </Button>
-              </div>
-            }
-          />
-        )}
+          )}
+        </div>
       </main>
 
       <DayEntrySheet

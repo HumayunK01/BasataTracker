@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { colorForKey, withAlpha } from "@/lib/cat-colors";
 import type { Category } from "@/hooks/useCategories";
-import { Minus, Plus, X } from "lucide-react";
+import { Minus, Plus, X } from "@/components/ui/icons";
 
 /** Press-and-hold auto-repeat for the +/- buttons. */
 function useHoldRepeat(action: () => void) {
@@ -33,7 +33,7 @@ interface CounterCardProps {
   onIncrement: () => void;
   onDecrement: () => void;
   onRemove: () => void;
-  hotkeyIndex?: number; // Optional keyboard shortcut (1-9)
+  hotkeyIndex?: number;
 }
 
 export function CounterCard({
@@ -58,68 +58,97 @@ export function CounterCard({
     setBump((n) => n + 1);
   };
 
-  // Pulse ring via CSS transitions (replaces former GSAP fromTo)
+  // Pulse ring animation
   useEffect(() => {
     if (count === 0) return;
     const ring = cardRef.current?.querySelector(".pulse-ring") as HTMLElement | null;
     if (!ring) return;
     ring.style.transition = "none";
     ring.style.transform = "scale(1)";
-    ring.style.opacity = "0.4";
-    // ponytail: forced reflow so the browser registers the reset before the transition starts
+    ring.style.opacity = "0.35";
     void ring.offsetHeight;
-    ring.style.transition = "transform 0.35s ease-out, opacity 0.35s ease-out";
-    ring.style.transform = "scale(2.5)";
+    ring.style.transition = "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease-out";
+    ring.style.transform = "scale(2.2)";
     ring.style.opacity = "0";
   }, [count]);
 
   return (
     <div
       ref={cardRef}
-      className="group rounded-xl border flex flex-col relative overflow-hidden focus-within:ring-2 focus-within:ring-primary/30 active:scale-[0.98] transition-[opacity,transform] duration-100"
-      style={{ borderColor: withAlpha(clr, 0.15), backgroundColor: withAlpha(clr, 0.04) }}
+      className="group rounded-2xl border flex flex-col relative overflow-hidden focus-within:ring-2 focus-within:ring-primary/40 active:scale-[0.985] transition-all duration-200 shadow-2xs hover:shadow-md"
+      style={{
+        borderColor: withAlpha(clr, 0.22),
+        background: `radial-gradient(ellipse at top, ${withAlpha(clr, 0.08)} 0%, ${withAlpha(clr, 0.02)} 100%)`,
+      }}
     >
-      {/* GSAP pulse ring */}
-      <div className="pulse-ring absolute inset-0 pointer-events-none rounded-lg" style={{ backgroundColor: clr }} />
-      {/* Progress fill (share of the busiest category) */}
+      {/* Pulse ring */}
+      <div
+        className="pulse-ring absolute inset-0 pointer-events-none rounded-2xl"
+        style={{ backgroundColor: clr }}
+      />
+
+      {/* Progress fill from bottom */}
       <div
         className="absolute inset-x-0 bottom-0 transition-[height] duration-500 ease-out pointer-events-none"
-        style={{ height: `${fill}%`, backgroundColor: withAlpha(clr, 0.10) }}
+        style={{ height: `${fill}%`, backgroundColor: withAlpha(clr, 0.08) }}
         aria-hidden
       />
 
-      {/* Baseline accent strip */}
-      <div className="absolute inset-x-0 bottom-0 h-px pointer-events-none" style={{ backgroundColor: withAlpha(clr, 0.25) }} aria-hidden />
+      {/* Accent baseline line */}
+      <div
+        className="absolute inset-x-0 bottom-0 h-0.5 pointer-events-none"
+        style={{ backgroundColor: withAlpha(clr, 0.35) }}
+        aria-hidden
+      />
 
-      {/* Header */}
-      <div className="relative flex items-center gap-2 px-3.5 pt-3.5 pb-1 pr-9 min-w-0">
-        <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: withAlpha(clr, 0.5) }} aria-hidden />
-        <p className="text-xs font-semibold truncate text-foreground/90 flex-1 min-w-0" title={cat.label}>
-          {cat.label}
-        </p>
-
-        {/* Key shortcut indicator badge */}
-        {hotkeyIndex !== undefined && (
-          <kbd
-            className="hidden md:inline text-2xs font-bold font-mono px-1.5 py-0.5 rounded-md border border-border/40 bg-background/60 shrink-0 select-none cursor-help hover:border-foreground/20 transition-[border-color] duration-150 text-foreground"
-            title={`Press ${hotkeyIndex} key to count`}
+      {/* Card Header */}
+      <div className="relative flex items-center justify-between gap-2 p-3.5 pb-1 z-10">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <span
+            className="size-2 rounded-full shrink-0 shadow-2xs"
+            style={{ backgroundColor: clr }}
+            aria-hidden
+          />
+          <h4
+            className="text-xs font-semibold truncate text-foreground"
+            title={cat.label}
           >
-            {hotkeyIndex}
-          </kbd>
-        )}
+            {cat.label}
+          </h4>
+          <span
+            className="text-[10px] font-mono font-medium px-1.5 py-0.2 rounded-md uppercase tracking-wider shrink-0 border"
+            style={{
+              color: clr,
+              backgroundColor: withAlpha(clr, 0.12),
+              borderColor: withAlpha(clr, 0.25),
+            }}
+          >
+            {cat.short}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          {hotkeyIndex !== undefined && (
+            <kbd
+              className="hidden sm:inline-block text-[10px] font-bold font-mono px-1.5 py-0.5 rounded-md border border-border/50 bg-background/70 text-muted-foreground shadow-2xs"
+              title={`Press ${hotkeyIndex} key to count`}
+            >
+              {hotkeyIndex}
+            </kbd>
+          )}
+          <button
+            type="button"
+            onClick={onRemove}
+            className="size-6 rounded-md grid place-items-center text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors touch-manipulation opacity-50 group-hover:opacity-100 cursor-pointer"
+            title={`Remove ${cat.label}`}
+            aria-label={`Remove ${cat.label}`}
+          >
+            <X className="size-3.5" />
+          </button>
+        </div>
       </div>
 
-      <button
-        type="button"
-        onClick={onRemove}
-          className="absolute top-1.5 right-1.5 size-9 md:size-6 md:top-2.5 md:right-2.5 rounded-md flex items-center justify-center text-foreground hover:text-destructive hover:bg-destructive/10 transition-colors touch-manipulation z-10 opacity-60 group-hover:opacity-100"
-        title={`Remove ${cat.label}`}
-        aria-label={`Remove ${cat.label}`}
-      >
-        <X className="size-4 md:size-3" />
-      </button>
-
-      {/* Big tap area */}
+      {/* Big Tap Area */}
       <button
         type="button"
         onClick={tap}
@@ -132,29 +161,31 @@ export function CounterCard({
             onDecrement();
           }
         }}
-        className="relative flex-1 flex items-center justify-center py-6 sm:py-7 mx-2 rounded-lg active:opacity-70 transition-opacity duration-100 touch-manipulation select-none outline-none cursor-pointer overflow-hidden"
+        className="relative flex-1 flex items-center justify-center py-6 sm:py-8 mx-2 rounded-xl active:scale-95 transition-transform duration-100 touch-manipulation select-none outline-none cursor-pointer overflow-hidden"
         title="Tap to count (or press ↑ / +)"
         aria-label={`${cat.label}: ${count}. Tap to add one.`}
       >
-        {/* Category code watermark */}
+        {/* Category watermark */}
         <span
           aria-hidden
-          className="absolute inset-0 flex items-center justify-center font-mono font-bold text-[4.5rem] sm:text-[6.5rem] leading-none select-none pointer-events-none"
-          style={{ color: withAlpha(clr, 0.055) }}
+          className="absolute inset-0 flex items-center justify-center font-mono font-extrabold text-[4.5rem] sm:text-[6rem] leading-none select-none pointer-events-none"
+          style={{ color: withAlpha(clr, 0.065) }}
         >
           {cat.short}
         </span>
         <span
           key={bump}
-          className="counter-pop relative text-5xl sm:text-7xl font-bold font-mono tabular-nums leading-none select-none"
-          style={{ color: count > 0 ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground) / 0.3)" }}
+          className="counter-pop relative text-5xl sm:text-6xl font-bold font-mono tabular-nums leading-none select-none tracking-tight"
+          style={{
+            color: count > 0 ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground) / 0.35)",
+          }}
         >
           {count}
         </span>
       </button>
 
-      {/* +/- controls */}
-      <div className="relative flex gap-2 p-2 pt-1">
+      {/* +/- Hold Controls */}
+      <div className="relative flex items-center gap-2 p-2.5 pt-1 z-10">
         <button
           type="button"
           onPointerDown={dec.start}
@@ -162,11 +193,10 @@ export function CounterCard({
           onPointerLeave={dec.stop}
           onPointerCancel={dec.stop}
           disabled={count === 0}
-              className="flex-1 flex items-center justify-center h-12 rounded-md border active:scale-[0.97] transition-all duration-100 disabled:opacity-35 disabled:cursor-not-allowed touch-manipulation border-border/40"
-              style={{ backgroundColor: withAlpha(clr, 0.08) }}
-              aria-label={`Decrease ${cat.label}`}
-            >
-              <Minus className="size-4" style={{ color: withAlpha(clr, 0.5) }} />
+          className="flex-1 flex items-center justify-center h-10 rounded-xl border border-border/50 bg-background/60 hover:bg-muted active:scale-[0.96] transition-all disabled:opacity-30 disabled:cursor-not-allowed touch-manipulation cursor-pointer shadow-2xs"
+          aria-label={`Decrease ${cat.label}`}
+        >
+          <Minus className="size-4 text-muted-foreground" />
         </button>
         <button
           type="button"
@@ -174,11 +204,15 @@ export function CounterCard({
           onPointerUp={inc.stop}
           onPointerLeave={inc.stop}
           onPointerCancel={inc.stop}
-              className="flex-1 flex items-center justify-center h-12 rounded-md border active:scale-[0.97] transition-all duration-100 touch-manipulation border-border/40"
-              style={{ backgroundColor: withAlpha(clr, 0.08) }}
+          className="flex-1 flex items-center justify-center h-10 rounded-xl border active:scale-[0.96] transition-all touch-manipulation cursor-pointer shadow-2xs"
+          style={{
+            backgroundColor: withAlpha(clr, 0.12),
+            borderColor: withAlpha(clr, 0.3),
+            color: clr,
+          }}
           aria-label={`Increase ${cat.label}`}
         >
-          <Plus className="size-4" style={{ color: withAlpha(clr, 0.5) }} />
+          <Plus className="size-4" />
         </button>
       </div>
     </div>

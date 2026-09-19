@@ -58,19 +58,31 @@ function markSessionStart() {
   }
 }
 
-function clearSessionStart() {
+function clearSessionLocalStorage() {
   capWarningShown = false;
   try {
-    localStorage.removeItem(SESSION_START_KEY);
+    // ponytail: preserve visual theme preferences so logout doesn't flash white in dark mode
+    const theme = localStorage.getItem("basata-theme");
+    const variant = localStorage.getItem("basata-theme-variant");
+    localStorage.clear();
+    if (theme) localStorage.setItem("basata-theme", theme);
+    if (variant) localStorage.setItem("basata-theme-variant", variant);
   } catch {
     // Ignore localStorage failures
   }
+  try {
+    sessionStorage.clear();
+  } catch {
+    // Ignore sessionStorage failures
+  }
 }
+
+export { clearSessionLocalStorage };
 
 function forceLogout() {
   if (forcedLogoutInFlight) return;
   forcedLogoutInFlight = true;
-  clearSessionStart();
+  clearSessionLocalStorage();
   supabase.auth.signOut().finally(() => {
     forcedLogoutInFlight = false;
   });
@@ -103,6 +115,8 @@ export function useAuth() {
         if (session) {
           markSessionStart();
           maybeWarnSessionEnding();
+        } else {
+          clearSessionLocalStorage();
         }
         dispatch({ type: "set", session });
       }
@@ -110,7 +124,7 @@ export function useAuth() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT" || !session) {
-        clearSessionStart();
+        clearSessionLocalStorage();
         dispatch({ type: "set", session: null });
         return;
       }
@@ -140,7 +154,7 @@ export function useAuth() {
   }, []);
 
   const signOut = () => {
-    clearSessionStart();
+    clearSessionLocalStorage();
     return supabase.auth.signOut();
   };
 
@@ -152,6 +166,7 @@ export function useAuth() {
     }
     const { data, error } = await supabase.auth.refreshSession();
     if (error || !data.session) {
+      clearSessionLocalStorage();
       await supabase.auth.signOut();
       dispatch({ type: "clear" });
       return false;
