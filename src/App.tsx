@@ -19,6 +19,7 @@ import {
   VaultPage,
   TeamPage,
   FacilitiesPage,
+  ScenariosPage,
   ResourcePage,
   NotFound,
 } from "@/lib/routePreload";
@@ -55,6 +56,7 @@ const TITLES: Record<string, string> = {
   "/vault": "Vault",
   "/team": "Team",
   "/facilities": "Facilities",
+  "/scenarios": "Scenarios & SOP Guide",
   "/resources/cheat-sheet": "Cheat Sheet",
   "/resources/test-patients": "Labeling Guide",
 };
@@ -99,6 +101,7 @@ const App = () => (
                   <Route path="/vault" element={<VaultPage />} />
                   <Route path="/team" element={<TeamPage />} />
                   <Route path="/facilities" element={<FacilitiesPage />} />
+                  <Route path="/scenarios" element={<ScenariosPage />} />
                   <Route path="/resources/:docId" element={<ResourcePage />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />

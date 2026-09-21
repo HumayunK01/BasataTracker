@@ -25,6 +25,35 @@ export interface WhatsNewEntry {
 // ── Entries (newest first) ────────────────────────────────────────────────
 export const WHATS_NEW_ENTRIES: WhatsNewEntry[] = [
   {
+    id: "version-2-0-1-mini",
+    date: "2026-09-22",
+    title: "Inbox Process Guide",
+    description:
+      "A comprehensive, interactive intake guide featuring step-by-step flowcharts, document routing rules, and approved label references.",
+    body: [
+      (
+        <>
+          <strong className="text-foreground font-semibold">Step-by-Step Flowcharts:</strong> Interactive visual decision trees for all core intake workflows — including ROI medical records requests, Indexable documents, single-patient EKG and Cath Lab routing, Patient Referrals with incomplete document checks, and Archive rules.
+        </>
+      ),
+      (
+        <>
+          <strong className="text-foreground font-semibold">Document Routing Guide:</strong> Instant search and lookup across clinical document types, showing exact NextGen categories, description conventions, and step-by-step bucket paths.
+        </>
+      ),
+      (
+        <>
+          <strong className="text-foreground font-semibold">Approved Labels & Test Patients:</strong> Quick-reference directory of all 29 approved inbox labels and test patient account details with one-click copying for fast chart verification.
+        </>
+      ),
+      (
+        <>
+          <strong className="text-foreground font-semibold">One-Click Compliance Actions:</strong> Built-in 1-click copy buttons for standard faxback responses, complete routing sequences, and clinical refax notices.
+        </>
+      ),
+    ],
+  },
+  {
     id: "version-2-0-0-major",
     date: "2026-09-19",
     title: "Basata Tracker 2.0",

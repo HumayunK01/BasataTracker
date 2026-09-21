@@ -12,6 +12,7 @@ import {
   KeyRound,
   Users,
   Building2,
+  HelpCircle,
 } from "@/components/ui/icons";
 import {
   Sidebar,
@@ -57,6 +58,11 @@ function buildGroups(isAdmin: boolean) {
 }
 
 const externalLinks = [
+  {
+    title: "Scenarios Guide",
+    icon: HelpCircle,
+    path: "/scenarios",
+  },
   {
     title: "Cheat Sheet",
     icon: BookOpen,

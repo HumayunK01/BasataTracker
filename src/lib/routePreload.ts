@@ -12,6 +12,7 @@ const importers = {
   "/vault": () => import("@/pages/Credentials.tsx"),
   "/team": () => import("@/pages/Team.tsx"),
   "/facilities": () => import("@/pages/Facilities.tsx"),
+  "/scenarios": () => import("@/pages/Scenarios.tsx"),
   "/resources/cheat-sheet": () => import("@/pages/Resources.tsx"),
   "/resources/test-patients": () => import("@/pages/Resources.tsx"),
   "*": () => import("@/pages/NotFound.tsx"),
@@ -26,6 +27,7 @@ export const FaxTrackerPage = lazy(importers["/tracker"]);
 export const VaultPage = lazy(importers["/vault"]);
 export const TeamPage = lazy(importers["/team"]);
 export const FacilitiesPage = lazy(importers["/facilities"]);
+export const ScenariosPage = lazy(importers["/scenarios"]);
 export const ResourcePage = lazy(importers["/resources/cheat-sheet"]);
 export const NotFound = lazy(importers["*"]);
 
