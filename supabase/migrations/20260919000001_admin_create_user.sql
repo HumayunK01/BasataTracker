@@ -81,7 +81,7 @@ begin
     ''
   );
 
-  -- 6. Insert into auth.identities (supports both legacy and modern Supabase schemas)
+  -- 6. Insert into auth.identities (supports modern Supabase with UUID id & provider_id, plus legacy schemas)
   begin
     insert into auth.identities (
       id,
@@ -93,33 +93,56 @@ begin
       created_at,
       updated_at
     ) values (
-      new_user_id::text,
+      gen_random_uuid(),
       new_user_id,
       jsonb_build_object('sub', new_user_id::text, 'email', new_email),
       'email',
-      new_email,
+      new_user_id::text,
       null,
       now(),
       now()
     );
-  exception when undefined_column then
-    insert into auth.identities (
-      id,
-      user_id,
-      identity_data,
-      provider,
-      last_sign_in_at,
-      created_at,
-      updated_at
-    ) values (
-      new_user_id::text,
-      new_user_id,
-      jsonb_build_object('sub', new_user_id::text, 'email', new_email),
-      'email',
-      null,
-      now(),
-      now()
-    );
+  exception
+    when undefined_column then
+      -- Legacy Supabase schema: no provider_id column, id was text
+      insert into auth.identities (
+        id,
+        user_id,
+        identity_data,
+        provider,
+        last_sign_in_at,
+        created_at,
+        updated_at
+      ) values (
+        new_user_id::text,
+        new_user_id,
+        jsonb_build_object('sub', new_user_id::text, 'email', new_email),
+        'email',
+        null,
+        now(),
+        now()
+      );
+    when datatype_mismatch then
+      -- In case id is text in a schema that has provider_id
+      insert into auth.identities (
+        id,
+        user_id,
+        identity_data,
+        provider,
+        provider_id,
+        last_sign_in_at,
+        created_at,
+        updated_at
+      ) values (
+        new_user_id::text,
+        new_user_id,
+        jsonb_build_object('sub', new_user_id::text, 'email', new_email),
+        'email',
+        new_user_id::text,
+        null,
+        now(),
+        now()
+      );
   end;
 
   -- 7. Ensure profile exists and set role
