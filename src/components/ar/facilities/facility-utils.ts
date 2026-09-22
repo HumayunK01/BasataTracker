@@ -34,9 +34,8 @@ export function copyFax(f: Facility): Promise<void> {
     });
 }
 
-export function logoSrc(url: string, token: string | null): string {
-  const t = token ? `&t=${encodeURIComponent(token)}` : "";
-  return window.location.protocol === "https:" ? `/api/logo?url=${encodeURIComponent(url)}${t}` : url;
+export function logoSrc(url: string): string {
+  return window.location.protocol === "https:" ? `/api/logo?url=${encodeURIComponent(url)}` : url;
 }
 
 // ── Dynamic & Fuzzy Facility Search ─────────────────────────────────────────

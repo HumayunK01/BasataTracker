@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useAccessToken } from "@/hooks/useAccessToken";
+import { useAuthenticatedImage } from "@/hooks/useAuthenticatedImage";
 import type { Facility, useUpsertFacility, useDeleteFacility } from "@/hooks/useFacilities";
 import { formatFax, copyFax, logoSrc } from "./facility-utils";
 import { HighlightText } from "@/components/ar/HighlightText";
@@ -26,10 +26,11 @@ interface FacilityCardProps {
 }
 
 function LogoBanner({ f }: { f: Facility }) {
-  const [failed, setFailed] = useState(false);
-  const token = useAccessToken();
+  const [imgError, setImgError] = useState(false);
+  const proxyUrl = f.logo_url ? logoSrc(f.logo_url) : null;
+  const { src, error } = useAuthenticatedImage(proxyUrl);
 
-  if (failed || !f.logo_url) {
+  if (imgError || error || !src || !f.logo_url) {
     return (
       <div className="size-full bg-gradient-to-br from-primary/20 via-primary/10 to-muted/40 flex items-center justify-center select-none relative">
         <span className="text-5xl font-extrabold text-primary/40 tracking-widest">
@@ -43,10 +44,10 @@ function LogoBanner({ f }: { f: Facility }) {
   return (
     <div className="size-full relative overflow-hidden bg-muted/20 flex items-center justify-center">
       <img
-        src={logoSrc(f.logo_url, token)}
+        src={src}
         alt={`${f.name} logo`}
         className="size-full object-cover object-center transform group-hover:scale-105 transition-transform duration-300"
-        onError={() => setFailed(true)}
+        onError={() => setImgError(true)}
       />
     </div>
   );

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useAccessToken } from "@/hooks/useAccessToken";
+import { useState, useEffect } from "react";
+import { useAuthenticatedImage } from "@/hooks/useAuthenticatedImage";
 
 // ponytail: favicon is fetched via the same-origin /api/favicon proxy (which
 // itself calls DuckDuckGo server-side), so the production CSP/COEP don't block it.
@@ -23,15 +23,22 @@ export function ServiceLogo({ service, website, className }: { service: string; 
   const [failed, setFailed] = useState(false);
   const domain = resolveDomain(service, website);
   const letter = service.trim().charAt(0).toUpperCase() || "?";
-  const token = useAccessToken();
 
-  // Derived (not useState) so the proxy URL updates when the async token
-  // arrives or refreshes.
+  // Try same-origin proxy first (with auth header), fall back to direct if proxy fails
   const [stage, setStage] = useState<"proxy" | "direct">("proxy");
-  const proxy = domain ? `/api/favicon?domain=${encodeURIComponent(domain)}${token ? `&t=${encodeURIComponent(token)}` : ""}` : null;
+  const proxy = domain ? `/api/favicon?domain=${encodeURIComponent(domain)}` : null;
   const direct = domain ? `https://icons.duckduckgo.com/ip3/${domain}.ico` : null;
 
-  if (!domain || failed) {
+  const currentUrl = stage === "proxy" ? proxy : direct;
+  const { src, error } = useAuthenticatedImage(currentUrl);
+
+  useEffect(() => {
+    if (error && stage === "proxy") {
+      setStage("direct");
+    }
+  }, [error, stage]);
+
+  if (!domain || failed || (stage === "direct" && error)) {
     return (
       <span
         className={`grid place-items-center rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-xs font-semibold shrink-0 ${className ?? "size-6"}`}
@@ -42,10 +49,17 @@ export function ServiceLogo({ service, website, className }: { service: string; 
     );
   }
 
-  const src = stage === "proxy" && proxy ? proxy : direct!;
-  // Try the same-origin proxy first (works in prod under CSP). If it's missing
-  // (local vite has no serverless fn), unauthorized, or fails, fall back to the
-  // direct URL (works in local dev, blocked in prod) before the letter tile.
+  if (!src) {
+    return (
+      <span
+        className={`grid place-items-center rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-xs font-semibold shrink-0 ${className ?? "size-6"}`}
+        aria-hidden
+      >
+        {letter}
+      </span>
+    );
+  }
+
   return (
     <img
       src={src}

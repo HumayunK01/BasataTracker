@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useAccessToken } from "@/hooks/useAccessToken";
+import { useAuthenticatedImage } from "@/hooks/useAuthenticatedImage";
 import type { Facility, FacilityInput, useUpsertFacility } from "@/hooks/useFacilities";
 import { formatFax, logoSrc } from "./facility-utils";
 
@@ -34,7 +34,6 @@ export function FacilityDialog({
   row,
   upsert,
 }: FacilityDialogProps) {
-  const token = useAccessToken();
   const [name, setName] = useState("");
   const [faxNumber, setFaxNumber] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
@@ -63,6 +62,8 @@ export function FacilityDialog({
   const previewName = name.trim() || "Facility Name";
   const previewFax = faxNumber.trim() ? formatFax(faxNumber) : "(000) 000-0000";
   const hasValidLogo = Boolean(logoUrl.trim()) && !imgError;
+  const previewLogoUrl = hasValidLogo ? logoSrc(logoUrl.trim()) : null;
+  const { src: previewImgSrc, error: previewImgError } = useAuthenticatedImage(previewLogoUrl);
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -105,9 +106,9 @@ export function FacilityDialog({
           {/* Compact Live Preview Strip */}
           <div className="rounded-xl border border-border/60 bg-muted/20 p-2.5 flex items-center justify-between gap-3 shadow-2xs">
             <div className="flex items-center gap-2.5 min-w-0 flex-1">
-              {hasValidLogo ? (
+              {hasValidLogo && previewImgSrc && !previewImgError ? (
                 <img
-                  src={logoSrc(logoUrl.trim(), token)}
+                  src={previewImgSrc}
                   alt="Preview"
                   className="size-8 rounded-lg object-cover border border-border/60 shrink-0 bg-muted/30"
                   onError={() => setImgError(true)}
