@@ -2,12 +2,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { DailyLog } from "@/types/log";
 import type { Profile } from "@/hooks/useProfile";
+import { useIsAdmin } from "@/hooks/useProfile";
 import { logAuditEvent } from "@/hooks/useAuditLog";
 import { toast } from "sonner";
 
 export function useTeamProfiles() {
+  const isAdmin = useIsAdmin();
   return useQuery<Profile[]>({
     queryKey: ["team_profiles"],
+    enabled: isAdmin,
     queryFn: async () => {
       const { data, error } = await supabase.from("profiles").select("*").order("first_name");
       if (error) throw error;
@@ -17,8 +20,10 @@ export function useTeamProfiles() {
 }
 
 export function useTeamDailyLogs() {
+  const isAdmin = useIsAdmin();
   return useQuery<DailyLog[]>({
     queryKey: ["team_daily_logs"],
+    enabled: isAdmin,
     staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_team_daily_logs", { limit_count: 2000 });

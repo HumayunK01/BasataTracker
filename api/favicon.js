@@ -23,7 +23,23 @@ export default async function handler(req, res) {
       res.status(r.status).end();
       return;
     }
-    const buf = Buffer.from(await r.arrayBuffer());
+    const MAX_FAVICON_SIZE = 512 * 1024;
+    const contentLength = parseInt(r.headers.get("content-length") || "0", 10);
+    if (contentLength > MAX_FAVICON_SIZE) {
+      res.status(502).end();
+      return;
+    }
+    const chunks = [];
+    let bytes = 0;
+    for await (const chunk of r.body) {
+      bytes += chunk.byteLength;
+      if (bytes > MAX_FAVICON_SIZE) {
+        res.status(502).end();
+        return;
+      }
+      chunks.push(chunk);
+    }
+    const buf = Buffer.concat(chunks);
     res.setHeader("Content-Type", r.headers.get("content-type") || "image/x-icon");
     // private: the response was auth-gated, so never let a shared cache
     // serve it to another user. Browsers may still cache it.

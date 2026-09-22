@@ -10,7 +10,9 @@ const ANON_KEY =
 
 export default async function authorized(req) {
   if (!SUPABASE_URL || !ANON_KEY) return false; // misconfigured — deny
-  const token = req.query.t;
+  const authHeader = req.headers?.authorization || req.headers?.Authorization;
+  const bearer = typeof authHeader === "string" && authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  const token = bearer || req.query?.t;
   if (typeof token !== "string" || token.length === 0 || token.length > 4096) return false;
   try {
     const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {

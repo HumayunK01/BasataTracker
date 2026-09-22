@@ -30,6 +30,11 @@ test("denies when supabase rejects the token", async () => {
   assert.equal(await authorized(req("bad-token")), false);
 });
 
+test("allows when token is in Authorization header", async () => {
+  globalThis.fetch = async () => ({ ok: true });
+  assert.equal(await authorized({ headers: { authorization: "Bearer header-token" } }), true);
+});
+
 test("denies when the auth call throws", async () => {
   globalThis.fetch = async () => { throw new Error("network"); };
   assert.equal(await authorized(req("any")), false);
