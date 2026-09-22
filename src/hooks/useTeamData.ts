@@ -198,7 +198,6 @@ export function useSetUserDisabled() {
         should_disable: shouldDisable,
       });
       if (error) throw error;
-      await logAuditEvent(shouldDisable ? "account_disabled" : "account_enabled", { target_user_id: targetUserId });
     },
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ["team_profiles"] });

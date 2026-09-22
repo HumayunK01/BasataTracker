@@ -49,7 +49,7 @@ begin
     where id = target_user;
 
   -- Record audit log if audit_logs table exists
-  insert into public.audit_logs (user_id, event_type, details)
+  insert into public.audit_logs (user_id, event, details)
   values (
     caller_id,
     case when should_disable then 'account_disabled' else 'account_enabled' end,

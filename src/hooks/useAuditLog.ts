@@ -26,7 +26,9 @@ export type AuditEvent =
   | "facility_created"
   | "facility_updated"
   | "facility_deleted"
-  | "role_changed";
+  | "role_changed"
+  | "account_disabled"
+  | "account_enabled";
 
 export async function logAuditEvent(
   event: AuditEvent,
