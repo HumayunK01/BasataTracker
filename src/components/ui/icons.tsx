@@ -20,6 +20,7 @@ import {
   ShieldAlert,
   User,
   UserX,
+  UserCheck,
   SlidersHorizontal,
   ShieldX,
 } from "lucide-react";
@@ -320,4 +321,4 @@ export const Circle = React.forwardRef<SVGSVGElement, IconProps>(
 Circle.displayName = "Circle";
 
 export const CalendarCheck = wrapIcon(CalendarDaysIcon);
-export { CalendarIcon };
+export { CalendarIcon, UserCheck };

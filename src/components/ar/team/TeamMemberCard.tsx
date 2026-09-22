@@ -11,7 +11,10 @@ import {
   ChevronRight,
   BedDouble,
   Sparkles,
+  Ban,
+  UserCheck,
 } from "@/components/ui/icons";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +34,7 @@ export interface TeamMemberItem {
   totalDocs: number;
   avg: number;
   logCount: number;
+  is_disabled?: boolean;
 }
 
 interface TeamMemberCardProps {
@@ -40,7 +44,9 @@ interface TeamMemberCardProps {
   onSelect: () => void;
   onToggleRole: (targetUserId: string, currentRole: "admin" | "user") => void;
   onDeleteRequest: (targetUserId: string, name: string) => void;
+  onToggleDisabled?: (targetUserId: string, name: string, shouldDisable: boolean) => void;
   isRolePending?: boolean;
+  isDisabledPending?: boolean;
 }
 
 export const TeamMemberCard = React.memo(function TeamMemberCard({
@@ -50,7 +56,9 @@ export const TeamMemberCard = React.memo(function TeamMemberCard({
   onSelect,
   onToggleRole,
   onDeleteRequest,
+  onToggleDisabled,
   isRolePending = false,
+  isDisabledPending = false,
 }: TeamMemberCardProps) {
   const fullName = `${member.first_name || ""} ${member.last_name || ""}`.trim() || "Team Member";
   const initials =
@@ -71,7 +79,12 @@ export const TeamMemberCard = React.memo(function TeamMemberCard({
           onSelect();
         }
       }}
-      className="group relative bg-card border border-border/60 hover:border-primary/35 rounded-xl p-4 sm:p-5 text-left transition-all duration-200 hover:shadow-md hover:shadow-primary/5 cursor-pointer flex flex-col justify-between gap-4"
+      className={cn(
+        "group relative bg-card border rounded-xl p-4 sm:p-5 text-left transition-all duration-200 hover:shadow-md hover:shadow-primary/5 cursor-pointer flex flex-col justify-between gap-4",
+        member.is_disabled
+          ? "opacity-75 border-dashed border-destructive/40 bg-destructive/[0.02]"
+          : "border-border/60 hover:border-primary/35",
+      )}
     >
       {/* Top row: Avatar, Name, Role, Actions */}
       <div className="flex items-start justify-between gap-3">
@@ -91,6 +104,11 @@ export const TeamMemberCard = React.memo(function TeamMemberCard({
               ) : (
                 <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full bg-muted/60 text-muted-foreground border border-border/40">
                   Member
+                </span>
+              )}
+              {member.is_disabled && (
+                <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/25">
+                  <Ban className="size-3" /> Disabled
                 </span>
               )}
             </div>
@@ -134,6 +152,34 @@ export const TeamMemberCard = React.memo(function TeamMemberCard({
                 )}
                 {member.role === "admin" ? "Revoke admin" : "Make admin"}
               </DropdownMenuItem>
+              {onToggleDisabled && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleDisabled(member.id, fullName, !member.is_disabled);
+                    }}
+                    disabled={isDisabledPending}
+                    className={cn(
+                      "cursor-pointer",
+                      member.is_disabled ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400",
+                    )}
+                  >
+                    {member.is_disabled ? (
+                      <>
+                        <UserCheck className="size-4 mr-2" />
+                        Re-enable user
+                      </>
+                    ) : (
+                      <>
+                        <Ban className="size-4 mr-2" />
+                        Disable user
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={(e) => {

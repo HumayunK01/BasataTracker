@@ -189,6 +189,26 @@ export function useDeleteUser() {
   });
 }
 
+export function useSetUserDisabled() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ targetUserId, shouldDisable }: { targetUserId: string; shouldDisable: boolean }) => {
+      const { error } = await supabase.rpc("set_user_disabled", {
+        target_user: targetUserId,
+        should_disable: shouldDisable,
+      });
+      if (error) throw error;
+      await logAuditEvent(shouldDisable ? "account_disabled" : "account_enabled", { target_user_id: targetUserId });
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ["team_profiles"] });
+      qc.invalidateQueries({ queryKey: ["profile"] });
+      toast.success(variables.shouldDisable ? "User account disabled" : "User account re-enabled");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
 export function useSetUserRole() {
   const qc = useQueryClient();
   return useMutation({

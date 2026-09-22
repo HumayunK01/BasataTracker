@@ -5,6 +5,7 @@ import {
   useTeamDailyLogs,
   useSetUserRole,
   useDeleteUser,
+  useSetUserDisabled,
   useTeamUserFaxedBack,
   useTeamUserCategories,
   useTeamUserAuditLogs,
@@ -33,6 +34,7 @@ import {
   CheckCheck,
   X,
   Ban,
+  UserCheck,
   Download,
   UserPlus,
 } from "@/components/ui/icons";
@@ -238,7 +240,9 @@ export default function TeamPage() {
   const { isPending: profilePending } = useProfile();
   const setRole = useSetUserRole();
   const deleteUser = useDeleteUser();
+  const setUserDisabled = useSetUserDisabled();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [disableTarget, setDisableTarget] = useState<{ id: string; name: string; shouldDisable: boolean } | null>(null);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("overview");
@@ -350,6 +354,64 @@ export default function TeamPage() {
             }}
           >
             {deleteUser.isPending ? "Deleting…" : "Delete forever"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
+  const disableDialog = (
+    <AlertDialog open={!!disableTarget} onOpenChange={(open) => !open && setDisableTarget(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            {disableTarget?.shouldDisable ? `Disable ${disableTarget?.name}?` : `Re-enable ${disableTarget?.name}?`}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="space-y-2">
+            {disableTarget?.shouldDisable ? (
+              <>
+                <span className="block text-foreground font-medium">
+                  Login access will immediately be blocked for this user.
+                </span>
+                <span className="block text-muted-foreground">
+                  All historical records (daily logs, categorized counts, faxed-back records, and audit events) will remain 100% intact and untouched.
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="block text-foreground font-medium">
+                  Re-enable login access for this user account.
+                </span>
+                <span className="block text-muted-foreground">
+                  They will be able to log in to the dashboard again.
+                </span>
+              </>
+            )}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="border-border/60">Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className={
+              disableTarget?.shouldDisable
+                ? "bg-amber-600 hover:bg-amber-600/90 text-white"
+                : "bg-emerald-600 hover:bg-emerald-600/90 text-white"
+            }
+            disabled={setUserDisabled.isPending}
+            onClick={() => {
+              if (!disableTarget) return;
+              setUserDisabled.mutate({
+                targetUserId: disableTarget.id,
+                shouldDisable: disableTarget.shouldDisable,
+              });
+              setDisableTarget(null);
+            }}
+          >
+            {setUserDisabled.isPending
+              ? "Saving…"
+              : disableTarget?.shouldDisable
+              ? "Disable account"
+              : "Re-enable account"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -526,7 +588,11 @@ export default function TeamPage() {
                     onDeleteRequest={(targetUserId, name) => {
                       setDeleteTarget({ id: targetUserId, name });
                     }}
+                    onToggleDisabled={(targetUserId, name, shouldDisable) => {
+                      setDisableTarget({ id: targetUserId, name, shouldDisable });
+                    }}
                     isRolePending={setRole.isPending}
+                    isDisabledPending={setUserDisabled.isPending}
                   />
                 );
               })}
@@ -534,6 +600,7 @@ export default function TeamPage() {
           )}
         </div>
         {deleteDialog}
+        {disableDialog}
         <NewMemberDialog open={addMemberOpen} onOpenChange={setAddMemberOpen} />
       </main>
     );
@@ -574,13 +641,52 @@ export default function TeamPage() {
                     Member
                   </span>
                 )}
+                {selectedMember?.is_disabled && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/25">
+                    <Ban className="size-3" /> Disabled
+                  </span>
+                )}
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">{isMe ? "Your Personal Panel" : "Team Member Profile"}</p>
             </div>
           </div>
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-card border border-border/50 rounded-full px-3 py-1 shadow-xs">
-            <span className="size-1.5 rounded-full bg-emerald-500" /> {selectedMember?.first_name}'s panel
-          </span>
+          <div className="flex items-center gap-2">
+            {!isMe && selectedMember && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setDisableTarget({
+                    id: selectedMember.id,
+                    name: `${selectedMember.first_name || ""} ${selectedMember.last_name || ""}`.trim() || "User",
+                    shouldDisable: !selectedMember.is_disabled,
+                  });
+                }}
+                disabled={setUserDisabled.isPending}
+                className={cn(
+                  "h-8 text-xs font-semibold gap-1.5",
+                  selectedMember.is_disabled
+                    ? "text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10"
+                    : "text-amber-600 border-amber-500/30 hover:bg-amber-500/10",
+                )}
+              >
+                {selectedMember.is_disabled ? (
+                  <>
+                    <UserCheck className="size-3.5" />
+                    Re-enable ID
+                  </>
+                ) : (
+                  <>
+                    <Ban className="size-3.5" />
+                    Disable ID
+                  </>
+                )}
+              </Button>
+            )}
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-card border border-border/50 rounded-full px-3 py-1 shadow-xs">
+              <span className="size-1.5 rounded-full bg-emerald-500" /> {selectedMember?.first_name}'s panel
+            </span>
+          </div>
         </div>
 
         {/* Tab navigation bar */}
@@ -909,6 +1015,7 @@ export default function TeamPage() {
         )}
       </div>
       {deleteDialog}
+      {disableDialog}
     </main>
   );
 }

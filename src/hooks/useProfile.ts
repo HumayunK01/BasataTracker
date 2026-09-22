@@ -9,6 +9,8 @@ export interface Profile {
   updated_at: string;
   daily_goal: number | null;
   role: "user" | "admin";
+  is_disabled?: boolean;
+  disabled_at?: string | null;
 }
 
 export function useProfile() {
