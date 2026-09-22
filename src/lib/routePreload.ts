@@ -1,4 +1,5 @@
 import { lazy } from "react";
+import { preloadResources } from "@/pages/Resources";
 
 // Centralized route chunks so navigation can prefetch on hover/focus intent.
 const importers = {
@@ -13,8 +14,6 @@ const importers = {
   "/team": () => import("@/pages/Team.tsx"),
   "/facilities": () => import("@/pages/Facilities.tsx"),
   "/scenarios": () => import("@/pages/Scenarios.tsx"),
-  "/resources/cheat-sheet": () => import("@/pages/Resources.tsx"),
-  "/resources/test-patients": () => import("@/pages/Resources.tsx"),
   "*": () => import("@/pages/NotFound.tsx"),
 } as const;
 
@@ -28,10 +27,14 @@ export const VaultPage = lazy(importers["/vault"]);
 export const TeamPage = lazy(importers["/team"]);
 export const FacilitiesPage = lazy(importers["/facilities"]);
 export const ScenariosPage = lazy(importers["/scenarios"]);
-export const ResourcePage = lazy(importers["/resources/cheat-sheet"]);
+export const ResourcePage = () => null;
 export const NotFound = lazy(importers["*"]);
 
 export function prefetchRoute(path: string) {
+  if (path.startsWith("/resources/")) {
+    preloadResources();
+    return;
+  }
   // ponytail: thunk returns a cached promise, so repeated hovers are no-ops
   const fn = (importers as Record<string, (() => Promise<unknown>) | undefined>)[path];
   if (fn) void fn();

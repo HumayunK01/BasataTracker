@@ -5,6 +5,8 @@ import { AppSidebar } from "@/components/ar/AppSidebar";
 import { MobileTabBar } from "@/components/ar/MobileTabBar";
 import { PageHeader } from "@/components/ar/PageHeader";
 import { HrmsReminder } from "@/components/ar/HrmsReminder";
+import { ResourceViewer, preloadResources } from "@/pages/Resources";
+import { cn } from "@/lib/utils";
 
 const pageEase: Easing = [0.16, 1, 0.3, 1];
 
@@ -45,25 +47,56 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    // Idle background warmup for external Google Docs
+    const timer = setTimeout(() => {
+      preloadResources();
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
   const title = pageTitles[location.pathname] ?? "";
+  const isResourceRoute = location.pathname.startsWith("/resources/");
 
   return (
     <div className="flex h-dvh w-full bg-background text-foreground overflow-hidden relative">
       <AppSidebar />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         <PageHeader now={now} title={title} />
-        <Suspense
-          fallback={
-            <div className="flex-1 flex items-center justify-center text-xs font-mono uppercase tracking-widest text-muted-foreground">
-              <div className="size-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin mr-2.5" />
-              <span>Loading...</span>
-            </div>
-          }
+
+        {/* Persistent keep-alive Resource Viewer */}
+        <div
+          className={cn(
+            "flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden",
+            isResourceRoute
+              ? "relative flex"
+              : "absolute inset-0 invisible pointer-events-none -z-50",
+          )}
         >
-          <AnimatedPage key={location.pathname}>
-            {children}
-          </AnimatedPage>
-        </Suspense>
+          <ResourceViewer />
+        </div>
+
+        {/* Regular route pages with animated transitions */}
+        <div
+          className={cn(
+            "flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden",
+            isResourceRoute && "hidden",
+          )}
+        >
+          <Suspense
+            fallback={
+              <div className="flex-1 flex items-center justify-center text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                <div className="size-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin mr-2.5" />
+                <span>Loading...</span>
+              </div>
+            }
+          >
+            <AnimatedPage key={location.pathname}>
+              {children}
+            </AnimatedPage>
+          </Suspense>
+        </div>
+
         <MobileTabBar />
       </div>
       <HrmsReminder />
