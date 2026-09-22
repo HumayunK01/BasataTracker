@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutationRateLimit } from "@/hooks/useMutationRateLimit";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import { encryptPassword, decryptCredentialRows } from "@/lib/credential-crypto";
 
 export type CredentialFolder = Tables<"credential_folders">;
 export type Credential = Tables<"credentials">;
@@ -127,7 +128,7 @@ export function useCredentials(folderId?: string) {
         .eq("folder_id", folderId)
         .order("service", { ascending: true });
       if (error) throw error;
-      return data ?? [];
+      return decryptCredentialRows(data ?? []);
     },
   });
 }
@@ -144,7 +145,7 @@ export function useAllCredentials(enabled = true) {
         .select("*")
         .order("service", { ascending: true });
       if (error) throw error;
-      return data ?? [];
+      return decryptCredentialRows(data ?? []);
     },
   });
 }
@@ -156,17 +157,22 @@ export function useUpsertCredential() {
     mutationFn: async (input: { row: Credential | null; folderId: string; values: { service: string; login_id: string; password: string; notes: string | null; website: string | null } }) => {
       if (!checkLimit()) throw new Error("Too many requests. Please wait a moment.");
       const validated = CredentialSchema.parse(input.values);
+      const encryptedPassword = await encryptPassword(validated.password);
+      const payload = {
+        ...validated,
+        password: encryptedPassword,
+      };
       const created_by = await getUserId();
       if (input.row) {
         const { error } = await supabase
           .from("credentials")
-          .update(validated)
+          .update(payload)
           .eq("id", input.row.id)
           .eq("created_by", created_by);
         if (error) throw error;
       } else {
         const insert: TablesInsert<"credentials"> = {
-          ...validated,
+          ...payload,
           folder_id: input.folderId,
           created_by,
         };
