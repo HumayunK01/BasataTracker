@@ -132,7 +132,7 @@ function BranchSplitter2({
 
       {/* Mobile stem */}
       <div className={cn("flex justify-center", is6733 ? "sm:hidden" : "md:hidden")}>
-        <VerticalArrow height={16} />
+        <VerticalArrow height={18} />
       </div>
 
       {/* Branch pill labels and directional down arrows to destination cards */}
@@ -144,7 +144,7 @@ function BranchSplitter2({
           !is3367 && !is6733 && "grid grid-cols-1 md:grid-cols-2 gap-4",
         )}
       >
-        <div className={cn("flex flex-col items-center pb-1", is3367 && "md:col-span-4", is6733 && "sm:col-span-8")}>
+        <div className={cn("flex flex-col items-center", is3367 && "md:col-span-4", is6733 && "sm:col-span-8")}>
           <span
             className={cn(
               "px-3 py-1 rounded-full text-2xs font-mono font-bold uppercase shadow-2xs border bg-white leading-tight",
@@ -158,7 +158,7 @@ function BranchSplitter2({
           <VerticalArrow height={18} />
         </div>
 
-        <div className={cn("flex flex-col items-center pb-1", is3367 && "md:col-span-8", is6733 && "sm:col-span-4")}>
+        <div className={cn("flex flex-col items-center", is3367 && "md:col-span-8", is6733 && "sm:col-span-4")}>
           <span
             className={cn(
               "px-3 py-1 rounded-full text-2xs font-mono font-bold uppercase shadow-2xs border bg-white leading-tight",
@@ -733,12 +733,13 @@ export default function ScenariosPage() {
                     rightLabel="Patient Not in NextGen (Check Athena)"
                     leftColor="emerald"
                     rightColor="amber"
+                    ratio="33-67"
                   />
 
-                  {/* TWO SIDES: Patient Available (Left) vs Not in NextGen (Right) */}
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+                  {/* TWO SIDES: Patient Available (Left 4 cols) vs Not in NextGen (Right 8 cols) */}
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
                     {/* LEFT COLUMN: Patient Available & Note Rules */}
-                    <div className="lg:col-span-6 space-y-3">
+                    <div className="md:col-span-4 space-y-3">
                       {/* Verification & Provider Note Rules Box */}
                       <div className="rounded-xl bg-emerald-50/40 border-2 border-emerald-300/80 shadow-xs overflow-hidden">
                         <div className="px-3.5 py-1.5 bg-emerald-100/70 border-b border-emerald-200/90 flex items-center justify-between text-2xs font-mono">
@@ -803,7 +804,7 @@ export default function ScenariosPage() {
                     </div>
 
                     {/* RIGHT COLUMN: Patient Not in NextGen -> Athena Check & Outcomes */}
-                    <div className="lg:col-span-6 flex flex-col">
+                    <div className="md:col-span-8 flex flex-col">
                       {/* Step 3: Check Athena */}
                       <div className="rounded-xl bg-white border-2 border-amber-500/70 shadow-xs overflow-hidden">
                         <div className="px-3 py-1 bg-amber-50 border-b border-amber-200 flex items-center justify-between text-2xs font-mono">
@@ -823,7 +824,7 @@ export default function ScenariosPage() {
                       </div>
 
                       {/* Vertical connector from Step 3 to Cardiac Clearance Exception */}
-                      <VerticalArrow height={20} />
+                      <VerticalArrow height={18} />
 
                       {/* SPECIAL RULE: Cardiac Clearance Exception */}
                       <div className="rounded-xl bg-purple-50 border-2 border-purple-400/80 shadow-xs overflow-hidden">
@@ -854,113 +855,152 @@ export default function ScenariosPage() {
                         </div>
                       </div>
 
-                      {/* Fork connector to Athena Outcomes */}
-                      <div className="w-full select-none">
-                        {/* Desktop/Tablet Fork Bar */}
-                        <div className="w-full hidden sm:block">
-                          <svg
-                            className="w-full h-5 text-slate-400 block overflow-visible"
-                            viewBox="0 0 100 20"
-                            preserveAspectRatio="none"
-                          >
-                            <line x1="50" y1="0" x2="50" y2="10" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                            <line x1="25" y1="10" x2="75" y2="10" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                            <line x1="25" y1="10" x2="25" y2="20" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                            <line x1="75" y1="10" x2="75" y2="20" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                          </svg>
-                        </div>
+                      {/* Branch Splitter: Found in Athena vs Not Found in Athena */}
+                      <BranchSplitter2
+                        leftLabel="Found in Athena"
+                        rightLabel="Not Found in Athena"
+                        leftColor="emerald"
+                        rightColor="red"
+                        ratio="67-33"
+                      />
 
-                        {/* Mobile stem */}
-                        <div className="flex justify-center sm:hidden">
-                          <VerticalArrow height={16} />
-                        </div>
-
-                        {/* Branch pill labels and directional down arrows to destination cards */}
-                        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div className="flex flex-col items-center">
-                            <span className="px-3 py-1 rounded-full text-2xs font-mono font-bold uppercase shadow-2xs border bg-amber-50 text-amber-800 border-amber-300 leading-tight">
-                              Found in Athena
+                      {/* 2 Outcome Sections: Found in Athena (Left 8 cols) vs Not Found in Athena (Right 4 cols) */}
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-stretch">
+                        {/* LEFT CONTAINER: Found in Athena (2 Outcomes) */}
+                        <div className="sm:col-span-8 rounded-xl bg-emerald-50/30 border-2 border-emerald-300/70 shadow-2xs overflow-hidden flex flex-col justify-between">
+                          <div className="px-3 py-1.5 bg-emerald-100/70 border-b border-emerald-200/90 flex items-center justify-between gap-2 text-2xs font-mono">
+                            <span className="font-bold text-emerald-900 uppercase tracking-tight flex items-center gap-1.5 whitespace-nowrap text-[11px]">
+                              <CheckCircle2 className="size-3.5 text-emerald-600 shrink-0" />
+                              Found in Athena • Check History
                             </span>
-                            <VerticalArrow height={18} />
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-200/70 text-emerald-900 shrink-0 whitespace-nowrap">
+                              2 Outcomes
+                            </span>
                           </div>
 
-                          <div className="flex flex-col items-center">
-                            <span className="px-3 py-1 rounded-full text-2xs font-mono font-bold uppercase shadow-2xs border bg-rose-50 text-rose-700 border-rose-300 leading-tight">
-                              Not Found in Athena
-                            </span>
-                            <VerticalArrow height={18} />
+                          <div className="p-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2.5 flex-1 items-stretch">
+                            {/* Outcome 1: Chart in Athena Only */}
+                            <div className="p-3 rounded-lg bg-white border border-emerald-200/70 shadow-2xs flex flex-col justify-between space-y-2.5">
+                              <div className="space-y-1">
+                                <span className="text-[10px] font-mono font-bold text-amber-700 uppercase tracking-wide bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 inline-block">
+                                  Outcome 1
+                                </span>
+                                <h5 className="text-xs font-bold text-slate-900 block tracking-tight font-heading">
+                                  Chart in Athena Only
+                                </h5>
+                                <p className="text-2xs text-slate-600 leading-relaxed">
+                                  Patient exists in Athena, but is missing in NextGen.
+                                </p>
+                              </div>
+
+                              <div className="p-2 rounded-md bg-amber-50/70 border border-amber-200/80 space-y-1">
+                                <span className="text-[10px] font-mono uppercase text-amber-800 block font-bold tracking-wider">
+                                  Faxback Response:
+                                </span>
+                                <p className="text-xs font-mono font-medium text-slate-900 select-all leading-snug">
+                                  Patient not seen by Phoenix heart
+                                </p>
+                              </div>
+
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => copyToClipboard("Patient not seen by Phoenix heart", "Copied phrase")}
+                                className="text-xs h-7 px-2 gap-1.5 w-full font-medium bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 font-mono"
+                              >
+                                <Copy className="size-3" />
+                                Copy Phrase
+                              </Button>
+                            </div>
+
+                            {/* Outcome 2: Found Only Old Visits */}
+                            <div className="p-3 rounded-lg bg-white border border-emerald-200/70 shadow-2xs flex flex-col justify-between space-y-2.5">
+                              <div className="space-y-1">
+                                <span className="text-[10px] font-mono font-bold text-amber-700 uppercase tracking-wide bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 inline-block">
+                                  Outcome 2
+                                </span>
+                                <h5 className="text-xs font-bold text-slate-900 block tracking-tight font-heading">
+                                  Found Only Old Visits eg. 2021, 2022, 2023, etc
+                                </h5>
+                                <p className="text-2xs text-slate-600 leading-relaxed">
+                                  Patient was seen previously, but has no recent visits.
+                                </p>
+                              </div>
+
+                              <div className="p-2 rounded-md bg-amber-50/70 border border-amber-200/80 space-y-1">
+                                <span className="text-[10px] font-mono uppercase text-amber-800 block font-bold tracking-wider">
+                                  Faxback Response:
+                                </span>
+                                <p className="text-xs font-mono font-medium text-slate-900 select-all leading-snug">
+                                  Patient not recently seen by Phoenix Heart, last encounter was on [MM/DD/YYYY]
+                                </p>
+                              </div>
+
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() =>
+                                  copyToClipboard(
+                                    "Patient not recently seen by Phoenix Heart, last encounter was on",
+                                    "Copied phrase"
+                                  )
+                                }
+                                className="text-xs h-7 px-2 gap-1.5 w-full font-medium bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 font-mono"
+                              >
+                                <Copy className="size-3" />
+                                Copy Phrase
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Athena Outcomes Header */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch">
-                        {/* Outcome A: Found ONLY in Athena */}
-                        <div className="p-3.5 rounded-xl bg-amber-50/40 border-2 border-amber-300/80 flex flex-col justify-between space-y-2.5 shadow-2xs">
-                          <div className="space-y-1">
-                            <span className="text-[10px] font-mono font-bold text-amber-800 uppercase tracking-wide bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200/80 inline-block">
-                              Found Only in Athena
+                        {/* RIGHT CONTAINER: Not in NextGen OR Athena */}
+                        <div className="sm:col-span-4 rounded-xl bg-rose-50/30 border-2 border-rose-300/70 shadow-2xs overflow-hidden flex flex-col justify-between">
+                          <div className="px-2.5 py-1.5 bg-rose-100/70 border-b border-rose-200/90 flex items-center justify-between gap-1 text-2xs font-mono">
+                            <span className="font-bold text-rose-900 uppercase tracking-tight flex items-center gap-1.5 whitespace-nowrap text-[11px]">
+                              <XCircle className="size-3.5 text-rose-600 shrink-0" />
+                              Not in Athena
                             </span>
-                            <h5 className="text-xs font-bold text-slate-900 block tracking-tight font-heading">
-                              Chart in Athena Only
-                            </h5>
-                            <p className="text-2xs text-slate-600 leading-relaxed">
-                              Patient exists in Athena, but is missing in NextGen.
-                            </p>
-                          </div>
-
-                          <div className="p-2 rounded-md bg-amber-50/70 border border-amber-200 space-y-1">
-                            <span className="text-[10px] font-mono uppercase text-amber-800 block font-bold tracking-wider">
-                              Faxback Response:
-                            </span>
-                            <p className="text-xs font-mono font-medium text-slate-900 select-all leading-snug">
-                              Patient not seen by Phoenix heart
-                            </p>
-                          </div>
-
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => copyToClipboard("Patient not seen by Phoenix heart", "Copied phrase")}
-                            className="text-xs h-7 px-2 gap-1.5 w-full font-medium bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 font-mono"
-                          >
-                            <Copy className="size-3" />
-                            Copy Phrase
-                          </Button>
-                        </div>
-
-                        {/* Outcome B: Missing in Both NextGen & Athena */}
-                        <div className="p-3.5 rounded-xl bg-rose-50/40 border-2 border-rose-300/80 flex flex-col justify-between space-y-2.5 shadow-2xs">
-                          <div className="space-y-1">
-                            <span className="text-[10px] font-mono font-bold text-rose-800 uppercase tracking-wide bg-rose-100 px-1.5 py-0.5 rounded border border-rose-200/80 inline-block">
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-200/70 text-rose-900 shrink-0 whitespace-nowrap">
                               Missing in Both
                             </span>
-                            <h5 className="text-xs font-bold text-slate-900 block tracking-tight font-heading">
-                              Not in NextGen OR Athena
-                            </h5>
-                            <p className="text-2xs text-slate-600 leading-relaxed">
-                              Patient does not exist in either NextGen or Athena.
-                            </p>
                           </div>
 
-                          <div className="p-2 rounded-md bg-rose-50/70 border border-rose-200 space-y-1">
-                            <span className="text-[10px] font-mono uppercase text-rose-800 block font-bold tracking-wider">
-                              Faxback Response:
-                            </span>
-                            <p className="text-xs font-mono font-medium text-slate-900 select-all leading-snug">
-                              No patient found, please update your system
-                            </p>
-                          </div>
+                          <div className="p-2.5 flex flex-col flex-1 items-stretch">
+                            {/* Case 3: Missing in both */}
+                            <div className="p-3 rounded-lg bg-white border border-rose-200/70 shadow-2xs flex flex-col justify-between space-y-2.5 flex-1">
+                              <div className="space-y-1">
+                                <span className="text-[10px] font-mono font-bold text-rose-700 uppercase tracking-wide bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200/60 inline-block">
+                                  Missing in Both
+                                </span>
+                                <h5 className="text-xs font-bold text-slate-900 block tracking-tight font-heading">
+                                  Not in NextGen OR Athena
+                                </h5>
+                                <p className="text-2xs text-slate-600 leading-relaxed">
+                                  Patient does not exist in either NextGen or Athena.
+                                </p>
+                              </div>
 
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => copyToClipboard("No patient found, please update your system", "Copied phrase")}
-                            className="text-xs h-7 px-2 gap-1.5 w-full font-medium bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 font-mono"
-                          >
-                            <Copy className="size-3" />
-                            Copy Phrase
-                          </Button>
+                              <div className="p-2 rounded-md bg-rose-50/70 border border-rose-200/80 space-y-1">
+                                <span className="text-[10px] font-mono uppercase text-rose-800 block font-bold tracking-wider">
+                                  Faxback Response:
+                                </span>
+                                <p className="text-xs font-mono font-medium text-slate-900 select-all leading-snug">
+                                  No patient found, please update your system
+                                </p>
+                              </div>
+
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => copyToClipboard("No patient found, please update your system", "Copied phrase")}
+                                className="text-xs h-7 px-2 gap-1.5 w-full font-medium bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 font-mono"
+                              >
+                                <Copy className="size-3" />
+                                Copy Phrase
+                              </Button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1069,6 +1109,10 @@ export default function ScenariosPage() {
                           <p className="flex items-start gap-2">
                             <span className="text-emerald-600 font-bold shrink-0">•</span>
                             <span>Verify patient details thoroughly: First Name, Last Name, and DOB.</span>
+                          </p>
+                          <p className="flex items-start gap-2">
+                            <span className="text-emerald-600 font-bold shrink-0">•</span>
+                            <span>Search using the ID mentioned on the EKG (e.g. <strong>402301</strong>).</span>
                           </p>
                           <p className="flex items-start gap-2 text-emerald-800 font-bold">
                             <span className="text-emerald-600 font-bold shrink-0">•</span>
