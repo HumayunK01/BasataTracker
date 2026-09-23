@@ -441,7 +441,8 @@ export function DaysTable({ logs, onEdit, onNew, userName }: Props) {
       : [
           ["Date", formatTableDate(l.log_date)],
           ...categories.reduce<string[][]>((acc, c) => {
-            if (getVal(l, c.key) > 0) acc.push([c.label, String(getVal(l, c.key))]);
+            if (getVal(l, c.key) > 0)
+              acc.push([c.label, String(getVal(l, c.key)).padStart(2, "0")]);
             return acc;
           }, []),
         ];
