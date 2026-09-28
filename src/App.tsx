@@ -23,6 +23,7 @@ import {
   ResourcePage,
   NotFound,
 } from "@/lib/routePreload";
+import { initQueryPersistence } from "@/lib/queryPersister";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,6 +32,7 @@ const queryClient = new QueryClient({
       // every window refocus. Queries that need tighter sync (e.g. daily_logs
       // cross-device polling) override this locally.
       staleTime: 60_000,
+      gcTime: 1000 * 60 * 60 * 24, // keep cached for 24h to support offline/revisit hydration
     },
   },
   // Mutations already toast their own errors in the hooks; queries previously
@@ -43,6 +45,9 @@ const queryClient = new QueryClient({
     },
   }),
 });
+
+initQueryPersistence(queryClient);
+
 
 const TITLES: Record<string, string> = {
   "/": "Console",

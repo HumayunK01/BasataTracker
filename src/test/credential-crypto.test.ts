@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import {
   encryptPassword,
   decryptPassword,
-  decryptCredentialRow,
   decryptCredentialRows,
 } from "@/lib/credential-crypto";
 import type { Credential } from "@/hooks/useCredentials";

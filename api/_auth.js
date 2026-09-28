@@ -4,16 +4,31 @@
 // ponytail: token rides in the URL (browser history / request logs); safe
 // while Supabase access tokens stay short-lived (~1h). If that changes,
 // switch to client-side blob fetching with a real header.
+import { ratelimit } from "./_redis.js";
+
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const ANON_KEY =
   process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 export default async function authorized(req) {
   if (!SUPABASE_URL || !ANON_KEY) return false; // misconfigured — deny
+
+  if (ratelimit) {
+    const rawIp = req.headers?.["x-forwarded-for"] || "127.0.0.1";
+    const ip = typeof rawIp === "string" ? rawIp.split(",")[0].trim() : "127.0.0.1";
+    try {
+      const rl = await ratelimit.limit(ip);
+      if (!rl.success) return false;
+    } catch {
+      // ponytail: fail-open on rate limiter network glitch to prevent locking out active associates
+    }
+  }
+
   const authHeader = req.headers?.authorization || req.headers?.Authorization;
   const bearer = typeof authHeader === "string" && authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
   const token = bearer || req.query?.t;
   if (typeof token !== "string" || token.length === 0 || token.length > 4096) return false;
+
   try {
     const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
       headers: { apikey: ANON_KEY, Authorization: `Bearer ${token}` },

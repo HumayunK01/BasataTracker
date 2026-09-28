@@ -11,21 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Search,
-  Check,
   Copy,
-  AlertTriangle,
   FileText,
   ShieldAlert,
-  RotateCcw,
-  Sparkles,
   GitFork,
   CheckCircle2,
   XCircle,
-  Building2,
   Tags,
   X,
-  PhoneCall,
-  UserCheck,
   CornerDownRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -179,11 +172,9 @@ function BranchSplitter2({
 export default function ScenariosPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("flowcharts");
   const [activeFlowchart, setActiveFlowchart] = useState<FlowchartKey>("roi");
-  const [copiedText, setCopiedText] = useState<string | null>(null);
 
   // Pipeline lookup search
   const [lookupSearch, setLookupSearch] = useState("");
-  const [lookupCategory, setLookupCategory] = useState("all");
 
   // Reference quick tab
   const [refTab, setRefTab] = useState<"labels" | "patients">("labels");
@@ -191,25 +182,22 @@ export default function ScenariosPage() {
 
   const copyToClipboard = (text: string, label = "Copied to clipboard") => {
     navigator.clipboard.writeText(text);
-    setCopiedText(text);
     toast.success(label);
-    setTimeout(() => setCopiedText((curr) => (curr === text ? null : curr)), 2000);
   };
 
   const filteredIndexing = useMemo(() => {
-    if (!lookupSearch.trim() && lookupCategory === "all") {
+    if (!lookupSearch.trim()) {
       return INDEXING_DOC_TYPES.slice(0, 8);
     }
+    const q = lookupSearch.toLowerCase();
     return INDEXING_DOC_TYPES.filter((doc) => {
-      const matchSearch =
-        !lookupSearch.trim() ||
-        doc.title.toLowerCase().includes(lookupSearch.toLowerCase()) ||
-        doc.indicators.toLowerCase().includes(lookupSearch.toLowerCase()) ||
-        (doc.facilityTypes && doc.facilityTypes.toLowerCase().includes(lookupSearch.toLowerCase()));
-      const matchCat = lookupCategory === "all" || doc.category.toLowerCase().includes(lookupCategory.toLowerCase());
-      return matchSearch && matchCat;
+      return (
+        doc.title.toLowerCase().includes(q) ||
+        doc.indicators.toLowerCase().includes(q) ||
+        Boolean(doc.facilityTypes && doc.facilityTypes.toLowerCase().includes(q))
+      );
     });
-  }, [lookupSearch, lookupCategory]);
+  }, [lookupSearch]);
 
   return (
     <main className="flex-1 min-h-0 overflow-y-auto px-2 sm:px-4 py-3 sm:py-4 bg-background">
@@ -1612,7 +1600,7 @@ export default function ScenariosPage() {
                 <button
                   key={tab.key}
                   type="button"
-                  onClick={() => setRefTab(tab.key as any)}
+                  onClick={() => setRefTab(tab.key as "labels" | "patients")}
                   className={cn(
                     "relative px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors",
                     refTab === tab.key

@@ -4,6 +4,7 @@
 // client and avoids leaking the request to a third party from the browser.
 // Auth-gated via ?t=<supabase access token> — see ./_auth.js.
 import authorized from "./_auth.js";
+import { redis } from "./_redis.js";
 
 export default async function handler(req, res) {
   if (!(await authorized(req))) {
@@ -16,6 +17,24 @@ export default async function handler(req, res) {
     res.status(400).end();
     return;
   }
+
+  const cacheKey = `proxy:favicon:${domain.toLowerCase()}`;
+  if (redis) {
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached && typeof cached === "object" && cached.base64) {
+        res.setHeader("Content-Type", cached.contentType || "image/x-icon");
+        res.setHeader("Cache-Control", "private, max-age=86400");
+        res.setHeader("X-Cache", "HIT");
+        res.status(200).end(Buffer.from(cached.base64, "base64"));
+        return;
+      }
+    } catch (err) {
+      // ponytail: non-fatal cache read error; fall through to upstream fetch
+      console.warn("Redis favicon read failed:", err);
+    }
+  }
+
   try {
     const upstream = `https://icons.duckduckgo.com/ip3/${domain}.ico`;
     const r = await fetch(upstream, { signal: AbortSignal.timeout(5000) });
@@ -40,10 +59,21 @@ export default async function handler(req, res) {
       chunks.push(chunk);
     }
     const buf = Buffer.concat(chunks);
-    res.setHeader("Content-Type", r.headers.get("content-type") || "image/x-icon");
+    const contentType = r.headers.get("content-type") || "image/x-icon";
+    res.setHeader("Content-Type", contentType);
     // private: the response was auth-gated, so never let a shared cache
     // serve it to another user. Browsers may still cache it.
     res.setHeader("Cache-Control", "private, max-age=86400");
+    res.setHeader("X-Cache", "MISS");
+
+    if (redis) {
+      redis.set(
+        cacheKey,
+        { contentType, base64: buf.toString("base64") },
+        { ex: 60 * 60 * 24 * 7 }, // 7 days TTL
+      ).catch((err) => console.warn("Redis favicon set failed:", err));
+    }
+
     res.status(200).end(buf);
   } catch {
     res.status(502).end();

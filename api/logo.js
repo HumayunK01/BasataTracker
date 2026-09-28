@@ -6,6 +6,7 @@
 // redirects), image content-type only, and a response-size cap.
 import dns from "node:dns/promises";
 import authorized from "./_auth.js";
+import { redis } from "./_redis.js";
 
 const PRIVATE_V4 = [
   /^0\./,
@@ -80,6 +81,23 @@ export default async function handler(req, res) {
     return;
   }
 
+  const cacheKey = `proxy:logo:${encodeURIComponent(url.href)}`;
+  if (redis) {
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached && typeof cached === "object" && cached.base64) {
+        res.setHeader("Content-Type", cached.contentType || "image/png");
+        res.setHeader("Cache-Control", "private, max-age=86400");
+        res.setHeader("X-Cache", "HIT");
+        res.status(200).end(Buffer.from(cached.base64, "base64"));
+        return;
+      }
+    } catch (err) {
+      // ponytail: non-fatal Redis read error; proceed with standard fetch
+      console.warn("Redis logo read failed:", err);
+    }
+  }
+
   const MAX_HOPS = 3;
   const MAX_SIZE = 2 * 1024 * 1024;
   let currentUrl = url;
@@ -139,6 +157,16 @@ export default async function handler(req, res) {
 
     res.setHeader("Content-Type", type);
     res.setHeader("Cache-Control", "private, max-age=86400");
+    res.setHeader("X-Cache", "MISS");
+
+    if (redis) {
+      redis.set(
+        cacheKey,
+        { contentType: type, base64: buf.toString("base64") },
+        { ex: 60 * 60 * 24 * 7 }, // 7 days TTL
+      ).catch((err) => console.warn("Redis logo set failed:", err));
+    }
+
     res.status(200).end(buf);
   } catch {
     res.status(502).end();

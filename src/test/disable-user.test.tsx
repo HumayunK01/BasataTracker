@@ -1,5 +1,4 @@
 import { describe, it, expect, vi } from "vitest";
-import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { TeamMemberCard, type TeamMemberItem } from "@/components/ar/team/TeamMemberCard";
 import fs from "node:fs";

@@ -53,7 +53,7 @@ describe("useAuthenticatedImage", () => {
   it("fetches /api/ endpoints with Authorization: Bearer <token> and creates blob URL", async () => {
     let capturedHeaders: Record<string, string> | undefined;
 
-    globalThis.fetch = vi.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
+    globalThis.fetch = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
       capturedHeaders = init?.headers as Record<string, string>;
       return new Response(new Blob(["fake-image-bytes"], { type: "image/png" }), {
         status: 200,
