@@ -14,7 +14,7 @@ import { useCategories, type Category } from "@/hooks/useCategories";
 import { useUpsertLog, useDailyLogs } from "@/hooks/useDailyLogs";
 import { isoDate, totalForLog, isWeekend } from "@/types/log";
 import { EmptyState } from "@/components/ar/industrial";
-import { RotateCcw, Hash, Plus, Tag, ChevronRight, RefreshCw } from "@/components/ui/icons";
+import { RotateCcw, Hash, Plus, Tag, ChevronRight, RefreshCw, AlertTriangle } from "@/components/ui/icons";
 import { supabase, getUserId } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
@@ -31,6 +31,7 @@ import { NewCategoryDialog } from "@/components/ar/counter/NewCategoryDialog";
 
 const COUNTS_KEY = "counter_counts";
 const SELECTED_KEY = "counter_selected_keys";
+const COUNTS_DATE_KEY = "counter_counts_date";
 
 function load<T>(key: string, fallback: T): T {
   try {
@@ -96,21 +97,31 @@ function triggerKudosAnimation(emoji: string) {
 
 export default function CounterPage() {
   const { data: categories = [], isLoading: catsLoading } = useCategories();
-  const { data: logs = [] } = useDailyLogs();
+  const { data: logs = [], isLoading: logsLoading, isFetched: logsFetched } = useDailyLogs();
   const upsert = useUpsertLog();
   const { user } = useAuth();
   const channelRef = useRef<RealtimeChannel | null>(null);
   const qc = useQueryClient();
   const { checkLimit: checkSilentLimit } = useMutationRateLimit({ maxRequests: 20, windowMs: 60_000 });
 
-  const [{ counts, selectedKeys, saved }, cDispatch] = useReducer(counterReducer, undefined, () => ({
-    counts: load<Record<string, number>>(COUNTS_KEY, {}),
-    selectedKeys: load<string[]>(SELECTED_KEY, []),
-    saved: false,
-  }));
+  const todayIso = isoDate();
+  const todayLog = logs.find((l) => l.log_date === todayIso);
+  const todayTotal = todayLog ? totalForLog(todayLog) : 0;
+
+  const [{ counts, selectedKeys, saved }, cDispatch] = useReducer(counterReducer, undefined, () => {
+    const savedDate = localStorage.getItem(COUNTS_DATE_KEY);
+    const isCurrentDay = savedDate === todayIso;
+    return {
+      counts: isCurrentDay ? load<Record<string, number>>(COUNTS_KEY, {}) : {},
+      selectedKeys: load<string[]>(SELECTED_KEY, []),
+      saved: false,
+    };
+  });
   const [pickerOpen, setPickerOpen] = useState(false);
   const [newCatOpen, setNewCatOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
+  const [overwriteOpen, setOverwriteOpen] = useState(false);
+  const [reducedList, setReducedList] = useState<{ label: string; from: number; to: number }[] | null>(null);
 
   // Cross-device persistence. Saving is manual (Save button) into today's
   // daily_logs row; on first load the counter hydrates from the server so a
@@ -149,7 +160,8 @@ export default function CounterPage() {
 
   useEffect(() => {
     localStorage.setItem(COUNTS_KEY, JSON.stringify(counts));
-  }, [counts]);
+    localStorage.setItem(COUNTS_DATE_KEY, todayIso);
+  }, [counts, todayIso]);
 
   useEffect(() => {
     localStorage.setItem(SELECTED_KEY, JSON.stringify(selectedKeys));
@@ -198,42 +210,52 @@ export default function CounterPage() {
   const addCategory = (cat: Category) => cDispatch({ type: "add_key", key: cat.key });
   const removeCategory = (key: string) => cDispatch({ type: "remove_key", key });
 
-  const todayIso = isoDate();
-  const todayLog = logs.find((l) => l.log_date === todayIso);
-  const todayTotal = todayLog ? totalForLog(todayLog) : 0;
-
-  // Hydrate from the server once, when today's row first arrives. Only seed if
-  // this device has no local progress, so we never clobber in-progress taps.
+  // Hydrate from the server once, when today's row genuinely arrives from the database.
+  // We MUST wait for !catsLoading && !logsLoading && logsFetched so we never overwrite DB data with 0.
   useEffect(() => {
     if (hydratedRef.current) return;
+    if (catsLoading || logsLoading || !logsFetched) return;
     if (categories.length === 0) return;
 
     const serverCounts = todayLog?.counts ?? {};
+    const serverTotal = totalForLog(todayLog ?? { counts: {} });
     const localTotal = Object.values(counts).reduce((s, v) => s + (v || 0), 0);
-    const serverTotal = Object.values(serverCounts).reduce((s, v) => s + (v || 0), 0);
 
-    // Wait for todayLog if local has counts that might match the server row.
-    if (localTotal > 0 && !todayLog) return;
+    if (serverTotal > 0) {
+      // Database already has counts for today (e.g. Move to Indexing: 20)
+      // Automatically select and activate all categories that have counts in the DB
+      const serverKeysWithCounts = Object.keys(serverCounts).filter(
+        (k) => (serverCounts[k] ?? 0) > 0 && categories.some((c) => c.key === k)
+      );
+      const nextKeys = Array.from(new Set([...selectedKeys, ...serverKeysWithCounts]));
 
-    if (localTotal === 0 && serverTotal > 0) {
+      // Safe merge: Never lose server counts or local taps
+      const merged = { ...serverCounts };
+      if (localTotal > 0) {
+        for (const k of Object.keys(counts)) {
+          merged[k] = Math.max(counts[k] ?? 0, serverCounts[k] ?? 0);
+        }
+      }
+
       skipUnsavedMarkRef.current = true;
-      const next = new Set(selectedKeys);
-      for (const k of Object.keys(serverCounts)) {
-        if ((serverCounts[k] ?? 0) > 0 && categories.some((c) => c.key === k)) next.add(k);
+      cDispatch({ type: "hydrate", counts: merged, keys: nextKeys });
+
+      const matchesServer = Object.keys(merged).every((k) => (merged[k] ?? 0) === (serverCounts[k] ?? 0));
+      cDispatch({ type: "set_saved", v: matchesServer });
+
+      if (localTotal === 0) {
+        toast.success(`Loaded today's counts from database (${serverTotal} docs).`, {
+          id: "server-counts-loaded",
+        });
       }
-      cDispatch({ type: "hydrate", counts: { ...serverCounts }, keys: [...next] });
-    } else if (todayLog && localTotal > 0) {
-      let match = true;
-      const all = new Set([...Object.keys(counts), ...Object.keys(serverCounts)]);
-      for (const k of all) {
-        if ((counts[k] ?? 0) !== (serverCounts[k] ?? 0)) { match = false; break; }
-      }
-      if (match) cDispatch({ type: "set_saved", v: true });
+    } else if (localTotal > 0) {
+      cDispatch({ type: "set_saved", v: false });
+    } else {
+      cDispatch({ type: "set_saved", v: true });
     }
 
     hydratedRef.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [todayLog, categories]);
+  }, [todayLog, categories, catsLoading, logsLoading, logsFetched, counts, selectedKeys]);
 
   // Mark progress as unsaved whenever counts change after initial hydration.
   useEffect(() => {
@@ -269,11 +291,76 @@ export default function CounterPage() {
     setResetOpen(false);
   };
 
+  // Check if candidate counts would reduce existing database counts for today
+  const getReductionWarning = useCallback(
+    (candidateCounts: Record<string, number>) => {
+      const existingLog = logs.find((l) => l.log_date === todayIso);
+      if (!existingLog?.counts) return null;
+      const existingCounts = existingLog.counts;
+
+      const reducedCategories: { label: string; from: number; to: number }[] = [];
+      for (const cat of categories) {
+        const serverVal = existingCounts[cat.key] ?? 0;
+        const localVal = candidateCounts[cat.key] ?? 0;
+        if (serverVal > 0 && localVal < serverVal) {
+          reducedCategories.push({ label: cat.label, from: serverVal, to: localVal });
+        }
+      }
+      return reducedCategories.length > 0 ? reducedCategories : null;
+    },
+    [logs, todayIso, categories]
+  );
+
+  const commitSave = useCallback(
+    async (current: Record<string, number>, keys: string[]) => {
+      if (keys.length === 0) return;
+      const existingLog = logs.find((l) => l.log_date === todayIso);
+      let same = true;
+      for (const k of keys) {
+        if ((current[k] ?? 0) !== (existingLog?.counts?.[k] ?? 0)) {
+          same = false;
+          break;
+        }
+      }
+      if (same) {
+        cDispatch({ type: "set_saved", v: true });
+        return;
+      }
+      if (!checkSilentLimit()) throw new Error("Too many saves");
+      const mergedCounts: Record<string, number> = { ...(existingLog?.counts ?? {}) };
+      for (const k of keys) mergedCounts[k] = current[k] ?? 0;
+      const user_id = await getUserId();
+      const { error } = await supabase
+        .from("daily_logs")
+        .upsert(
+          {
+            log_date: todayIso,
+            is_off_day: isWeekend(todayIso),
+            notes: existingLog?.notes ?? null,
+            counts: mergedCounts,
+            user_id,
+          },
+          { onConflict: "user_id,log_date" }
+        );
+      if (error) throw error;
+      await logAuditEvent("log_updated", { log_date: todayIso });
+      qc.invalidateQueries({ queryKey: ["daily_logs"] });
+      cDispatch({ type: "set_saved", v: true });
+    },
+    [logs, todayIso, qc, checkSilentLimit]
+  );
+
   const handleSave = async () => {
     if (saved) return;
     const keys = activeCategories.map((c) => c.key);
+    const reduction = getReductionWarning(counts);
+    if (reduction) {
+      setReducedList(reduction);
+      setOverwriteOpen(true);
+      return;
+    }
     try {
-      await silentFlush(counts, keys);
+      await commitSave(counts, keys);
       toast.success("Synced to database");
     } catch {
       toast.error("Couldn't sync counts", {
@@ -281,24 +368,6 @@ export default function CounterPage() {
       });
     }
   };
-
-  // ponytail: silent auto-save — only when not already saved, no toasts.
-  const silentFlush = useCallback(async (current: Record<string, number>, keys: string[]) => {
-    if (keys.length === 0) return;
-    const existingLog = logs.find((l) => l.log_date === todayIso);
-    let same = true;
-    for (const k of keys) if ((current[k] ?? 0) !== (existingLog?.counts?.[k] ?? 0)) { same = false; break; }
-    if (same) { cDispatch({ type: "set_saved", v: true }); return; }
-    if (!checkSilentLimit()) throw new Error("Too many saves");
-    const mergedCounts: Record<string, number> = { ...(existingLog?.counts ?? {}) };
-    for (const k of keys) mergedCounts[k] = current[k] ?? 0;
-    const user_id = await getUserId();
-    const { error } = await supabase.from("daily_logs").upsert({ log_date: todayIso, is_off_day: isWeekend(todayIso), notes: existingLog?.notes ?? null, counts: mergedCounts, user_id }, { onConflict: "user_id,log_date" });
-    if (error) throw error;
-    await logAuditEvent("log_updated", { log_date: todayIso });
-    qc.invalidateQueries({ queryKey: ["daily_logs"] });
-    cDispatch({ type: "set_saved", v: true });
-  }, [logs, todayIso, qc, checkSilentLimit]);
 
   // Auto-save: debounced silent flush, plus periodic backup — only if not saved.
   const autoSaveRef = useRef({ counts, activeCategories, isPending: upsert.isPending, saved });
@@ -309,27 +378,42 @@ export default function CounterPage() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       const { counts: c, activeCategories: cats, isPending, saved: isSaved } = autoSaveRef.current;
-      if (isPending || cats.length === 0 || isSaved) return;
-      try { await silentFlush(c, cats.map((cat) => cat.key)); } catch { /* silent retry */ }
+      if (!hydratedRef.current || !logsFetched || isPending || cats.length === 0 || isSaved) return;
+
+      // Safeguard: Never auto-save if it would reduce existing server counts
+      if (getReductionWarning(c)) return;
+
+      try {
+        await commitSave(c, cats.map((cat) => cat.key));
+      } catch {
+        /* silent retry */
+      }
     }, 2000);
-  }, [silentFlush]);
+  }, [commitSave, getReductionWarning, logsFetched]);
 
   useEffect(() => {
     if (hydratedRef.current && activeCategories.length > 0 && !saved) {
       scheduleAutoSave();
     }
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [counts, activeCategories, saved, scheduleAutoSave]);
 
-  // Periodic backup every 30s — only if unsaved (catches missed debounced saves)
+  // Periodic backup every 30s — only if unsaved and safe to save
   useEffect(() => {
     const id = setInterval(async () => {
       const { counts: c, activeCategories: cats, isPending, saved: isSaved } = autoSaveRef.current;
-      if (isPending || cats.length === 0 || isSaved) return;
-      try { await silentFlush(c, cats.map((cat) => cat.key)); } catch { /* best-effort backup; next debounced save retries */ }
+      if (!hydratedRef.current || !logsFetched || isPending || cats.length === 0 || isSaved) return;
+      if (getReductionWarning(c)) return;
+      try {
+        await commitSave(c, cats.map((cat) => cat.key));
+      } catch {
+        /* best-effort backup */
+      }
     }, 30 * 1000);
     return () => clearInterval(id);
-  }, [silentFlush]);
+  }, [commitSave, getReductionWarning, logsFetched]);
 
   return (
     <>
@@ -356,7 +440,9 @@ export default function CounterPage() {
                 {/* Sync status badge */}
                 <div
                   className={`flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border shadow-2xs transition-colors duration-200 ${
-                    saved
+                    logsLoading
+                      ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25"
+                      : saved
                       ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25"
                       : upsert.isPending
                       ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25"
@@ -367,17 +453,17 @@ export default function CounterPage() {
                 >
                   <span
                     className={`size-1.5 rounded-full ${
-                      saved
-                        ? "bg-emerald-500"
-                        : upsert.isPending
+                      logsLoading || upsert.isPending
                         ? "bg-sky-500 animate-ping"
+                        : saved
+                        ? "bg-emerald-500"
                         : total > 0
                         ? "bg-amber-500"
                         : "bg-muted-foreground"
                     }`}
                   />
                   <span>
-                    {saved ? "Synced" : upsert.isPending ? "Syncing…" : total > 0 ? "Unsaved" : "Ready"}
+                    {logsLoading ? "Syncing…" : saved ? "Synced" : upsert.isPending ? "Syncing…" : total > 0 ? "Unsaved" : "Ready"}
                   </span>
                 </div>
 
@@ -593,6 +679,71 @@ export default function CounterPage() {
               onClick={handleReset}
             >
               Reset counter
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={overwriteOpen} onOpenChange={setOverwriteOpen}>
+        <AlertDialogContent className="rounded-2xl border border-destructive/40 bg-background/95 backdrop-blur-xl shadow-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base font-bold flex items-center gap-2 text-destructive">
+              <AlertTriangle className="size-4" />
+              Lower Count than Database Record
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-muted-foreground leading-relaxed space-y-2">
+              <span className="block text-foreground/90 font-medium">
+                The database currently has higher counts saved for today ({todayIso}):
+              </span>
+              <div className="bg-muted/40 p-2.5 rounded-lg border border-border/50 text-foreground font-mono text-2xs space-y-1 max-h-40 overflow-y-auto">
+                {reducedList?.map((r) => (
+                  <div key={r.label} className="flex justify-between items-center py-0.5">
+                    <span className="truncate pr-2">{r.label}</span>
+                    <span className="shrink-0 font-semibold">
+                      <span className="text-emerald-500 font-bold">{r.from}</span> &rarr;{" "}
+                      <span className="text-destructive font-bold">{r.to}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="pt-1">
+                Do you want to keep the higher counts from the database or overwrite your saved history with these lower numbers?
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0 mt-2">
+            <AlertDialogCancel
+              className="rounded-xl border-border/60"
+              onClick={() => {
+                const serverCounts = todayLog?.counts ?? {};
+                const serverKeys = Object.keys(serverCounts).filter((k) => (serverCounts[k] ?? 0) > 0);
+                skipUnsavedMarkRef.current = true;
+                cDispatch({
+                  type: "hydrate",
+                  counts: serverCounts,
+                  keys: Array.from(new Set([...selectedKeys, ...serverKeys])),
+                });
+                cDispatch({ type: "set_saved", v: true });
+                setOverwriteOpen(false);
+                toast.info("Restored database counts.");
+              }}
+            >
+              Keep Database Counts
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm"
+              onClick={async () => {
+                setOverwriteOpen(false);
+                const keys = activeCategories.map((c) => c.key);
+                try {
+                  await commitSave(counts, keys);
+                  toast.warning("Database record overwritten.");
+                } catch {
+                  toast.error("Failed to overwrite database record.");
+                }
+              }}
+            >
+              Overwrite Record
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
