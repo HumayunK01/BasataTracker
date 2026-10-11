@@ -1,11 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { supabase, getUserId } from "@/integrations/supabase/client";
 import type { DailyLog, DailyLogInsert } from "@/types/log";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { useMutationRateLimit } from "@/hooks/useMutationRateLimit";
-import { logAuditEvent } from "@/hooks/useAuditLog";
+import { api, ApiError } from "@/lib/api";
 
 const countField = z.number().int("Must be a whole number").nonnegative("Must be 0 or more").max(9999, "Value too large");
 
@@ -16,26 +14,23 @@ const DailyLogInsertSchema = z.object({
   notes: z.string().max(500, "Notes must be 500 characters or fewer").nullable().optional(),
 });
 
+function formatError(e: unknown): string {
+  if (e instanceof ApiError) return e.message;
+  if (e instanceof z.ZodError) return e.issues[0]?.message ?? "Validation error";
+  if (e instanceof Error) return e.message;
+  return "Something went wrong";
+}
+
 export function useDailyLogs() {
   const { user } = useAuth();
   return useQuery({
     queryKey: ["daily_logs", user?.id],
     enabled: !!user,
-    // Pull remote changes so the counter/logs stay in sync across the user's
-    // devices (another device's auto-save shows up here on focus/interval).
-    // staleTime 0 opts out of the global default so focus always refetches.
     staleTime: 0,
     refetchOnWindowFocus: true,
     refetchInterval: 60_000,
     queryFn: async (): Promise<DailyLog[]> => {
-      const user_id = await getUserId();
-      const { data, error } = await supabase
-        .from("daily_logs")
-        .select("*")
-        .eq("user_id", user_id)
-        .order("log_date", { ascending: false })
-        .limit(1000);
-      if (error) throw error;
+      const data = await api.get<DailyLog[]>("/logs");
       return (data ?? []).map((row) => ({
         ...row,
         counts: (row.counts ?? {}) as Record<string, number>,
@@ -46,41 +41,44 @@ export function useDailyLogs() {
 
 export function useUpsertLog() {
   const qc = useQueryClient();
-  const { checkLimit } = useMutationRateLimit({ maxRequests: 20, windowMs: 60_000 });
   return useMutation({
     mutationFn: async (log: DailyLogInsert) => {
-      if (!checkLimit()) throw new Error("Too many saves. Please wait a moment.");
       const validated = DailyLogInsertSchema.parse(log);
-      const user_id = await getUserId();
-      const { error } = await supabase
-        .from("daily_logs")
-        .upsert({ ...validated, user_id }, { onConflict: "user_id,log_date" });
-      if (error) throw error;
-      await logAuditEvent("log_updated", { log_date: validated.log_date });
+      return await api.post<DailyLog>("/logs", { ...validated, notes: validated.notes ?? "" });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["daily_logs"] });
-      toast.success("Day saved");
     },
-    onError: (e: Error) => toast.error(e instanceof z.ZodError ? e.issues[0]?.message : e.message),
+    onError: (e: unknown) => {
+      toast.error(formatError(e));
+    },
   });
 }
 
 export function useDeleteLog() {
   const qc = useQueryClient();
-  const { checkLimit } = useMutationRateLimit({ maxRequests: 10, windowMs: 60_000 });
   return useMutation({
-    mutationFn: async (id: string) => {
-      if (!checkLimit()) throw new Error("Too many deletes. Please wait a moment.");
-      const user_id = await getUserId();
-      const { error } = await supabase.from("daily_logs").delete().eq("id", id).eq("user_id", user_id);
-      if (error) throw error;
-      await logAuditEvent("log_deleted", { log_id: id });
+    mutationFn: async (date: string) => {
+      return await api.delete(`/logs?date=${encodeURIComponent(date)}`);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["daily_logs"] });
-      toast.success("Day deleted");
+      toast.success("Log deleted");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: unknown) => {
+      toast.error(formatError(e));
+    },
+  });
+}
+
+export function useTapIncrement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ log_date, key, delta = 1 }: { log_date: string; key: string; delta?: number }) => {
+      return await api.post<DailyLog>("/logs/tap", { log_date, key, delta });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["daily_logs"] });
+    },
   });
 }
