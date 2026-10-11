@@ -1,210 +1,217 @@
 <div align="center">
 
-<img src="public/lightlogo.png" alt="Basata Tracker logo" width="120" />
+<img src="public/lightlogo.png" alt="TrackBasata logo" width="120" />
 
-## Basata Tracker
+# TrackBasata
 
-**A fast, focused productivity tracker for AR associates** — log and analyze your daily document workflow with per-user data isolation, cross-device sync, and an append-only audit trail.
+**High-performance document productivity tracker and workflow manager for Accounts Receivable (AR) healthcare teams.**
 
 [![React](https://img.shields.io/badge/React_18-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Vite](https://img.shields.io/badge/Vite_5-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript_5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Vite](https://img.shields.io/badge/Vite_8-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
+[![Express](https://img.shields.io/badge/Express-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com)
 [![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com)
-[![Vitest](https://img.shields.io/badge/tested_with-Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white)](https://vitest.dev)
-
-<img src="public/ppreview.jpg" alt="Basata Tracker app preview" width="100%" />
+[![Vitest](https://img.shields.io/badge/Tests-100_Passed-6E9F18?style=flat-square&logo=vitest&logoColor=white)](https://vitest.dev)
+[![Version](https://img.shields.io/badge/Version-3.0.0-10B981?style=flat-square)](package.json)
 
 </div>
 
 ---
 
-## Why not a spreadsheet?
+## Overview
 
-|  | Basata Tracker |
-|---|---|
-| **Immutable audit trail** | Every log save, category change, and account deletion lands in an append-only table — record-keeping requirements are satisfied by design, not by discipline |
-| **Cross-device live sync** | Start tap-counting on one workstation, pick up mid-session on another — server state is always the source of truth |
-
-Built for shift-based AR work: multi-step fax/indexable tracking, custom categories, day-of-week analytics, and a 10-hour session cap that fits real schedules.
+TrackBasata replaces spreadsheets and disparate tracking notes with a purpose-built workstation for healthcare AR associates. It delivers tactile tap counting, category tracking across EHR workflows (NextGen, Athena), team workload visibility, and a tamper-resistant audit trail.
 
 ---
 
-## Features
+## Core Features
 
-| Feature | Description |
-|---|---|
-| **Console** | Industrial workflow console — per-category totals, trend charts, weekly breakdowns, day-of-week averages, contribution heatmap |
-| **Daily Log** | Full history with search, pagination, inline edit/delete, CSV/JSON export |
-| **Counter** | Tap-to-count interface with auto-save and live sync across devices |
-| **Date Range Report** | Preset or custom range filters with summary stats and category breakdown |
-| **Users** | Directory of registered users with profile and sign-in details |
-| **Settings** | Custom categories (add, edit, reorder, delete), profile updates, password change, account deletion |
-| **Credential Vault** | Encrypted-at-rest credentials organized in folders, with service favicon lookup |
-| **Auth** | Email/password sign-up via Supabase; every record scoped to its owner |
+### 1. Console & Work Breakdown
+- **Team Work Distribution**: Interactive donut charts and progress ring gauges show each team member's share and totals per category.
+- **Draggable Category Slider**: Mouse-drag, horizontal scroll, and directional arrows to quickly inspect categories.
+- **14-Day Sparklines**: Trend micro-charts for every document category.
+- **Weekly & Day-of-Week Trends**: Automatic volume aggregation by day of week and rolling 10-week totals.
+
+### 2. Fast Tap Counter
+- **Zero-Latency Tapping**: Big-button touch and click counter built for high-speed document indexing.
+- **Local Storage Hydration**: Protects ongoing session counts even if the browser closes or the network disconnects.
+- **Auto-Save & Cloud Sync**: Debounced background persistence updates database records automatically.
+
+### 3. Daily Logs & Reporting
+- **Daily History**: View, filter, and edit daily count records by date.
+- **Multi-Format Export**: One-click generation of formatted PDF summaries, CSV spreadsheets, and JSON exports.
+- **Date Range Filters**: Presets for 7 days, 14 days, 30 days, current month, or custom date spans.
+
+### 4. Fax & Indexable Tracker
+- **Multi-Step Tracking**: Track incoming faxes, verification steps, and indexing queue handoffs.
+- **Search & Resolution**: Instant filtering by patient name or document ID with quick status resolution.
+
+### 5. Clinic Facilities Directory
+- **Facility Directory**: Searchable directory of clinic names, verified addresses, and fax numbers.
+- **One-Click Copy**: Copy phone, fax, and address details straight to your clipboard.
+
+### 6. Intake Process Guide & Decision Trees
+- **Visual Flowcharts**: Step-by-step decision trees for intake routing, ROI medical record requests, single-patient EKG/Cath lab files, and archive rules.
+- **Routing Reference**: Directory of 29 approved inbox labels and test patient account details.
+
+### 7. Credential Vault
+- **Encrypted Storage**: Store service logins, clinic portal URLs, and notes organized into folders.
+- **Secure Retrieval**: Client-side decryption and one-click copy with automatic favicon lookups.
+
+---
+
+## System Architecture
+
+```
+TrackBasata/
+├── backend/                  # Express + TypeScript REST API Gateway (:5000)
+│   ├── src/
+│   │   ├── config/           # Environment validation, Supabase Admin, Upstash Redis, Swagger
+│   │   ├── controllers/      # Request handlers (Categories, Logs, Facilities, Proxies)
+│   │   ├── middleware/       # JWT auth guard, account disabled checks, rate limiting
+│   │   ├── routes/           # Parameterized REST endpoints (/api/v1/*)
+│   │   ├── services/         # Atomic counter increments, audit logging
+│   │   └── server.ts         # HTTP server entrypoint
+│   └── test/                 # Service boot and query security tests
+│
+├── frontend/                 # Vite 8 + React 18 + Tailwind CSS Client (:3000)
+│   ├── src/
+│   │   ├── components/       # Metric cards, counter pad, charts, facility tables, dialogs
+│   │   ├── hooks/            # TanStack React Query hooks with cache persistence
+│   │   ├── pages/            # Console, Counter, DailyLog, Report, Facilities, Team, Settings
+│   │   └── test/             # 16 Vitest suites covering 100 unit & integration tests
+│   └── vite.config.ts        # Proxy to backend (:5000), security CSP headers, vendor chunks
+│
+└── supabase/                 # PostgreSQL migrations & database schema
+    └── migrations/           # Tables, Row Level Security, triggers, and functions
+```
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
+| Component | Technology |
 |---|---|
-| Frontend | React 18 · TypeScript · Vite 5 |
-| UI | shadcn/ui · Tailwind CSS · Lucide icons |
-| Charts | Recharts |
-| Backend / DB | Supabase — Postgres, Auth, Row Level Security, Edge Functions (Deno) |
-| Server state | TanStack React Query |
-| Validation | Zod (every mutation and query response) |
-| Routing | React Router v6 |
-| Testing | Vitest · Testing Library · jsdom |
+| **Frontend Framework** | React 18 · TypeScript 5 · Vite 8 |
+| **Styling & Design** | Tailwind CSS · shadcn/ui · Hubot Sans font |
+| **Icons & Motion** | Heroicons (24/outline) · Lucide React · Motion |
+| **State & Cache** | TanStack React Query with local storage persistence |
+| **Charts** | Recharts · SVG Sparklines |
+| **Backend API** | Node.js · Express · TypeScript · Swagger (OpenAPI 3.0) |
+| **Database & Auth** | Supabase (PostgreSQL with Row Level Security) |
+| **Rate Limiting** | Upstash Redis (sliding-window) with in-memory fallback |
+| **Testing** | Vitest · React Testing Library · jsdom |
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
+- **Node.js**: Version 18 or higher
+- **npm**: Version 9 or higher
+- **Supabase Account**: With a running PostgreSQL database
 
-- [Node.js 18+](https://nodejs.org) and npm
-- A [Supabase](https://supabase.com) project
-- [Supabase CLI](https://supabase.com/docs/guides/cli) — to apply migrations
+### 1. Installation
 
-### 1 · Clone and install
+Install dependencies across the monorepo:
 
 ```bash
-git clone https://github.com/HumayunK01/BasataTracker.git
-cd BasataTracker
+# Install root, backend, and frontend dependencies
+npm run install:all
+```
+
+Or install inside the individual folders:
+
+```bash
+# Frontend
+cd frontend
+npm install
+
+# Backend
+cd ../backend
 npm install
 ```
 
-### 2 · Configure environment
+### 2. Configure Environment Variables
 
-```bash
-cp .env.example .env.local
-```
-
+**Frontend (`frontend/.env.local`):**
 ```env
-# .env.local — never commit this file (it is gitignored)
 VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=your_anon_publishable_key
+VITE_SUPABASE_PUBLISHABLE_KEY=your-supabase-anon-key
 ```
 
-> The **service role key** is never used by the frontend. It is read only by
-> Edge Functions via `Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")` and must be
-> configured as a Supabase Function secret — not in any `.env` file.
+**Backend (`backend/.env`):**
+```env
+PORT=5000
+NODE_ENV=development
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+UPSTASH_REDIS_REST_URL=https://your-redis-url.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-redis-token
+```
 
-### 3 · Apply the database schema
+### 3. Database Setup
 
-Schema lives in `supabase/migrations/` — do **not** hand-write tables:
+Apply database schema and security policies using the Supabase CLI:
 
 ```bash
-supabase link --project-ref <your-project-ref>
+supabase link --project-ref your-project-id
 supabase db push
 ```
 
-This creates `daily_logs`, `categories`, `audit_logs`, and `profiles`, all with Row Level Security policies, plus the `delete_own_account()` function and the new-user profile trigger.
-
-### 4 · Run locally
+### 4. Running the Development Servers
 
 ```bash
-npm run dev
+# Run both backend and frontend concurrently
+npm run dev:backend    # Starts API on http://localhost:5000
+npm run dev:frontend   # Starts client on http://localhost:3000
 ```
 
-Open **http://localhost:8080**.
+- **Web App**: Open [http://localhost:3000](http://localhost:3000)
+- **API Swagger Documentation**: Open [http://localhost:5000/docs](http://localhost:5000/docs)
 
 ---
 
-## Scripts
+## Available Scripts
 
-```bash
-npm run dev         # Start dev server (port 8080)
-npm run build       # Production build
-npm run build:dev   # Development-mode build
-npm run preview     # Preview the production build
-npm run lint        # Run ESLint
-npm run test        # Run the test suite once (Vitest)
-npm run test:watch  # Run tests in watch mode
-```
-
----
-
-<details>
-<summary><strong>Project Structure</strong></summary>
-
-```
-src/
-├── components/
-│   ├── ar/            # App-specific components (Sidebar, Charts, Table, Heatmap, …)
-│   └── ui/            # shadcn/ui primitives (only those in use)
-├── hooks/             # Data & logic hooks
-│   ├── useAuth.ts                # Session, expiry checks, refresh
-│   ├── useDailyLogs.ts           # Log CRUD + Zod validation + rate limit
-│   ├── useCategories.ts          # Category CRUD + Zod validation
-│   ├── useDailyActivity.ts       # Team activity via Edge Function
-│   ├── useProfile.ts             # Profile read/update
-│   ├── useAuditLog.ts            # Append-only audit events
-│   └── useMutationRateLimit.ts   # Client-side sliding-window limiter
-├── integrations/supabase/   # Supabase client + generated DB types
-├── lib/               # Utilities (CSV/JSON export, category colors)
-├── pages/             # Route pages
-├── types/             # Shared types and date/format helpers
-└── test/              # Vitest suites (incl. security verification)
-
-api/                   # Vercel serverless functions — same-origin image proxies
-├── favicon.js         # Favicon proxy (SSRF-hardened)
-└── logo.js            # Facility logo proxy
-
-supabase/
-└── migrations/        # Source of truth for the database schema
-```
-
-</details>
-
-<details>
-<summary><strong>Data Model</strong></summary>
-
-All tables enable Postgres **Row Level Security**; every policy is scoped to `auth.uid()`, so a user can only ever read or write their own rows.
-
-| Table | Purpose |
+| Command | Purpose |
 |---|---|
-| **`daily_logs`** | One row per user per day. Category counts in a single `counts` JSONB column, plus `is_off_day` and `notes` |
-| **`categories`** | Per-user ordered list of document categories — drives counters, charts, and forms dynamically |
-| **`fax_tracker` / `indexable_tracker`** | Per-patient multi-step document status |
-| **`credentials` / `credential_folders`** | Credential vault with folder organization |
-| **`audit_logs`** | Append-only record of sensitive actions — no update/delete policies, entries are immutable |
-| **`profiles`** | First/last name per user, auto-created on signup via a trigger |
-
-A `SECURITY DEFINER` function, `delete_own_account()`, lets a user delete only their own auth account (revoked from `PUBLIC`, granted to `authenticated`).
-
-</details>
-
-<details>
-<summary><strong>Security</strong></summary>
-
-- **Input validation** — every mutation and query response is parsed with Zod schemas before touching the database or UI
-- **Rate limiting** — sliding-window limiter guards mutations; login caps attempts (5 / 60s). Authoritative limits enforced by Supabase Auth and RLS server-side
-- **Headers** — CSP, HSTS, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` set in `vite.config.ts` (dev) and `vercel.json` (prod)
-- **Secrets** — only the public anon key reaches the client; service role key confined to Edge Functions
-- **Audit trail** — sensitive actions recorded in an append-only table
-
-A regression suite (`src/test/security-claims.test.ts`) empirically verifies the input-validation and rate-limit behavior.
-
-</details>
+| `npm run dev:frontend` | Starts the Vite development server on port 3000 |
+| `npm run dev:backend` | Starts the Express API server with hot-reload on port 5000 |
+| `npm run build` | Builds production bundles for both frontend and backend |
+| `npm run test` | Runs the full automated test suite |
+| `npm run typecheck` | Checks TypeScript types without emitting files |
 
 ---
 
-## Deployment
+## Security & Reliability
 
-Static SPA — `vercel.json` rewrites all routes to `index.html` for client-side routing.
+- **Row Level Security (RLS)**: Enforces table access control at the database engine level.
+- **Deactivation Killswitch**: The backend verifies `profiles.is_disabled` on incoming requests, cutting access immediately if a user is deactivated.
+- **SSRF-Hardened Proxies**: Logo and favicon image endpoints validate target domains, check DNS records, and reject private/loopback IP addresses.
+- **Input Validation**: All API inputs and frontend forms are validated using Zod schemas.
+- **Append-Only Audit Trail**: Administrative updates, account actions, and category changes log to an immutable audit table.
+
+---
+
+## Testing
+
+Run the test suite with Vitest:
 
 ```bash
-npm run build      # outputs to dist/
+npm test
 ```
 
-Deploy `dist/` to any static host (Vercel, Netlify, Cloudflare Pages). Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` as build-time environment variables in your host's dashboard.
+All 16 test suites pass with 100 assertions covering:
+- Counter state hydration and persistence
+- User category contributions and metric calculations
+- Session cleanups and token handling
+- Facilities search and data normalization
+- Security claims and rate limiting
 
 ---
 
-<div align="center">
+## License
 
-**Basata Tracker** · Built with care for AR teams
-
-</div>
+This project is licensed under the [MIT License](LICENSE).
