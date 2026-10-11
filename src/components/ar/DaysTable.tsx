@@ -381,7 +381,7 @@ export function DaysTable({ logs, onEdit, onNew, userName }: Props) {
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("all");
   const deleteLog = useDeleteLog();
   const { data: categories = [] } = useCategories();
-  const [hideZeroCategories, setHideZeroCategories] = useState(false);
+  const [hideZeroCategories, setHideZeroCategories] = useState(true);
 
   // Track categories that have > 0 contributions across this user's logs
   const userContributedKeys = useMemo(() => {
