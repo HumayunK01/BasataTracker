@@ -18,7 +18,9 @@ opencode.json
 
 # vendored agent skills (re-install per-machine, don't ship)
 .agents/
+**/.agents/
 .impeccable/
+**/.impeccable/
 
 # understand-anything & graphify knowledge graphs (local analysis artifacts)
 .ua/
@@ -30,7 +32,8 @@ graphify-out/
 # incremental compiler caches
 *.tsbuildinfo
 
-# supabase CLI local state (project refs, pooler URLs)
+# supabase CLI local state & local migrations
+supabase/
 supabase/.temp/
 
 # Environment variables

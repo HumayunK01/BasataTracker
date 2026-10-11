@@ -72,8 +72,8 @@ describe("Counter Hydration & Anti-Data Loss Guards", () => {
   });
 
   it("detects when candidate counts would reduce existing database counts", () => {
-    const serverCounts = { move_to_indexing: 20 };
-    const candidateCounts = { move_to_indexing: 0 };
+    const serverCounts: Record<string, number> = { move_to_indexing: 20 };
+    const candidateCounts: Record<string, number> = { move_to_indexing: 0 };
     const categories = [{ key: "move_to_indexing", label: "Move to Indexing" }];
 
     const reduced: { label: string; from: number; to: number }[] = [];
