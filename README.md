@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/lightlogo.png" alt="TrackBasata logo" width="120" />
+<img src="public/app-icon-512.png" alt="TrackBasata logo" width="120" />
 
 # TrackBasata
 
